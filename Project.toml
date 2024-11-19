@@ -1,6 +1,6 @@
 name = "SoleXplorer"
 uuid = "5816ab97-8dbe-4a0a-b2fb-0334bd9876ed"
-authors = ["Giovanni Pagliarini", "pglgnn@unife.it", "Riccardo Pasini", "riccardo01.pasini@unife.it"]
+authors = ["Giovanni Pagliarini", "pglgnn@unife.it", "Riccardo Pasini", "riccardo01.pasini@edu.unife.it"]
 version = "0.0.1"
 
 [compat]
