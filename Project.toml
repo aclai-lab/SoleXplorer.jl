@@ -3,7 +3,33 @@ uuid = "5816ab97-8dbe-4a0a-b2fb-0334bd9876ed"
 authors = ["Giovanni Pagliarini", "pglgnn@unife.it", "Riccardo Pasini", "riccardo01.pasini@edu.unife.it"]
 version = "0.0.1"
 
+[deps]
+Catch22 = "acdeb78f-3d39-4310-8fdf-6d75c17c6d5a"
+CategoricalArrays = "324d7699-5711-5eae-9e2f-1d82baa6b597"
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
+MLJ = "add582a8-e3ab-11e8-2d5e-e98b27df1bc7"
+MLJDecisionTreeInterface = "c6f25543-311c-4c74-83dc-3ea6d1015661"
+ModalDecisionTrees = "e54bda2e-c571-11ec-9d64-0242ac120002"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+Sole = "7b3b3b3f-8b15-4a80-a798-b383498bc2cf"
+SoleDecisionTreeInterface = "de8eae22-3630-40e0-868c-abfc4c1bb3da"
+StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
+TreeParzen = "eb66a70c-a255-11e9-03ea-7ba6b2f22006"
+
 [compat]
+Catch22 = "0.5.1"
+CategoricalArrays = "0.10.8"
+DataFrames = "1.7.0"
+Distributions = "0.25.113"
+MLJ = "0.20.7"
+MLJDecisionTreeInterface = "0.4.2"
+ModalDecisionTrees = "0.5.1"
+Random = "1.11.0"
+Sole = "0.6.1"
+SoleDecisionTreeInterface = "0.1.5"
+StatsBase = "0.34.3"
+TreeParzen = "0.3.4"
 julia = "1"
 
 [extras]
