@@ -1,11 +1,6 @@
 using Sole
 using SoleXplorer
 using Random, StatsBase
-# using MLJ
-# using MLJDecisionTreeInterface
-# using MLJParticleSwarmOptimization: ParticleSwarm, AdaptiveParticleSwarm
-# using Distributions
-# using TreeParzen
 
 # References
 # https://github.com/ablaom/MLJTutorial.jl/blob/dev/notebooks/04_tuning/notebook.ipynb
@@ -49,39 +44,39 @@ dtree = SoleXplorer.get_test(valid_X, y, tt_pairs, model, fit_model)
 
 rules = SoleXplorer.get_rules(dtree)
 
-# ---------------------------------------------------------------------------- #
-#                  hybrid propositional/modal decision tree                    #
-# ---------------------------------------------------------------------------- #
-@info "Test 3: Windowed Decision Tree"
-model_name = :win_decision_tree
+# # ---------------------------------------------------------------------------- #
+# #                  hybrid propositional/modal decision tree                    #
+# # ---------------------------------------------------------------------------- #
+# @info "Test 3: Windowed Decision Tree"
+# model_name = :win_decision_tree
 
-model = SoleXplorer.get_model(model_name)
+# model = SoleXplorer.get_model(model_name)
 
-valid_X = get_treatment(X, model, features)
-tt_pairs = get_partition(y)
+# valid_X = get_treatment(X, model, features)
+# tt_pairs = get_partition(y)
 
-fit_model = SoleXplorer.get_fit(valid_X, y, tt_pairs, model; features=features, rng=rng)
-dtree = SoleXplorer.get_test(valid_X, y, tt_pairs, model, fit_model)
+# fit_model = SoleXplorer.get_fit(valid_X, y, tt_pairs, model; features=features, rng=rng)
+# dtree = SoleXplorer.get_test(valid_X, y, tt_pairs, model, fit_model)
 
-rules = SoleXplorer.get_rules(dtree)
+# rules = SoleXplorer.get_rules(dtree)
 
-# ---------------------------------------------------------------------------- #
-#                   hybrid decision tree with model tuning                     #
-# ---------------------------------------------------------------------------- #
-@info "Test 4: Windowed Decision Tree"
-model_name = :win_decision_tree
-tuning_method = :particleswarm
+# # ---------------------------------------------------------------------------- #
+# #                   hybrid decision tree with model tuning                     #
+# # ---------------------------------------------------------------------------- #
+# @info "Test 4: Windowed Decision Tree with model tuning and stratified sampling"
+# model_name = :win_decision_tree
+# tuning_method = :particleswarm
 
-model = SoleXplorer.get_model(model_name)
-tuning = SoleXplorer.get_tuning(model, tuning_method)
+# model = SoleXplorer.get_model(model_name)
+# tuning = SoleXplorer.get_tuning(model, tuning_method)
 
-valid_X = get_treatment(X, model, features)
-tt_pairs = get_partition(y; stratified_sampling=true, nfolds=3, rng=rng)
+# valid_X = get_treatment(X, model, features)
+# tt_pairs = get_partition(y; stratified_sampling=true, nfolds=3, rng=rng)
 
-fit_model = SoleXplorer.get_fit(valid_X, y, tt_pairs, model; tuning=tuning, features=features, rng=rng)
-dtree = SoleXplorer.get_test(valid_X, y, tt_pairs, model, fit_model)
+# fit_model = SoleXplorer.get_fit(valid_X, y, tt_pairs, model; tuning=tuning, features=features, rng=rng)
+# dtree = SoleXplorer.get_test(valid_X, y, tt_pairs, model, fit_model)
 
-rules = SoleXplorer.get_rules(dtree)
+# rules = SoleXplorer.get_rules(dtree)
 
 # ---------------------------------------------------------------------------- #
 #                            modal decision tree                               #
