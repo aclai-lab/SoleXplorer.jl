@@ -51,8 +51,4 @@ export get_test
 include("rules_interface.jl")
 export get_rules
 
-# sparito da SoleBase
-# da cancellare appena ritrovo le movingwindow che erano in SoleBase
-include("deprecated/movingwindow.jl")
-
 end
