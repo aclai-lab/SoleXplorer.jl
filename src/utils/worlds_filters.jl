@@ -1,17 +1,17 @@
 # ---------------------------------------------------------------------------- #
 #                          wolrds filters functions                            #
 # ---------------------------------------------------------------------------- #
-function fixed_windows(intervals::Vector{SoleLogics.Interval{Int64}}, nwindows::Int, overlap::Nothing=nothing)
+function fixed_windows(intervals::Vector{SoleLogics.Interval{Int64}}; nwindows::Int)
     i_filter = SoleLogics.IntervalLengthFilter(==, nwindows)
     collect(SoleLogics.filterworlds(i_filter, intervals))
 end
 
-function whole(intervals::Vector{SoleLogics.Interval{Int64}}, nwindows::Nothing=nothing, overlap::Nothing=nothing)
+function whole(intervals::Vector{SoleLogics.Interval{Int64}})
     max_upper = maximum(i.y for i in intervals)
-    SoleLogics.Interval{Int64}(1, max_upper)
+    [SoleLogics.Interval{Int64}(1, max_upper)]
 end
 
-function absolute_movingwindow(intervals::Vector{SoleLogics.Interval{Int64}}, nwindows::Int, overlap::Int)
+function absolute_movingwindow(intervals::Vector{SoleLogics.Interval{Int64}}; nwindows::Int, overlap::Int)
     """
     Generates a list of intervals from the input intervals that are of fixed size `nwindows` and overlap by a specified amount `overlap`.
     
@@ -39,9 +39,9 @@ function absolute_movingwindow(intervals::Vector{SoleLogics.Interval{Int64}}, nw
     return worlds
 end
 
-absolute_splitwindow(intervals::Vector{SoleLogics.Interval{Int64}}, nwindows::Int, overlap::Nothing=nothing) = absolute_movingwindow(intervals, nwindows, 0)
+absolute_splitwindow(intervals::Vector{SoleLogics.Interval{Int64}}; nwindows::Int) = absolute_movingwindow(intervals; nwindows=nwindows, overlap=0)
 
-function realtive_movingwindow(intervals::Vector{SoleLogics.Interval{Int64}}, nwindows::AbstractFloat, overlap::AbstractFloat)
+function realtive_movingwindow(intervals::Vector{SoleLogics.Interval{Int64}}; nwindows::AbstractFloat, overlap::AbstractFloat)
     0.0 ≤ nwindows ≤ 1.0 || throw(ArgumentError("Window size ratio must be between 0.0 and 1.0"))
     0.0 ≤ overlap ≤ 1.0 || throw(ArgumentError("Overlap ratio must be between 0.0 and 1.0"))
 
@@ -49,12 +49,12 @@ function realtive_movingwindow(intervals::Vector{SoleLogics.Interval{Int64}}, nw
     absolute_window_size = floor(Int, max_upper * nwindows)
     absolute_overlap = floor(Int, absolute_window_size * overlap)
     
-    absolute_movingwindow(intervals, absolute_window_size, absolute_overlap)
+    absolute_movingwindow(intervals; nwindows=absolute_window_size, overlap=absolute_overlap)
 end
 
-function relative_splitwindow(intervals::Vector{SoleLogics.Interval{Int64}}, nwindows::AbstractFloat, overlap::Nothing=nothing)
+function relative_splitwindow(intervals::Vector{SoleLogics.Interval{Int64}}; nwindows::AbstractFloat)
     0.0 ≤ nwindows ≤ 1.0 || throw(ArgumentError("Window size ratio must be between 0.0 and 1.0"))
 
     max_upper = maximum(i.y for i in intervals) -1
-    absolute_movingwindow(intervals, floor(Int, max_upper * nwindows), 0)
+    absolute_movingwindow(intervals; nwindows=floor(Int, max_upper * nwindows), overlap=0)
 end

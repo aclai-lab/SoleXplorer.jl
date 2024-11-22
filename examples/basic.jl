@@ -81,13 +81,13 @@ rules = SoleXplorer.get_rules(dtree)
 # ---------------------------------------------------------------------------- #
 #                            modal decision tree                               #
 # ---------------------------------------------------------------------------- #
-@info "Test 5: Modal Decision Tree"
+@info "Test 3: Modal Decision Tree"
 model_name = :modal_decision_tree
-features = [minimum, mean, StatsBase.cov, mode_5]
+features = [minimum, mean]
 
 model = SoleXplorer.get_model(model_name; relations=:IA7, features=features, set=X)
 
-valid_X = get_treatment(X, model, features)
+valid_X = get_treatment(X, model, features; nwindows = 20, relative_overlap=0.3)
 tt_pairs = get_partition(y)
 
 fit_model = SoleXplorer.get_fit(valid_X, y, tt_pairs, model; features=features, rng=rng)
@@ -98,7 +98,7 @@ rules = SoleXplorer.get_rules(dtree)
 # ---------------------------------------------------------------------------- #
 #                       modal decision tree with tuning                        #
 # ---------------------------------------------------------------------------- #
-@info "Test 6: Modal Decision Tree with catch9 and tuning: be patient."
+@info "Test 4: Modal Decision Tree with catch9 and tuning: be patient."
 features = catch9
 model_name = :modal_decision_tree
 tuning_method = :latinhypercube
@@ -106,7 +106,7 @@ tuning_method = :latinhypercube
 model = SoleXplorer.get_model(model_name; relations=:IA7, features=features, set=X)
 tuning = SoleXplorer.get_tuning(model, tuning_method)
 
-valid_X = get_treatment(X, model, features)
+valid_X = get_treatment(X, model, features; nwindows = 20, relative_overlap=0.3)
 tt_pairs = get_partition(y; stratified_sampling=true, nfolds=3, rng=rng)
 
 fit_model = SoleXplorer.get_fit(valid_X, y, tt_pairs, model; tuning=tuning, features=features, rng=rng)
