@@ -9,9 +9,9 @@ nwindows = 10
 overlap = 2
 
 @info "Test: Decision Tree based on world filtering"
+model_name = :modal_decision_tree
+features = [minimum, mean, StatsBase.cov, mode_5]
 
-# code included in SoleXplorer.jl/src/user_interfaces/worlds_interface.jl
-maxsize = argmax(length.(Array(X[!, :])))
-intervals = collect(allworlds(frame(X, maxsize.I[1])))
+model = SoleXplorer.get_model(model_name; relations=:IA7, features=features, set=X)
 
-valid_intervals = absolute_movingwindow(intervals, nwindows, overlap)
+valid_X = get_treatment(X, model, features; worlds=realtive_movingwindow)

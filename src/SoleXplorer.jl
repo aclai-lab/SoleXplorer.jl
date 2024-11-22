@@ -1,6 +1,7 @@
 module SoleXplorer
 
 using Sole
+import MultiData.hasnans
 
 using DataFrames
 using CategoricalArrays
@@ -31,6 +32,7 @@ export stretch_high, entropy_pairs, rs_range, dfa, low_freq_power, centroid_freq
 export catch9
 
 include("utils/worlds_filters.jl")
+export fixed_windows, whole
 export absolute_movingwindow, absolute_splitwindow, realtive_movingwindow, relative_splitwindow
 
 include("user_interfaces/models_interface.jl")
