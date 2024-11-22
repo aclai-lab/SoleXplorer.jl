@@ -14,4 +14,4 @@ features = [minimum, mean, StatsBase.cov, mode_5]
 
 model = SoleXplorer.get_model(model_name; relations=:IA7, features=features, set=X)
 
-valid_X = get_treatment(X, model, features; worlds=realtive_movingwindow)
+valid_X = get_treatment(X, model, features; treatment=realtive_movingwindow, nwindows=0.25, overlap=0.25)

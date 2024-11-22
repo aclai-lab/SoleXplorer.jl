@@ -22,9 +22,8 @@ end
 # ---------------------------------------------------------------------------- #
 
 function get_treatment(X::DataFrame, model::T, features::AbstractVector; 
-    worlds::Union{Function, Nothing}=nothing,
     vnames::Union{AbstractVector{Union{String, Symbol}}, Nothing}=nothing,
-    treatment::Union{Symbol, Nothing}=nothing,
+    treatment::Union{Base.Callable, Nothing}=nothing,
     nwindows::Union{Int, AbstractFloat, Nothing}=nothing,
     overlap::Union{Int, AbstractFloat, Nothing}=nothing,
 ) where {T<:SoleXplorer.ModelConfig}
@@ -38,6 +37,10 @@ function get_treatment(X::DataFrame, model::T, features::AbstractVector;
     hasnans(X) && (warn = true; @warn "DataFrame contains NaN values")
     check_vector_dataframe(X) || @warn "DataFrame contains vectors of different lengths"
     !warn && @info "DataFrame is valid"
+
+    isnothing(nwindows) && (nwindows = 10)
+    isnothing(overlap) && (overlap = 0.2)
+
     # ------------------------------------------------------------------------ #
     #                       check sub features names                           #
     # ------------------------------------------------------------------------ #
@@ -57,8 +60,6 @@ function get_treatment(X::DataFrame, model::T, features::AbstractVector;
             push!(valid_X, [vcat([map(f, Array(row)) for f in features]...) for row in eachrow(X)]...)
 
         elseif model.data_treatment == :reducesize
-            isnothing(nwindows) && (nwindows = 10)
-            isnothing(overlap) && (overlap = 0.2)
             overlap isa Int && (overlap = overlap / nwindows)
             
             valid_X = DataFrame([name => Vector{Float64}[] for name in vnames])
@@ -75,9 +76,16 @@ function get_treatment(X::DataFrame, model::T, features::AbstractVector;
         # -------------------------------------------------------------------- #
         maxsize = argmax(length.(Array(X[!, :])))
         intervals = collect(allworlds(frame(X, maxsize.I[1])))
+        valid_intervals = treatment(intervals, nwindows, overlap)
 
-        valid_X = DataFrame([v => Vector{Float64}[] for v in [string(j, "(", i, ")") for j in features for i in vnames]])
-        push!(valid_X, [vcat([map(f, Array(row[i])) for f in features for i in intervals]...) for row in eachrow(X)]...)
+        valid_X = DataFrame([v => Float64[] for v in [string(f, "(", v, ")w", i) for f in features for v in vnames for (i, _) in enumerate(valid_intervals)]])
+
+        win_X = Vector{Vector{Float64}}[]
+        for row in eachrow(X)    # for vec in row
+                push!(win_X, [vcat(vec[i.x:i.y]) for vec in row for i in valid_intervals])
+        end
+
+        push!(valid_X, [vcat([map(f, i) for f in features for i in row]...) for row in eachrow(win_X)]...)
     end
 
     return valid_X

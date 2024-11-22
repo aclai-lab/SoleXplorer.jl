@@ -1,12 +1,12 @@
 # ---------------------------------------------------------------------------- #
 #                          wolrds filters functions                            #
 # ---------------------------------------------------------------------------- #
-function fixed_windows(intervals::Vector{SoleLogics.Interval{Int64}}, nwindows::Int)
+function fixed_windows(intervals::Vector{SoleLogics.Interval{Int64}}, nwindows::Int, overlap::Nothing=nothing)
     i_filter = SoleLogics.IntervalLengthFilter(==, nwindows)
     collect(SoleLogics.filterworlds(i_filter, intervals))
 end
 
-function whole(intervals::Vector{SoleLogics.Interval{Int64}})
+function whole(intervals::Vector{SoleLogics.Interval{Int64}}, nwindows::Nothing=nothing, overlap::Nothing=nothing)
     max_upper = maximum(i.y for i in intervals)
     SoleLogics.Interval{Int64}(1, max_upper)
 end
@@ -39,7 +39,7 @@ function absolute_movingwindow(intervals::Vector{SoleLogics.Interval{Int64}}, nw
     return worlds
 end
 
-absolute_splitwindow(intervals::Vector{SoleLogics.Interval{Int64}}, nwindows::Int) = absolute_movingwindow(intervals, nwindows, 0)
+absolute_splitwindow(intervals::Vector{SoleLogics.Interval{Int64}}, nwindows::Int, overlap::Nothing=nothing) = absolute_movingwindow(intervals, nwindows, 0)
 
 function realtive_movingwindow(intervals::Vector{SoleLogics.Interval{Int64}}, nwindows::AbstractFloat, overlap::AbstractFloat)
     0.0 ≤ nwindows ≤ 1.0 || throw(ArgumentError("Window size ratio must be between 0.0 and 1.0"))
@@ -52,7 +52,7 @@ function realtive_movingwindow(intervals::Vector{SoleLogics.Interval{Int64}}, nw
     absolute_movingwindow(intervals, absolute_window_size, absolute_overlap)
 end
 
-function relative_splitwindow(intervals::Vector{SoleLogics.Interval{Int64}}, nwindows::AbstractFloat)
+function relative_splitwindow(intervals::Vector{SoleLogics.Interval{Int64}}, nwindows::AbstractFloat, overlap::Nothing=nothing)
     0.0 ≤ nwindows ≤ 1.0 || throw(ArgumentError("Window size ratio must be between 0.0 and 1.0"))
 
     max_upper = maximum(i.y for i in intervals) -1
