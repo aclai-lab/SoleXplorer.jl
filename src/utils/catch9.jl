@@ -2,7 +2,7 @@
 #                        catch22 pretty named functions                        #
 # ---------------------------------------------------------------------------- #
 
-mode_5(x) = Catch22.DN_HistogramMode_5((x));                            @doc (@doc Catch22.DN_HistogramMode_5) mode_5
+mode_5(x) = Catch22.DN_HistogramMode_5((x));                              @doc (@doc Catch22.DN_HistogramMode_5) mode_5
 mode_10(x) = Catch22.DN_HistogramMode_10((x));                            @doc (@doc Catch22.DN_HistogramMode_10) mode_10
 embedding_dist(x) = Catch22.CO_Embed2_Dist_tau_d_expfit_meandiff((x));    @doc (@doc Catch22.CO_Embed2_Dist_tau_d_expfit_meandiff) embedding_dist
 acf_timescale(x) = Catch22.CO_f1ecac((x));                                @doc (@doc Catch22.CO_f1ecac) acf_timescale

@@ -9,8 +9,7 @@ function get_fit(
     tt_pairs::AbstractVector{TTIdx},
     model::T;
     features::Union{Function, AbstractVector}=catch9,
-    fixcallablenans = false,
-    kwargs...
+    kwargs... # TODO put the remaining kwargs into the MLJ model's kwargs?
 ) where {T<:SoleXplorer.ModelConfig}
     # ------------------------------------------------------------------------ #
     #                         data check and treatment                         #

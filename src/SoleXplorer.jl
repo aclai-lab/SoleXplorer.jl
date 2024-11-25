@@ -1,12 +1,14 @@
 module SoleXplorer
 
 using Sole
-import MultiData.hasnans
 
+# Utilities
 using DataFrames
 using CategoricalArrays
 using Random
+using IterTools # da cancellare appena ritrovo le movingwindow che erano in SoleBase
 
+# Learning infrastructure
 using MLJ
 # using MLJBase: Probabilistic, ParamRange, train_test_pairs
 using MLJTuning
@@ -15,15 +17,13 @@ using MLJParticleSwarmOptimization: ParticleSwarm, AdaptiveParticleSwarm
 using TreeParzen
 using Distributions
 
+# Learning algorithms
 using ModalDecisionTrees
 using SoleDecisionTreeInterface
 
+# Features
 using Catch22
 using StatsBase
-# using SoleData
-# using SoleData: PatchFunction, patchedfunction
-
-using IterTools # da cancellare appena ritrovo le movingwindow che erano in SoleBase
 
 include("utils/catch9.jl")
 export mode_5, mode_10, embedding_dist, acf_timescale, acf_first_min, ami2, trev, outlier_timing_pos

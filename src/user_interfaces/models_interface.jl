@@ -96,13 +96,6 @@ function get_model(model_name::Symbol; kwargs...)
 
     kwargs_dict = Dict(kwargs)
 
-    if model_name == :modal_decision_tree && haskey(kwargs_dict, :features)
-        features = kwargs_dict[:features]
-        X = kwargs_dict[:set]
-        patched_f = collect(Iterators.flatten(SoleData.naturalconditions(X, [f]; fixcallablenans = true) for f in features))
-        kwargs_dict[:features] = patched_f
-    end
-
     params = AVAIL_MODELS[model_name].params
     valid_kwargs = filter(kv -> kv.first in keys(params), kwargs_dict)
     valid_params = merge(params, valid_kwargs)
