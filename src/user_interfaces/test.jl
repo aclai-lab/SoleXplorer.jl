@@ -14,6 +14,8 @@ function get_test(
 
         if model.classifier isa ModalDecisionTrees.MLJInterface.ModalDecisionTree
             _, sole_dt = report(mach[i]).sprinkle(X[tt.test, :], y[tt.test])
+        elseif model.classifier isa MLJTuning.ProbabilisticTunedModel && model.classifier.model isa ModalDecisionTrees.MLJInterface.ModalDecisionTree
+            _, sole_dt = report(mach[i])[4].sprinkle(X[tt.test, :], y[tt.test])
         else
             sole_dt = solemodel(learned_dt_tree.tree)
             apply!(sole_dt, X[tt.test, :], y[tt.test])

@@ -48,14 +48,14 @@ function get_treatment(X::DataFrame, model::T, features::AbstractVector;
     isnothing(treatment) && (treatment = model.default_treatment; kwargs = (nwindows=10, overlap=0.3))
 
     maxsize_idx = argmax(length.(eachcol(X)))
-    n_intervals = length(treatment(collect(allworlds(frame(X, maxsize_idx))); kwargs...))
+    n_intervals = treatment(collect(allworlds(frame(X, maxsize_idx))); kwargs...)
 
     if model.data_treatment == :aggregate
-        valid_X = DataFrame([v => Float64[] for v in [string(f, "(", v, ")w", i) for f in features for v in vnames for i in 1:n_intervals]])
+        valid_X = DataFrame([v => Float64[] for v in [string(f, "(", v, ")w", i) for f in features for v in vnames for i in 1:length(n_intervals)]])
 
         for (n, row) in enumerate(eachrow(X))
             intervals = treatment(collect(allworlds(frame(X, n))); kwargs...)
-            interval_diff = n_intervals - length(intervals)
+            interval_diff = length(n_intervals) - length(intervals)
             push!(valid_X, vcat([vcat([f(col[i.x:i.y-1]) for i in intervals], fill(NaN, interval_diff)) for col in row, f in features]...))
         end
 
@@ -64,13 +64,10 @@ function get_treatment(X::DataFrame, model::T, features::AbstractVector;
 
         for (n, row) in enumerate(eachrow(X))
             intervals = treatment(collect(allworlds(frame(X, n))); kwargs...)
-            interval_diff = n_intervals - length(intervals)
+            interval_diff = length(n_intervals) - length(intervals)
             push!(valid_X, [vcat([mean(col[i.x:i.y-1]) for i in intervals], fill(NaN, interval_diff)) for col in row])
         end
     end
 
     return valid_X
 end
-
-
-
