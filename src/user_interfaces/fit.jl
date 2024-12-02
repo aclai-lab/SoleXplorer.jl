@@ -7,7 +7,7 @@ function get_fit(
     model::T,
     X::DataFrame,
     y::CategoricalArray,
-    tt_pairs::AbstractVector{TTIdx};
+    tt_pairs::Union{TTIdx, AbstractVector{TTIdx}};
     features::Union{Function, AbstractVector}=catch9,
     fixcallablenans = false,
     kwargs...
@@ -19,14 +19,15 @@ function get_fit(
     size(X, 1) == length(y) || throw(ArgumentError("Number of rows in DataFrame must match length of class labels"))
 
     valid_feats = features isa Function ? [features] : unique(vcat(features...))
+    valid_tt = tt_pairs isa TTIdx ? [tt_pairs] : tt_pairs
 
     # ------------------------------------------------------------------------ #
     #                           train & fit model                              #
     # ------------------------------------------------------------------------ #
     fitmodel = MLJ.Machine[]
 
-    for tt in tt_pairs
-        mach = machine(model.classifier, X[tt.train, :], y[tt.train])
+    for tt in valid_tt
+        mach = machine(model.classifier, selectrows(X, tt.train), y[tt.train])
         fit!(mach, verbosity=0)
 
         push!(fitmodel, mach)

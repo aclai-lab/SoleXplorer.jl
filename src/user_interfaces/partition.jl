@@ -21,6 +21,6 @@ function get_partition(y::CategoricalArray;
         tt_pairs = MLJ.MLJBase.train_test_pairs(stratified_cv, 1:length(y), y)
         return [TTIdx(train, test) for (train, test) in tt_pairs]
     else
-        return [TTIdx(MLJ.partition(eachindex(y), train_ratio; shuffle=shuffle, rng=rng)...)]
+        return TTIdx(MLJ.partition(eachindex(y), train_ratio; shuffle=shuffle, rng=rng)...)
     end
 end
