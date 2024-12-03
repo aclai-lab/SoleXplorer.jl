@@ -51,7 +51,7 @@ const AVAIL_MODELS = Dict(
             rng=Random.TaskLocalRNG()
         ),
         data_treatment = :reducesize,
-        default_treatment = fixednumber_windows,
+        default_treatment = adaptive_moving_windows,
 
         ranges = [
             model -> MLJ.range(model, :merge_purity_threshold, lower=0, upper=1),

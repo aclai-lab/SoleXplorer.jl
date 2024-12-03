@@ -46,7 +46,7 @@ export catch9
 include("utils/worlds_filters.jl")
 export fixedlength_windows, whole
 export absolute_movingwindow, absolute_splitwindow, relative_movingwindow, relative_splitwindow
-export fixednumber_windows
+export adaptive_moving_windows
 
 include("user_interfaces/models.jl")
 export ModelConfig, get_model
