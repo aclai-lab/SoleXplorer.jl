@@ -1,43 +1,75 @@
+using Sole
+using SoleModels
+
 # ---------------------------------------------------------------------------- #
 #                         interesting rule dataframe                           #
 # ---------------------------------------------------------------------------- #
+"""
+    get_rules(
+        solemodels;
+        method = Sole.listrules,
+        min_lift=1.0,
+        min_ninstances=0,
+        min_coverage=0.10,
+        min_ncovered=1,
+        normalize=true,
+        kwargs...
+    )
+
+Extracts interesting rules from one or more (Sole compliant) symbolic models,
+returning a DataFrame of rules, and their metrics.
+Note that duplicate rules may be returned.
+
+Keyword arguments:
+- `method`: a callable method for extracting rules, such as `Sole.listrules` and `SolePostHoc.extractrules`
+- `min_lift`: minimum lift
+- `min_ninstances`: minimum number of instances
+- `min_coverage`: minimum coverage
+- `min_ncovered`: minimum number of covered instances
+- `normalize`: whether to normalize the antecedent
+- See [`Sole.listrules`](@ref) or [`SolePostHoc.extractrules`](@ref) for additional keyword arguments.
+"""
 function get_rules(
-    sole_dt::Union{DecisionTree, AbstractVector{DecisionTree}};
+    solemodels;
+    method::Base.Callable = Sole.listrules,
     min_lift::Float64=1.0,
     min_ninstances::Int=0,
     min_coverage::Float64=0.10,
     min_ncovered::Int=1,
     normalize::Bool=true,
+    threshold_digits::Int=2,
+    round_digits::Int=2,
+    kwargs...
 )
-    sole_dt isa DecisionTree && (sole_dt = [sole_dt,])
+    solemodels isa AbstractVector || (solemodels = [solemodels,])
 
     _X = DataFrame[]
 
-    for dt in sole_dt
-        rules = listrules(
-            dt,
+    for solemodel in solemodels
+        rules = method(
+            solemodel,
             min_lift=min_lift,
             min_ninstances=min_ninstances,
             min_coverage=min_coverage,
             min_ncovered=min_ncovered,
             normalize=normalize,
+            kwargs...
         );
 
         map(r->(consequent(r), readmetrics(r)), rules)
         irules = sort(rules, by=readmetrics)
 
-        isempty(irules) && return nothing
-        
-        X = DataFrame(antecedent=String[], consequent=String[]; [name => Vector{Union{Float64, Int}}() for name in keys(readmetrics(irules[1]))]...)
+        X = DataFrame(antecedent=String[], consequent=Any[]; [name => Vector{Union{Float64, Int}}() for name in keys(readmetrics(irules[1]))]...)
 
-        for i in irules
-            antecedent = syntaxstring(i.antecedent, threshold_digits=2)
-            consequent = i.consequent.outcome
-            push!(X, (antecedent, consequent, readmetrics(i, round_digits=2)...))
+        for rule in irules
+            ant = syntaxstring(Sole.antecedent(rule), threshold_digits=threshold_digits)
+            cons = Sole.leafmodelname(Sole.consequent(rule))
+            push!(X, (ant, cons, readmetrics(rule, round_digits=round_digits)...))
         end
 
         push!(_X, X)
     end
 
-    return length(_X) > 1 ? _X : _X[1]
+    return vcat(_X...)
 end
+
