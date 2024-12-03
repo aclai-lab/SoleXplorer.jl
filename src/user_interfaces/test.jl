@@ -2,16 +2,16 @@ function get_test(
     model::T,
     X::DataFrame,
     y::CategoricalArray,
-    tt_pairs::Union{TTIdx, AbstractVector{TTIdx}},
-    mach::Union{MLJ.Machine, AbstractVector{MLJ.Machine}};
+    tt_pairs::Union{TTIdx, AbstractVector{TTIdx}};
+    kwargs...
 ) where {T<:SoleXplorer.ModelConfig}
-    mach isa MLJ.Machine && (mach = [mach])
+    mach = model.mach isa MLJ.Machine ? [model.mach] : model.mach
     valid_tt = tt_pairs isa TTIdx ? [tt_pairs] : tt_pairs
 
     result = DecisionTree[]
     
     for (i, tt) in enumerate(valid_tt)
-        learned_dt_tree = haskey(fitted_params(mach[i]), :best_fitted_params) ? fitted_params(mach[i]).best_fitted_params : fitted_params(mach[i])
+        learned_dt_tree = haskey(MLJ.fitted_params(mach[i]), :best_fitted_params) ? MLJ.fitted_params(mach[i]).best_fitted_params : MLJ.fitted_params(mach[i])
 
         if model.classifier isa ModalDecisionTrees.MLJInterface.ModalDecisionTree
             _, sole_dt = report(mach[i]).sprinkle(X[tt.test, :], y[tt.test])

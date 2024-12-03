@@ -3,7 +3,7 @@
 # ---------------------------------------------------------------------------- #
 check_dataframe_type(df::AbstractDataFrame) = all(col -> eltype(col) <: Union{Real, AbstractArray{<:Real}}, eachcol(df))
 
-function get_fit(
+function get_fit!(
     model::T,
     X::DataFrame,
     y::CategoricalArray,
@@ -33,5 +33,5 @@ function get_fit(
         push!(fitmodel, mach)
     end
 
-    return length(fitmodel) == 1 ? fitmodel[1] : fitmodel
+    model.mach = length(fitmodel) == 1 ? fitmodel[1] : fitmodel
 end
