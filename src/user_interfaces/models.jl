@@ -60,8 +60,9 @@ const AVAIL_MODELS = Dict(
     )
 )
 
-struct ModelConfig{T<:MLJ.Probabilistic, S<:Function}
+mutable struct ModelConfig{T<:MLJ.Probabilistic, S<:Function}
     classifier::T
+    mach::Union{MLJ.Machine, AbstractVector{MLJ.Machine}, Nothing}
     ranges::Vector{S}
     data_treatment::Symbol
     default_treatment::Base.Callable
@@ -81,7 +82,8 @@ function get_model(model_name::Symbol; kwargs...)
     valid_params = merge(params, valid_kwargs)
 
     ModelConfig(
-        AVAIL_MODELS[model_name].method(; valid_params...), 
+        AVAIL_MODELS[model_name].method(; valid_params...),
+        nothing,
         AVAIL_MODELS[model_name].ranges,
         AVAIL_MODELS[model_name].data_treatment,
         AVAIL_MODELS[model_name].default_treatment,

@@ -37,11 +37,11 @@ model = SoleXplorer.get_model(model_name)
 valid_X = get_treatment(X, model, features)
 tt_pairs = get_partition(y)
 
-fitmodel = SoleXplorer.get_fit(model, valid_X, y, tt_pairs; features=features, rng=rng)
-dtree = SoleXplorer.get_test(model, valid_X, y, tt_pairs, fitmodel);
+SoleXplorer.get_fit!(model, valid_X, y, tt_pairs; features=features, rng=rng)
+dtree = SoleXplorer.get_test(model, valid_X, y, tt_pairs);
 
 @show SoleXplorer.get_rules(dtree);
-@show SoleXplorer.get_predict(fitmodel, valid_X, y, tt_pairs);
+@show SoleXplorer.get_predict(fitted_model, valid_X, y, tt_pairs);
 
 # ---------------------------------------------------------------------------- #
 #                  decision tree with stratified sampling                      #
@@ -56,11 +56,11 @@ model = SoleXplorer.get_model(model_name)
 valid_X = get_treatment(X, model, features)
 tt_pairs = get_partition(y; stratified_sampling=true, nfolds=3, rng=rng)
 
-fitmodel = SoleXplorer.get_fit(model, valid_X, y, tt_pairs; features=features, rng=rng)
-dtree = SoleXplorer.get_test(model, valid_X, y, tt_pairs, fitmodel);
+SoleXplorer.get_fit!(model, valid_X, y, tt_pairs; features=features, rng=rng)
+dtree = SoleXplorer.get_test(model, valid_X, y, tt_pairs);
 
 @show SoleXplorer.get_rules(dtree);
-@show SoleXplorer.get_predict(fitmodel, valid_X, y, tt_pairs);
+@show SoleXplorer.get_predict(fitted_model, valid_X, y, tt_pairs);
 
 # ---------------------------------------------------------------------------- #
 #                       decision tree with model tuning                        #
@@ -82,11 +82,11 @@ ranges = [
 ]
 tunedmodel = SoleXplorer.get_tuning(model, tuning_method; ranges=ranges, n=25)
 
-fitmodel = SoleXplorer.get_fit(tunedmodel, valid_X, y, tt_pairs; features=features, rng=rng)
-dtree = SoleXplorer.get_test(tunedmodel, valid_X, y, tt_pairs, fitmodel);
+SoleXplorer.get_fit!(tunedmodel, valid_X, y, tt_pairs; features=features, rng=rng)
+dtree = SoleXplorer.get_test(tunedmodel, valid_X, y, tt_pairs);
 
 @show SoleXplorer.get_rules(dtree);
-@show SoleXplorer.get_predict(fitmodel, valid_X, y, tt_pairs);
+@show SoleXplorer.get_predict(fitted_model, valid_X, y, tt_pairs);
 
 # ---------------------------------------------------------------------------- #
 #                          basic modal decision tree                           #
@@ -101,11 +101,11 @@ model = SoleXplorer.get_model(model_name; relations=:IA7, features=features, set
 valid_X = get_treatment(X, model, features, nwindows=20)
 tt_pairs = get_partition(y)
 
-fitmodel = SoleXplorer.get_fit(model, valid_X, y, tt_pairs; features=features, rng=rng)
-dtree = SoleXplorer.get_test(model, valid_X, y, tt_pairs, fitmodel)
+SoleXplorer.get_fit!(model, valid_X, y, tt_pairs; features=features, rng=rng)
+dtree = SoleXplorer.get_test(model, valid_X, y, tt_pairs)
 
 @show SoleXplorer.get_rules(dtree);
-@show SoleXplorer.get_predict(fitmodel, valid_X, y, tt_pairs);
+@show SoleXplorer.get_predict(fitted_model, valid_X, y, tt_pairs);
 
 # ---------------------------------------------------------------------------- #
 #                       modal decision tree with tuning                        #
@@ -127,11 +127,11 @@ ranges = [
 ]
 tunedmodel = SoleXplorer.get_tuning(model, tuning_method; ranges=ranges, n=25)
 
-fitmodel = SoleXplorer.get_fit(tunedmodel, valid_X, y, tt_pairs; features=features, rng=rng)
-dtree = SoleXplorer.get_test(tunedmodel, valid_X, y, tt_pairs, fitmodel)
+SoleXplorer.get_fit!(tunedmodel, valid_X, y, tt_pairs; features=features, rng=rng)
+dtree = SoleXplorer.get_test(tunedmodel, valid_X, y, tt_pairs)
 
 @show SoleXplorer.get_rules(dtree);
-@show SoleXplorer.get_predict(fitmodel, valid_X, y, tt_pairs);
+@show SoleXplorer.get_predict(fitted_model, valid_X, y, tt_pairs);
 
 # ---------------------------------------------------------------------------- #
 #                                                                              #
@@ -155,11 +155,11 @@ model = SoleXplorer.get_model(model_name)
 valid_X = get_treatment(X, model, features; treatment=fixedlength_windows, winsize=30)
 tt_pairs = get_partition(y)
 
-fitmodel = SoleXplorer.get_fit(model, valid_X, y, tt_pairs; features=features, rng=rng)
-dtree = SoleXplorer.get_test(model, valid_X, y, tt_pairs, fitmodel)
+SoleXplorer.get_fit!(model, valid_X, y, tt_pairs; features=features, rng=rng)
+dtree = SoleXplorer.get_test(model, valid_X, y, tt_pairs)
 
 @show SoleXplorer.get_rules(dtree);
-@show SoleXplorer.get_predict(fitmodel, valid_X, y, tt_pairs);
+@show SoleXplorer.get_predict(fitted_model, valid_X, y, tt_pairs);
 
 # ---------------------------------------------------------------------------- #
 #                            get worlds: one window                            #
@@ -175,11 +175,11 @@ model = SoleXplorer.get_model(model_name)
 valid_X = get_treatment(X, model, features; treatment=whole)
 tt_pairs = get_partition(y)
 
-fitmodel = SoleXplorer.get_fit(model, valid_X, y, tt_pairs; features=features, rng=rng)
-dtree = SoleXplorer.get_test(model, valid_X, y, tt_pairs, fitmodel)
+SoleXplorer.get_fit!(model, valid_X, y, tt_pairs; features=features, rng=rng)
+dtree = SoleXplorer.get_test(model, valid_X, y, tt_pairs)
 
 @show SoleXplorer.get_rules(dtree);
-@show SoleXplorer.get_predict(fitmodel, valid_X, y, tt_pairs);
+@show SoleXplorer.get_predict(fitted_model, valid_X, y, tt_pairs);
 
 # ---------------------------------------------------------------------------- #
 #                    get worlds: absolute moving window                        #
@@ -195,11 +195,11 @@ model = SoleXplorer.get_model(model_name)
 @btime valid_X = get_treatment(X, model, features; treatment=absolute_movingwindow, winsize=10, overlap=2)
 tt_pairs = get_partition(y)
 
-fitmodel = SoleXplorer.get_fit(model, valid_X, y, tt_pairs; features=features, rng=rng)
-dtree = SoleXplorer.get_test(model, valid_X, y, tt_pairs, fitmodel)
+SoleXplorer.get_fit!(model, valid_X, y, tt_pairs; features=features, rng=rng)
+dtree = SoleXplorer.get_test(model, valid_X, y, tt_pairs)
 
 @show SoleXplorer.get_rules(dtree);
-@show SoleXplorer.get_predict(fitmodel, valid_X, y, tt_pairs);
+@show SoleXplorer.get_predict(fitted_model, valid_X, y, tt_pairs);
 
 # ---------------------------------------------------------------------------- #
 #                     get worlds: absolute split window                        #
@@ -215,11 +215,11 @@ model = SoleXplorer.get_model(model_name)
 valid_X = get_treatment(X, model, features; treatment=absolute_splitwindow, winsize=10)
 tt_pairs = get_partition(y)
 
-fitmodel = SoleXplorer.get_fit(model, valid_X, y, tt_pairs; features=features, rng=rng)
-dtree = SoleXplorer.get_test(model, valid_X, y, tt_pairs, fitmodel)
+SoleXplorer.get_fit!(model, valid_X, y, tt_pairs; features=features, rng=rng)
+dtree = SoleXplorer.get_test(model, valid_X, y, tt_pairs)
 
 @show SoleXplorer.get_rules(dtree);
-@show SoleXplorer.get_predict(fitmodel, valid_X, y, tt_pairs);
+@show SoleXplorer.get_predict(fitted_model, valid_X, y, tt_pairs);
 
 # ---------------------------------------------------------------------------- #
 #                    get worlds: relative moving window                        #
@@ -235,11 +235,11 @@ model = SoleXplorer.get_model(model_name)
 valid_X = get_treatment(X, model, features; treatment=relative_movingwindow, winsize=0.25, overlap=0.25)
 tt_pairs = get_partition(y)
 
-fitmodel = SoleXplorer.get_fit(model, valid_X, y, tt_pairs; features=features, rng=rng)
-dtree = SoleXplorer.get_test(model, valid_X, y, tt_pairs, fitmodel)
+SoleXplorer.get_fit!(model, valid_X, y, tt_pairs; features=features, rng=rng)
+dtree = SoleXplorer.get_test(model, valid_X, y, tt_pairs)
 
 @show SoleXplorer.get_rules(dtree);
-@show SoleXplorer.get_predict(fitmodel, valid_X, y, tt_pairs);
+@show SoleXplorer.get_predict(fitted_model, valid_X, y, tt_pairs);
 
 # ---------------------------------------------------------------------------- #
 #                     get worlds: relative split windows                       #
@@ -255,11 +255,11 @@ model = SoleXplorer.get_model(model_name)
 valid_X = get_treatment(X, model, features; treatment=relative_splitwindow, winsize=0.25)
 tt_pairs = get_partition(y)
 
-fitmodel = SoleXplorer.get_fit(model, valid_X, y, tt_pairs; features=features, rng=rng)
-dtree = SoleXplorer.get_test(model, valid_X, y, tt_pairs, fitmodel)
+SoleXplorer.get_fit!(model, valid_X, y, tt_pairs; features=features, rng=rng)
+dtree = SoleXplorer.get_test(model, valid_X, y, tt_pairs)
 
 @show SoleXplorer.get_rules(dtree);
-@show SoleXplorer.get_predict(fitmodel, valid_X, y, tt_pairs);
+@show SoleXplorer.get_predict(fitted_model, valid_X, y, tt_pairs);
 
 # ---------------------------------------------------------------------------- #
 #                     get worlds: fixed number windows                       #
@@ -275,11 +275,11 @@ model = SoleXplorer.get_model(model_name)
 valid_X = get_treatment(X, model, features; treatment=adaptive_moving_windows, nwindows=15, overlap=0.1)
 tt_pairs = get_partition(y)
 
-fitmodel = SoleXplorer.get_fit(model, valid_X, y, tt_pairs; features=features, rng=rng)
-dtree = SoleXplorer.get_test(model, valid_X, y, tt_pairs, fitmodel)
+SoleXplorer.get_fit!(model, valid_X, y, tt_pairs; features=features, rng=rng)
+dtree = SoleXplorer.get_test(model, valid_X, y, tt_pairs)
 
 @show SoleXplorer.get_rules(dtree);
-@show SoleXplorer.get_predict(fitmodel, valid_X, y, tt_pairs);
+@show SoleXplorer.get_predict(fitted_model, valid_X, y, tt_pairs);
 
 # ---------------------------------------------------------------------------- #
 #                                                                              #
@@ -306,11 +306,11 @@ model = SoleXplorer.get_model(model_name)
 valid_X = get_treatment(X, model, features)
 tt_pairs = get_partition(y)
 
-fitmodel = SoleXplorer.get_fit(model, valid_X, y, tt_pairs; features=features, rng=rng)
-dtree = SoleXplorer.get_test(model, valid_X, y, tt_pairs, fitmodel)
+SoleXplorer.get_fit!(model, valid_X, y, tt_pairs; features=features, rng=rng)
+dtree = SoleXplorer.get_test(model, valid_X, y, tt_pairs)
 
 @show SoleXplorer.get_rules(dtree);
-@show SoleXplorer.get_predict(fitmodel, valid_X, y, tt_pairs);
+@show SoleXplorer.get_predict(fitted_model, valid_X, y, tt_pairs);
 
 # ---------------------------------------------------------------------------- #
 #                    decision tree based on world filtering                    #
@@ -326,11 +326,11 @@ model = SoleXplorer.get_model(model_name)
 valid_X = get_treatment(X, model, features; treatment=SoleXplorer.adaptive_moving_windows, nwindows=3)
 tt_pairs = get_partition(y)
 
-fitmodel = SoleXplorer.get_fit(model,valid_X, y, tt_pairs; features=features, rng=rng)
-dtree = SoleXplorer.get_test(model, valid_X, y, tt_pairs, fitmodel)
+SoleXplorer.get_fit!(model,valid_X, y, tt_pairs; features=features, rng=rng)
+dtree = SoleXplorer.get_test(model, valid_X, y, tt_pairs)
 
 @show SoleXplorer.get_rules(dtree);
-@show SoleXplorer.get_predict(fitmodel, valid_X, y, tt_pairs);
+@show SoleXplorer.get_predict(fitted_model, valid_X, y, tt_pairs);
 
 # ---------------------------------------------------------------------------- #
 #                             modal decision tree                              #
@@ -346,8 +346,8 @@ model = SoleXplorer.get_model(model_name; relations=:IA7, features=features, set
 valid_X = get_treatment(X, model, features; treatment=SoleXplorer.adaptive_moving_windows, nwindows=3)
 tt_pairs = get_partition(y)
 
-fitmodel = SoleXplorer.get_fit(model, valid_X, y, tt_pairs; features=features, rng=rng)
-dtree = SoleXplorer.get_test(model, valid_X, y, tt_pairs, fitmodel)
+SoleXplorer.get_fit!(model, valid_X, y, tt_pairs; features=features, rng=rng)
+dtree = SoleXplorer.get_test(model, valid_X, y, tt_pairs)
 
 @show SoleXplorer.get_rules(dtree);
-@show SoleXplorer.get_predict(fitmodel, valid_X, y, tt_pairs);
+@show SoleXplorer.get_predict(fitted_model, valid_X, y, tt_pairs);
