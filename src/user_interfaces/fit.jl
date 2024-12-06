@@ -1,33 +1,20 @@
 # ---------------------------------------------------------------------------- #
 #                                   fit model                                  #
 # ---------------------------------------------------------------------------- #
-check_dataframe_type(df::AbstractDataFrame) = all(col -> eltype(col) <: Union{Real, AbstractArray{<:Real}}, eachcol(df))
-
-function get_fit!(
+function modelfit!(
     model::T,
-    X::DataFrame,
-    y::CategoricalArray,
-    tt_pairs::Union{TTIdx, AbstractVector{TTIdx}};
+    ds::S;
     features::Union{Function, AbstractVector}=catch9,
     fixcallablenans = false,
     kwargs...
-) where {T<:SoleXplorer.ModelConfig}
-    # ------------------------------------------------------------------------ #
-    #                         data check and treatment                         #
-    # ------------------------------------------------------------------------ #
-    check_dataframe_type(X) || throw(ArgumentError("DataFrame must contain only Real or Array{<:Real} columns"))
-    size(X, 1) == length(y) || throw(ArgumentError("Number of rows in DataFrame must match length of class labels"))
-
+) where {T<:SoleXplorer.ModelConfig, S<:SoleXplorer.Dataset}
     valid_feats = features isa Function ? [features] : unique(vcat(features...))
-    valid_tt = tt_pairs isa TTIdx ? [tt_pairs] : tt_pairs
+    tt_train = ds.tt isa AbstractVector ? ds.tt : [ds.tt]
 
-    # ------------------------------------------------------------------------ #
-    #                           train & fit model                              #
-    # ------------------------------------------------------------------------ #
     fitmodel = MLJ.Machine[]
 
-    for tt in valid_tt
-        mach = machine(model.classifier, selectrows(X, tt.train), y[tt.train])
+    for tt in tt_train
+        mach = machine(model.classifier, selectrows(ds.X, tt.train), ds.y[tt.train])
         fit!(mach, verbosity=0)
 
         push!(fitmodel, mach)

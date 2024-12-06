@@ -76,4 +76,4 @@ tt_pairs = get_partition(y)
 plain_classifier = MLJXGBoostInterface.XGBoostClassifier(num_round=5, max_depth=6, objective="reg:squarederror")
 
 model = MLJ.machine(plain_classifier, valid_X[tt_pairs.train, :], y[tt_pairs.train])
-f = fit!(model, verbosity=0)
+fit!(model, verbosity=0)

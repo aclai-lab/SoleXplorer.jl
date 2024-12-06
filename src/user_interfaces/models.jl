@@ -1,78 +1,67 @@
 # ---------------------------------------------------------------------------- #
-#                              available models                                #
+#                                 model struct                                 #
 # ---------------------------------------------------------------------------- #
-const AVAIL_MODELS = Dict(
-    :decision_tree => (
-        method = MLJDecisionTreeInterface.DecisionTreeClassifier,
-
-        params = (;
-            max_depth=-1, 
-            min_samples_leaf=1, 
-            min_samples_split=2, 
-            min_purity_increase=0.0, 
-            n_subfeatures=0, 
-            post_prune=false, 
-            merge_purity_threshold=1.0, 
-            display_depth=5, 
-            feature_importance=:impurity, 
-            rng=Random.TaskLocalRNG()
-        ),
-        data_treatment = :aggregate,
-        default_treatment = whole,
-
-        ranges = [
-            model -> MLJ.range(model, :merge_purity_threshold, lower=0, upper=1),
-            model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])
-        ]
-    ),
-
-    :modal_decision_tree => (
-        method = ModalDecisionTree,
-
-        params = (;
-            max_depth=nothing, 
-            min_samples_leaf=4, 
-            min_purity_increase=0.002, 
-            max_purity_at_leaf=Inf, 
-            max_modal_depth=nothing, 
-            relations=nothing, 
-            features=nothing, 
-            conditions=nothing, 
-            featvaltype=Float64, 
-            initconditions=nothing, 
-            # downsize=SoleData.var"#downsize#482"(), 
-            print_progress=false, 
-            display_depth=nothing, 
-            min_samples_split=nothing, 
-            n_subfeatures=identity, 
-            post_prune=false, 
-            merge_purity_threshold=nothing, 
-            feature_importance=:split,
-            rng=Random.TaskLocalRNG()
-        ),
-        data_treatment = :reducesize,
-        default_treatment = adaptive_moving_windows,
-
-        ranges = [
-            model -> MLJ.range(model, :merge_purity_threshold, lower=0, upper=1),
-            model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])
-        ]
-    )
-)
-
-mutable struct ModelConfig{T<:MLJ.Probabilistic, S<:Function}
+mutable struct ModelConfig{T<:MLJ.Model, S<:Function}
     classifier::T
     mach::Union{MLJ.Machine, AbstractVector{MLJ.Machine}, Nothing}
     ranges::Vector{S}
     data_treatment::Symbol
+    default_features::AbstractVector{<:Base.Callable}
     default_treatment::Base.Callable
-    params::NamedTuple
+    treatment_params::NamedTuple
+end
+
+# ---------------------------------------------------------------------------- #
+#                                    tuning                                    #
+# ---------------------------------------------------------------------------- #
+const TUNEDMODEL_PARAMS = (;
+    resampling=Holdout(),
+    measure=LogLoss(tol = 2.22045e-16),
+    weights=nothing,
+    class_weights=nothing,
+    repeats=1,
+    operation=nothing,
+    selection_heuristic= MLJTuning.NaiveSelection(nothing),
+    n=nothing,
+    train_best=true,
+    acceleration=default_resource(),
+    acceleration_resampling=CPU1(),
+    check_measure=true,
+    cache=true
+)
+
+function range(
+    field::Union{Expr, Symbol};
+    lower::Union{AbstractFloat, Int, Nothing}=nothing,
+    upper::Union{AbstractFloat, Int, Nothing}=nothing,
+    origin::Union{AbstractFloat, Int, Nothing}=nothing,
+    unit::Union{AbstractFloat, Int, Nothing}=nothing,
+    scale::Union{Symbol, Nothing}=nothing,
+    values::Union{AbstractVector, Nothing}=nothing,
+)
+    return function(model)
+        MLJ.range(
+            model,
+            field;
+            lower=lower,
+            upper=upper,
+            origin=origin,
+            unit=unit,
+            scale=scale,
+            values=values
+        )
+    end
 end
 
 # ---------------------------------------------------------------------------- #
 #                                   get model                                  #
 # ---------------------------------------------------------------------------- #
-function get_model(model_name::Symbol; kwargs...)
+function get_model(
+    model_name::Symbol;
+    tuning::Union{T, Nothing}=nothing,
+    ranges::Union{S, AbstractVector{S}, Nothing}=nothing,
+    kwargs...
+) where {T<:MLJTuning.TuningStrategy, S<:Base.Callable}
     !haskey(AVAIL_MODELS, model_name) && throw(ArgumentError("Model $model_name not found in available models. Valid options are: $(keys(AVAIL_MODELS))"))
 
     kwargs_dict = Dict(kwargs)
@@ -84,16 +73,37 @@ function get_model(model_name::Symbol; kwargs...)
         kwargs_dict[:features] = patched_f
     end
 
-    params = AVAIL_MODELS[model_name].params
+    params = AVAIL_MODELS[model_name].model_params
     valid_kwargs = filter(kv -> kv.first in keys(params), kwargs_dict)
-    valid_params = merge(params, valid_kwargs)
+    model_params = merge(params, valid_kwargs)
 
+    classifier = AVAIL_MODELS[model_name].method(; model_params...)
+
+    if !isnothing(tuning)
+        tuning_kwargs = merge(TUNEDMODEL_PARAMS, filter(kv -> kv.first in keys(TUNEDMODEL_PARAMS), kwargs))
+
+        if isnothing(ranges)
+            ranges = [r(model.classifier) for r in model.ranges]
+        else
+            user_ranges = ranges isa AbstractVector ? ranges : [ranges]
+            ranges = [r(classifier) for r in user_ranges]
+        end
+
+        classifier = MLJ.TunedModel(; 
+            model=classifier, 
+            tuning=tuning, 
+            ranges=ranges, 
+            tuning_kwargs...
+        )
+    end
+    
     ModelConfig(
-        AVAIL_MODELS[model_name].method(; valid_params...),
+        classifier,
         nothing,
         AVAIL_MODELS[model_name].ranges,
         AVAIL_MODELS[model_name].data_treatment,
+        AVAIL_MODELS[model_name].default_features,
         AVAIL_MODELS[model_name].default_treatment,
-        valid_params
+        AVAIL_MODELS[model_name].treatment_params,
     )
 end

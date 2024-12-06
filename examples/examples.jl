@@ -1,6 +1,7 @@
 using Sole
 using SoleXplorer
 using Random, StatsBase, JLD2, DataFrames
+using RDatasets
 
 # ---------------------------------------------------------------------------- #
 #                                                                              #
@@ -12,12 +13,14 @@ train_seed = 11;
 
 # Note about Sole
 #
-# SoleBase: on branch dev (pulled dec, 2 2024)
-# SoleData: on branch dev-autologiset (pulled dec, 2 2024)
+# SoleBase: on branch dev (pulled dec, 7 2024)
+# SoleData: on branch dev-autologiset (pulled dec, 7 2024)
 # SoleDecisionTree: on branch dev (pulled dec, 2 2024)
-# Sole: on branch dev (pulled dec, 2 2024)
-# SoleLogics: on branch dev (pulled dec, 2 2024)
-# SoleModels: on branch dev (pulled dec, 2 2024)
+# Sole: on branch dev (pulled dec, 7 2024)
+# SoleLogics: on branch dev (pulled dec, 7 2024)
+# SoleModels: on branch dev (pulled dec, 7 2024)
+# ModalDecisionLists: on branch dev (pulled dec, 7 2024)
+# ModalDecisionTees: on branch dev (pulled dec, 7 2024)
 
 # References
 # https://github.com/ablaom/MLJTutorial.jl/blob/dev/notebooks/04_tuning/notebook.ipynb
@@ -34,14 +37,13 @@ Random.seed!(train_seed)
 
 model = SoleXplorer.get_model(model_name)
 
-valid_X = get_treatment(X, model, features)
-tt_pairs = get_partition(y)
+ds = SoleXplorer.preprocess_dataset(X, y, model, features=features)
 
-SoleXplorer.get_fit!(model, valid_X, y, tt_pairs; features=features, rng=rng)
-dtree = SoleXplorer.get_test(model, valid_X, y, tt_pairs);
+SoleXplorer.modelfit!(model, ds; features=features, rng=rng)
+dtree = SoleXplorer.modeltest(model, ds);
 
 @show SoleXplorer.get_rules(dtree);
-@show SoleXplorer.get_predict(fitted_model, valid_X, y, tt_pairs);
+@show SoleXplorer.get_predict(model, ds);
 
 # ---------------------------------------------------------------------------- #
 #                  decision tree with stratified sampling                      #
@@ -53,14 +55,13 @@ rng = Random.Xoshiro(train_seed)
 Random.seed!(train_seed)
 
 model = SoleXplorer.get_model(model_name)
-valid_X = get_treatment(X, model, features)
-tt_pairs = get_partition(y; stratified_sampling=true, nfolds=3, rng=rng)
+ds = SoleXplorer.preprocess_dataset(X, y, model; features=features, stratified_sampling=true, nfolds=3, rng=rng)
 
-SoleXplorer.get_fit!(model, valid_X, y, tt_pairs; features=features, rng=rng)
-dtree = SoleXplorer.get_test(model, valid_X, y, tt_pairs);
+SoleXplorer.modelfit!(model, ds; features=features, rng=rng)
+dtree = SoleXplorer.modeltest(model, ds);
 
 @show SoleXplorer.get_rules(dtree);
-@show SoleXplorer.get_predict(fitted_model, valid_X, y, tt_pairs);
+@show SoleXplorer.get_predict(model, ds);
 
 # ---------------------------------------------------------------------------- #
 #                       decision tree with model tuning                        #
@@ -71,22 +72,20 @@ features = catch9
 rng = Random.Xoshiro(train_seed)
 Random.seed!(train_seed)
 
-model = SoleXplorer.get_model(model_name)
-valid_X = get_treatment(X, model, features)
-tt_pairs = get_partition(y)
-
 tuning_method = latinhypercube(gens=2, popsize=120)
 ranges = [
-    SoleXplorer.range(model.classifier, :merge_purity_threshold, lower=0, upper=1),
-    SoleXplorer.range(model.classifier, :feature_importance, values=[:impurity, :split])
+    SoleXplorer.range(:merge_purity_threshold; lower=0, upper=1),
+    SoleXplorer.range(:feature_importance; values=[:impurity, :split])
 ]
-tunedmodel = SoleXplorer.get_tuning(model, tuning_method; ranges=ranges, n=25)
 
-SoleXplorer.get_fit!(tunedmodel, valid_X, y, tt_pairs; features=features, rng=rng)
-dtree = SoleXplorer.get_test(tunedmodel, valid_X, y, tt_pairs);
+model = SoleXplorer.get_model(model_name; tuning=tuning_method, ranges=ranges, n=25)
+ds = SoleXplorer.preprocess_dataset(X, y, model, features=features)
+
+SoleXplorer.modelfit!(model, ds; features=features, rng=rng)
+dtree = SoleXplorer.modeltest(model, ds);
 
 @show SoleXplorer.get_rules(dtree);
-@show SoleXplorer.get_predict(fitted_model, valid_X, y, tt_pairs);
+@show SoleXplorer.get_predict(model, ds);
 
 # ---------------------------------------------------------------------------- #
 #                          basic modal decision tree                           #
@@ -98,14 +97,13 @@ rng = Random.Xoshiro(train_seed)
 Random.seed!(train_seed)
 
 model = SoleXplorer.get_model(model_name; relations=:IA7, features=features, set=X)
-valid_X = get_treatment(X, model, features, nwindows=20)
-tt_pairs = get_partition(y)
+ds = SoleXplorer.preprocess_dataset(X, y, model; features=features, nwindows=20)
 
-SoleXplorer.get_fit!(model, valid_X, y, tt_pairs; features=features, rng=rng)
-dtree = SoleXplorer.get_test(model, valid_X, y, tt_pairs)
+SoleXplorer.modelfit!(model, ds; features=features, rng=rng)
+dtree = SoleXplorer.modeltest(model, ds)
 
 @show SoleXplorer.get_rules(dtree);
-@show SoleXplorer.get_predict(fitted_model, valid_X, y, tt_pairs);
+@show SoleXplorer.get_predict(model, ds);
 
 # ---------------------------------------------------------------------------- #
 #                       modal decision tree with tuning                        #
@@ -116,55 +114,33 @@ features = catch9
 rng = Random.Xoshiro(train_seed)
 Random.seed!(train_seed)
 
-model = SoleXplorer.get_model(model_name; relations=:IA7, features=features, set=X)
-valid_X = get_treatment(X, model, features)
-tt_pairs = get_partition(y)
-
 tuning_method = adaptiveparticleswarm(rng=rng)
 ranges = [
-    SoleXplorer.range(model.classifier, :merge_purity_threshold, lower=0, upper=1),
-    SoleXplorer.range(model.classifier, :feature_importance, values=[:impurity, :split])
+    SoleXplorer.range(:merge_purity_threshold, lower=0, upper=1),
+    SoleXplorer.range(:feature_importance, values=[:impurity, :split])
 ]
-tunedmodel = SoleXplorer.get_tuning(model, tuning_method; ranges=ranges, n=25)
 
-SoleXplorer.get_fit!(tunedmodel, valid_X, y, tt_pairs; features=features, rng=rng)
-dtree = SoleXplorer.get_test(tunedmodel, valid_X, y, tt_pairs)
+model = SoleXplorer.get_model(model_name; relations=:IA7, features=features, set=X, ranges=ranges, n=25)
+ds = SoleXplorer.preprocess_dataset(X, y, model; features=features)
+
+SoleXplorer.modelfit!(model, ds; features=features, rng=rng)
+dtree = SoleXplorer.modeltest(model, ds)
 
 @show SoleXplorer.get_rules(dtree);
-@show SoleXplorer.get_predict(fitted_model, valid_X, y, tt_pairs);
+@show SoleXplorer.get_predict(model, ds);
 
 # ---------------------------------------------------------------------------- #
 #                                                                              #
-#                      examples based on world filtering                       #
+#                      examples based on movingwindow                       #
 #                                                                              #
 # ---------------------------------------------------------------------------- #
 X, y = SoleData.load_arff_dataset("NATOPS");
 rng = Random.Xoshiro(1)
 
 # ---------------------------------------------------------------------------- #
-#                     get worlds: fixed length windows                         # 
-# ---------------------------------------------------------------------------- #
-@info "Test 6: Decision Tree based on world filtering 'fixedlength_windows'"
-model_name = :decision_tree
-features = [minimum, mean, StatsBase.cov, mode_5]
-rng = Random.Xoshiro(train_seed)
-Random.seed!(train_seed)
-
-model = SoleXplorer.get_model(model_name)
-
-valid_X = get_treatment(X, model, features; treatment=fixedlength_windows, winsize=30)
-tt_pairs = get_partition(y)
-
-SoleXplorer.get_fit!(model, valid_X, y, tt_pairs; features=features, rng=rng)
-dtree = SoleXplorer.get_test(model, valid_X, y, tt_pairs)
-
-@show SoleXplorer.get_rules(dtree);
-@show SoleXplorer.get_predict(fitted_model, valid_X, y, tt_pairs);
-
-# ---------------------------------------------------------------------------- #
 #                            get worlds: one window                            #
 # ---------------------------------------------------------------------------- #
-@info "Test 7: Decision Tree based on world filtering 'whole'"
+@info "Test 7: Decision Tree based on wholewindow"
 model_name = :decision_tree
 features = [minimum, mean, StatsBase.cov, mode_5]
 rng = Random.Xoshiro(train_seed)
@@ -172,19 +148,18 @@ Random.seed!(train_seed)
 
 model = SoleXplorer.get_model(model_name)
 
-valid_X = get_treatment(X, model, features; treatment=whole)
-tt_pairs = get_partition(y)
+ds = SoleXplorer.preprocess_dataset(X, y, model, features=features; treatment=wholewindow)
 
-SoleXplorer.get_fit!(model, valid_X, y, tt_pairs; features=features, rng=rng)
-dtree = SoleXplorer.get_test(model, valid_X, y, tt_pairs)
+SoleXplorer.modelfit!(model, ds; features=features, rng=rng)
+dtree = SoleXplorer.modeltest(model, ds)
 
 @show SoleXplorer.get_rules(dtree);
-@show SoleXplorer.get_predict(fitted_model, valid_X, y, tt_pairs);
+@show SoleXplorer.get_predict(model, ds);
 
 # ---------------------------------------------------------------------------- #
-#                    get worlds: absolute moving window                        #
+#                           get worlds: moving window                          #
 # ---------------------------------------------------------------------------- #
-@info "Test 8: Decision Tree based on world filtering 'absolute_movingwindow'"
+@info "Test 8: Decision Tree based on movingwindow 'movingwindow'"
 model_name = :decision_tree
 features = [minimum, mean, StatsBase.cov, mode_5]
 rng = Random.Xoshiro(train_seed)
@@ -192,79 +167,18 @@ Random.seed!(train_seed)
 
 model = SoleXplorer.get_model(model_name)
 
-@btime valid_X = get_treatment(X, model, features; treatment=absolute_movingwindow, winsize=10, overlap=2)
-tt_pairs = get_partition(y)
+ds = SoleXplorer.preprocess_dataset(X, y, model, features=features; treatment=movingwindow, treatment_params=(nwindows=10, relative_overlap=0.2))
 
-SoleXplorer.get_fit!(model, valid_X, y, tt_pairs; features=features, rng=rng)
-dtree = SoleXplorer.get_test(model, valid_X, y, tt_pairs)
-
-@show SoleXplorer.get_rules(dtree);
-@show SoleXplorer.get_predict(fitted_model, valid_X, y, tt_pairs);
-
-# ---------------------------------------------------------------------------- #
-#                     get worlds: absolute split window                        #
-# ---------------------------------------------------------------------------- #
-@info "Test 9: Decision Tree based on world filtering 'absolute_splitwindow'"
-model_name = :decision_tree
-features = [minimum, mean, StatsBase.cov, mode_5]
-rng = Random.Xoshiro(train_seed)
-Random.seed!(train_seed)
-
-model = SoleXplorer.get_model(model_name)
-
-valid_X = get_treatment(X, model, features; treatment=absolute_splitwindow, winsize=10)
-tt_pairs = get_partition(y)
-
-SoleXplorer.get_fit!(model, valid_X, y, tt_pairs; features=features, rng=rng)
-dtree = SoleXplorer.get_test(model, valid_X, y, tt_pairs)
+SoleXplorer.modelfit!(model, ds; features=features, rng=rng)
+dtree = SoleXplorer.modeltest(model, ds)
 
 @show SoleXplorer.get_rules(dtree);
-@show SoleXplorer.get_predict(fitted_model, valid_X, y, tt_pairs);
-
-# ---------------------------------------------------------------------------- #
-#                    get worlds: relative moving window                        #
-# ---------------------------------------------------------------------------- #
-@info "Test 10: Decision Tree based on world filtering 'relative_movingwindow'"
-model_name = :decision_tree
-features = [minimum, mean, StatsBase.cov, mode_5]
-rng = Random.Xoshiro(train_seed)
-Random.seed!(train_seed)
-
-model = SoleXplorer.get_model(model_name)
-
-valid_X = get_treatment(X, model, features; treatment=relative_movingwindow, winsize=0.25, overlap=0.25)
-tt_pairs = get_partition(y)
-
-SoleXplorer.get_fit!(model, valid_X, y, tt_pairs; features=features, rng=rng)
-dtree = SoleXplorer.get_test(model, valid_X, y, tt_pairs)
-
-@show SoleXplorer.get_rules(dtree);
-@show SoleXplorer.get_predict(fitted_model, valid_X, y, tt_pairs);
-
-# ---------------------------------------------------------------------------- #
-#                     get worlds: relative split windows                       #
-# ---------------------------------------------------------------------------- #
-@info "Test 11: Decision Tree based on world filtering 'relative_splitwindows'"
-model_name = :decision_tree
-features = [minimum, mean, StatsBase.cov, mode_5]
-rng = Random.Xoshiro(train_seed)
-Random.seed!(train_seed)
-
-model = SoleXplorer.get_model(model_name)
-
-valid_X = get_treatment(X, model, features; treatment=relative_splitwindow, winsize=0.25)
-tt_pairs = get_partition(y)
-
-SoleXplorer.get_fit!(model, valid_X, y, tt_pairs; features=features, rng=rng)
-dtree = SoleXplorer.get_test(model, valid_X, y, tt_pairs)
-
-@show SoleXplorer.get_rules(dtree);
-@show SoleXplorer.get_predict(fitted_model, valid_X, y, tt_pairs);
+@show SoleXplorer.get_predict(model, ds);
 
 # ---------------------------------------------------------------------------- #
 #                     get worlds: fixed number windows                       #
 # ---------------------------------------------------------------------------- #
-@info "Test 12: Decision Tree based on world filtering 'adaptive_moving_windows'"
+@info "Test 12: Decision Tree based on movingwindow 'adaptivewindow'"
 model_name = :decision_tree
 features = [minimum, mean, StatsBase.cov, mode_5]
 rng = Random.Xoshiro(train_seed)
@@ -272,14 +186,13 @@ Random.seed!(train_seed)
 
 model = SoleXplorer.get_model(model_name)
 
-valid_X = get_treatment(X, model, features; treatment=adaptive_moving_windows, nwindows=15, overlap=0.1)
-tt_pairs = get_partition(y)
+ds = SoleXplorer.preprocess_dataset(X, y, model, features=features, treatment=adaptivewindow, treatment_params=(nwindows=15, relative_overlap=0.1))
 
-SoleXplorer.get_fit!(model, valid_X, y, tt_pairs; features=features, rng=rng)
-dtree = SoleXplorer.get_test(model, valid_X, y, tt_pairs)
+SoleXplorer.modelfit!(model, ds; features=features, rng=rng)
+dtree = SoleXplorer.modeltest(model, ds)
 
 @show SoleXplorer.get_rules(dtree);
-@show SoleXplorer.get_predict(fitted_model, valid_X, y, tt_pairs);
+@show SoleXplorer.get_predict(model, ds);
 
 # ---------------------------------------------------------------------------- #
 #                                                                              #
@@ -303,19 +216,18 @@ Random.seed!(train_seed)
 
 model = SoleXplorer.get_model(model_name)
 
-valid_X = get_treatment(X, model, features)
-tt_pairs = get_partition(y)
+ds = SoleXplorer.preprocess_dataset(X, y, model, features=features)
 
-SoleXplorer.get_fit!(model, valid_X, y, tt_pairs; features=features, rng=rng)
-dtree = SoleXplorer.get_test(model, valid_X, y, tt_pairs)
+SoleXplorer.modelfit!(model, ds; features=features, rng=rng)
+dtree = SoleXplorer.modeltest(model, ds)
 
 @show SoleXplorer.get_rules(dtree);
-@show SoleXplorer.get_predict(fitted_model, valid_X, y, tt_pairs);
+@show SoleXplorer.get_predict(model, ds);
 
 # ---------------------------------------------------------------------------- #
-#                    decision tree based on world filtering                    #
+#                    decision tree based on movingwindow                    #
 # ---------------------------------------------------------------------------- #
-@info "Test 14: Decision Tree based on world filtering 'adaptive_moving_windows'"
+@info "Test 14: Decision Tree based on movingwindow 'adaptive_moving_windows'"
 model_name = :decision_tree
 features = [minimum, mean, StatsBase.cov, mode_5]
 rng = Random.Xoshiro(train_seed)
@@ -323,14 +235,13 @@ Random.seed!(train_seed)
 
 model = SoleXplorer.get_model(model_name)
 
-valid_X = get_treatment(X, model, features; treatment=SoleXplorer.adaptive_moving_windows, nwindows=3)
-tt_pairs = get_partition(y)
+ds = SoleXplorer.preprocess_dataset(X, y, model, features=features, treatment=SoleXplorer.adaptivewindow, treatment_params=(nwindows=3,))
 
-SoleXplorer.get_fit!(model,valid_X, y, tt_pairs; features=features, rng=rng)
-dtree = SoleXplorer.get_test(model, valid_X, y, tt_pairs)
+SoleXplorer.modelfit!(model,ds; features=features, rng=rng)
+dtree = SoleXplorer.modeltest(model, ds)
 
 @show SoleXplorer.get_rules(dtree);
-@show SoleXplorer.get_predict(fitted_model, valid_X, y, tt_pairs);
+@show SoleXplorer.get_predict(model, ds);
 
 # ---------------------------------------------------------------------------- #
 #                             modal decision tree                              #
@@ -343,11 +254,65 @@ rng = Random.Xoshiro(train_seed)
 Random.seed!(train_seed)
 
 model = SoleXplorer.get_model(model_name; relations=:IA7, features=features, set=X)
-valid_X = get_treatment(X, model, features; treatment=SoleXplorer.adaptive_moving_windows, nwindows=3)
-tt_pairs = get_partition(y)
+ds = SoleXplorer.preprocess_dataset(X, y, model, features=features, treatment=SoleXplorer.adaptivewindow, treatment_params=(nwindows=3,))
 
-SoleXplorer.get_fit!(model, valid_X, y, tt_pairs; features=features, rng=rng)
-dtree = SoleXplorer.get_test(model, valid_X, y, tt_pairs)
+SoleXplorer.modelfit!(model, ds; features=features, rng=rng)
+dtree = SoleXplorer.modeltest(model, ds)
 
 @show SoleXplorer.get_rules(dtree);
-@show SoleXplorer.get_predict(fitted_model, valid_X, y, tt_pairs);
+@show SoleXplorer.get_predict(model, ds);
+
+# ---------------------------------------------------------------------------- #
+#                                                                              #
+#                            modal decision list                               #
+#                                                                              #
+# ---------------------------------------------------------------------------- #
+table = RDatasets.dataset("datasets", "iris")
+y = table[:, :Species]
+X = select(table, Not([:Species]));
+
+# X, y = preprocess_inputdata(X,y)
+train_seed = 11;
+
+# # ---------------------------------------------------------------------------- #
+# #                         basic modal decision list                            #
+# # ---------------------------------------------------------------------------- #
+# @info "Test 16: Modal Decision List"
+# model_name = :modal_decision_list
+# features = [mean]
+# rng = Random.Xoshiro(train_seed)
+# Random.seed!(train_seed)
+
+# model = SoleXplorer.get_model(model_name)
+# ds = SoleXplorer.preprocess_dataset(X, y, model)
+
+# SoleXplorer.modelfit!(model, ds; features=features, rng=rng)
+
+# dlist = SoleXplorer.modeltest(model, ds)
+
+# @show SoleXplorer.get_rules(dlist);
+# @show SoleXplorer.get_predict(model, dss);
+
+# # ---------------------------------------------------------------------------- #
+# #                                                                              #
+# #                            examples based on vectors                         #
+# #                                                                              #
+# # ---------------------------------------------------------------------------- #
+# X, y = SoleData.load_arff_dataset("NATOPS")
+# train_seed = 11;
+
+# # ---------------------------------------------------------------------------- #
+# #                         basic modal decision list                            #
+# # ---------------------------------------------------------------------------- #
+# @info "Test 17: Modal Decision List on time series"
+# model_name = :modal_decision_list
+# features = [mean]
+# rng = Random.Xoshiro(train_seed)
+# Random.seed!(train_seed)
+
+# model = SoleXplorer.get_model(model_name)
+# ds = SoleXplorer.preprocess_dataset(X, y, model; treatment=SoleXplorer.wholewindow)
+
+# SoleXplorer.modelfit!(model, ds; features=features, rng=rng)
+
+

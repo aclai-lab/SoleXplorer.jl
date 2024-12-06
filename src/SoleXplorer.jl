@@ -14,20 +14,20 @@ using MLJ
 using MLJTuning
 using MLJDecisionTreeInterface
 using MLJParticleSwarmOptimization: ParticleSwarm, AdaptiveParticleSwarm
+
+export grid, randomsearch, latinhypercube, treeparzen, particleswarm, adaptiveparticleswarm
+
 using TreeParzen
 using Distributions
 
 using ModalDecisionTrees
+using ModalDecisionLists
 using SoleDecisionTreeInterface
 
 using Catch22
 using StatsBase
 
-using IterTools # da cancellare appena ritrovo le movingwindow che erano in SoleBase
-
-export range
-
-export grid, randomsearch, latinhypercube, treeparzen, particleswarm, adaptiveparticleswarm
+# export range
 
 using MLJ: Grid as grid, RandomSearch as randomsearch, LatinHypercube as latinhypercube
 using TreeParzen: MLJTreeParzenTuning as treeparzen
@@ -39,28 +39,19 @@ export outlier_timing_neg, whiten_timescale, forecast_error, ami_timescale, high
 export stretch_high, entropy_pairs, rs_range, dfa, low_freq_power, centroid_freq, transition_variance, periodicity
 export catch9
 
-include("utils/worlds_filters.jl")
-export fixedlength_windows, whole
-export absolute_movingwindow, absolute_splitwindow, relative_movingwindow, relative_splitwindow
-export adaptive_moving_windows
+include("utils/avail_models.jl")
 
 include("user_interfaces/models.jl")
-export ModelConfig, get_model
+export ModelConfig, range, get_model
 
-include("user_interfaces/tuning.jl")
-export get_tuning
-
-include("user_interfaces/treatment.jl")
-export get_treatment
-
-include("user_interfaces/partition.jl")
-export TTIdx, get_partition
+include("user_interfaces/preprocess.jl")
+export preprocess_dataset
 
 include("user_interfaces/fit.jl")
-export get_fit
+export modelfit
 
 include("user_interfaces/test.jl")
-export get_test
+export modeltest
 
 include("user_interfaces/rules.jl")
 export get_rules

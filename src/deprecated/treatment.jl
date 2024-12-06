@@ -7,15 +7,15 @@ function is_valid_type(X::AbstractDataFrame, valid_type::Type = AbstractFloat)
     any(x -> x == 1, is_valid)
 end
 
-hasnans(X::AbstractDataFrame) = any(x -> x == 1, SoleData.hasnans.(eachcol(X)))
+# hasnans(X::AbstractDataFrame) = any(x -> x == 1, SoleData.hasnans.(eachcol(X)))
 
-function check_vector_dataframe(X::AbstractDataFrame)
-    column_types = eltype.(eachcol(X))
-    vector_lengths = length.(collect(eachcol(X)))
-    is_vector = all(t -> t <: AbstractVector, column_types)
+# function check_vector_dataframe(X::AbstractDataFrame)
+#     column_types = eltype.(eachcol(X))
+#     vector_lengths = length.(collect(eachcol(X)))
+#     is_vector = all(t -> t <: AbstractVector, column_types)
     
-    is_vector ? all(==(vector_lengths[1]), vector_lengths) : false
-end
+#     is_vector ? all(==(vector_lengths[1]), vector_lengths) : false
+# end
 
 # ---------------------------------------------------------------------------- #
 #                               get treatment                                  #
@@ -30,7 +30,7 @@ function get_treatment(X::DataFrame, model::T, features::AbstractVector;
     # ------------------------------------------------------------------------ #
     is_valid_type(X) || throw(ArgumentError("DataFrame must contain only numeric values"))
     hasnans(X) && @warn "DataFrame contains NaN values"
-    check_vector_dataframe(X) || @warn "DataFrame contains vectors of different lengths"
+    # check_vector_dataframe(X) || @warn "DataFrame contains vectors of different lengths"
 
     # ------------------------------------------------------------------------ #
     #                        check sub features names                          #
@@ -45,7 +45,11 @@ function get_treatment(X::DataFrame, model::T, features::AbstractVector;
     # ------------------------------------------------------------------------ #
     #                                treatment                                 #
     # ------------------------------------------------------------------------ #
-    isnothing(treatment) && (treatment = model.default_treatment; kwargs = (nwindows=10, overlap=0.3))
+    isnothing(treatment) && (treatment = model.default_treatment; kwargs = model.treatment_params)
+
+    for col in eachcol(X)
+
+    end
 
     maxsize_idx = argmax(length.(eachcol(X)))
     n_intervals = treatment(collect(allworlds(frame(X, maxsize_idx))); kwargs...)
