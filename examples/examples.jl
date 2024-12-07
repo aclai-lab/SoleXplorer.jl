@@ -110,7 +110,7 @@ dtree = SoleXplorer.modeltest(model, ds)
 # ---------------------------------------------------------------------------- #
 @info "Test 5: Modal Decision Tree with model tuning"
 model_name = :modal_decision_tree
-features = catch9
+features = [minimum, mean]
 rng = Random.Xoshiro(train_seed)
 Random.seed!(train_seed)
 
@@ -120,7 +120,7 @@ ranges = [
     SoleXplorer.range(:feature_importance, values=[:impurity, :split])
 ]
 
-model = SoleXplorer.get_model(model_name; relations=:IA7, features=features, set=X, ranges=ranges, n=25)
+model = SoleXplorer.get_model(model_name; relations=:IA7, tuning=tuning_method, features=features, set=X, ranges=ranges, n=25)
 ds = SoleXplorer.preprocess_dataset(X, y, model; features=features)
 
 SoleXplorer.modelfit!(model, ds; features=features, rng=rng)
@@ -131,7 +131,7 @@ dtree = SoleXplorer.modeltest(model, ds)
 
 # ---------------------------------------------------------------------------- #
 #                                                                              #
-#                      examples based on movingwindow                       #
+#                       examples based on movingwindow                         #
 #                                                                              #
 # ---------------------------------------------------------------------------- #
 X, y = SoleData.load_arff_dataset("NATOPS");
@@ -274,45 +274,45 @@ X = select(table, Not([:Species]));
 # X, y = preprocess_inputdata(X,y)
 train_seed = 11;
 
-# # ---------------------------------------------------------------------------- #
-# #                         basic modal decision list                            #
-# # ---------------------------------------------------------------------------- #
-# @info "Test 16: Modal Decision List"
-# model_name = :modal_decision_list
-# features = [mean]
-# rng = Random.Xoshiro(train_seed)
-# Random.seed!(train_seed)
+# ---------------------------------------------------------------------------- #
+#                         basic modal decision list                            #
+# ---------------------------------------------------------------------------- #
+@info "Test 16: Modal Decision List"
+model_name = :modal_decision_list
+features = [mean]
+rng = Random.Xoshiro(train_seed)
+Random.seed!(train_seed)
 
-# model = SoleXplorer.get_model(model_name)
-# ds = SoleXplorer.preprocess_dataset(X, y, model)
+model = SoleXplorer.get_model(model_name)
+ds = SoleXplorer.preprocess_dataset(X, y, model)
 
-# SoleXplorer.modelfit!(model, ds; features=features, rng=rng)
+SoleXplorer.modelfit!(model, ds; features=features, rng=rng)
 
-# dlist = SoleXplorer.modeltest(model, ds)
+dlist = SoleXplorer.modeltest(model, ds)
 
-# @show SoleXplorer.get_rules(dlist);
-# @show SoleXplorer.get_predict(model, dss);
+@show SoleXplorer.get_rules(dlist);
+@show SoleXplorer.get_predict(model, dss);
 
-# # ---------------------------------------------------------------------------- #
-# #                                                                              #
-# #                            examples based on vectors                         #
-# #                                                                              #
-# # ---------------------------------------------------------------------------- #
-# X, y = SoleData.load_arff_dataset("NATOPS")
-# train_seed = 11;
+# ---------------------------------------------------------------------------- #
+#                                                                              #
+#                            examples based on vectors                         #
+#                                                                              #
+# ---------------------------------------------------------------------------- #
+X, y = SoleData.load_arff_dataset("NATOPS")
+train_seed = 11;
 
-# # ---------------------------------------------------------------------------- #
-# #                         basic modal decision list                            #
-# # ---------------------------------------------------------------------------- #
-# @info "Test 17: Modal Decision List on time series"
-# model_name = :modal_decision_list
-# features = [mean]
-# rng = Random.Xoshiro(train_seed)
-# Random.seed!(train_seed)
+# ---------------------------------------------------------------------------- #
+#                         basic modal decision list                            #
+# ---------------------------------------------------------------------------- #
+@info "Test 17: Modal Decision List on time series"
+model_name = :modal_decision_list
+features = [mean]
+rng = Random.Xoshiro(train_seed)
+Random.seed!(train_seed)
 
-# model = SoleXplorer.get_model(model_name)
-# ds = SoleXplorer.preprocess_dataset(X, y, model; treatment=SoleXplorer.wholewindow)
+model = SoleXplorer.get_model(model_name)
+ds = SoleXplorer.preprocess_dataset(X, y, model; treatment=SoleXplorer.wholewindow)
 
-# SoleXplorer.modelfit!(model, ds; features=features, rng=rng)
+SoleXplorer.modelfit!(model, ds; features=features, rng=rng)
 
 

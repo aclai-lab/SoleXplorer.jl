@@ -4,6 +4,10 @@
 mutable struct ModelConfig{T<:MLJ.Model, S<:Function}
     classifier::T
     mach::Union{MLJ.Machine, AbstractVector{MLJ.Machine}, Nothing}
+    model_type::UnionAll
+    learn_method::S
+    tune_learn_method::S
+    apply_tuning::Bool
     ranges::Vector{S}
     data_treatment::Symbol
     default_features::AbstractVector{<:Base.Callable}
@@ -63,8 +67,8 @@ function get_model(
     kwargs...
 ) where {T<:MLJTuning.TuningStrategy, S<:Base.Callable}
     !haskey(AVAIL_MODELS, model_name) && throw(ArgumentError("Model $model_name not found in available models. Valid options are: $(keys(AVAIL_MODELS))"))
-
     kwargs_dict = Dict(kwargs)
+    apply_tuning = false
 
     if model_name == :modal_decision_tree && haskey(kwargs_dict, :features)
         features = kwargs_dict[:features]
@@ -80,6 +84,7 @@ function get_model(
     classifier = AVAIL_MODELS[model_name].method(; model_params...)
 
     if !isnothing(tuning)
+        apply_tuning = true
         tuning_kwargs = merge(TUNEDMODEL_PARAMS, filter(kv -> kv.first in keys(TUNEDMODEL_PARAMS), kwargs))
 
         if isnothing(ranges)
@@ -100,6 +105,10 @@ function get_model(
     ModelConfig(
         classifier,
         nothing,
+        AVAIL_MODELS[model_name].model_type,
+        AVAIL_MODELS[model_name].learn_method,
+        AVAIL_MODELS[model_name].tune_learn_method,
+        apply_tuning,
         AVAIL_MODELS[model_name].ranges,
         AVAIL_MODELS[model_name].data_treatment,
         AVAIL_MODELS[model_name].default_features,

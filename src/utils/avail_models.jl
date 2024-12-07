@@ -17,6 +17,12 @@ const AVAIL_MODELS = Dict(
             feature_importance=:impurity, 
             rng=Random.TaskLocalRNG()
         ),
+
+        model_type = DecisionTree,
+        learn_method = (mach, X, y) -> (dt = solemodel(MLJ.fitted_params(mach).tree); apply!(dt, X, y); dt),
+        tune_learn_method = (mach, X, y) -> (dt = solemodel(MLJ.fitted_params(mach).best_fitted_params.tree); apply!(dt, X, y); dt),
+
+
         data_treatment = :aggregate,
         default_features = [maximum, minimum, mean], # magari catch9
         default_treatment = wholewindow,
@@ -52,6 +58,11 @@ const AVAIL_MODELS = Dict(
             feature_importance=:split,
             rng=Random.TaskLocalRNG()
         ),
+
+        model_type = DecisionTree,
+        learn_method = (mach, X, y) -> ((_, dt) = MLJ.report(mach).sprinkle(X, y); dt),
+        tune_learn_method = (mach, X, y) -> ((_, dt) = MLJ.report(mach).best_report.sprinkle(X, y); dt),
+
         data_treatment = :reducesize,
         default_features = [mean],
         default_treatment = adaptivewindow,
@@ -76,6 +87,11 @@ const AVAIL_MODELS = Dict(
             max_rulebase_length=nothing, 
             suppress_parity_warning=false,
         ),
+
+        model_type = DecisionList,
+        learn_method = (mach, X, y) -> (dt = solemodel(MLJ.fitted_params(mach).tree); apply!(dt, X, y); dt),
+        tune_learn_method = (mach, X, y) -> (dt = solemodel(MLJ.fitted_params(mach).best_fitted_params.tree); apply!(dt, X, y); dt),
+        
         data_treatment = :aggregate,
         default_features = [maximum, minimum, mean], # magari catch9
         default_treatment = wholewindow,
