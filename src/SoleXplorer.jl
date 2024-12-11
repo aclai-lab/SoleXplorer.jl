@@ -13,7 +13,17 @@ using MLJ
 # using MLJBase: Probabilistic, ParamRange, train_test_pairs
 using MLJTuning
 using MLJDecisionTreeInterface
-using MLJParticleSwarmOptimization: ParticleSwarm, AdaptiveParticleSwarm
+import MLJModelInterface as MMI
+
+import MLJ: Grid as grid, RandomSearch as randomsearch, LatinHypercube as latinhypercube
+using TreeParzen: MLJTreeParzenTuning as treeparzen
+using MLJParticleSwarmOptimization: ParticleSwarm as particleswarm, AdaptiveParticleSwarm as adaptiveparticleswarm
+
+import XGBoost as XGB
+
+include("mlj/xgboost.jl")
+using .MLJXGBoostInterface
+export MLJXGBoostInterface, XGBoostRegressor, XGBoostClassifier, XGBoostCount
 
 export grid, randomsearch, latinhypercube, treeparzen, particleswarm, adaptiveparticleswarm
 
@@ -26,12 +36,6 @@ using SoleDecisionTreeInterface
 
 using Catch22
 using StatsBase
-
-# export range
-
-using MLJ: Grid as grid, RandomSearch as randomsearch, LatinHypercube as latinhypercube
-using TreeParzen: MLJTreeParzenTuning as treeparzen
-using MLJParticleSwarmOptimization: ParticleSwarm as particleswarm, AdaptiveParticleSwarm as adaptiveparticleswarm
 
 include("utils/catch9.jl")
 export mode_5, mode_10, embedding_dist, acf_timescale, acf_first_min, ami2, trev, outlier_timing_pos

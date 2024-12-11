@@ -25,7 +25,7 @@ const AVAIL_MODELS = Dict(
 
         data_treatment = :aggregate,
         default_features = [maximum, minimum, mean], # magari catch9
-        default_treatment = wholewindow,
+        default_treatment = SoleBase.wholewindow,
         treatment_params = (;),
 
         ranges = [
@@ -35,7 +35,7 @@ const AVAIL_MODELS = Dict(
     ),
 
     :modal_decision_tree => (
-        method = ModalDecisionTree,
+        method = ModalDecisionTrees.ModalDecisionTree,
 
         model_params = (;
             max_depth=nothing, 
@@ -65,7 +65,7 @@ const AVAIL_MODELS = Dict(
 
         data_treatment = :reducesize,
         default_features = [mean],
-        default_treatment = adaptivewindow,
+        default_treatment = SoleBase.adaptivewindow,
         treatment_params = (nwindows=10, relative_overlap=0.3),
 
         ranges = [
@@ -89,17 +89,57 @@ const AVAIL_MODELS = Dict(
         ),
 
         model_type = DecisionList,
-        learn_method = (mach, X, y) -> (dt = solemodel(MLJ.fitted_params(mach).tree); apply!(dt, X, y); dt),
+        learn_method = (mach, X, y) -> begin
+            fitted_params(mach).fitresult.model
+            #TODO: not working yet
+        end,
         tune_learn_method = (mach, X, y) -> (dt = solemodel(MLJ.fitted_params(mach).best_fitted_params.tree); apply!(dt, X, y); dt),
         
         data_treatment = :aggregate,
         default_features = [maximum, minimum, mean], # magari catch9
-        default_treatment = wholewindow,
+        default_treatment = SoleBase.wholewindow,
         treatment_params = (;),
 
         ranges = [
             model -> MLJ.range(model, :beam_width, lower=3, upper=25),
             model -> MLJ.range(model, :discretizedomain, values=[:false, :true])
         ]
+    ),
+
+    :xgboost => (
+        method = MLJXGBoostInterface.XGBoostClassifier,
+
+        model_params = (;
+            booster="gbtree",
+            num_round=100,
+            max_depth=6,
+            # eval_metric="mlogloss",
+            eta=0.3,
+            alpha=0,
+            gamma=0,
+            lambda=1,
+        ),
+
+        model_type = Vector{DecisionTree},
+        learn_method = (mach, X, y) -> begin
+                dt = MLJXGBoostInterface.solemodel(MLJ.fitted_params(mach)...)
+                # for d in dt
+                #     apply!(d, X, y)
+                # end
+                dt
+            end,
+        # TODO
+        tune_learn_method = (mach, X, y) -> (dt = solemodel(MLJ.fitted_params(mach).best_fitted_params.tree); apply!(dt, X, y); dt),
+
+
+        data_treatment = :aggregate,
+        default_features = [maximum, minimum, mean], # magari catch9
+        default_treatment = SoleBase.wholewindow,
+        treatment_params = (;),
+
+        ranges = [
+            model -> MLJ.range(model, :merge_purity_threshold, lower=0, upper=1),
+            model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])
+        ],
     ),
 )

@@ -1,10 +1,16 @@
 # ---------------------------------------------------------------------------- #
 #                                 model struct                                 #
 # ---------------------------------------------------------------------------- #
+abstract type XGBoostAbstractRegressor <: MMI.Deterministic end
+abstract type XGBoostAbstractClassifier <: MMI.Probabilistic end
+
+const XGTypes = Union{XGBoostAbstractRegressor,XGBoostAbstractClassifier}
+
 mutable struct ModelConfig{T<:MLJ.Model, S<:Function}
     classifier::T
     mach::Union{MLJ.Machine, AbstractVector{MLJ.Machine}, Nothing}
-    model_type::UnionAll
+    # model_type::UnionAll
+    model_type
     learn_method::S
     tune_learn_method::S
     apply_tuning::Bool
