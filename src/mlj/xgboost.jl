@@ -6,6 +6,7 @@ import Tables
 using CategoricalArrays
 using AbstractTrees
 
+import Sole: AbstractModel
 import Sole: VariableValue, ScalarCondition, Atom, ConstantModel, Branch, DecisionTree
 
 const PKG = "MLJXGBoostInterface"
@@ -198,7 +199,8 @@ function MMI.fitted_params(::XGBoostAbstractClassifier, fitresult)
     encoding = get_encoding(fitresult[2])
     features = fitresult[4]
     classlabels = MLJXGBoostInterface.classlabels(encoding)
-    tree = MLJXGBoostInterface.wrap(raw_tree, (featurenames=features, classlabels),)
+    info = (featurenames=features, classlabels)
+    tree = MLJXGBoostInterface.wrap(raw_tree, info,)
     (; tree, raw_tree, encoding, features)
 end
 
@@ -228,8 +230,8 @@ function solemodel(
     features::Vector{Symbol};
     kwargs...
 )
-    dt = DecisionTree
-
+    dt = DecisionTree[]
+    @show encoding
     for (i, t) in enumerate(tree)
         idx = (i - 1) % length(encoding) + 1
         push!(dt, MLJXGBoostInterface.solemodel(t; majority=encoding[idx], kwargs...))

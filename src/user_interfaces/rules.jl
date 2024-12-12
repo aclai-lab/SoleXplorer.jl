@@ -2,20 +2,20 @@
 #                         interesting rule dataframe                           #
 # ---------------------------------------------------------------------------- #
 function get_rules(
-    sole_dt::Union{DecisionTree, AbstractVector{DecisionTree}};
+    model::SoleXplorer.ModelConfig;
     min_lift::Float64=1.0,
     min_ninstances::Int=0,
     min_coverage::Float64=0.10,
     min_ncovered::Int=1,
     normalize::Bool=true,
 )
-    sole_dt isa DecisionTree && (sole_dt = [sole_dt,])
+    # sole_dt isa DecisionTree && (sole_dt = [sole_dt,])
 
     _X = DataFrame[]
 
-    for dt in sole_dt
-        rules = listrules(
-            dt,
+    for r in model.rules
+        rules = model.rules_method(
+            r;
             min_lift=min_lift,
             min_ninstances=min_ninstances,
             min_coverage=min_coverage,

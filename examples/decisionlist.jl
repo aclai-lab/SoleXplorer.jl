@@ -8,12 +8,12 @@ X = select(table, Not([:Species]));
 
 features = [mean, minimum]
 
-model_name = :xgboost
-xgb = SoleXplorer.get_model(model_name; num_round=10, objective="multi:softmax")
+model_name = :modal_decision_list
+xgb = SoleXplorer.get_model(model_name;)
 ds = SoleXplorer.preprocess_dataset(X, y, xgb)
 
 SoleXplorer.modelfit!(xgb, ds; features=features)
-xm = SoleXplorer.modeltest(xgb, ds)
+# xm = SoleXplorer.modeltest(xgb, ds);
 
 # @show SoleXplorer.get_rules(dtree);
 # @show SoleXplorer.get_predict(model, ds);

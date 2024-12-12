@@ -32,6 +32,8 @@ const AVAIL_MODELS = Dict(
             model -> MLJ.range(model, :merge_purity_threshold, lower=0, upper=1),
             model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])
         ],
+
+        rules_method = Sole.listrules
     ),
 
     :modal_decision_tree => (
@@ -71,7 +73,9 @@ const AVAIL_MODELS = Dict(
         ranges = [
             model -> MLJ.range(model, :merge_purity_threshold, lower=0, upper=1),
             model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])
-        ]
+        ],
+
+        rules_method = Sole.listrules
     ),
 
     :modal_decision_list => (
@@ -103,7 +107,9 @@ const AVAIL_MODELS = Dict(
         ranges = [
             model -> MLJ.range(model, :beam_width, lower=3, upper=25),
             model -> MLJ.range(model, :discretizedomain, values=[:false, :true])
-        ]
+        ],
+
+        rules_method = Sole.listrules
     ),
 
     :xgboost => (
@@ -141,5 +147,7 @@ const AVAIL_MODELS = Dict(
             model -> MLJ.range(model, :merge_purity_threshold, lower=0, upper=1),
             model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])
         ],
+
+        rules_method = Sole.listrules
     ),
 )

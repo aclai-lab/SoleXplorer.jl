@@ -1,24 +1,19 @@
 # ---------------------------------------------------------------------------- #
 #                                 model struct                                 #
 # ---------------------------------------------------------------------------- #
-abstract type XGBoostAbstractRegressor <: MMI.Deterministic end
-abstract type XGBoostAbstractClassifier <: MMI.Probabilistic end
-
-const XGTypes = Union{XGBoostAbstractRegressor,XGBoostAbstractClassifier}
-
-mutable struct ModelConfig{T<:MLJ.Model, S<:Function}
-    classifier::T
+mutable struct ModelConfig{T}
+    classifier::MLJ.Model
     mach::Union{MLJ.Machine, AbstractVector{MLJ.Machine}, Nothing}
-    # model_type::UnionAll
-    model_type
-    learn_method::S
-    tune_learn_method::S
+    rules::AbstractVector{T}
+    learn_method::Function
+    tune_learn_method::Function
     apply_tuning::Bool
-    ranges::Vector{S}
+    ranges::AbstractVector{Function}
     data_treatment::Symbol
     default_features::AbstractVector{<:Base.Callable}
     default_treatment::Base.Callable
     treatment_params::NamedTuple
+    rules_method::Function
 end
 
 # ---------------------------------------------------------------------------- #
@@ -76,6 +71,7 @@ function get_model(
     kwargs_dict = Dict(kwargs)
     apply_tuning = false
 
+    # nan patch
     if model_name == :modal_decision_tree && haskey(kwargs_dict, :features)
         features = kwargs_dict[:features]
         X = kwargs_dict[:set]
@@ -108,10 +104,10 @@ function get_model(
         )
     end
     
-    ModelConfig(
+    ModelConfig{AVAIL_MODELS[model_name].model_type}(
         classifier,
         nothing,
-        AVAIL_MODELS[model_name].model_type,
+        [],
         AVAIL_MODELS[model_name].learn_method,
         AVAIL_MODELS[model_name].tune_learn_method,
         apply_tuning,
@@ -120,5 +116,6 @@ function get_model(
         AVAIL_MODELS[model_name].default_features,
         AVAIL_MODELS[model_name].default_treatment,
         AVAIL_MODELS[model_name].treatment_params,
+        AVAIL_MODELS[model_name].rules_method,
     )
 end

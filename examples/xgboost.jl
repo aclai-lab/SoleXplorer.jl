@@ -1,17 +1,17 @@
 using Sole
 using SoleXplorer
 using Random, RDatasets
-# using CategoricalArrays
-# import MLJModelInterface as MMI
-# import XGBoost as XGB
-# using AbstractTrees
+using CategoricalArrays
+import MLJModelInterface as MMI
+import XGBoost as XGB
+using AbstractTrees
 # import DecisionTree
-# using MLJ
+using MLJ
 
 # X, y = SoleData.load_arff_dataset("NATOPS")
-# train_seed = 11;
-# rng = Random.Xoshiro(train_seed)
-# Random.seed!(train_seed)
+train_seed = 11;
+rng = Random.Xoshiro(train_seed)
+Random.seed!(train_seed)
 
 table = RDatasets.dataset("datasets", "iris")
 y = table[:, :Species]
@@ -23,7 +23,7 @@ model_name = :xgboost
 x = SoleXplorer.get_model(model_name; num_round=1)
 ds = SoleXplorer.preprocess_dataset(X, y, x)
 
-SoleXplorer.modelfit!(x, ds; features=features, rng=rng)
+SoleXplorer.modelfit!(x, ds; features=features)
 xm = SoleXplorer.modeltest(x, ds);
 
 # @show SoleXplorer.get_rules(dtree);
