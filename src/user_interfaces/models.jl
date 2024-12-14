@@ -5,14 +5,15 @@ mutable struct ModelConfig{T}
     classifier::MLJ.Model
     mach::Union{MLJ.Machine, AbstractVector{MLJ.Machine}, Nothing}
     rules::AbstractVector{T}
+    model_algo::Symbol
     learn_method::Function
     tune_learn_method::Function
     apply_tuning::Bool
     ranges::AbstractVector{Function}
     data_treatment::Symbol
-    default_features::AbstractVector{<:Base.Callable}
-    default_treatment::Base.Callable
-    treatment_params::NamedTuple
+    features::AbstractVector{<:Base.Callable}
+    nested_treatment::NamedTuple #{Base.Callable, NamedTuple}
+    # nested_treatment_params::NamedTuple
     rules_method::Function
 end
 
@@ -104,18 +105,19 @@ function get_model(
         )
     end
     
-    ModelConfig{AVAIL_MODELS[model_name].model_type}(
+    ModelConfig{AVAIL_MODELS[model_name].model.type}(
         classifier,
         nothing,
         [],
+        AVAIL_MODELS[model_name].model.algo,
         AVAIL_MODELS[model_name].learn_method,
         AVAIL_MODELS[model_name].tune_learn_method,
         apply_tuning,
         AVAIL_MODELS[model_name].ranges,
         AVAIL_MODELS[model_name].data_treatment,
-        AVAIL_MODELS[model_name].default_features,
-        AVAIL_MODELS[model_name].default_treatment,
-        AVAIL_MODELS[model_name].treatment_params,
+        AVAIL_MODELS[model_name].nested_features,
+        AVAIL_MODELS[model_name].nested_treatment,
+        # AVAIL_MODELS[model_name].treatment_params,
         AVAIL_MODELS[model_name].rules_method,
     )
 end

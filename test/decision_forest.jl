@@ -8,11 +8,11 @@ X, y = SoleData.load_arff_dataset("NATOPS")
 train_seed = 11;
 
 # ---------------------------------------------------------------------------- #
-#                             basic decision tree                              #
+#                            basic decision forest                             #
 # ---------------------------------------------------------------------------- #
-@info "Test 1: Decision Tree"
-model_name = :decision_tree
-features = catch9
+@info "Test 1: Decision Forest"
+model_name = :decision_forest
+features = [mean, maximum]
 rng = Random.Xoshiro(train_seed)
 Random.seed!(train_seed)
 
@@ -22,14 +22,14 @@ ds = SoleXplorer.preprocess_dataset(X, y, model, features=features)
 SoleXplorer.modelfit!(model, ds; features=features, rng=rng)
 SoleXplorer.modeltest!(model, ds);
 
-@show SoleXplorer.get_rules(model);
+# @show SoleXplorer.get_rules(model);
 @show SoleXplorer.get_predict(model, ds);
 
 # ---------------------------------------------------------------------------- #
-#                  decision tree with stratified sampling                      #
+#                 decision forest with sratified sampling                      #
 # ---------------------------------------------------------------------------- #
-@info "Test 2: Decision Tree with stratified sampling"
-model_name = :decision_tree
+@info "Test 2: Decision Forest with stratified sampling"
+model_name = :decision_forest
 features = catch9
 rng = Random.Xoshiro(train_seed)
 Random.seed!(train_seed)
@@ -40,21 +40,21 @@ ds = SoleXplorer.preprocess_dataset(X, y, model; features=features, stratified_s
 SoleXplorer.modelfit!(model, ds; features=features, rng=rng)
 SoleXplorer.modeltest!(model, ds);
 
-@show SoleXplorer.get_rules(model);
+# @show SoleXplorer.get_rules(model);
 @show SoleXplorer.get_predict(model, ds);
 
 # ---------------------------------------------------------------------------- #
-#                       decision tree with model tuning                        #
+#                      decision forest with mdel tuning                        #
 # ---------------------------------------------------------------------------- #
-@info "Test 3: Decision Tree with model tuning"
-model_name = :decision_tree
+@info "Test 3: Decision Forest with model tuning"
+model_name = :decision_forest
 features = catch9
 rng = Random.Xoshiro(train_seed)
 Random.seed!(train_seed)
 
 tuning_method = latinhypercube(gens=2, popsize=120)
 ranges = [
-    SoleXplorer.range(:merge_purity_threshold; lower=0, upper=1),
+    SoleXplorer.range(:sampling_fraction; lower=0.5, upper=0.8),
     SoleXplorer.range(:feature_importance; values=[:impurity, :split])
 ]
 
@@ -64,7 +64,7 @@ ds = SoleXplorer.preprocess_dataset(X, y, model, features=features)
 SoleXplorer.modelfit!(model, ds; features=features, rng=rng)
 SoleXplorer.modeltest!(model, ds);
 
-@show SoleXplorer.get_rules(model);
+# @show SoleXplorer.get_rules(model);
 @show SoleXplorer.get_predict(model, ds);
 
 # ---------------------------------------------------------------------------- #
@@ -74,8 +74,8 @@ SoleXplorer.modeltest!(model, ds);
 # ---------------------------------------------------------------------------- #
 #                            get worlds: one window                            #
 # ---------------------------------------------------------------------------- #
-@info "Test 4: Decision Tree based on wholewindow"
-model_name = :decision_tree
+@info "Test 4: Decision Forest based on wholewindow"
+model_name = :decision_forest
 features = [minimum, mean, StatsBase.cov, mode_5]
 rng = Random.Xoshiro(train_seed)
 Random.seed!(train_seed)
@@ -87,14 +87,14 @@ ds = SoleXplorer.preprocess_dataset(X, y, model, features=features; treatment=wh
 SoleXplorer.modelfit!(model, ds; features=features, rng=rng)
 SoleXplorer.modeltest!(model, ds)
 
-@show SoleXplorer.get_rules(model);
+# @show SoleXplorer.get_rules(model);
 @show SoleXplorer.get_predict(model, ds);
 
 # ---------------------------------------------------------------------------- #
 #                           get worlds: moving window                          #
 # ---------------------------------------------------------------------------- #
-@info "Test 5: Decision Tree based on movingwindow 'movingwindow'"
-model_name = :decision_tree
+@info "Test 5: Decision Forest based on movingwindow 'movingwindow'"
+model_name = :decision_forest
 features = [minimum, mean, StatsBase.cov, mode_5]
 rng = Random.Xoshiro(train_seed)
 Random.seed!(train_seed)
@@ -106,14 +106,14 @@ ds = SoleXplorer.preprocess_dataset(X, y, model, features=features; treatment=mo
 SoleXplorer.modelfit!(model, ds; features=features, rng=rng)
 SoleXplorer.modeltest!(model, ds)
 
-@show SoleXplorer.get_rules(model);
+# @show SoleXplorer.get_rules(model);
 @show SoleXplorer.get_predict(model, ds);
 
 # ---------------------------------------------------------------------------- #
 #                     get worlds: fixed number windows                       #
 # ---------------------------------------------------------------------------- #
-@info "Test 6: Decision Tree based on movingwindow 'adaptivewindow'"
-model_name = :decision_tree
+@info "Test 6: Decision Forest based on movingwindow 'adaptivewindow'"
+model_name = :decision_forest
 features = [minimum, mean, StatsBase.cov, mode_5]
 rng = Random.Xoshiro(train_seed)
 Random.seed!(train_seed)
@@ -125,7 +125,7 @@ ds = SoleXplorer.preprocess_dataset(X, y, model, features=features, treatment=ad
 SoleXplorer.modelfit!(model, ds; features=features, rng=rng)
 SoleXplorer.modeltest!(model, ds)
 
-@show SoleXplorer.get_rules(model);
+# @show SoleXplorer.get_rules(model);
 @show SoleXplorer.get_predict(model, ds);
 
 # ---------------------------------------------------------------------------- #
@@ -137,10 +137,10 @@ rng = Random.Xoshiro(1)
 train_seed = 11;
 
 # ---------------------------------------------------------------------------- #
-#                                 decision tree                                #
+#                                decision forest                               #
 # ---------------------------------------------------------------------------- #
-@info "Test 7: Decision Tree"
-model_name = :decision_tree
+@info "Test 7: Decision Forest"
+model_name = :decision_forest
 features = [minimum, mean, StatsBase.cov, mode_5]
 rng = Random.Xoshiro(train_seed)
 Random.seed!(train_seed)
@@ -152,14 +152,14 @@ ds = SoleXplorer.preprocess_dataset(X, y, model, features=features)
 SoleXplorer.modelfit!(model, ds; features=features, rng=rng)
 SoleXplorer.modeltest!(model, ds)
 
-@show SoleXplorer.get_rules(model);
+# @show SoleXplorer.get_rules(model);
 @show SoleXplorer.get_predict(model, ds);
 
 # ---------------------------------------------------------------------------- #
-#                    decision tree based on movingwindow                    #
+#                   decision forest based n movingwindow                    #
 # ---------------------------------------------------------------------------- #
-@info "Test 8: Decision Tree based on movingwindow 'adaptive_moving_windows'"
-model_name = :decision_tree
+@info "Test 8: Decision Forest based on movingwindow 'adaptive_moving_windows'"
+model_name = :decision_forest
 features = [minimum, mean, StatsBase.cov, mode_5]
 rng = Random.Xoshiro(train_seed)
 Random.seed!(train_seed)
@@ -171,5 +171,5 @@ ds = SoleXplorer.preprocess_dataset(X, y, model, features=features, treatment=So
 SoleXplorer.modelfit!(model,ds; features=features, rng=rng)
 SoleXplorer.modeltest!(model, ds)
 
-@show SoleXplorer.get_rules(model);
+# @show SoleXplorer.get_rules(model);
 @show SoleXplorer.get_predict(model, ds);

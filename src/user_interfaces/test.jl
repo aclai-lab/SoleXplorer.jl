@@ -5,8 +5,6 @@ function modeltest!(
 ) where {T<:SoleXplorer.ModelConfig, S<:SoleXplorer.Dataset}
     mach = model.mach isa MLJ.Machine ? [model.mach] : model.mach
     tt_test = ds.tt isa AbstractVector ? ds.tt : [ds.tt]
-
-    # result = model.model_type[]
     
     for (i, tt) in enumerate(tt_test)
         learn_apply_method = model.apply_tuning ? model.tune_learn_method : model.learn_method
@@ -14,6 +12,4 @@ function modeltest!(
 
         push!(model.rules, sole_dt)
     end
-
-    # return length(result) == 1 ? result[1] : result
 end

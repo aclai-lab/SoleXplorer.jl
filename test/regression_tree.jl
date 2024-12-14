@@ -1,17 +1,30 @@
 using Sole
 using SoleXplorer
 using Random, StatsBase, JLD2, DataFrames
-using RDatasets
+using MLDatasets
 
 # ---------------------------------------------------------------------------- #
-X, y = SoleData.load_arff_dataset("NATOPS")
+X = MLDatasets.BostonHousing().dataframe
+features = setdiff(names(X), ["MEDV"])
+
+train_ratio = 0.8
+train_indices = randperm(nrow(df))[1:Int(round(train_ratio * nrow(df)))]
+
+dtrain = df[train_indices, :]
+deval = df[setdiff(1:nrow(df), train_indices), :]
+
+_mean, _std = mean(X.MEDV), std(X.MEDV)
+transform!(dtrain, :MEDV => (x -> (x .- _mean) ./ _std) => "target")
+transform!(deval, :MEDV => (x -> (x .- _mean) ./ _std) => "target")
+
+target_name = "target"
 train_seed = 11;
 
 # ---------------------------------------------------------------------------- #
-#                             basic decision tree                              #
+#                            basic regression tree                             #
 # ---------------------------------------------------------------------------- #
-@info "Test 1: Decision Tree"
-model_name = :decision_tree
+@info "Test 1: Regression Tree"
+model_name = :regression_tree
 features = catch9
 rng = Random.Xoshiro(train_seed)
 Random.seed!(train_seed)
@@ -26,10 +39,10 @@ SoleXplorer.modeltest!(model, ds);
 @show SoleXplorer.get_predict(model, ds);
 
 # ---------------------------------------------------------------------------- #
-#                  decision tree with stratified sampling                      #
+#                 regression tree with stratified sampling                     #
 # ---------------------------------------------------------------------------- #
-@info "Test 2: Decision Tree with stratified sampling"
-model_name = :decision_tree
+@info "Test 2: Regression Tree with stratified sampling"
+model_name = :regression_tree
 features = catch9
 rng = Random.Xoshiro(train_seed)
 Random.seed!(train_seed)
@@ -44,10 +57,10 @@ SoleXplorer.modeltest!(model, ds);
 @show SoleXplorer.get_predict(model, ds);
 
 # ---------------------------------------------------------------------------- #
-#                       decision tree with model tuning                        #
+#                      regression tree with model tuning                       #
 # ---------------------------------------------------------------------------- #
-@info "Test 3: Decision Tree with model tuning"
-model_name = :decision_tree
+@info "Test 3: Regression Tree with model tuning"
+model_name = :regression_tree
 features = catch9
 rng = Random.Xoshiro(train_seed)
 Random.seed!(train_seed)
@@ -68,14 +81,14 @@ SoleXplorer.modeltest!(model, ds);
 @show SoleXplorer.get_predict(model, ds);
 
 # ---------------------------------------------------------------------------- #
-# X, y = SoleData.load_arff_dataset("NATOPS");
-# rng = Random.Xoshiro(1)
+X, y = SoleData.load_arff_dataset("NATOPS");
+rng = Random.Xoshiro(1)
 
 # ---------------------------------------------------------------------------- #
 #                            get worlds: one window                            #
 # ---------------------------------------------------------------------------- #
-@info "Test 4: Decision Tree based on wholewindow"
-model_name = :decision_tree
+@info "Test 4: Regression Tree based on wholewindow"
+model_name = :regression_tree
 features = [minimum, mean, StatsBase.cov, mode_5]
 rng = Random.Xoshiro(train_seed)
 Random.seed!(train_seed)
@@ -93,8 +106,8 @@ SoleXplorer.modeltest!(model, ds)
 # ---------------------------------------------------------------------------- #
 #                           get worlds: moving window                          #
 # ---------------------------------------------------------------------------- #
-@info "Test 5: Decision Tree based on movingwindow 'movingwindow'"
-model_name = :decision_tree
+@info "Test 5: Regression Tree based on movingwindow 'movingwindow'"
+model_name = :regression_tree
 features = [minimum, mean, StatsBase.cov, mode_5]
 rng = Random.Xoshiro(train_seed)
 Random.seed!(train_seed)
@@ -110,10 +123,10 @@ SoleXplorer.modeltest!(model, ds)
 @show SoleXplorer.get_predict(model, ds);
 
 # ---------------------------------------------------------------------------- #
-#                     get worlds: fixed number windows                       #
+#                      get worlds: fixed number windows                        #
 # ---------------------------------------------------------------------------- #
-@info "Test 6: Decision Tree based on movingwindow 'adaptivewindow'"
-model_name = :decision_tree
+@info "Test 6: Regression Tree based on movingwindow 'adaptivewindow'"
+model_name = :regression_tree
 features = [minimum, mean, StatsBase.cov, mode_5]
 rng = Random.Xoshiro(train_seed)
 Random.seed!(train_seed)
@@ -137,10 +150,10 @@ rng = Random.Xoshiro(1)
 train_seed = 11;
 
 # ---------------------------------------------------------------------------- #
-#                                 decision tree                                #
+#                                 regression tree                                #
 # ---------------------------------------------------------------------------- #
-@info "Test 7: Decision Tree"
-model_name = :decision_tree
+@info "Test 7: Regression Tree"
+model_name = :regression_tree
 features = [minimum, mean, StatsBase.cov, mode_5]
 rng = Random.Xoshiro(train_seed)
 Random.seed!(train_seed)
@@ -156,10 +169,10 @@ SoleXplorer.modeltest!(model, ds)
 @show SoleXplorer.get_predict(model, ds);
 
 # ---------------------------------------------------------------------------- #
-#                    decision tree based on movingwindow                    #
+#                    regression tree based on movingwindow                    #
 # ---------------------------------------------------------------------------- #
-@info "Test 8: Decision Tree based on movingwindow 'adaptive_moving_windows'"
-model_name = :decision_tree
+@info "Test 8: Regression Tree based on movingwindow 'adaptive_moving_windows'"
+model_name = :regression_tree
 features = [minimum, mean, StatsBase.cov, mode_5]
 rng = Random.Xoshiro(train_seed)
 Random.seed!(train_seed)
@@ -173,3 +186,19 @@ SoleXplorer.modeltest!(model, ds)
 
 @show SoleXplorer.get_rules(model);
 @show SoleXplorer.get_predict(model, ds);
+
+
+#####################################################################à
+n,m = 10^3, 5;
+X = rand(n,m);
+features = [:x1, :x2, :x3, :x4, :x5]
+weights = rand(-1:1,m);
+y = X * weights;
+
+R1Tree = DecisionTreeRegressor(
+    min_samples_leaf=5,
+    merge_purity_threshold=0.1,
+    rng=stable_rng(),
+)
+R2Tree = DecisionTreeRegressor(min_samples_split=5, rng=stable_rng())
+model1 = MLJ.machine(model.classifier, X, y, features)

@@ -19,6 +19,7 @@ import MLJ: Grid as grid, RandomSearch as randomsearch, LatinHypercube as latinh
 using TreeParzen: MLJTreeParzenTuning as treeparzen
 using MLJParticleSwarmOptimization: ParticleSwarm as particleswarm, AdaptiveParticleSwarm as adaptiveparticleswarm
 
+import DecisionTree as DT
 import XGBoost as XGB
 
 include("mlj/xgboost.jl")
@@ -32,7 +33,6 @@ using Distributions
 
 using ModalDecisionTrees
 using ModalDecisionLists
-using SoleDecisionTreeInterface
 
 using Catch22
 using StatsBase
@@ -43,7 +43,7 @@ export outlier_timing_neg, whiten_timescale, forecast_error, ami_timescale, high
 export stretch_high, entropy_pairs, rs_range, dfa, low_freq_power, centroid_freq, transition_variance, periodicity
 export catch9
 
-include("utils/avail_models.jl")
+include("avail_models.jl")
 
 include("user_interfaces/models.jl")
 export ModelConfig, range, get_model

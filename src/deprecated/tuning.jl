@@ -32,8 +32,8 @@ function get_tuning(model::T, tuning::S;
         nothing,
         model.ranges,
         model.data_treatment,
-        model.default_features,
-        model.default_treatment,
+        model.nested_features,
+        model.nested_treatment,
         model.treatment_params
     )
 end

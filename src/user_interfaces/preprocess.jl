@@ -8,7 +8,7 @@ end
 
 struct Dataset
     X::AbstractDataFrame
-    y::CategoricalArray
+    y::Union{CategoricalArray, Nothing}
     tt::Union{SoleXplorer.TT_indexes, AbstractVector{<:SoleXplorer.TT_indexes}}
 end
 
@@ -43,60 +43,60 @@ function _treatment(
     treatment_params::NamedTuple;
     kwargs...
 ) where {T<:SoleXplorer.ModelConfig}
-    column_eltypes = eltype.(eachcol(X))
+    # column_eltypes = eltype.(eachcol(X))
 
-    if all(t -> t <: Number, column_eltypes)
-        valid_X = DataFrame(vnames .=> eachcol(X))
+    # if all(t -> t <: Number, column_eltypes)
+    #     valid_X = DataFrame(vnames .=> eachcol(X))
     
-    elseif all(t -> t <: AbstractVector{<:Number}, column_eltypes)
-        max_interval = maximum(length.(eachrow(X)))
-        n_intervals = treatment(max_interval; treatment_params...)
-    
-            if model.data_treatment == :aggregate        # propositional
-                if n_intervals == 1
-                    valid_X = DataFrame([v => Float64[] 
-                        for v in [string(f, "(", v, ")") 
-                        for f in features for v in vnames]]
-                    )
-                else
-                    valid_X = DataFrame([v => Float64[] 
-                        for v in [string(f, "(", v, ")w", i) 
-                        for f in features for v in vnames 
-                        for i in 1:length(n_intervals)]]
-                    )
-                end
-    
-            elseif model.data_treatment == :reducesize   # modal
-                valid_X = DataFrame([name => Vector{Float64}[] for name in vnames])
-                # valid_X = DataFrame([v => Vector{Float64}[] 
-                #     for v in [string(f, "(", v, ")") 
-                #     for f in features for v in vnames]]
-                # )
+    # elseif all(t -> t <: AbstractVector{<:Number}, column_eltypes)
+    max_interval = maximum(length.(eachrow(X)))
+    n_intervals = treatment(max_interval; treatment_params...)
+
+        if model.data_treatment == :aggregate        # propositional
+            if n_intervals == 1
+                valid_X = DataFrame([v => Float64[] 
+                    for v in [string(f, "(", v, ")") 
+                    for f in features for v in vnames]]
+                )
             else
-                # TODO
-                throw(ArgumentError("Column type not yet supported"))
+                valid_X = DataFrame([v => Float64[] 
+                    for v in [string(f, "(", v, ")w", i) 
+                    for f in features for v in vnames 
+                    for i in 1:length(n_intervals)]]
+                )
             end
-    
-        for row in eachrow(X)
-            row_intervals = treatment(maximum(length.(collect(row))); treatment_params...)
-            interval_diff = length(n_intervals) - length(row_intervals)
-    
-            if model.data_treatment == :aggregate
-                push!(valid_X, vcat([vcat([f(col[r]) for r in row_intervals], 
-                                            fill(NaN, interval_diff)) 
-                                            for col in row, f in features]...)
-                                        )
-            elseif model.data_treatment == :reducesize
-                f = mean
-                push!(valid_X, [vcat([f(col[r]) for r in row_intervals], 
+
+        elseif model.data_treatment == :reducesize   # modal
+            valid_X = DataFrame([name => Vector{Float64}[] for name in vnames])
+            # valid_X = DataFrame([v => Vector{Float64}[] 
+            #     for v in [string(f, "(", v, ")") 
+            #     for f in features for v in vnames]]
+            # )
+        else
+            # TODO
+            throw(ArgumentError("Column type not yet supported"))
+        end
+
+    for row in eachrow(X)
+        row_intervals = treatment(maximum(length.(collect(row))); treatment_params...)
+        interval_diff = length(n_intervals) - length(row_intervals)
+
+        if model.data_treatment == :aggregate
+            push!(valid_X, vcat([vcat([f(col[r]) for r in row_intervals], 
                                         fill(NaN, interval_diff)) 
-                                        for col in row
-                                        # f in features
-                                        ]
+                                        for col in row, f in features]...)
                                     )
-            end
+        elseif model.data_treatment == :reducesize
+            f = mean
+            push!(valid_X, [vcat([f(col[r]) for r in row_intervals], 
+                                    fill(NaN, interval_diff)) 
+                                    for col in row
+                                    # f in features
+                                    ]
+                                )
         end
     end
+    # end
 
     return valid_X
 end
@@ -138,31 +138,50 @@ function preprocess_dataset(
     #                           check parameters                               #
     # ------------------------------------------------------------------------ #
     check_dataframe_type(X) || throw(ArgumentError("DataFrame must contain only numeric values"))
-    hasnans(X) && @warn "DataFrame contains NaN values"
     size(X, 1) == length(y) || throw(ArgumentError("Number of rows in DataFrame must match length of class labels"))
 
     y isa CategoricalArray || (y = CategoricalArray(y))
-    
-    if isnothing(vnames)
-        vnames = names(X)
+
+    hasnans(X) && @warn "DataFrame contains NaN values"
+    # TODO nan handles
+
+    column_eltypes = eltype.(eachcol(X))
+
+    if all(t -> t <: Number, column_eltypes)
+        # dataframe with numeric columns
+        SoleXplorer.Dataset(DataFrame(vnames .=> eachcol(X)), y, _partition(y; kwargs...))
+
+    elseif all(t -> t <: AbstractVector{<:Number}, column_eltypes)
+        # dataframe with vector-valued columns
+        if isnothing(vnames)
+            vnames = names(X)
+        else
+            size(X, 2) == length(vnames) || throw(ArgumentError("Number of columns in DataFrame must match length of variable names"))
+            vnames = eltype(vnames) <: Symbol ? string.(vnames) : vnames
+        end
+
+        if isnothing(treatment)
+            treatment = model.nested_treatment.mode
+            treatment_params = model.nested_treatment.params
+        elseif isnothing(treatment_params)
+            treatment_params = model.nested_treatment.params
+        else
+            params = model.nested_treatment.params
+            treatment_params = merge(params, treatment_params)
+        end
+
+        if isnothing(features)
+            features = model.nested_features
+        end
+
+        SoleXplorer.Dataset(
+            _treatment(X, model, features, vnames, treatment, treatment_params; kwargs...), 
+            y, 
+            _partition(y; kwargs...)
+        )
+
     else
-        size(X, 2) == length(vnames) || throw(ArgumentError("Number of columns in DataFrame must match length of variable names"))
-        vnames = eltype(vnames) <: Symbol ? string.(vnames) : vnames
+        # TODO
+        throw(ArgumentError("Column type not yet supported"))
     end
-
-    if isnothing(treatment)
-        treatment = model.default_treatment
-        treatment_params = model.treatment_params
-    elseif isnothing(treatment_params)
-        treatment_params = model.treatment_params
-    else
-        params = model.treatment_params
-        treatment_params = merge(params, treatment_params)
-    end
-
-    if isnothing(features)
-        features = model.default_features
-    end
-
-    SoleXplorer.Dataset(_treatment(X, model, features, vnames, treatment, treatment_params; kwargs...), y, _partition(y; kwargs...))
 end
