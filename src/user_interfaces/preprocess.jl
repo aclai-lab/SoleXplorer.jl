@@ -8,7 +8,7 @@ end
 
 struct Dataset
     X::AbstractDataFrame
-    y::Union{CategoricalArray, Nothing}
+    y::Union{CategoricalArray, Vector{<:Number}}
     tt::Union{SoleXplorer.TT_indexes, AbstractVector{<:SoleXplorer.TT_indexes}}
 end
 
@@ -104,7 +104,7 @@ end
 # ---------------------------------------------------------------------------- #
 #                                 partitioning                                 #
 # ---------------------------------------------------------------------------- #
-function _partition(y::CategoricalArray; 
+function _partition(y::Union{CategoricalArray, Vector{Float64}}; 
     stratified_sampling::Bool=false,
     train_ratio::Float64=0.7,
     nfolds::Int64=6,
@@ -140,10 +140,21 @@ function preprocess_dataset(
     check_dataframe_type(X) || throw(ArgumentError("DataFrame must contain only numeric values"))
     size(X, 1) == length(y) || throw(ArgumentError("Number of rows in DataFrame must match length of class labels"))
 
-    y isa CategoricalArray || (y = CategoricalArray(y))
+    if model.model_algo == :regression
+        y isa AbstractFloat || (y = Float64.(y))
+    else
+        y isa CategoricalArray || (y = CategoricalArray(y))
+    end
 
     hasnans(X) && @warn "DataFrame contains NaN values"
     # TODO nan handles
+
+    if isnothing(vnames)
+        vnames = names(X)
+    else
+        size(X, 2) == length(vnames) || throw(ArgumentError("Number of columns in DataFrame must match length of variable names"))
+        vnames = eltype(vnames) <: Symbol ? string.(vnames) : vnames
+    end
 
     column_eltypes = eltype.(eachcol(X))
 
@@ -153,12 +164,6 @@ function preprocess_dataset(
 
     elseif all(t -> t <: AbstractVector{<:Number}, column_eltypes)
         # dataframe with vector-valued columns
-        if isnothing(vnames)
-            vnames = names(X)
-        else
-            size(X, 2) == length(vnames) || throw(ArgumentError("Number of columns in DataFrame must match length of variable names"))
-            vnames = eltype(vnames) <: Symbol ? string.(vnames) : vnames
-        end
 
         if isnothing(treatment)
             treatment = model.nested_treatment.mode
@@ -184,4 +189,13 @@ function preprocess_dataset(
         # TODO
         throw(ArgumentError("Column type not yet supported"))
     end
+end
+
+function preprocess_dataset(
+    X::AbstractDataFrame, 
+    y::Union{Symbol, AbstractString}, 
+    model::T;
+    kwargs...
+) where {T<:SoleXplorer.ModelConfig}
+    preprocess_dataset(X[!, Not(y)], X[!, y], model; kwargs...)
 end

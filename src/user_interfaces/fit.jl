@@ -14,11 +14,11 @@ function modelfit!(
     fitmodel = MLJ.Machine[]
 
     for tt in tt_train
-        mach = if model.model_algo == :regression
-            MLJ.machine(model.classifier, selectrows(ds.X, tt.train))
-        else
-            MLJ.machine(model.classifier, selectrows(ds.X, tt.train), ds.y[tt.train])
-        end
+        # mach = if model.model_algo == :regression
+        #     MLJ.machine(model.classifier, selectrows(ds.X, tt.train))
+        # else
+            mach = MLJ.machine(model.classifier, selectrows(ds.X, tt.train), ds.y[tt.train])
+        # end
         fit!(mach, verbosity=0)
 
         push!(fitmodel, mach)

@@ -18,13 +18,14 @@ import MLJModelInterface as MMI
 import MLJ: Grid as grid, RandomSearch as randomsearch, LatinHypercube as latinhypercube
 using TreeParzen: MLJTreeParzenTuning as treeparzen
 using MLJParticleSwarmOptimization: ParticleSwarm as particleswarm, AdaptiveParticleSwarm as adaptiveparticleswarm
+# using MLJXGBoostInterface
 
 import DecisionTree as DT
 import XGBoost as XGB
 
-include("mlj/xgboost.jl")
-using .MLJXGBoostInterface
-export MLJXGBoostInterface, XGBoostRegressor, XGBoostClassifier, XGBoostCount
+# include("mlj/xgboost.jl")
+# using .MLJXGBoostInterface
+# export MLJXGBoostInterface, XGBoostRegressor, XGBoostClassifier, XGBoostCount
 
 export grid, randomsearch, latinhypercube, treeparzen, particleswarm, adaptiveparticleswarm
 

@@ -104,15 +104,14 @@ AVAIL_MODELS = Dict(
         learn_method = (mach, X, y) -> begin
                 classlabels = (mach).fitresult[2][sortperm((mach).fitresult[3])]
                 featurenames = MLJ.report(mach).features
-                # dt = solemodel(MLJ.fitted_params(mach).forest, classlabels=classlabels, featurenames=featurenames)
-                dt = solemodel(MLJ.fitted_params(mach).forest, classlabels=classlabels, featurenames=featurenames)
+                dt = solemodel(MLJ.fitted_params(mach).forest; classlabels, featurenames)
                 apply!(dt, X, y)
                 return dt
             end,
         tune_learn_method = (mach, X, y) -> begin
                 classlabels = (mach).fitresult.fitresult[2][sortperm((mach).fitresult.fitresult[3])]
                 featurenames = MLJ.report(mach).best_report.features
-                dt = solemodel(MLJ.fitted_params(mach).best_fitted_params.forest, classlabels=classlabels, featurenames=featurenames)
+                dt = solemodel(MLJ.fitted_params(mach).best_fitted_params.forest; classlabels, featurenames)
                 apply!(dt, X, y)
                 return dt
             end,
@@ -123,6 +122,48 @@ AVAIL_MODELS = Dict(
 
         ranges = [
             model -> MLJ.range(:sampling_fraction; lower=0.5, upper=0.8),
+            model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])
+        ],
+
+        rules_method = Sole.listrules
+    ),
+
+    # ------------------------------------------------------------------------ #
+    #                           adaboost classifier                            #
+    # ------------------------------------------------------------------------ #
+    :adaboost => (
+        method = MLJDecisionTreeInterface.AdaBoostStumpClassifier,
+
+        model_params = (;
+            n_iter=10, 
+            feature_importance=:impurity, 
+            rng=Random.TaskLocalRNG(),
+        ),
+
+        model = (; algo = :classification, type = DecisionEnsemble),
+        learn_method = (mach, X, y) -> begin
+                weights = mach.fitresult[2]
+                classlabels = sort(mach.fitresult[3])
+                featurenames = MLJ.report(mach).features
+                dt = solemodel(MLJ.fitted_params(mach).stumps; weights, classlabels, featurenames)
+                apply!(dt, X, y)
+                return dt
+            end,
+        tune_learn_method = (mach, X, y) -> begin
+                weights = mach.fitresult.fitresult[2]
+                classlabels = sort(mach.fitresult.fitresult[3])
+                featurenames = MLJ.report(mach).best_report.features
+                dt = solemodel(MLJ.fitted_params(mach).best_fitted_params.stumps; weights, classlabels, featurenames)
+                apply!(dt, X, y)
+                return dt
+            end,
+
+        data_treatment = :aggregate,
+        nested_features = [maximum, minimum, mean],
+        nested_treatment = (mode=SoleBase.wholewindow, params=(;)),
+
+        ranges = [
+            model -> MLJ.range(:n_iter; lower=5, upper=15),
             model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])
         ],
 
@@ -235,40 +276,40 @@ AVAIL_MODELS = Dict(
     # ------------------------------------------------------------------------ #
     #                                  xgboost                                 #
     # ------------------------------------------------------------------------ #
-    :xgboost => (
-        method = MLJXGBoostInterface.XGBoostClassifier,
+    # :xgboost => (
+    #     method = MLJXGBoostInterface.XGBoostClassifier,
 
-        model_params = (;
-            booster="gbtree",
-            num_round=100,
-            max_depth=6,
-            # eval_metric="mlogloss",
-            eta=0.3,
-            alpha=0,
-            gamma=0,
-            lambda=1,
-        ),
+    #     model_params = (;
+    #         booster="gbtree",
+    #         num_round=100,
+    #         max_depth=6,
+    #         # eval_metric="mlogloss",
+    #         eta=0.3,
+    #         alpha=0,
+    #         gamma=0,
+    #         lambda=1,
+    #     ),
 
-        model = (; algo = :classification, type = Vector{DecisionTree}),
-        learn_method = (mach, X, y) -> begin
-                dt = MLJXGBoostInterface.solemodel(MLJ.fitted_params(mach)...)
-                # for d in dt
-                #     apply!(d, X, y)
-                # end
-                dt
-            end,
-        # TODO
-        tune_learn_method = (mach, X, y) -> (dt = solemodel(MLJ.fitted_params(mach).best_fitted_params.tree); apply!(dt, X, y); dt),
+    #     model = (; algo = :classification, type = Vector{DecisionTree}),
+    #     learn_method = (mach, X, y) -> begin
+    #             dt = MLJXGBoostInterface.solemodel(MLJ.fitted_params(mach)...)
+    #             # for d in dt
+    #             #     apply!(d, X, y)
+    #             # end
+    #             dt
+    #         end,
+    #     # TODO
+    #     tune_learn_method = (mach, X, y) -> (dt = solemodel(MLJ.fitted_params(mach).best_fitted_params.tree); apply!(dt, X, y); dt),
 
-        data_treatment = :aggregate,
-        nested_features = [maximum, minimum, mean], # magari catch9
-        nested_treatment = (mode=SoleBase.wholewindow, params=(;)),
+    #     data_treatment = :aggregate,
+    #     nested_features = [maximum, minimum, mean], # magari catch9
+    #     nested_treatment = (mode=SoleBase.wholewindow, params=(;)),
 
-        ranges = [
-            model -> MLJ.range(model, :merge_purity_threshold, lower=0, upper=1),
-            model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])
-        ],
+    #     ranges = [
+    #         model -> MLJ.range(model, :merge_purity_threshold, lower=0, upper=1),
+    #         model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])
+    #     ],
 
-        rules_method = Sole.listrules
-    ),
+    #     rules_method = Sole.listrules
+    # ),
 )
