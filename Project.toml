@@ -28,7 +28,7 @@ XGBoost = "009559a3-9522-5dbb-924b-0b6ed2b22bb9"
 
 [compat]
 AbstractTrees = "0.4.5"
-Catch22 = "0.5, 0.6"
+Catch22 = "0.5, 0.6, 0.7"
 CategoricalArrays = "0.10"
 DataFrames = "1.7"
 DecisionTree = "0.12.4"
