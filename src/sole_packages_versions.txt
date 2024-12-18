@@ -1,0 +1,13 @@
+Sole Framework
+
+SoleBase: on branch dev (pulled dec, 14 2024)
+SoleData: on branch dev-autologiset (pulled dec, 14 2024)
+Sole: on branch dev (pulled dec, 14 2024)
+SoleLogics: on branch dev (pulled dec, 14 2024)
+SoleModels: on branch gio/refractoring (pulled dec, 14 2024)
+ModalDecisionLists: on branch dev (pulled dec, 14 2024)
+ModalDecisionTees: on branch dev (pulled dec, 14 2024)
+
+References
+https://github.com/ablaom/MLJTutorial.jl/blob/dev/notebooks/04_tuning/notebook.ipynb
+https://juliaai.github.io/DataScienceTutorials.jl/getting-started/model-tuning/

@@ -30,8 +30,7 @@ Keyword arguments:
 - See [`Sole.listrules`](@ref) or [`SolePostHoc.extractrules`](@ref) for additional keyword arguments.
 """
 function get_rules(
-    solemodels;
-    method::Base.Callable = Sole.listrules,
+    model::SoleXplorer.ModelConfig;
     min_lift::Float64=1.0,
     min_ninstances::Int=0,
     min_coverage::Float64=0.10,
@@ -41,13 +40,11 @@ function get_rules(
     round_digits::Int=2,
     kwargs...
 )
-    solemodels isa AbstractVector || (solemodels = [solemodels,])
-
     _X = DataFrame[]
 
-    for solemodel in solemodels
-        rules = method(
-            solemodel,
+    for r in model.rules
+        rules = model.rules_method(
+            r;
             min_lift=min_lift,
             min_ninstances=min_ninstances,
             min_coverage=min_coverage,

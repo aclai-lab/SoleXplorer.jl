@@ -61,7 +61,16 @@ AbstractTrees.print_tree(bst_tree)
 # ---------------------------------------------------------------------------- #
 #                            MLJXGBoostInterface.jl                            #
 # ---------------------------------------------------------------------------- #
-X, y = SoleData.load_arff_dataset("NATOPS")
+using Sole
+using SoleXplorer
+using Random, StatsBase, JLD2, DataFrames
+using XGBoost, CategoricalArrays, OrderedCollections, MLBase, AbstractTrees
+using MLJ, MLJBase, MLJXGBoostInterface
+
+filename = "examples/respiratory_Pneumonia.jld2"
+df = jldopen(filename)
+X, y = df["X"], df["y"]
+rng = Random.Xoshiro(1)
 train_seed = 11;
 model_name = :decision_tree
 features = catch9
@@ -69,11 +78,18 @@ rng = Random.Xoshiro(train_seed)
 Random.seed!(train_seed)
 
 model = SoleXplorer.get_model(model_name)
+ds = SoleXplorer.preprocess_dataset(X, y, model)
 
-valid_X = get_treatment(X, model, features)
-tt_pairs = get_partition(y)
+plain_classifier = MLJXGBoostInterface.XGBoostClassifier(
+    # ds.tt.train,
+    num_round = 100, 
+    eval_metric = ["rmse"], 
+    watchlist = OrderedDict(["train" => ds.tt.train, "eval" => ds.tt.test]), 
+    early_stopping_rounds = 5, 
+    max_depth=6, 
+    # η=0.3
+)    
+# num_round=5, max_depth=6, objective="reg:squarederror")
 
-plain_classifier = MLJXGBoostInterface.XGBoostClassifier(num_round=5, max_depth=6, objective="reg:squarederror")
-
-model = MLJ.machine(plain_classifier, valid_X[tt_pairs.train, :], y[tt_pairs.train])
-f = fit!(model, verbosity=0)
+model = MLJ.machine(plain_classifier, ds.X[ds.tt.train, :], ds.y[ds.tt.train])
+fit!(model, verbosity=0)

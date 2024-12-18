@@ -28,11 +28,12 @@ function get_tuning(model::T, tuning::S;
     ranges isa MLJ.ParamRange && (ranges = [ranges])
     
     ModelConfig( 
-        # MLJ.TunedModel(; model=model.classifier, tuning=tuning, ranges=ranges, tuning_kwargs...), 
-        MLJ.TunedModel(; model=model.classifier, tuning=tuning, ranges=ranges, tuning_kwargs...), 
+        MLJ.TunedModel(; model=model.classifier, tuning=tuning, ranges=ranges, tuning_kwargs...),
+        nothing,
         model.ranges,
         model.data_treatment,
-        model.default_treatment,
-        model.params
+        model.nested_features,
+        model.nested_treatment,
+        model.treatment_params
     )
 end
