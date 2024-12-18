@@ -171,6 +171,48 @@ AVAIL_MODELS = Dict(
     ),
 
     # ------------------------------------------------------------------------ #
+    #                         adaboost modal classifier                        #
+    # ------------------------------------------------------------------------ #
+    :modal_adaboost => (
+        method = AdaBoostModalClassifier,
+
+        model_params = (;
+            n_iter=10, 
+            feature_importance=:impurity, 
+            rng=Random.TaskLocalRNG(),
+        ),
+
+        model = (; algo = :classification, type = DecisionEnsemble),
+        learn_method = (mach, X, y) -> begin
+                weights = mach.fitresult[2]
+                classlabels = sort(mach.fitresult[3])
+                featurenames = MLJ.report(mach).features
+                dt = solemodel(MLJ.fitted_params(mach).stumps; weights, classlabels, featurenames)
+                apply!(dt, X, y)
+                return dt
+            end,
+        tune_learn_method = (mach, X, y) -> begin
+                weights = mach.fitresult.fitresult[2]
+                classlabels = sort(mach.fitresult.fitresult[3])
+                featurenames = MLJ.report(mach).best_report.features
+                dt = solemodel(MLJ.fitted_params(mach).best_fitted_params.stumps; weights, classlabels, featurenames)
+                apply!(dt, X, y)
+                return dt
+            end,
+
+        data_treatment = :reducesize,
+        nested_features = [maximum, minimum, mean],
+        nested_treatment = (mode=SoleBase.wholewindow, params=(;)),
+
+        ranges = [
+            model -> MLJ.range(:n_iter; lower=5, upper=15),
+            model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])
+        ],
+
+        rules_method = Sole.listrules
+    ),
+
+    # ------------------------------------------------------------------------ #
     #                             regression tree                              #
     # ------------------------------------------------------------------------ #
     :regression_tree => (

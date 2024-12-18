@@ -27,6 +27,10 @@ import XGBoost as XGB
 # using .MLJXGBoostInterface
 # export MLJXGBoostInterface, XGBoostRegressor, XGBoostClassifier, XGBoostCount
 
+include("utils/MLJAdaBoostModalInterface.jl")
+using .MLJAdaBoostModalInterface
+# export MLJAdaBoostModalClassifier, AdaBoostModalClassifier
+
 export grid, randomsearch, latinhypercube, treeparzen, particleswarm, adaptiveparticleswarm
 
 using TreeParzen
