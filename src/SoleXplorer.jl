@@ -27,9 +27,9 @@ import XGBoost as XGB
 # using .MLJXGBoostInterface
 # export MLJXGBoostInterface, XGBoostRegressor, XGBoostClassifier, XGBoostCount
 
-include("utils/MLJAdaBoostModalInterface.jl")
-using .MLJAdaBoostModalInterface
-# export MLJAdaBoostModalClassifier, AdaBoostModalClassifier
+# include("utils/MLJAdaBoostModalInterface.jl")
+# using .MLJAdaBoostModalInterface
+# export AdaBoostModalClassifier
 
 export grid, randomsearch, latinhypercube, treeparzen, particleswarm, adaptiveparticleswarm
 
@@ -41,6 +41,7 @@ using ModalDecisionLists
 
 using Catch22
 using StatsBase
+using ScientificTypes
 
 include("utils/catch9.jl")
 export mode_5, mode_10, embedding_dist, acf_timescale, acf_first_min, ami2, trev, outlier_timing_pos

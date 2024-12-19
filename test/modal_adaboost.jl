@@ -16,10 +16,10 @@ features = [minimum, mean]
 rng = Random.Xoshiro(train_seed)
 Random.seed!(train_seed)
 
-model = SoleXplorer.get_model(model_name; relations=:IA7, features=features, set=X)
-ds = SoleXplorer.preprocess_dataset(X, y, model; features=features, nwindows=20)
+model = SoleXplorer.get_model(model_name; relations=:IA7, features, set=X)
+ds = SoleXplorer.preprocess_dataset(X, y, model; features, treatment_params=(nwindows=5,))
 
-SoleXplorer.modelfit!(model, ds; features=features, rng=rng)
+SoleXplorer.modelfit!(model, ds; features, rng=rng)
 SoleXplorer.modeltest!(model, ds)
 
 @show SoleXplorer.get_rules(model);

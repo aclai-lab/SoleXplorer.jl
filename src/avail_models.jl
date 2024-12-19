@@ -55,7 +55,6 @@ AVAIL_MODELS = Dict(
             conditions=nothing, 
             featvaltype=Float64, 
             initconditions=nothing, 
-            # downsize=SoleData.var"#downsize#482"(), 
             print_progress=false, 
             display_depth=nothing, 
             min_samples_split=nothing, 
@@ -174,12 +173,27 @@ AVAIL_MODELS = Dict(
     #                         adaboost modal classifier                        #
     # ------------------------------------------------------------------------ #
     :modal_adaboost => (
-        method = AdaBoostModalClassifier,
+        method = ModalDecisionTrees.ModalAdaBoost,
 
         model_params = (;
-            n_iter=10, 
-            feature_importance=:impurity, 
+            min_samples_leaf=4, 
+            min_purity_increase=0.002, 
+            max_purity_at_leaf=Inf, 
+            max_modal_depth=nothing, 
+            relations=nothing, 
+            features=nothing, 
+            conditions=nothing, 
+            featvaltype=Float64, 
+            initconditions=nothing, 
+            print_progress=false, 
+            display_depth=nothing, 
+            min_samples_split=nothing, 
+            n_subfeatures=identity, 
+            post_prune=false, 
+            merge_purity_threshold=nothing, 
+            feature_importance=:split,
             rng=Random.TaskLocalRNG(),
+            n_iter=10, 
         ),
 
         model = (; algo = :classification, type = DecisionEnsemble),
@@ -201,8 +215,8 @@ AVAIL_MODELS = Dict(
             end,
 
         data_treatment = :reducesize,
-        nested_features = [maximum, minimum, mean],
-        nested_treatment = (mode=SoleBase.wholewindow, params=(;)),
+        nested_features = [mean],
+        nested_treatment = (mode=SoleBase.adaptivewindow, params=(nwindows=10, relative_overlap=0.3)),
 
         ranges = [
             model -> MLJ.range(:n_iter; lower=5, upper=15),
