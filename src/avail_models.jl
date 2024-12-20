@@ -176,8 +176,6 @@ AVAIL_MODELS = Dict(
         method = ModalDecisionTrees.ModalAdaBoost,
 
         model_params = (;
-            min_samples_leaf=4, 
-            min_purity_increase=0.002, 
             max_purity_at_leaf=Inf, 
             max_modal_depth=nothing, 
             relations=nothing, 
@@ -187,7 +185,6 @@ AVAIL_MODELS = Dict(
             initconditions=nothing, 
             print_progress=false, 
             display_depth=nothing, 
-            min_samples_split=nothing, 
             n_subfeatures=identity, 
             post_prune=false, 
             merge_purity_threshold=nothing, 

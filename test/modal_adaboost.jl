@@ -17,9 +17,9 @@ rng = Random.Xoshiro(train_seed)
 Random.seed!(train_seed)
 
 model = SoleXplorer.get_model(model_name; relations=:IA7, features, set=X)
-ds = SoleXplorer.preprocess_dataset(X, y, model; features, treatment_params=(nwindows=5,))
+ds = SoleXplorer.preprocess_dataset(X, y, model; features, treatment_params=(nwindows=10,))
 
-SoleXplorer.modelfit!(model, ds; features, rng=rng)
+SoleXplorer.modelfit!(model, ds; features, rng)
 SoleXplorer.modeltest!(model, ds)
 
 @show SoleXplorer.get_rules(model);
@@ -75,3 +75,30 @@ SoleXplorer.modeltest!(model, ds)
 
 @show SoleXplorer.get_rules(model);
 @show SoleXplorer.get_predict(model, ds);
+
+
+
+
+
+##############à DEBUGGING ############################
+@info "Test 1: Basic Modal Adaboost Tree"
+model_name = :modal_adaboost
+features = [minimum, mean]
+rng = Random.Xoshiro(train_seed)
+Random.seed!(train_seed)
+
+model = SoleXplorer.get_model(model_name; relations=:IA7, features, set=X)
+ds = SoleXplorer.preprocess_dataset(X, y, model; features, treatment_params=(nwindows=10,))
+
+SoleXplorer.modelfit!(model, ds; features, rng)
+
+@info "Test 1: Ada boost Forest"
+model_name = :adaboost
+features = [mean, maximum]
+rng = Random.Xoshiro(train_seed)
+Random.seed!(train_seed)
+
+model = SoleXplorer.get_model(model_name)
+ds = SoleXplorer.preprocess_dataset(X, y, model, features=features)
+
+SoleXplorer.modelfit!(model, ds; features=features, rng=rng)
