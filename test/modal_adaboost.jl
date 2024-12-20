@@ -87,18 +87,14 @@ features = [minimum, mean]
 rng = Random.Xoshiro(train_seed)
 Random.seed!(train_seed)
 
-model = SoleXplorer.get_model(model_name; relations=:IA7, features, set=X)
-ds = SoleXplorer.preprocess_dataset(X, y, model; features, treatment_params=(nwindows=10,))
+m1 = SoleXplorer.get_model(:adaboost)
+m2 = SoleXplorer.get_model(:modal_adaboost; relations=:IA7, features, set=X)
+m3 = SoleXplorer.get_model(:modal_adaboost; relations=:IA7, features, set=X)
+ds1 = SoleXplorer.preprocess_dataset(X, y, m1, features=features)
+ds2 = SoleXplorer.preprocess_dataset(X, y, m2; features, treatment_params=(nwindows=10,))
 
-SoleXplorer.modelfit!(model, ds; features, rng)
+SoleXplorer.modelfit!(m1, ds1; features, rng)
+SoleXplorer.modelfit!(m2, ds2; features, rng)
+SoleXplorer.modelfit!(m3, ds1; features, rng)
 
-@info "Test 1: Ada boost Forest"
-model_name = :adaboost
-features = [mean, maximum]
-rng = Random.Xoshiro(train_seed)
-Random.seed!(train_seed)
 
-model = SoleXplorer.get_model(model_name)
-ds = SoleXplorer.preprocess_dataset(X, y, model, features=features)
-
-SoleXplorer.modelfit!(model, ds; features=features, rng=rng)
