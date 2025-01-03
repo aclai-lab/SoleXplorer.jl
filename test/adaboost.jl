@@ -25,23 +25,13 @@ SoleXplorer.modeltest!(model, ds);
 # @show SoleXplorer.get_rules(model);
 @show SoleXplorer.get_predict(model, ds);
 
-# ####################################################################
-# stumps, coeffs = build_adaboost_stumps(string.(ds.y[dss.tt.train]), Matrix(selectrows(ds.X, dss.tt.train)), 10);
-# Xtest = Matrix(DataFrames.selectrows(ds.X, ds.tt.test))
-# apply_adaboost_stumps(stumps, coeffs, Xtest)
+#####################################################################
+# import DecisionTree as DT
 
-# model, coeffs = build_adaboost_stumps(labels, features, 10);
-# # apply learned model
-# apply_adaboost_stumps(model, coeffs, [5.9,3.0,5.1,1.9])
-# # get the probability of each label
-# apply_adaboost_stumps_proba(stumps, coeffs, Xtest, unique(String.(model.rules[1].info.supporting_labels)))
-# # run 3-fold cross validation for boosted stumps, using 7 iterations
-# n_iterations=7; n_folds=3
-# accuracy = nfoldCV_stumps(labels, features,
-#                           n_folds,
-#                           n_iterations;
-#                           verbose = true)
-# #####################################################################
+# stumps, coeffs = DT.build_adaboost_stumps(string.(_ds.y[_ds.tt.train]), Matrix(_ds.X[_ds.tt.train, :]), 10);
+# result = DT.apply_adaboost_stumps(stumps, coeffs, Matrix(_ds.X[_ds.tt.test, :]));
+
+######################################################################
 
 # ---------------------------------------------------------------------------- #
 #                 Ada boost forest with sratified sampling                     #

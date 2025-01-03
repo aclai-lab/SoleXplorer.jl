@@ -194,22 +194,8 @@ AVAIL_MODELS = Dict(
         ),
 
         model = (; algo = :classification, type = DecisionEnsemble),
-        learn_method = (mach, X, y) -> begin
-                weights = mach.fitresult[2]
-                classlabels = sort(mach.fitresult[3])
-                featurenames = MLJ.report(mach).features
-                dt = solemodel(MLJ.fitted_params(mach).stumps; weights, classlabels, featurenames)
-                apply!(dt, X, y)
-                return dt
-            end,
-        tune_learn_method = (mach, X, y) -> begin
-                weights = mach.fitresult.fitresult[2]
-                classlabels = sort(mach.fitresult.fitresult[3])
-                featurenames = MLJ.report(mach).best_report.features
-                dt = solemodel(MLJ.fitted_params(mach).best_fitted_params.stumps; weights, classlabels, featurenames)
-                apply!(dt, X, y)
-                return dt
-            end,
+        learn_method = (mach, X, y) -> ((_, dt) = MLJ.report(mach).sprinkle(X, y); dt),
+        tune_learn_method = (mach, X, y) -> ((_, dt) = MLJ.report(mach).best_report.sprinkle(X, y); dt),
 
         data_treatment = :reducesize,
         nested_features = [mean],

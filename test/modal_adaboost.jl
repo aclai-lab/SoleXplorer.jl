@@ -1,5 +1,6 @@
 using Sole
 using SoleXplorer
+import SoleXplorer as SX
 using Random, StatsBase, JLD2, DataFrames
 using RDatasets
 
@@ -12,18 +13,25 @@ train_seed = 11;
 # ---------------------------------------------------------------------------- #
 @info "Test 1: Basic Modal Adaboost Tree"
 model_name = :modal_adaboost
-features = [minimum, mean]
-rng = Random.Xoshiro(train_seed)
+features   = [mean]
+rng        = Random.Xoshiro(train_seed)
 Random.seed!(train_seed)
 
-model = SoleXplorer.get_model(model_name; relations=:IA7, features, set=X)
-ds = SoleXplorer.preprocess_dataset(X, y, model; features, treatment_params=(nwindows=10,))
+model = SX.get_model(model_name; relations=:IA7, features, set=X)
+ds    = SX.preprocess_dataset(X, y, model; features, treatment_params=(nwindows=10,))
 
-SoleXplorer.modelfit!(model, ds; features, rng)
-SoleXplorer.modeltest!(model, ds)
+SX.modelfit!(model, ds; features, rng)
+SX.modeltest!(model, ds)
 
-@show SoleXplorer.get_rules(model);
-@show SoleXplorer.get_predict(model, ds);
+@show SX.get_rules(model);
+@show SX.get_predict(model, ds);
+
+###### DEBUG
+_model_name = :adaboost
+_model = SX.get_model(_model_name)
+_ds = SX.preprocess_dataset(X, y, _model; features)
+SX.modelfit!(model, _ds; features, rng)
+SX.modeltest!(model, _ds)
 
 # ---------------------------------------------------------------------------- #
 #                       modal adaboost tree with tuning                        #
@@ -36,18 +44,18 @@ Random.seed!(train_seed)
 
 tuning_method = adaptiveparticleswarm(rng=rng)
 ranges = [
-    SoleXplorer.range(:merge_purity_threshold, lower=0, upper=1),
-    SoleXplorer.range(:feature_importance, values=[:impurity, :split])
+    SX.range(:merge_purity_threshold, lower=0, upper=1),
+    SX.range(:feature_importance, values=[:impurity, :split])
 ]
 
-model = SoleXplorer.get_model(model_name; relations=:IA7, tuning=tuning_method, features=features, set=X, ranges=ranges, n=25)
-ds = SoleXplorer.preprocess_dataset(X, y, model; features=features)
+model = SX.get_model(model_name; relations=:IA7, tuning=tuning_method, features=features, set=X, ranges=ranges, n=25)
+ds = SX.preprocess_dataset(X, y, model; features=features)
 
-SoleXplorer.modelfit!(model, ds; features=features, rng=rng)
-SoleXplorer.modeltest!(model, ds)
+SX.modelfit!(model, ds; features=features, rng=rng)
+SX.modeltest!(model, ds)
 
-@show SoleXplorer.get_rules(model);
-@show SoleXplorer.get_predict(model, ds);
+@show SX.get_rules(model);
+@show SX.get_predict(model, ds);
 
 # ---------------------------------------------------------------------------- #
 filename = "respiratory_Pneumonia.jld2"
@@ -67,34 +75,11 @@ features = catch9
 rng = Random.Xoshiro(train_seed)
 Random.seed!(train_seed)
 
-model = SoleXplorer.get_model(model_name; relations=:IA7, features=features, set=X)
-ds = SoleXplorer.preprocess_dataset(X, y, model, features=features, treatment=SoleXplorer.adaptivewindow, treatment_params=(nwindows=3,))
+model = SX.get_model(model_name; relations=:IA7, features=features, set=X)
+ds = SX.preprocess_dataset(X, y, model, features=features, treatment=SX.adaptivewindow, treatment_params=(nwindows=3,))
 
-SoleXplorer.modelfit!(model, ds; features=features, rng=rng)
-SoleXplorer.modeltest!(model, ds)
+SX.modelfit!(model, ds; features=features, rng=rng)
+SX.modeltest!(model, ds)
 
-@show SoleXplorer.get_rules(model);
-@show SoleXplorer.get_predict(model, ds);
-
-
-
-
-
-##############à DEBUGGING ############################
-@info "Test 1: Basic Modal Adaboost Tree"
-model_name = :modal_adaboost
-features = [minimum, mean]
-rng = Random.Xoshiro(train_seed)
-Random.seed!(train_seed)
-
-m1 = SoleXplorer.get_model(:adaboost)
-m2 = SoleXplorer.get_model(:modal_adaboost; relations=:IA7, features, set=X)
-m3 = SoleXplorer.get_model(:modal_adaboost; relations=:IA7, features, set=X)
-ds1 = SoleXplorer.preprocess_dataset(X, y, m1, features=features)
-ds2 = SoleXplorer.preprocess_dataset(X, y, m2; features, treatment_params=(nwindows=10,))
-
-SoleXplorer.modelfit!(m1, ds1; features, rng)
-SoleXplorer.modelfit!(m2, ds2; features, rng)
-SoleXplorer.modelfit!(m3, ds1; features, rng)
-
-
+@show SX.get_rules(model);
+@show SX.get_predict(model, ds);
