@@ -1,4 +1,5 @@
 using Sole
+import SoleXplorer as SX
 using SoleXplorer
 using Random, StatsBase, JLD2, DataFrames
 using RDatasets
@@ -10,28 +11,49 @@ train_seed = 11;
 # ---------------------------------------------------------------------------- #
 #                           basic Ada boost forest                             #
 # ---------------------------------------------------------------------------- #
-@info "Test 1: Ada boost Forest"
+@info "Test 1: Basic AdaBoost"
 model_name = :adaboost
-features = [mean, maximum]
+features = catch9
 rng = Random.Xoshiro(train_seed)
 Random.seed!(train_seed)
 
-model = SoleXplorer.get_model(model_name)
-ds = SoleXplorer.preprocess_dataset(X, y, model, features=features)
+model = SX.get_model(model_name)
+ds = SX.preprocess_dataset(X, y, model, features=features)
 
-SoleXplorer.modelfit!(model, ds; features=features, rng=rng)
-SoleXplorer.modeltest!(model, ds);
+SX.modelfit!(model, ds; features=features, rng=rng)
+SX.modeltest!(model, ds);
 
-# @show SoleXplorer.get_rules(model);
-@show SoleXplorer.get_predict(model, ds);
+@show SX.get_rules(model);
+@show SX.get_predict(model, ds);
 
-#####################################################################
-# import DecisionTree as DT
 
-# stumps, coeffs = DT.build_adaboost_stumps(string.(_ds.y[_ds.tt.train]), Matrix(_ds.X[_ds.tt.train, :]), 10);
-# result = DT.apply_adaboost_stumps(stumps, coeffs, Matrix(_ds.X[_ds.tt.test, :]));
+#################################
+# ---------------------------------------------------------------------------- #
+#                             basic decision tree                              #
+# ---------------------------------------------------------------------------- #
+@info "Test 1: Decision Tree"
+model_name = :decision_tree
+features = catch9
+rng = Random.Xoshiro(train_seed)
+Random.seed!(train_seed)
 
-######################################################################
+_model = SX.get_model(model_name)
+# ds = SX.preprocess_dataset(X, y, model, features=features)
+
+SX.modelfit!(_model, ds; features=features, rng=rng)
+SX.modeltest!(_model, ds);
+
+@show SX.get_rules(_model);
+@show SX.get_predict(_model, ds);
+
+##############################################à
+
+import DecisionTree as DT
+stumps, coeffs = DT.build_adaboost_stumps(string.(ds.y[ds.tt.train]), Matrix(ds.X[ds.tt.train, :]), 10);
+result = DT.apply_adaboost_stumps(stumps, coeffs, Matrix(ds.X[ds.tt.test, :]));
+# accuracy = nfoldCV_stumps(labels, features, n_folds, n_iterations; verbose = true)
+
+
 
 # ---------------------------------------------------------------------------- #
 #                 Ada boost forest with sratified sampling                     #
@@ -42,14 +64,14 @@ features = catch9
 rng = Random.Xoshiro(train_seed)
 Random.seed!(train_seed)
 
-model = SoleXplorer.get_model(model_name)
-ds = SoleXplorer.preprocess_dataset(X, y, model; features=features, stratified_sampling=true, nfolds=3, rng=rng)
+model = SX.get_model(model_name)
+ds = SX.preprocess_dataset(X, y, model; features=features, stratified_sampling=true, nfolds=3, rng=rng)
 
-SoleXplorer.modelfit!(model, ds; features=features, rng=rng)
-SoleXplorer.modeltest!(model, ds);
+SX.modelfit!(model, ds; features=features, rng=rng)
+SX.modeltest!(model, ds);
 
-# @show SoleXplorer.get_rules(model);
-@show SoleXplorer.get_predict(model, ds);
+# @show SX.get_rules(model);
+@show SX.get_predict(model, ds);
 
 # ---------------------------------------------------------------------------- #
 #                     Ada boost forest with mdel tuning                        #
@@ -62,18 +84,18 @@ Random.seed!(train_seed)
 
 tuning_method = latinhypercube(gens=2, popsize=120)
 ranges = [
-    SoleXplorer.range(:n_iter; lower=5, upper=20),
-    SoleXplorer.range(:feature_importance; values=[:impurity, :split])
+    SX.range(:n_iter; lower=5, upper=20),
+    SX.range(:feature_importance; values=[:impurity, :split])
 ]
 
-model = SoleXplorer.get_model(model_name; tuning=tuning_method, ranges=ranges, n=25)
-ds = SoleXplorer.preprocess_dataset(X, y, model, features=features)
+model = SX.get_model(model_name; tuning=tuning_method, ranges=ranges, n=25)
+ds = SX.preprocess_dataset(X, y, model, features=features)
 
-SoleXplorer.modelfit!(model, ds; features=features, rng=rng)
-SoleXplorer.modeltest!(model, ds);
+SX.modelfit!(model, ds; features=features, rng=rng)
+SX.modeltest!(model, ds);
 
-# @show SoleXplorer.get_rules(model);
-@show SoleXplorer.get_predict(model, ds);
+# @show SX.get_rules(model);
+@show SX.get_predict(model, ds);
 
 # ---------------------------------------------------------------------------- #
 # X, y = SoleData.load_arff_dataset("NATOPS");
@@ -88,15 +110,15 @@ features = [minimum, mean, StatsBase.cov, mode_5]
 rng = Random.Xoshiro(train_seed)
 Random.seed!(train_seed)
 
-model = SoleXplorer.get_model(model_name)
+model = SX.get_model(model_name)
 
-ds = SoleXplorer.preprocess_dataset(X, y, model, features=features; treatment=wholewindow)
+ds = SX.preprocess_dataset(X, y, model, features=features; treatment=wholewindow)
 
-SoleXplorer.modelfit!(model, ds; features=features, rng=rng)
-SoleXplorer.modeltest!(model, ds)
+SX.modelfit!(model, ds; features=features, rng=rng)
+SX.modeltest!(model, ds)
 
-# @show SoleXplorer.get_rules(model);
-@show SoleXplorer.get_predict(model, ds);
+# @show SX.get_rules(model);
+@show SX.get_predict(model, ds);
 
 # ---------------------------------------------------------------------------- #
 #                           get worlds: moving window                          #
@@ -107,15 +129,15 @@ features = [minimum, mean, StatsBase.cov, mode_5]
 rng = Random.Xoshiro(train_seed)
 Random.seed!(train_seed)
 
-model = SoleXplorer.get_model(model_name)
+model = SX.get_model(model_name)
 
-ds = SoleXplorer.preprocess_dataset(X, y, model, features=features; treatment=movingwindow, treatment_params=(nwindows=10, relative_overlap=0.2))
+ds = SX.preprocess_dataset(X, y, model, features=features; treatment=movingwindow, treatment_params=(nwindows=10, relative_overlap=0.2))
 
-SoleXplorer.modelfit!(model, ds; features=features, rng=rng)
-SoleXplorer.modeltest!(model, ds)
+SX.modelfit!(model, ds; features=features, rng=rng)
+SX.modeltest!(model, ds)
 
-# @show SoleXplorer.get_rules(model);
-@show SoleXplorer.get_predict(model, ds);
+# @show SX.get_rules(model);
+@show SX.get_predict(model, ds);
 
 # ---------------------------------------------------------------------------- #
 #                      get worlds: fixed number windows                        #
@@ -126,15 +148,15 @@ features = [minimum, mean, StatsBase.cov, mode_5]
 rng = Random.Xoshiro(train_seed)
 Random.seed!(train_seed)
 
-model = SoleXplorer.get_model(model_name)
+model = SX.get_model(model_name)
 
-ds = SoleXplorer.preprocess_dataset(X, y, model, features=features, treatment=adaptivewindow, treatment_params=(nwindows=15, relative_overlap=0.1))
+ds = SX.preprocess_dataset(X, y, model, features=features, treatment=adaptivewindow, treatment_params=(nwindows=15, relative_overlap=0.1))
 
-SoleXplorer.modelfit!(model, ds; features=features, rng=rng)
-SoleXplorer.modeltest!(model, ds)
+SX.modelfit!(model, ds; features=features, rng=rng)
+SX.modeltest!(model, ds)
 
-# @show SoleXplorer.get_rules(model);
-@show SoleXplorer.get_predict(model, ds);
+# @show SX.get_rules(model);
+@show SX.get_predict(model, ds);
 
 # ---------------------------------------------------------------------------- #
 filename = "respiratory_Pneumonia.jld2"
@@ -153,15 +175,15 @@ features = [minimum, mean, StatsBase.cov, mode_5]
 rng = Random.Xoshiro(train_seed)
 Random.seed!(train_seed)
 
-model = SoleXplorer.get_model(model_name)
+model = SX.get_model(model_name)
 
-ds = SoleXplorer.preprocess_dataset(X, y, model, features=features)
+ds = SX.preprocess_dataset(X, y, model, features=features)
 
-SoleXplorer.modelfit!(model, ds; features=features, rng=rng)
-SoleXplorer.modeltest!(model, ds)
+SX.modelfit!(model, ds; features=features, rng=rng)
+SX.modeltest!(model, ds)
 
-# @show SoleXplorer.get_rules(model);
-@show SoleXplorer.get_predict(model, ds);
+# @show SX.get_rules(model);
+@show SX.get_predict(model, ds);
 
 # ---------------------------------------------------------------------------- #
 #                    Ada boost forest based n movingwindow                     #
@@ -172,13 +194,13 @@ features = [minimum, mean, StatsBase.cov, mode_5]
 rng = Random.Xoshiro(train_seed)
 Random.seed!(train_seed)
 
-model = SoleXplorer.get_model(model_name)
+model = SX.get_model(model_name)
 
-ds = SoleXplorer.preprocess_dataset(X, y, model, features=features, treatment=SoleXplorer.adaptivewindow, treatment_params=(nwindows=3,))
+ds = SX.preprocess_dataset(X, y, model, features=features, treatment=SX.adaptivewindow, treatment_params=(nwindows=3,))
 
-SoleXplorer.modelfit!(model,ds; features=features, rng=rng)
-SoleXplorer.modeltest!(model, ds)
+SX.modelfit!(model,ds; features=features, rng=rng)
+SX.modeltest!(model, ds)
 
-# @show SoleXplorer.get_rules(model);
-@show SoleXplorer.get_predict(model, ds);
+# @show SX.get_rules(model);
+@show SX.get_predict(model, ds);
 
