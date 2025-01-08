@@ -76,6 +76,7 @@ function get_model(
     valid_kwargs = filter(kv -> kv.first in keys(params), kwargs_dict)
     model_params = merge(params, valid_kwargs)
 
+    # TODO verifica che in modale passi il parametro relations AI7
     classifier = AVAIL_MODELS[model_name].method(; model_params...)
 
     if !isnothing(tuning)

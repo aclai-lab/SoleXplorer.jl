@@ -164,11 +164,12 @@ function preprocess_dataset(
 
     elseif all(t -> t <: AbstractVector{<:Number}, column_eltypes)
         # dataframe with vector-valued columns
-
         if isnothing(treatment)
             treatment = model.nested_treatment.mode
-            treatment_params = model.nested_treatment.params
-        elseif isnothing(treatment_params)
+            # treatment_params = model.nested_treatment.params
+        end
+
+        if isnothing(treatment_params)
             treatment_params = model.nested_treatment.params
         else
             params = model.nested_treatment.params

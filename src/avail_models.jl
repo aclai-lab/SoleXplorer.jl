@@ -55,7 +55,6 @@ AVAIL_MODELS = Dict(
             conditions=nothing, 
             featvaltype=Float64, 
             initconditions=nothing, 
-            # downsize=SoleData.var"#downsize#482"(), 
             print_progress=false, 
             display_depth=nothing, 
             min_samples_split=nothing, 
@@ -161,6 +160,46 @@ AVAIL_MODELS = Dict(
         data_treatment = :aggregate,
         nested_features = [maximum, minimum, mean],
         nested_treatment = (mode=SoleBase.wholewindow, params=(;)),
+
+        ranges = [
+            model -> MLJ.range(:n_iter; lower=5, upper=15),
+            model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])
+        ],
+
+        rules_method = Sole.listrules
+    ),
+
+    # ------------------------------------------------------------------------ #
+    #                         adaboost modal classifier                        #
+    # ------------------------------------------------------------------------ #
+    :modal_adaboost => (
+        method = ModalDecisionTrees.ModalAdaBoost,
+
+        model_params = (;
+            max_purity_at_leaf=Inf, 
+            max_modal_depth=nothing, 
+            relations=nothing, 
+            features=nothing, 
+            conditions=nothing, 
+            featvaltype=Float64, 
+            initconditions=nothing, 
+            print_progress=false, 
+            display_depth=nothing, 
+            n_subfeatures=identity, 
+            post_prune=false, 
+            merge_purity_threshold=nothing, 
+            feature_importance=:split,
+            rng=Random.TaskLocalRNG(),
+            n_iter=10, 
+        ),
+
+        model = (; algo = :classification, type = DecisionEnsemble),
+        learn_method = (mach, X, y) -> ((_, dt) = MLJ.report(mach).sprinkle(X, y); dt),
+        tune_learn_method = (mach, X, y) -> ((_, dt) = MLJ.report(mach).best_report.sprinkle(X, y); dt),
+
+        data_treatment = :reducesize,
+        nested_features = [mean],
+        nested_treatment = (mode=SoleBase.adaptivewindow, params=(nwindows=10, relative_overlap=0.3)),
 
         ranges = [
             model -> MLJ.range(:n_iter; lower=5, upper=15),
