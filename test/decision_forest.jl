@@ -23,8 +23,8 @@ ds = SoleXplorer.preprocess_dataset(X, y, model, features=features)
 SoleXplorer.modelfit!(model, ds; features=features, rng=rng)
 SoleXplorer.modeltest!(model, ds);
 
-# @show SoleXplorer.get_rules(model);
-@show SoleXplorer.get_predict(model, ds);
+@test_broken SoleXplorer.get_rules(model);
+@test_nowarn SoleXplorer.get_predict(model, ds);
 
 # ---------------------------------------------------------------------------- #
 #                 decision forest with sratified sampling                      #
@@ -41,8 +41,8 @@ ds = SoleXplorer.preprocess_dataset(X, y, model; features=features, stratified_s
 SoleXplorer.modelfit!(model, ds; features=features, rng=rng)
 SoleXplorer.modeltest!(model, ds);
 
-# @show SoleXplorer.get_rules(model);
-@show SoleXplorer.get_predict(model, ds);
+@test_broken SoleXplorer.get_rules(model);
+@test_nowarn SoleXplorer.get_predict(model, ds);
 
 # ---------------------------------------------------------------------------- #
 #                      decision forest with mdel tuning                        #
@@ -65,8 +65,8 @@ ds = SoleXplorer.preprocess_dataset(X, y, model, features=features)
 SoleXplorer.modelfit!(model, ds; features=features, rng=rng)
 SoleXplorer.modeltest!(model, ds);
 
-# @show SoleXplorer.get_rules(model);
-@show SoleXplorer.get_predict(model, ds);
+@test_broken SoleXplorer.get_rules(model);
+@test_nowarn SoleXplorer.get_predict(model, ds);
 
 # ---------------------------------------------------------------------------- #
 # X, y = SoleData.load_arff_dataset("NATOPS");
@@ -88,8 +88,8 @@ ds = SoleXplorer.preprocess_dataset(X, y, model, features=features; treatment=wh
 SoleXplorer.modelfit!(model, ds; features=features, rng=rng)
 SoleXplorer.modeltest!(model, ds)
 
-# @show SoleXplorer.get_rules(model);
-@show SoleXplorer.get_predict(model, ds);
+@test_broken SoleXplorer.get_rules(model);
+@test_nowarn SoleXplorer.get_predict(model, ds);
 
 # ---------------------------------------------------------------------------- #
 #                           get worlds: moving window                          #
@@ -107,8 +107,8 @@ ds = SoleXplorer.preprocess_dataset(X, y, model, features=features; treatment=mo
 SoleXplorer.modelfit!(model, ds; features=features, rng=rng)
 SoleXplorer.modeltest!(model, ds)
 
-# @show SoleXplorer.get_rules(model);
-@show SoleXplorer.get_predict(model, ds);
+@test_broken SoleXplorer.get_rules(model);
+@test_nowarn SoleXplorer.get_predict(model, ds);
 
 # ---------------------------------------------------------------------------- #
 #                     get worlds: fixed number windows                       #
@@ -126,8 +126,8 @@ ds = SoleXplorer.preprocess_dataset(X, y, model, features=features, treatment=ad
 SoleXplorer.modelfit!(model, ds; features=features, rng=rng)
 SoleXplorer.modeltest!(model, ds)
 
-# @show SoleXplorer.get_rules(model);
-@show SoleXplorer.get_predict(model, ds);
+@test_broken SoleXplorer.get_rules(model);
+@test_nowarn SoleXplorer.get_predict(model, ds);
 
 # ---------------------------------------------------------------------------- #
 filename = "respiratory_Pneumonia.jld2"
@@ -153,8 +153,8 @@ ds = SoleXplorer.preprocess_dataset(X, y, model, features=features)
 SoleXplorer.modelfit!(model, ds; features=features, rng=rng)
 SoleXplorer.modeltest!(model, ds)
 
-# @show SoleXplorer.get_rules(model);
-@show SoleXplorer.get_predict(model, ds);
+@test_broken SoleXplorer.get_rules(model);
+@test_nowarn SoleXplorer.get_predict(model, ds);
 
 # ---------------------------------------------------------------------------- #
 #                   decision forest based n movingwindow                    #
@@ -172,5 +172,5 @@ ds = SoleXplorer.preprocess_dataset(X, y, model, features=features, treatment=So
 SoleXplorer.modelfit!(model,ds; features=features, rng=rng)
 SoleXplorer.modeltest!(model, ds)
 
-# @show SoleXplorer.get_rules(model);
-@show SoleXplorer.get_predict(model, ds);
+@test_broken SoleXplorer.get_rules(model);
+@test_nowarn SoleXplorer.get_predict(model, ds);

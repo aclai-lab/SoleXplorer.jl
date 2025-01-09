@@ -24,8 +24,8 @@ ds = SX.preprocess_dataset(X, y, model, features=features)
 SX.modelfit!(model, ds; features=features, rng=rng)
 SX.modeltest!(model, ds);
 
-@show SX.get_rules(model);
-@show SX.get_predict(model, ds);
+@test_nowarn SX.get_rules(model);
+@test_nowarn SX.get_predict(model, ds);
 
 # ---------------------------------------------------------------------------- #
 #                  decision tree with stratified sampling                      #
@@ -42,8 +42,8 @@ ds = SX.preprocess_dataset(X, y, model; features=features, stratified_sampling=t
 SX.modelfit!(model, ds; features=features, rng=rng)
 SX.modeltest!(model, ds);
 
-@show SX.get_rules(model);
-@show SX.get_predict(model, ds);
+@test_nowarn SX.get_rules(model);
+@test_nowarn SX.get_predict(model, ds);
 
 # ---------------------------------------------------------------------------- #
 #                       decision tree with model tuning                        #
@@ -66,8 +66,8 @@ ds = SX.preprocess_dataset(X, y, model, features=features)
 SX.modelfit!(model, ds; features=features, rng=rng)
 SX.modeltest!(model, ds);
 
-@show SX.get_rules(model);
-@show SX.get_predict(model, ds);
+@test_nowarn SX.get_rules(model);
+@test_nowarn SX.get_predict(model, ds);
 
 # ---------------------------------------------------------------------------- #
 # X, y = SoleData.load_arff_dataset("NATOPS");
@@ -89,8 +89,8 @@ ds = SX.preprocess_dataset(X, y, model, features=features; treatment=wholewindow
 SX.modelfit!(model, ds; features=features, rng=rng)
 SX.modeltest!(model, ds)
 
-@show SX.get_rules(model);
-@show SX.get_predict(model, ds);
+@test_nowarn SX.get_rules(model);
+@test_nowarn SX.get_predict(model, ds);
 
 # ---------------------------------------------------------------------------- #
 #                           get worlds: moving window                          #
@@ -108,8 +108,8 @@ ds = SX.preprocess_dataset(X, y, model, features=features; treatment=movingwindo
 SX.modelfit!(model, ds; features=features, rng=rng)
 SX.modeltest!(model, ds)
 
-@show SX.get_rules(model);
-@show SX.get_predict(model, ds);
+@test_nowarn SX.get_rules(model);
+@test_nowarn SX.get_predict(model, ds);
 
 # ---------------------------------------------------------------------------- #
 #                     get worlds: fixed number windows                       #
@@ -127,8 +127,8 @@ ds = SX.preprocess_dataset(X, y, model, features=features, treatment=adaptivewin
 SX.modelfit!(model, ds; features=features, rng=rng)
 SX.modeltest!(model, ds)
 
-@show SX.get_rules(model);
-@show SX.get_predict(model, ds);
+@test_nowarn SX.get_rules(model);
+@test_nowarn SX.get_predict(model, ds);
 
 # ---------------------------------------------------------------------------- #
 filename = "respiratory_Pneumonia.jld2"
@@ -154,8 +154,8 @@ ds = SX.preprocess_dataset(X, y, model, features=features)
 SX.modelfit!(model, ds; features=features, rng=rng)
 SX.modeltest!(model, ds)
 
-@show SX.get_rules(model);
-@show SX.get_predict(model, ds);
+@test_nowarn SX.get_rules(model);
+@test_nowarn SX.get_predict(model, ds);
 
 # ---------------------------------------------------------------------------- #
 #                    decision tree based on movingwindow                    #
@@ -173,5 +173,5 @@ ds = SX.preprocess_dataset(X, y, model, features=features, treatment=SX.adaptive
 SX.modelfit!(model,ds; features=features, rng=rng)
 SX.modeltest!(model, ds)
 
-@show SX.get_rules(model);
-@show SX.get_predict(model, ds);
+@test_nowarn SX.get_rules(model);
+@test_nowarn SX.get_predict(model, ds);
