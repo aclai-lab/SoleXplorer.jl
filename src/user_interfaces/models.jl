@@ -65,6 +65,12 @@ end
 #                                   get model                                  #
 # ---------------------------------------------------------------------------- #
 function get_model(
+    model::ModelConfig,
+)
+    model
+end
+
+function get_model(
     model_name::Symbol;
     tuning::Union{T, Nothing}=nothing,
     ranges::Union{S, AbstractVector{S}, Nothing}=nothing,
