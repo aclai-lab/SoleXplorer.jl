@@ -43,7 +43,7 @@ function get_rules(
     _X = DataFrame[]
 
     for m in model.models
-        rules = extracturels(model.rules_method,
+        rules = Sole.extractrules(model.rules_method,
             m;
             min_lift=min_lift,
             min_ninstances=min_ninstances,
@@ -60,7 +60,7 @@ function get_rules(
 
         for rule in irules
             ant = syntaxstring(Sole.antecedent(rule), threshold_digits=threshold_digits)
-            cons = Sole.leafmodelname(Sole.consequent(rule))
+            cons = SoleModels.leafmodelname(Sole.consequent(rule))
             push!(X, (ant, cons, readmetrics(rule, round_digits=round_digits)...))
         end
 

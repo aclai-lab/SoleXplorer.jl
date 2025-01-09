@@ -6,7 +6,7 @@ using SoleModels
 mutable struct ModelConfig{T}
     classifier::MLJ.Model
     mach::Union{MLJ.Machine, AbstractVector{MLJ.Machine}, Nothing}
-    rules::AbstractVector{T}
+    models::AbstractVector{T}
     model_algo::Symbol
     learn_method::Function
     tune_learn_method::Function

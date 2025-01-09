@@ -1,3 +1,4 @@
+using Test
 using Sole
 using SoleXplorer
 using Random, StatsBase, JLD2, DataFrames

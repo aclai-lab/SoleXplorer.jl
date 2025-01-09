@@ -6,7 +6,7 @@ function modeltest!(
     mach = model.mach isa MLJ.Machine ? [model.mach] : model.mach
     tt_test = ds.tt isa AbstractVector ? ds.tt : [ds.tt]
 
-    # TODO svuota model.rules
+    # TODO svuota model.models
     
     for (i, tt) in enumerate(tt_test)
         learn_apply_method = model.apply_tuning ? model.tune_learn_method : model.learn_method
