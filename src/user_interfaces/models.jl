@@ -1,3 +1,5 @@
+using SoleModels
+
 # ---------------------------------------------------------------------------- #
 #                                 model struct                                 #
 # ---------------------------------------------------------------------------- #
@@ -14,7 +16,7 @@ mutable struct ModelConfig{T}
     features::AbstractVector{<:Base.Callable}
     nested_treatment::NamedTuple #{Base.Callable, NamedTuple}
     # nested_treatment_params::NamedTuple
-    rules_method::Function
+    rules_method::SoleModels.RuleExtractor
 end
 
 # ---------------------------------------------------------------------------- #

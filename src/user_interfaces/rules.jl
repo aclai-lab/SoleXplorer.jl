@@ -21,13 +21,13 @@ returning a DataFrame of rules, and their metrics.
 Note that duplicate rules may be returned.
 
 Keyword arguments:
-- `method`: a callable method for extracting rules, such as `Sole.listrules` and `SolePostHoc.extractrules`
+- `method`: a callable method for extracting rules, such as `Sole.listrules` and `Sole.extractrules`
 - `min_lift`: minimum lift
 - `min_ninstances`: minimum number of instances
 - `min_coverage`: minimum coverage
 - `min_ncovered`: minimum number of covered instances
 - `normalize`: whether to normalize the antecedent
-- See [`Sole.listrules`](@ref) or [`SolePostHoc.extractrules`](@ref) for additional keyword arguments.
+- See [`Sole.listrules`](@ref) or [`Sole.extractrules`](@ref) for additional keyword arguments.
 """
 function get_rules(
     model::SoleXplorer.ModelConfig;

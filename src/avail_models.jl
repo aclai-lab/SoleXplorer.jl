@@ -35,7 +35,7 @@ AVAIL_MODELS = Dict(
             model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])
         ],
 
-        rules_method = SoleModels.PlainRuleExtractor
+        rules_method = SoleModels.PlainRuleExtractor()
     ),
 
     # ------------------------------------------------------------------------ #
@@ -78,7 +78,7 @@ AVAIL_MODELS = Dict(
             model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])
         ],
 
-        rules_method = SoleModels.PlainRuleExtractor
+        rules_method = SoleModels.PlainRuleExtractor()
     ),
 
     # ------------------------------------------------------------------------ #
@@ -124,7 +124,7 @@ AVAIL_MODELS = Dict(
             model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])
         ],
 
-        rules_method = SolePostHoc.LumenRuleExtractor
+        rules_method = SolePostHoc.LumenRuleExtractor()
     ),
 
     # ------------------------------------------------------------------------ #
@@ -166,7 +166,7 @@ AVAIL_MODELS = Dict(
             model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])
         ],
 
-        rules_method = SolePostHoc.LumenRuleExtractor
+        rules_method = SolePostHoc.LumenRuleExtractor()
     ),
 
     # ------------------------------------------------------------------------ #
@@ -206,7 +206,7 @@ AVAIL_MODELS = Dict(
             model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])
         ],
 
-        rules_method = SolePostHoc.LumenRuleExtractor
+        rules_method = SolePostHoc.LumenRuleExtractor()
     ),
 
     # ------------------------------------------------------------------------ #
@@ -240,7 +240,7 @@ AVAIL_MODELS = Dict(
             model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])
         ],
 
-        rules_method = SoleModels.PlainRuleExtractor
+        rules_method = SoleModels.PlainRuleExtractor()
     ),
     # ------------------------------------------------------------------------ #
     #                            regression forest                             #
@@ -273,7 +273,7 @@ AVAIL_MODELS = Dict(
             model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])
         ],
 
-        rules_method = SolePostHoc.LumenRuleExtractor
+        rules_method = SolePostHoc.LumenRuleExtractor()
     ),
 
     # ------------------------------------------------------------------------ #
@@ -309,7 +309,7 @@ AVAIL_MODELS = Dict(
             model -> MLJ.range(model, :discretizedomain, values=[:false, :true])
         ],
 
-        rules_method = SoleModels.PlainRuleExtractor
+        rules_method = SoleModels.PlainRuleExtractor()
     ),
 
     # ------------------------------------------------------------------------ #
@@ -349,6 +349,6 @@ AVAIL_MODELS = Dict(
     #         model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])
     #     ],
 
-    #     rules_method = SoleModels.PlainRuleExtractor
+    #     rules_method = SoleModels.PlainRuleExtractor()
     # ),
 )

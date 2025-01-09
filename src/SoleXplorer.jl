@@ -1,6 +1,7 @@
 module SoleXplorer
 
 using Sole
+using SolePostHoc
 import MultiData.hasnans
 using SoleData
 using SoleData: PatchedFunction, nanpatchedfunction
