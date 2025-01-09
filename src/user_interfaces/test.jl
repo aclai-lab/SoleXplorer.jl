@@ -12,6 +12,6 @@ function modeltest!(
         learn_apply_method = model.apply_tuning ? model.tune_learn_method : model.learn_method
         sole_dt = learn_apply_method(mach[i], selectrows(ds.X, tt.test), ds.y[tt.test])
 
-        push!(model.rules, sole_dt)
+        push!(model.models, sole_dt)
     end
 end

@@ -42,9 +42,9 @@ function get_rules(
 )
     _X = DataFrame[]
 
-    for r in model.rules
-        rules = model.rules_method(
-            r;
+    for m in model.models
+        rules = extracturels(model.rules_method,
+            m;
             min_lift=min_lift,
             min_ninstances=min_ninstances,
             min_coverage=min_coverage,
