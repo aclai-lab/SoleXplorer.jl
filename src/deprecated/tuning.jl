@@ -1,19 +1,3 @@
-const TUNEDMODEL_PARAMS = (;
-    resampling=Holdout(),
-    measure=LogLoss(tol = 2.22045e-16),
-    weights=nothing,
-    class_weights=nothing,
-    repeats=1,
-    operation=nothing,
-    selection_heuristic= MLJTuning.NaiveSelection(nothing),
-    n=nothing,
-    train_best=true,
-    acceleration=default_resource(),
-    acceleration_resampling=CPU1(),
-    check_measure=true,
-    cache=true
-)
-
 # ---------------------------------------------------------------------------- #
 #                               get tuning model                               #
 # ---------------------------------------------------------------------------- #
@@ -32,8 +16,8 @@ function get_tuning(model::T, tuning::S;
         nothing,
         model.ranges,
         model.data_treatment,
-        model.nested_features,
-        model.nested_treatment,
+        model.features,
+        model.treatment,
         model.treatment_params
     )
 end

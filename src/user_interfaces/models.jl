@@ -12,52 +12,18 @@ mutable struct ModelConfig{T}
     ranges::AbstractVector{Function}
     data_treatment::Symbol
     features::AbstractVector{<:Base.Callable}
+<<<<<<< Updated upstream
     nested_treatment::NamedTuple #{Base.Callable, NamedTuple}
     # nested_treatment_params::NamedTuple
     rules_method::Function
+=======
+    treatment::NamedTuple #{Base.Callable, NamedTuple}
+    # treatment_params::NamedTuple
+    rules_method::SoleModels.RuleExtractor
+>>>>>>> Stashed changes
 end
 
-# ---------------------------------------------------------------------------- #
-#                                    tuning                                    #
-# ---------------------------------------------------------------------------- #
-const TUNEDMODEL_PARAMS = (;
-    resampling=Holdout(),
-    measure=LogLoss(tol = 2.22045e-16),
-    weights=nothing,
-    class_weights=nothing,
-    repeats=1,
-    operation=nothing,
-    selection_heuristic= MLJTuning.NaiveSelection(nothing),
-    n=nothing,
-    train_best=true,
-    acceleration=default_resource(),
-    acceleration_resampling=CPU1(),
-    check_measure=true,
-    cache=true
-)
 
-function range(
-    field::Union{Expr, Symbol};
-    lower::Union{AbstractFloat, Int, Nothing}=nothing,
-    upper::Union{AbstractFloat, Int, Nothing}=nothing,
-    origin::Union{AbstractFloat, Int, Nothing}=nothing,
-    unit::Union{AbstractFloat, Int, Nothing}=nothing,
-    scale::Union{Symbol, Nothing}=nothing,
-    values::Union{AbstractVector, Nothing}=nothing,
-)
-    return function(model)
-        MLJ.range(
-            model,
-            field;
-            lower=lower,
-            upper=upper,
-            origin=origin,
-            unit=unit,
-            scale=scale,
-            values=values
-        )
-    end
-end
 
 # ---------------------------------------------------------------------------- #
 #                                   get model                                  #
@@ -68,7 +34,8 @@ function get_model(
     ranges::Union{S, AbstractVector{S}, Nothing}=nothing,
     kwargs...
 ) where {T<:MLJTuning.TuningStrategy, S<:Base.Callable}
-    !haskey(AVAIL_MODELS, model_name) && throw(ArgumentError("Model $model_name not found in available models. Valid options are: $(keys(AVAIL_MODELS))"))
+    haskey(AVAIL_MODELS, model_name) || throw(ArgumentError("Model $model_name not found in available models. Valid options are: $(keys(AVAIL_MODELS))"))
+
     kwargs_dict = Dict(kwargs)
     apply_tuning = false
 
@@ -107,8 +74,8 @@ function get_model(
         apply_tuning,
         AVAIL_MODELS[model_name].ranges,
         AVAIL_MODELS[model_name].data_treatment,
-        AVAIL_MODELS[model_name].nested_features,
-        AVAIL_MODELS[model_name].nested_treatment,
+        AVAIL_MODELS[model_name].features,
+        AVAIL_MODELS[model_name].treatment,
         # AVAIL_MODELS[model_name].treatment_params,
         AVAIL_MODELS[model_name].rules_method,
     )

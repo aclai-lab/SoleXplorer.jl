@@ -127,13 +127,13 @@ end
 function preprocess_dataset(
     X::AbstractDataFrame, 
     y::AbstractVector, 
-    model::T;
+    model::AbstractModelSet;
     features::Union{Base.Callable, AbstractVector{<:Base.Callable}, Nothing}=nothing,
     vnames::Union{AbstractVector{Union{String, Symbol}}, Nothing}=nothing,
     treatment::Union{Base.Callable, Nothing}=nothing,
     treatment_params::Union{NamedTuple, Nothing}=nothing,
     kwargs...
-) where {T<:SoleXplorer.ModelConfig}
+)
     # ------------------------------------------------------------------------ #
     #                           check parameters                               #
     # ------------------------------------------------------------------------ #
@@ -166,17 +166,26 @@ function preprocess_dataset(
         # dataframe with vector-valued columns
 
         if isnothing(treatment)
+<<<<<<< Updated upstream
             treatment = model.nested_treatment.mode
             treatment_params = model.nested_treatment.params
         elseif isnothing(treatment_params)
             treatment_params = model.nested_treatment.params
+=======
+            treatment = model.treatment.mode
+            # treatment_params = model.treatment.params
+        end
+
+        if isnothing(treatment_params)
+            treatment_params = model.treatment.params
+>>>>>>> Stashed changes
         else
-            params = model.nested_treatment.params
+            params = model.treatment.params
             treatment_params = merge(params, treatment_params)
         end
 
         if isnothing(features)
-            features = model.nested_features
+            features = model.features
         end
 
         SoleXplorer.Dataset(

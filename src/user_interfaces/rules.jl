@@ -30,7 +30,8 @@ Keyword arguments:
 - See [`Sole.listrules`](@ref) or [`SolePostHoc.extractrules`](@ref) for additional keyword arguments.
 """
 function get_rules(
-    model::SoleXplorer.ModelConfig;
+    model::T,
+    ds::S,
     min_lift::Float64=1.0,
     min_ninstances::Int=0,
     min_coverage::Float64=0.10,
@@ -39,7 +40,8 @@ function get_rules(
     threshold_digits::Int=2,
     round_digits::Int=2,
     kwargs...
-)
+) where {T<:SoleXplorer.ModelConfig, S<:SoleXplorer.Dataset}
+    variable_names_map = [names(ds.X)]
     _X = DataFrame[]
 
     for r in model.rules
@@ -59,9 +61,21 @@ function get_rules(
         X = DataFrame(antecedent=String[], consequent=Any[]; [name => Vector{Union{Float64, Int}}() for name in keys(readmetrics(irules[1]))]...)
 
         for rule in irules
+<<<<<<< Updated upstream
             ant = syntaxstring(Sole.antecedent(rule), threshold_digits=threshold_digits)
             cons = Sole.leafmodelname(Sole.consequent(rule))
             push!(X, (ant, cons, readmetrics(rule, round_digits=round_digits)...))
+=======
+            ant = begin
+                if model.rules_method == SolePostHoc.LumenRuleExtractor()
+                    syntaxstring(Sole.antecedent(rule); threshold_digits)
+                else
+                    syntaxstring(Sole.antecedent(rule); threshold_digits, variable_names_map)
+                end
+            end
+            cons = SoleModels.leafmodelname(Sole.consequent(rule))
+            push!(X, (ant, cons, readmetrics(rule; round_digits)...))
+>>>>>>> Stashed changes
         end
 
         push!(_X, X)

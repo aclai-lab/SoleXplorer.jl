@@ -9,7 +9,6 @@ using SoleData: PatchedFunction, nanpatchedfunction
 using DataFrames
 using CategoricalArrays
 using Random
-using IterTools # da cancellare appena ritrovo le movingwindow che erano in SoleBase
 
 # Learning infrastructure
 using MLJ
@@ -49,7 +48,10 @@ export outlier_timing_neg, whiten_timescale, forecast_error, ami_timescale, high
 export stretch_high, entropy_pairs, rs_range, dfa, low_freq_power, centroid_freq, transition_variance, periodicity
 export catch9
 
-include("avail_models.jl")
+include("models_structs.jl")
+include("models/decisiontrees.jl")
+
+# include("avail_models_deprecated.jl")
 
 include("user_interfaces/models.jl")
 export ModelConfig, range, get_model
@@ -68,5 +70,8 @@ export get_rules
 
 include("user_interfaces/predict.jl")
 export get_predict
+
+include("symbolic_analysis.jl")
+export symbolic_analysis
 
 end
