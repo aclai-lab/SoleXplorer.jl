@@ -17,13 +17,13 @@ for model_name in [:decision_tree, my_decision_tree_parametrization, :decision_f
   @test_nowarn symbolic_analysis(model, X, y, features, treatment, treatment_params; rng)
 end
 
-# function symbolic_analysis(model::Union{ModelConfig,Symbol}, X, y, features, treatment, treatment_params; rng)
-#   model = SoleXplorer.get_model(model)
+function symbolic_analysis(model::Union{ModelConfig,Symbol}, X, y, features, treatment, treatment_params; rng)
+  model = SoleXplorer.get_model(model)
 
-#   ds = SoleXplorer.preprocess_dataset(X, y, model, features, treatment, treatment_params)
+  ds = SoleXplorer.preprocess_dataset(X, y, model, features, treatment, treatment_params)
 
-#   SoleXplorer.modelfit!(model, ds; features=features, rng=rng)
-#   SoleXplorer.modeltest!(model, ds)
-#   SoleXplorer.get_rules(model);
-#   SoleXplorer.get_predict(model, ds);
-# end
+  SoleXplorer.modelfit!(model, ds; features=features, rng=rng)
+  SoleXplorer.modeltest!(model, ds)
+  SoleXplorer.get_rules(model);
+  SoleXplorer.get_predict(model, ds);
+end

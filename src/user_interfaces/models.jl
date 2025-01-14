@@ -4,7 +4,7 @@
 mutable struct ModelConfig{T}
     classifier::MLJ.Model
     mach::Union{MLJ.Machine, AbstractVector{MLJ.Machine}, Nothing}
-    rules::AbstractVector{T}
+    models::AbstractVector{T}
     model_algo::Symbol
     learn_method::Function
     tune_learn_method::Function
@@ -12,15 +12,9 @@ mutable struct ModelConfig{T}
     ranges::AbstractVector{Function}
     data_treatment::Symbol
     features::AbstractVector{<:Base.Callable}
-<<<<<<< Updated upstream
-    nested_treatment::NamedTuple #{Base.Callable, NamedTuple}
-    # nested_treatment_params::NamedTuple
-    rules_method::Function
-=======
     treatment::NamedTuple #{Base.Callable, NamedTuple}
     # treatment_params::NamedTuple
     rules_method::SoleModels.RuleExtractor
->>>>>>> Stashed changes
 end
 
 
@@ -28,6 +22,12 @@ end
 # ---------------------------------------------------------------------------- #
 #                                   get model                                  #
 # ---------------------------------------------------------------------------- #
+function get_model(
+    model::ModelConfig,
+)
+    model
+end
+
 function get_model(
     model_name::Symbol;
     tuning::Union{T, Nothing}=nothing,

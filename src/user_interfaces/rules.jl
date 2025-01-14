@@ -21,13 +21,13 @@ returning a DataFrame of rules, and their metrics.
 Note that duplicate rules may be returned.
 
 Keyword arguments:
-- `method`: a callable method for extracting rules, such as `Sole.listrules` and `SolePostHoc.extractrules`
+- `method`: a callable method for extracting rules, such as `Sole.listrules` and `Sole.extractrules`
 - `min_lift`: minimum lift
 - `min_ninstances`: minimum number of instances
 - `min_coverage`: minimum coverage
 - `min_ncovered`: minimum number of covered instances
 - `normalize`: whether to normalize the antecedent
-- See [`Sole.listrules`](@ref) or [`SolePostHoc.extractrules`](@ref) for additional keyword arguments.
+- See [`Sole.listrules`](@ref) or [`Sole.extractrules`](@ref) for additional keyword arguments.
 """
 function get_rules(
     model::T,
@@ -44,9 +44,9 @@ function get_rules(
     variable_names_map = [names(ds.X)]
     _X = DataFrame[]
 
-    for r in model.rules
-        rules = model.rules_method(
-            r;
+    for m in model.models
+        rules = Sole.extractrules(model.rules_method,
+            m;
             min_lift=min_lift,
             min_ninstances=min_ninstances,
             min_coverage=min_coverage,
@@ -61,11 +61,6 @@ function get_rules(
         X = DataFrame(antecedent=String[], consequent=Any[]; [name => Vector{Union{Float64, Int}}() for name in keys(readmetrics(irules[1]))]...)
 
         for rule in irules
-<<<<<<< Updated upstream
-            ant = syntaxstring(Sole.antecedent(rule), threshold_digits=threshold_digits)
-            cons = Sole.leafmodelname(Sole.consequent(rule))
-            push!(X, (ant, cons, readmetrics(rule, round_digits=round_digits)...))
-=======
             ant = begin
                 if model.rules_method == SolePostHoc.LumenRuleExtractor()
                     syntaxstring(Sole.antecedent(rule); threshold_digits)
@@ -75,7 +70,6 @@ function get_rules(
             end
             cons = SoleModels.leafmodelname(Sole.consequent(rule))
             push!(X, (ant, cons, readmetrics(rule; round_digits)...))
->>>>>>> Stashed changes
         end
 
         push!(_X, X)
