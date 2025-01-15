@@ -1,11 +1,12 @@
 # ---------------------------------------------------------------------------- #
 #                                   fit model                                  #
 # ---------------------------------------------------------------------------- #
-function modelfit!(
-    model::T,
-    ds::S;
+function modelfit(
+    model::AbstractModelSet,
+    classifier::MLJ.Model,
+    ds::Dataset;
     kwargs...
-) where {T<:SoleXplorer.ModelConfig, S<:SoleXplorer.Dataset}
+)
     # ------------------------------------------------------------------------ #
     #                         data check and treatment                         #
     # ------------------------------------------------------------------------ #
@@ -17,15 +18,15 @@ function modelfit!(
     fitmodel = MLJ.Machine[]
 
     for tt in tt_train
-        mach = if model.model_algo == :regression
-            MLJ.machine(model.classifier, selectrows(ds.X, tt.train); kwargs...)
+        mach = if model.type.algo == :regression
+            MLJ.machine(classifier, selectrows(ds.X, tt.train); kwargs...)
         else
-            mach = MLJ.machine(model.classifier, selectrows(ds.X, tt.train), ds.y[tt.train]; kwargs...)
+            mach = MLJ.machine(classifier, selectrows(ds.X, tt.train), ds.y[tt.train]; kwargs...)
         end
         fit!(mach, verbosity=0)
 
         push!(fitmodel, mach)
     end
 
-    model.mach = length(fitmodel) == 1 ? fitmodel[1] : fitmodel
+    return length(fitmodel) == 1 ? fitmodel[1] : fitmodel
 end

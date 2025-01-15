@@ -2,8 +2,8 @@
 #                     models from DecisionTrees package                        #
 # ---------------------------------------------------------------------------- #
 function DecisionTreeModel()
-    model      = MLJDecisionTreeInterface.DecisionTreeClassifier
-    type = (; algo=:classification, type=DecisionTree, treatment=:aggregate)
+    model = MLJDecisionTreeInterface.DecisionTreeClassifier
+    type  = (; algo=:classification, type=DecisionTree, treatment=:aggregate)
 
     params = (;
     max_depth              = -1,
@@ -18,7 +18,7 @@ function DecisionTreeModel()
     rng                    = Random.TaskLocalRNG()
 )
 
-    features   = DEFAULT_FEATS
+    features  = DEFAULT_FEATS
     winparams = (type=SoleBase.wholewindow,)
 
     learn_method = (
@@ -26,10 +26,14 @@ function DecisionTreeModel()
         (mach, X, y) -> (dt = solemodel(MLJ.fitted_params(mach).best_fitted_params.tree); apply!(dt, X, y); dt)
     )
 
-    ranges = [
-        model -> MLJ.range(model, :merge_purity_threshold, lower=0, upper=1),
-        model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])
-    ]
+    tuning = (
+        method        = (type = latinhypercube, ntour = 20),
+        params        = TUNING_PARAMS,
+        ranges        = [
+            model -> MLJ.range(model, :merge_purity_threshold, lower=0, upper=1),
+            model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])
+        ]
+    )
 
     rules_method = SoleModels.PlainRuleExtractor()
 
@@ -40,7 +44,7 @@ function DecisionTreeModel()
         features,
         winparams,
         learn_method,
-        ranges,
+        tuning,
         rules_method
     )
 end

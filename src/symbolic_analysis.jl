@@ -4,6 +4,13 @@ function check_unknown_params(params, default_params, source)
     !isempty(unknown) && throw(ArgumentError("Unknown parameters in $source: $unknown"))
 end
 
+function get_function(params, avail_functions)
+    isnothing(params) && return nothing
+    funcs = filter(v -> v in avail_functions, collect(values(params)))
+    length(funcs) > 1 && throw(ArgumentError("Multiple window functions detected. Only one window function is allowed."))
+    return isempty(funcs) ? nothing : funcs[1]
+end
+
 function validate_model(model::Symbol)
     haskey(AVAIL_MODELS, model) || throw(ArgumentError("Model $model not found in available models"))
     return AVAIL_MODELS[model]()
@@ -42,25 +49,16 @@ function validate_features(
     return features
 end
 
-
-function get_wintype(params)
-    isnothing(params) && return nothing
-    win_values = filter(v -> v in AVAIL_WINS, collect(values(params)))
-    length(win_values) > 1 && throw(ArgumentError("Multiple window functions detected. Only one window function is allowed."))
-    return isempty(win_values) ? nothing : win_values[1]
-end
-
 function validate_winparams(
     default_params::NamedTuple,
     global_params::Union{NamedTuple, Nothing},
     user_params::Union{NamedTuple, Nothing},
 )
-    global_win = get_wintype(global_params)
-    user_win = get_wintype(user_params)
+    global_win = get_function(global_params, AVAIL_WINS)
+    user_win = get_function(user_params, AVAIL_WINS)
     
     type = if isnothing(user_win) && isnothing(global_win)
         default_params.type
-
     elseif isnothing(user_win)
         default_params = WIN_PARAMS[global_win]
         filtered_global_params = isnothing(global_params) ? nothing : NamedTuple(k => v for (k,v) in pairs(global_params) if k != :type)
@@ -74,16 +72,47 @@ function validate_winparams(
     end
 
     filter_valid_params(params) = isnothing(params) ? NamedTuple() : NamedTuple(k => v for (k,v) in pairs(params) if haskey(default_params, k))
+    filtered_default_params = NamedTuple(k => v for (k,v) in pairs(default_params) if k != :type)
     global_filt_params = filter_valid_params(global_params)
     user_filt_params = filter_valid_params(user_params)
-
-    filtered_default_params = NamedTuple(k => v for (k,v) in pairs(default_params) if k != :type)
 
     return (type = type, params = merge(filtered_default_params, global_filt_params, user_filt_params))
 end
 
-function validate_ranges(
-    default_ranges::AbstractVector{<:Base.Callable},
+function validate_tuning_type(
+    default_type::Union{NamedTuple, Nothing},
+    global_type::Union{NamedTuple, Nothing},
+    user_type::Union{NamedTuple, Nothing},
+)
+    global_tuning = get_function(global_type, AVAIL_TUNING_METHODS)
+    user_tuning = get_function(user_type, AVAIL_TUNING_METHODS)
+    
+    type = if isnothing(user_tuning) && isnothing(global_tuning)
+        isnothing(default_type) ? nothing : default_type.type
+    elseif isnothing(user_tuning)
+        default_type = TUNING_METHODS_PARAMS[global_tuning]
+        filtered_global_type = isnothing(global_type) ? nothing : NamedTuple(k => v for (k,v) in pairs(global_type) if k != :type)
+        check_unknown_params(filtered_global_type, default_type, "global_tuning_type")
+        haskey(global_type, :type) && global_type.type
+    else
+        default_type = TUNING_METHODS_PARAMS[user_tuning]
+        filtered_user_type = isnothing(user_type) ? nothing : NamedTuple(k => v for (k,v) in pairs(user_type) if k != :type)
+        check_unknown_params(filtered_user_type, default_type, "user_tuning_type")
+        haskey(user_type, :type) && user_type.type
+    end
+
+    filter_valid_params(params) = isnothing(params) ? NamedTuple() : NamedTuple(k => v for (k,v) in pairs(params) if haskey(default_type, k))
+    filtered_default_params = isnothing(default_type) ? NamedTuple() : NamedTuple(k => v for (k,v) in pairs(default_type) if k != :type)
+    global_filt_params = filter_valid_params(global_type)
+    user_filt_params = filter_valid_params(user_type)
+
+    merged_params = merge(filtered_default_params, global_filt_params, user_filt_params)
+
+    isempty(merged_params) ? nothing : type(; merged_params...)
+end
+
+function validate_tuning_ranges(
+    default_ranges::Union{AbstractVector{<:Base.Callable}, Nothing},
     global_ranges::Union{AbstractVector{<:Base.Callable}, Nothing},
     user_ranges::Union{AbstractVector{<:Base.Callable}, Nothing}
 )
@@ -98,6 +127,36 @@ function validate_ranges(
     all(r -> r isa Base.Callable, ranges) || throw(ArgumentError("All ranges must be functions"))
 
     return ranges
+end
+
+function validate_tuning(
+    default_tuning::NamedTuple,
+    global_tuning::Union{NamedTuple, Nothing},
+    user_tuning::Union{NamedTuple, Nothing},
+)
+    method = validate_tuning_type(
+        isnothing(default_tuning) ? nothing : haskey(default_tuning, :method) ? default_tuning.method : nothing,
+        isnothing(global_tuning) ? nothing : haskey(global_tuning, :method) ? global_tuning.method : nothing,
+        isnothing(user_tuning) ? nothing : haskey(user_tuning, :method) ? user_tuning.method : nothing,    
+    )
+
+    if !isnothing(method)
+        params = validate_params(
+            default_tuning.params,
+            isnothing(global_tuning) ? nothing : haskey(global_tuning, :params) ? global_tuning.params : nothing,
+            isnothing(user_tuning) ? nothing : haskey(user_tuning, :params) ? user_tuning.params : nothing,
+        )
+
+        ranges = validate_tuning_ranges(
+            default_tuning.ranges,
+            isnothing(global_tuning) ? nothing : haskey(global_tuning, :ranges) ? global_tuning.ranges : nothing,
+            isnothing(user_tuning) ? nothing : haskey(user_tuning, :ranges) ? user_tuning.ranges : nothing,
+        )
+
+        return (method=method, params=params, ranges=ranges)
+    else
+        return (method=method, params=NamedTuple(), ranges=nothing)
+    end  
 end
 
 function validate_modelset(
@@ -128,18 +187,13 @@ function validate_modelset(
             haskey(m, :winparams) ? m.winparams : nothing
         )
 
-        if haskey(m, :tuneparams) && m.tuneparams == true
-            model.learn_method = model.learn_method[2]
-            model.ranges = validate_ranges(
-                model.ranges,
-                isnothing(global_params) ? nothing : haskey(global_params, :ranges) ? global_params.ranges : nothing,
-                haskey(m, :ranges) ? m.ranges : nothing
-            )
-        else
-            model.learn_method = model.learn_method[1]
-            model.ranges = Base.Callable[]
-        end
+        model.tuning = validate_tuning(
+            model.tuning,
+            isnothing(global_params) ? nothing : haskey(global_params, :tuning) ? global_params.tuning : nothing,
+            haskey(m, :tuning) ? m.tuning : nothing
+        )
 
+        model.learn_method = isnothing(model.tuning.method) ? model.learn_method[1] : model.learn_method[2]
 
         push!(modelsets, model)
     end
@@ -181,17 +235,22 @@ function _symbolic_analysis(
 )
     modelsets = validate_modelset(models, global_params)
 
-    for m in modelsets
-    #     model = SX.get_model(m)
-        # ds = SX.preprocess_dataset(X, y, model)
+    models = ModelConfig[]
 
-    #     SX.modelfit!(model, ds);
+    for m in modelsets
+        ds = preprocess_dataset(X, y, m)
+        classifier = get_model(m, ds)
+
+        mach = modelfit(m, classifier, ds);
     #     SX.modeltest!(model, ds);
 
     #     @test_nowarn SX.get_rules(model, ds);
     #     @test_nowarn SX.get_predict(model, ds);
+    #     @test_nowarn SX.get_rules(model, ds);
+        mcgf = ModelConfig(m, ds, classifier, nothing)
+        push!(models, mcgf)
     end
-    return modelsets
+    return models
 end
 
 function symbolic_analysis(
