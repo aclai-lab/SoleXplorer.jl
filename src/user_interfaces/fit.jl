@@ -2,7 +2,7 @@
 #                                   fit model                                  #
 # ---------------------------------------------------------------------------- #
 function modelfit(
-    model::AbstractModelSet,
+    modelset::AbstractModelSet,
     classifier::MLJ.Model,
     ds::Dataset;
     kwargs...
@@ -18,7 +18,7 @@ function modelfit(
     fitmodel = MLJ.Machine[]
 
     for tt in tt_train
-        mach = if model.type.algo == :regression
+        mach = if modelset.type.algo == :regression
             MLJ.machine(classifier, selectrows(ds.X, tt.train); kwargs...)
         else
             mach = MLJ.machine(classifier, selectrows(ds.X, tt.train), ds.y[tt.train]; kwargs...)

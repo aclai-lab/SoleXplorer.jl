@@ -251,13 +251,12 @@ function _symbolic_analysis(
         classifier = get_model(m, ds)
 
         mach = modelfit(m, classifier, ds);
-    #     SX.modeltest!(model, ds);
+        model = modeltest(m, mach, ds);
 
-    #     @test_nowarn SX.get_rules(model, ds);
-    #     @test_nowarn SX.get_predict(model, ds);
-    #     @test_nowarn SX.get_rules(model, ds);
-        mcgf = ModelConfig(m, ds, classifier, nothing)
-        push!(models, mcgf)
+        rules = get_rules(m, model, ds);
+        accuracy = get_predict(mach, ds);
+
+        push!(models, ModelConfig(m, ds, classifier, mach, model, rules, accuracy))
     end
     return models
 end

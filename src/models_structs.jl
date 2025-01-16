@@ -35,17 +35,10 @@ mutable struct ModelConfig <: AbstractModelConfig
     setup      :: AbstractModelSet
     ds         :: Dataset
     classifier :: MLJ.Model
-    mach       :: Union{MLJ.Machine, AbstractVector{MLJ.Machine}, Nothing}
-    # models::AbstractVector{T}
-    # model_algo::Symbol
-    # learn_method::Function
-    # tune_learn_method::Function
-    # apply_tuning::Bool
-    # ranges::AbstractVector{Function}
-    # data_treatment::Symbol
-    # features::AbstractVector{<:Base.Callable}
-    # treatment::NamedTuple #{Base.Callable, NamedTuple}
-    # rules_method::SoleModels.RuleExtractor
+    mach       :: MLJ.Machine
+    models     :: AbstractModel
+    rules      :: AbstractDataFrame
+    accuracy   :: AbstractFloat
 end
 
 const DEFAULT_FEATS = [maximum, minimum, mean, std]

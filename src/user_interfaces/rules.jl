@@ -30,8 +30,9 @@ Keyword arguments:
 - See [`Sole.listrules`](@ref) or [`Sole.extractrules`](@ref) for additional keyword arguments.
 """
 function get_rules(
-    model::T,
-    ds::S,
+    modelset::AbstractModelSet,
+    model::AbstractModel,
+    ds::Dataset,
     min_lift::Float64=1.0,
     min_ninstances::Int=0,
     min_coverage::Float64=0.10,
@@ -40,41 +41,36 @@ function get_rules(
     threshold_digits::Int=2,
     round_digits::Int=2,
     kwargs...
-) where {T<:SoleXplorer.ModelConfig, S<:SoleXplorer.Dataset}
+)
     variable_names_map = [names(ds.X)]
-    _X = DataFrame[]
 
-    for m in model.models
-        rules = Sole.extractrules(model.rules_method,
-            m;
-            min_lift=min_lift,
-            min_ninstances=min_ninstances,
-            min_coverage=min_coverage,
-            min_ncovered=min_ncovered,
-            normalize=normalize,
-            kwargs...
-        );
+    rules = Sole.extractrules(modelset.rules_method,
+        model;
+        min_lift=min_lift,
+        min_ninstances=min_ninstances,
+        min_coverage=min_coverage,
+        min_ncovered=min_ncovered,
+        normalize=normalize,
+        kwargs...
+    );
 
-        map(r->(consequent(r), readmetrics(r)), rules)
-        irules = sort(rules, by=readmetrics)
+    map(r->(consequent(r), readmetrics(r)), rules)
+    irules = sort(rules, by=readmetrics)
 
-        X = DataFrame(antecedent=String[], consequent=Any[]; [name => Vector{Union{Float64, Int}}() for name in keys(readmetrics(irules[1]))]...)
+    X = DataFrame(antecedent=String[], consequent=Any[]; [name => Vector{Union{Float64, Int}}() for name in keys(readmetrics(irules[1]))]...)
 
-        for rule in irules
-            ant = begin
-                if model.rules_method == SolePostHoc.LumenRuleExtractor()
-                    syntaxstring(Sole.antecedent(rule); threshold_digits)
-                else
-                    syntaxstring(Sole.antecedent(rule); threshold_digits, variable_names_map)
-                end
+    for rule in irules
+        ant = begin
+            if modelset.rules_method == SolePostHoc.LumenRuleExtractor()
+                syntaxstring(Sole.antecedent(rule); threshold_digits)
+            else
+                syntaxstring(Sole.antecedent(rule); threshold_digits, variable_names_map)
             end
-            cons = SoleModels.leafmodelname(Sole.consequent(rule))
-            push!(X, (ant, cons, readmetrics(rule; round_digits)...))
         end
-
-        push!(_X, X)
+        cons = SoleModels.leafmodelname(Sole.consequent(rule))
+        push!(X, (ant, cons, readmetrics(rule; round_digits)...))
     end
 
-    return vcat(_X...)
+    return X
 end
 
