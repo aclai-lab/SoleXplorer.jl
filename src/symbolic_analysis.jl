@@ -131,16 +131,24 @@ end
 
 function validate_tuning(
     default_tuning::NamedTuple,
-    global_tuning::Union{NamedTuple, Nothing},
-    user_tuning::Union{NamedTuple, Nothing},
+    global_tuning::Union{NamedTuple, Bool, Nothing},
+    user_tuning::Union{NamedTuple, Bool, Nothing},
 )
-    method = validate_tuning_type(
-        isnothing(default_tuning) ? nothing : haskey(default_tuning, :method) ? default_tuning.method : nothing,
-        isnothing(global_tuning) ? nothing : haskey(global_tuning, :method) ? global_tuning.method : nothing,
-        isnothing(user_tuning) ? nothing : haskey(user_tuning, :method) ? user_tuning.method : nothing,    
-    )
+    if isa(global_tuning, Bool) 
+        global_tuning = NamedTuple()
+    end
 
-    if !isnothing(method)
+    if isa(user_tuning, Bool)
+        user_tuning = NamedTuple()
+    end
+
+    if !isnothing(global_tuning) || !isnothing(user_tuning)
+        method = validate_tuning_type(
+            default_tuning.method,
+            isnothing(global_tuning) ? nothing : haskey(global_tuning, :method) ? global_tuning.method : nothing,
+            isnothing(user_tuning) ? nothing : haskey(user_tuning, :method) ? user_tuning.method : nothing,    
+        )
+
         params = validate_params(
             default_tuning.params,
             isnothing(global_tuning) ? nothing : haskey(global_tuning, :params) ? global_tuning.params : nothing,
@@ -153,9 +161,9 @@ function validate_tuning(
             isnothing(user_tuning) ? nothing : haskey(user_tuning, :ranges) ? user_tuning.ranges : nothing,
         )
 
-        return (method=method, params=params, ranges=ranges)
+        return (tuning=true, method=method, params=params, ranges=ranges)
     else
-        return (method=method, params=NamedTuple(), ranges=nothing)
+        return (tuning=false, method=nothing, params=NamedTuple(), ranges=nothing)
     end  
 end
 
@@ -228,7 +236,7 @@ da notare: i parametri specificati nel model sovrascrivono i global_params.
 
 function _symbolic_analysis(
     X::AbstractDataFrame, 
-    y::AbstractVector; 
+    y::Union{AbstractVector, Nothing}; 
     models::AbstractVector{<:NamedTuple}, 
     global_params::Union{NamedTuple, Nothing}=nothing,
     kwargs...
@@ -239,9 +247,10 @@ function _symbolic_analysis(
 
     for m in modelsets
         ds = preprocess_dataset(X, y, m)
+
         classifier = get_model(m, ds)
 
-        mach = modelfit(m, classifier, ds);
+        # mach = modelfit(m, classifier, ds);
     #     SX.modeltest!(model, ds);
 
     #     @test_nowarn SX.get_rules(model, ds);

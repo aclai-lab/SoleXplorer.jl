@@ -23,6 +23,10 @@ model = symbolic_analysis(X, y;
 )
 
 model = symbolic_analysis(X, y;
+    model = (model = :decision_tree, tuning = true),
+)
+
+model = symbolic_analysis(X, y;
     model = 
         (
             model = :decision_tree,
@@ -85,7 +89,10 @@ models = symbolic_analysis(X, y;
             tuning = (
                 method = (type=latinhypercube,), 
                 params = (repeats=2,), 
-                ranges = [model -> MLJ.range(model, :feature_importance; values=[:impurity, :split])]
+                ranges = [
+                    SoleXplorer.range(:merge_purity_threshold; lower=0, upper=1),
+                    SoleXplorer.range(:feature_importance; values=[:impurity, :split])
+                ]
             ),   
         ),
         (
@@ -98,3 +105,4 @@ models = symbolic_analysis(X, y;
         )
     ],
 )
+

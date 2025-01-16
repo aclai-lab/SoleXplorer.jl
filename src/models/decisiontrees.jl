@@ -27,6 +27,7 @@ function DecisionTreeModel()
     )
 
     tuning = (
+        tuning        = false,
         method        = (type = latinhypercube, ntour = 20),
         params        = TUNING_PARAMS,
         ranges        = [

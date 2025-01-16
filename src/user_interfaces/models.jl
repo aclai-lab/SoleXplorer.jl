@@ -14,10 +14,8 @@ function get_model(
 )
     classifier = modelset.model(; modelset.params...)
 
-    if !isnothing(modelset.tuning.method)
+    if modelset.tuning.tuning
         ranges = [r(classifier) for r in modelset.tuning.ranges]
-
-        @show ranges
 
         classifier = MLJ.TunedModel(; 
             model=classifier, 
