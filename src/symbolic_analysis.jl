@@ -250,7 +250,7 @@ function _symbolic_analysis(
 
         classifier = get_model(m, ds)
 
-        # mach = modelfit(m, classifier, ds);
+        mach = modelfit(m, classifier, ds);
     #     SX.modeltest!(model, ds);
 
     #     @test_nowarn SX.get_rules(model, ds);

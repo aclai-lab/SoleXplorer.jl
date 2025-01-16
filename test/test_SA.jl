@@ -52,7 +52,7 @@ models = symbolic_analysis(X, y;
             tuning = (
                 method=(type=latinhypercube, ntour=20,), 
                 params=(repeats=11,), 
-                ranges = [model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])]
+                ranges = [SX.range(:feature_importance; values=[:impurity, :split])]
             ),   
         ),
         (
@@ -90,8 +90,8 @@ models = symbolic_analysis(X, y;
                 method = (type=latinhypercube,), 
                 params = (repeats=2,), 
                 ranges = [
-                    SoleXplorer.range(:merge_purity_threshold; lower=0, upper=1),
-                    SoleXplorer.range(:feature_importance; values=[:impurity, :split])
+                    SX.range(:merge_purity_threshold; lower=0, upper=1),
+                    SX.range(:feature_importance; values=[:impurity, :split])
                 ]
             ),   
         ),
@@ -100,7 +100,6 @@ models = symbolic_analysis(X, y;
             tuning = (
                 method = (type=latinhypercube, ntour=20,), 
                 params = (repeats=2,), 
-                # ranges = [model -> MLJ.range(model, :feature_importance; values=[:impurity, :split])]
             ), 
         )
     ],
