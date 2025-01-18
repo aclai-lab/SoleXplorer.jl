@@ -30,6 +30,8 @@ mutable struct ModelSet <: AbstractModelSet
 end
 
 DecisionTreeModel(dtmodel::ModelSet) = dtmodel
+RandomForestModel(dtmodel::ModelSet) = dtmodel
+AdaBoostModel(dtmodel::ModelSet)     = dtmodel
 
 mutable struct ModelConfig <: AbstractModelConfig
     setup      :: AbstractModelSet
@@ -44,9 +46,9 @@ end
 const DEFAULT_FEATS = [maximum, minimum, mean, std]
 
 const AVAIL_MODELS = Dict(
-    :decision_tree => DecisionTreeModel,
-    # :decision_forest     => MLJDecisionTreeInterface.RandomForestClassifier,
-    # :adaboost            => MLJDecisionTreeInterface.AdaBoostStumpClassifier,
+    :decisiontree => DecisionTreeModel,
+    :randomforest => RandomForestModel,
+    :adaboost     => AdaBoostModel,
 
     # :modal_decision_tree => ModalDecisionTrees.ModalDecisionTree,
     # :modal_adaboost      => ModalDecisionTrees.ModalAdaBoost,

@@ -13,23 +13,23 @@ train_seed = 11;
 #                             basic decision tree                              #
 # ---------------------------------------------------------------------------- #
 @info "Test 1: Decision Tree"
-model_name = :decision_tree
+model_name = :decisiontree
 features = catch9
 rng = Random.Xoshiro(train_seed)
 Random.seed!(train_seed)
 
-model = symbolic_analysis(X, y;
-    model = (model = :decision_tree,),
-)
+model = symbolic_analysis(X, y; model = (model = :decisiontree,))
+model = symbolic_analysis(X, y; model = (model = :randomforest,))
+model = symbolic_analysis(X, y; model = (model = :adaboost,))
 
 model = symbolic_analysis(X, y;
-    model = (model = :decision_tree, tuning = true),
+    model = (model = :decisiontree, tuning = true),
 )
 
 model = symbolic_analysis(X, y;
     model = 
         (
-            model = :decision_tree,
+            model = :decisiontree,
             params = (max_depth = 3, min_samples_leaf = 14),
             winparams = (type = movingwindow, window_size = 12),
             features = [minimum, mean, cov, mode_5]
@@ -45,7 +45,7 @@ model = symbolic_analysis(X, y;
 models = symbolic_analysis(X, y;
     models = [
         (
-            model = :decision_tree,
+            model = :decisiontree,
             params = (max_depth = 3, min_samples_leaf = 14),
             winparams = (type = movingwindow, window_size = 12),
             features = [minimum, mean, cov, mode_5],
@@ -56,7 +56,7 @@ models = symbolic_analysis(X, y;
             ),   
         ),
         (
-            model = :decision_tree,
+            model = :decisiontree,
             params = (min_samples_leaf = 30, min_samples_split = 1,),
         )
     ],
@@ -65,13 +65,13 @@ models = symbolic_analysis(X, y;
 models = symbolic_analysis(X, y;
     models = [
         (
-            model = :decision_tree,
+            model = :decisiontree,
             params = (max_depth = 3, min_samples_leaf = 14),
             winparams = (type = movingwindow, window_size = 12),
             features = [minimum, mean, cov, mode_5]
         ),
         (
-            model = :decision_tree,
+            model = :decisiontree,
             params = (min_samples_leaf = 30, min_samples_split = -2,)
         )
     ],
@@ -85,7 +85,7 @@ models = symbolic_analysis(X, y;
 models = symbolic_analysis(X, y;
     models = [
         (
-            model = :decision_tree,
+            model = :decisiontree,
             tuning = (
                 method = (type=latinhypercube,), 
                 params = (repeats=2,), 
@@ -96,7 +96,7 @@ models = symbolic_analysis(X, y;
             ),   
         ),
         (
-            model = :decision_tree,
+            model = :decisiontree,
             tuning = (
                 method = (type=latinhypercube, ntour=20,), 
                 params = (repeats=2,), 
