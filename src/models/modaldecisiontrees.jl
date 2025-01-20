@@ -62,7 +62,7 @@ end
 
 function ModalRandomForestModel()
     type   = ModalDecisionTrees.ModalRandomForest
-    config = (; algo=:classification, type=DecisionEnsemble, treatment=:reducesize)
+    config = (; algo=:classification, type=DecisionForest, treatment=:reducesize)
 
     params = (;
         sampling_fraction      = 0.7, 
@@ -108,6 +108,7 @@ function ModalRandomForestModel()
     )
 
     rules_method = SolePostHoc.LumenRuleExtractor()
+    # rules_method = SoleModels.PlainRuleExtractor() ### Lumen does not currently support symbolic feature names.
 
     return SymbolicModelSet(
         type,
@@ -182,7 +183,7 @@ function ModalAdaBoostModel()
     )
 
     # rules_method = SolePostHoc.LumenRuleExtractor()
-    rules_method = SoleModels.LumenRuleExtractor()
+    rules_method = SoleModels.PlainRuleExtractor() ### Lumen does not currently support symbolic feature names.
 
     return SymbolicModelSet(
         type,

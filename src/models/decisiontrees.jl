@@ -97,6 +97,7 @@ function RandomForestModel()
     )
 
     rules_method = SolePostHoc.LumenRuleExtractor()
+    # rules_method = SoleModels.PlainRuleExtractor() ### Lumen does not currently support symbolic feature names.
 
     return SymbolicModelSet(
         type,
@@ -153,7 +154,7 @@ function AdaBoostModel()
     )
 
     # rules_method = SolePostHoc.LumenRuleExtractor()
-    rules_method = SoleModels.PlainRuleExtractor() ### DEBUG
+    rules_method = SoleModels.PlainRuleExtractor() ### Lumen does not currently support symbolic feature names.
 
     return SymbolicModelSet(
         type,

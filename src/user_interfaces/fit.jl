@@ -18,7 +18,7 @@ function modelfit(
     fitmodel = MLJ.Machine[]
 
     for tt in tt_train
-        mach = if modelset.type.algo == :regression
+        mach = if modelset.config.algo == :regression
             MLJ.machine(classifier, selectrows(ds.X, tt.train); kwargs...)
         else
             mach = MLJ.machine(classifier, selectrows(ds.X, tt.train), ds.y[tt.train]; kwargs...)

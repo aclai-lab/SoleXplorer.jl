@@ -12,7 +12,7 @@ function get_model(
     ds::Dataset;
     kwargs...
 )
-    classifier = modelset.model(; modelset.params...)
+    classifier = modelset.type(; modelset.params...)
 
     if modelset.tuning.tuning
         ranges = [r(classifier) for r in modelset.tuning.ranges]

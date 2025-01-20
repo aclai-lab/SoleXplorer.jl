@@ -30,7 +30,7 @@ function _treatment(
     max_interval = maximum(length.(eachrow(X)))
     n_intervals = model.winparams.type(max_interval; model.winparams.params...)
     
-    if model.type.treatment == :aggregate        # propositional
+    if model.config.treatment == :aggregate        # propositional
         if n_intervals == 1
             valid_X = DataFrame([v => Float64[] 
                 for v in [string(f, "(", v, ")") 
@@ -44,7 +44,7 @@ function _treatment(
             )
         end
 
-    elseif model.type.treatment == :reducesize   # modal
+    elseif model.config.treatment == :reducesize   # modal
         valid_X = DataFrame([name => Vector{Float64}[] for name in vnames])
     else
         # TODO
@@ -55,12 +55,12 @@ function _treatment(
         row_intervals = model.winparams.type(maximum(length.(collect(row))); model.winparams.params...)
         interval_diff = length(n_intervals) - length(row_intervals)
 
-        if model.type.treatment == :aggregate
+        if model.config.treatment == :aggregate
             push!(valid_X, vcat([vcat([f(col[r]) for r in row_intervals], 
                                         fill(NaN, interval_diff)) 
                                         for col in row, f in model.features]...)
                                     )
-        elseif model.type.treatment == :reducesize
+        elseif model.config.treatment == :reducesize
             f = mean # TODO make it a parameter
             push!(valid_X, [vcat([f(col[r]) for r in row_intervals], 
                                     fill(NaN, interval_diff)) 
@@ -109,7 +109,7 @@ function preprocess_dataset(
     check_dataframe_type(X) || throw(ArgumentError("DataFrame must contain only numeric values"))
     size(X, 1) == length(y) || throw(ArgumentError("Number of rows in DataFrame must match length of class labels"))
 
-    if model.type.algo == :regression
+    if model.config.algo == :regression
         y isa AbstractFloat || (y = Float64.(y))
     else
         y isa CategoricalArray || (y = CategoricalArray(y))

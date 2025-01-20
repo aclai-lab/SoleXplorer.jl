@@ -19,8 +19,8 @@ abstract type AbstractModelSet end
 abstract type AbstractModelConfig end
 
 mutable struct SymbolicModelSet <: AbstractModelSet
-    model        :: Base.Callable
-    type         :: NamedTuple
+    type         :: Base.Callable
+    config       :: NamedTuple
     params       :: NamedTuple
     features     :: Union{AbstractVector{<:Base.Callable}, Nothing}
     winparams    :: NamedTuple
