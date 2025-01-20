@@ -22,7 +22,7 @@ mutable struct SymbolicModelSet <: AbstractModelSet
     model        :: Base.Callable
     type         :: NamedTuple
     params       :: NamedTuple
-    features     :: AbstractVector{<:Base.Callable}
+    features     :: Union{AbstractVector{<:Base.Callable}, Nothing}
     winparams    :: NamedTuple
     learn_method :: Union{Base.Callable, Tuple{Base.Callable, Base.Callable}}
     tuning       :: NamedTuple

@@ -183,11 +183,20 @@ function validate_modelset(
             haskey(m, :params) ? m.params : nothing
         )
 
-        model.features = validate_features(
-            model.features,
-            isnothing(global_params) ? nothing : haskey(global_params, :features) ? global_params.features : nothing,
-            haskey(m, :features) ? m.features : nothing
-        )
+        if isnothing(model.features)
+            features = validate_features(
+                model.params.features,
+                isnothing(global_params) ? nothing : haskey(global_params, :features) ? global_params.features : nothing,
+                haskey(m, :features) ? m.features : nothing
+            )
+            model.params = merge(model.params, (features=features,))
+        else
+            model.features = validate_features(
+                model.features,
+                isnothing(global_params) ? nothing : haskey(global_params, :features) ? global_params.features : nothing,
+                haskey(m, :features) ? m.features : nothing
+            )
+        end
 
         model.winparams = validate_winparams(
             model.winparams,

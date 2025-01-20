@@ -11,14 +11,14 @@ function ModalDecisionTreeModel()
         min_purity_increase    = 0.002, 
         max_purity_at_leaf     = Inf, 
         max_modal_depth        = nothing, 
-        relations              = nothing, 
-        features               = nothing, 
+        relations              = :IA7, 
+        features               = DEFAULT_FEATS, 
         conditions             = nothing, 
         featvaltype            = Float64, 
         initconditions         = nothing, 
         downsize               = true, 
         force_i_variables      = true, 
-        fixcallablenans        = false, 
+        fixcallablenans        = true, 
         print_progress         = false, 
         rng                    = Random.TaskLocalRNG(), 
         display_depth          = nothing, 
@@ -29,7 +29,6 @@ function ModalDecisionTreeModel()
         feature_importance     = :split,
     )
 
-    features  = DEFAULT_FEATS
     winparams = (type=SoleBase.adaptivewindow, nwindows=20)
 
     learn_method = (
@@ -53,7 +52,7 @@ function ModalDecisionTreeModel()
         type,
         config,
         params,
-        features,
+        nothing,
         winparams,
         learn_method,
         tuning,
@@ -73,14 +72,14 @@ function ModalRandomForestModel()
         min_purity_increase    = -Inf, 
         max_purity_at_leaf     = Inf, 
         max_modal_depth        = nothing, 
-        relations              = nothing, 
-        features               = nothing, 
+        relations              = :IA7, 
+        features               = DEFAULT_FEATS, 
         conditions             = nothing, 
         featvaltype            = Float64, 
         initconditions         = nothing, 
         downsize               = true, 
         force_i_variables      = true, 
-        fixcallablenans        = false, 
+        fixcallablenans        = true, 
         print_progress         = false, 
         rng                    = Random.TaskLocalRNG(), 
         display_depth          = nothing, 
@@ -91,7 +90,6 @@ function ModalRandomForestModel()
         feature_importance     = :split
     )
 
-    features  = DEFAULT_FEATS
     winparams = (type=SoleBase.adaptivewindow, nwindows=20)
 
     learn_method = (
@@ -115,7 +113,7 @@ function ModalRandomForestModel()
         type,
         config,
         params,
-        features,
+        nothing,
         winparams,
         learn_method,
         tuning,
@@ -133,14 +131,14 @@ function ModalAdaBoostModel()
         min_purity_increase    = 0.0, 
         max_purity_at_leaf     = Inf, 
         max_modal_depth        = nothing, 
-        relations              = nothing, 
-        features               = nothing, 
+        relations              = :IA7, 
+        features               = DEFAULT_FEATS, 
         conditions             = nothing, 
         featvaltype            = Float64, 
         initconditions         = nothing, 
         downsize               = true, 
         force_i_variables      = true, 
-        fixcallablenans        = false, 
+        fixcallablenans        = true, 
         print_progress         = false, 
         rng                    = Random.TaskLocalRNG(), 
         display_depth          = nothing, 
@@ -152,7 +150,6 @@ function ModalAdaBoostModel()
         n_iter                 = 10
     )
 
-    features  = DEFAULT_FEATS
     winparams = (type=SoleBase.adaptivewindow, nwindows=20)
 
     learn_method = (
@@ -191,7 +188,7 @@ function ModalAdaBoostModel()
         type,
         config,
         params,
-        features,
+        nothing,
         winparams,
         learn_method,
         tuning,
