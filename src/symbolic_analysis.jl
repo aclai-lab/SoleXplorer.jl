@@ -270,7 +270,7 @@ function symbolic_analysis(
     check_dataframe_type(X) || throw(ArgumentError("DataFrame must contain only numeric values"))
     size(X, 1) == length(y) || throw(ArgumentError("Number of rows in DataFrame must match length of class labels"))
 
-    isnothing(models) && throw(ArgumentError("At least one model must be specified"))
+    isnothing(models) && throw(ArgumentError("At least one type must be specified"))
 
     if isa(models, NamedTuple)
         _symbolic_analysis(X, y; models=[models], kwargs...)

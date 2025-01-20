@@ -29,9 +29,13 @@ mutable struct SymbolicModelSet <: AbstractModelSet
     rules_method :: SoleModels.RuleExtractor
 end
 
-DecisionTreeModel(dtmodel :: SymbolicModelSet) = dtmodel
-RandomForestModel(dtmodel :: SymbolicModelSet) = dtmodel
-AdaBoostModel(dtmodel     :: SymbolicModelSet) = dtmodel
+DecisionTreeModel(dtmodel      :: SymbolicModelSet) = dtmodel
+RandomForestModel(dtmodel      :: SymbolicModelSet) = dtmodel
+AdaBoostModel(dtmodel          :: SymbolicModelSet) = dtmodel
+
+ModalDecisionTreeModel(dtmodel :: SymbolicModelSet) = dtmodel
+ModalRandomForestModel(dtmodel :: SymbolicModelSet) = dtmodel
+ModalAdaBoostModel(dtmodel     :: SymbolicModelSet) = dtmodel
 
 mutable struct ModelConfig <: AbstractModelConfig
     setup      :: AbstractModelSet
@@ -46,12 +50,13 @@ end
 const DEFAULT_FEATS = [maximum, minimum, mean, std]
 
 const AVAIL_MODELS = Dict(
-    :decisiontree => DecisionTreeModel,
-    :randomforest => RandomForestModel,
-    :adaboost     => AdaBoostModel,
+    :decisiontree      => DecisionTreeModel,
+    :randomforest      => RandomForestModel,
+    :adaboost          => AdaBoostModel,
 
-    # :modal_decision_tree => ModalDecisionTrees.ModalDecisionTree,
-    # :modal_adaboost      => ModalDecisionTrees.ModalAdaBoost,
+    :modaldecisiontree => ModalDecisionTreeModel,
+    :modalrandomforest => ModalRandomForestModel,
+    :modaladaboost     => ModalAdaBoostModel,
 
     # :modal_decision_list => ModalDecisionLists.MLJInterface.ExtendedSequentialCovering,
 

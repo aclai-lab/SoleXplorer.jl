@@ -56,8 +56,7 @@ export catch9
 
 include("models_structs.jl")
 include("models/decisiontrees.jl")
-
-# include("avail_models_deprecated.jl")
+include("models/modaldecisiontrees.jl")
 
 include("user_interfaces/models.jl")
 export ModelConfig, range, get_model

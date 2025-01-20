@@ -10,26 +10,23 @@ X, y = SoleData.load_arff_dataset("NATOPS")
 train_seed = 11;
 
 # ---------------------------------------------------------------------------- #
-#                             basic decision tree                              #
+#                           basic symbolic analysis                            #
 # ---------------------------------------------------------------------------- #
-@info "Test 1: Decision Tree"
-model_name = :decisiontree
-features = catch9
 rng = Random.Xoshiro(train_seed)
 Random.seed!(train_seed)
 
-model = symbolic_analysis(X, y; model = (model = :decisiontree,))
-model = symbolic_analysis(X, y; model = (model = :randomforest,))
-model = symbolic_analysis(X, y; model = (model = :adaboost,))
+result = symbolic_analysis(X, y; models = (type = :decisiontree,))
+result = symbolic_analysis(X, y; models = (type = :modaldecisiontree,))
+result = symbolic_analysis(X, y; models = (type = :modaldecisiontree, features=[cov, mode_5]))
+result = symbolic_analysis(X, y; models = (type = :modaldecisiontree, winparams = (type = wholewindow,)))
 
-model = symbolic_analysis(X, y;
-    model = (model = :decisiontree, tuning = true),
-)
+result = symbolic_analysis(X, y; models = (type = :adaboost,))
 
-model = symbolic_analysis(X, y;
-    model = 
-        (
-            model = :decisiontree,
+result = symbolic_analysis(X, y; models = (type = :decisiontree, tuning = true),)
+
+result = symbolic_analysis(X, y;
+    models = (
+            type = :decisiontree,
             params = (max_depth = 3, min_samples_leaf = 14),
             winparams = (type = movingwindow, window_size = 12),
             features = [minimum, mean, cov, mode_5]
@@ -42,10 +39,9 @@ model = symbolic_analysis(X, y;
     )
 )
 
-models = symbolic_analysis(X, y;
-    models = [
-        (
-            model = :decisiontree,
+result = symbolic_analysis(X, y;
+    models = [(
+            type = :decisiontree,
             params = (max_depth = 3, min_samples_leaf = 14),
             winparams = (type = movingwindow, window_size = 12),
             features = [minimum, mean, cov, mode_5],
@@ -56,22 +52,21 @@ models = symbolic_analysis(X, y;
             ),   
         ),
         (
-            model = :decisiontree,
+            type = :decisiontree,
             params = (min_samples_leaf = 30, min_samples_split = 1,),
         )
     ],
 )
 
-models = symbolic_analysis(X, y;
-    models = [
-        (
-            model = :decisiontree,
+result = symbolic_analysis(X, y;
+    models = [(
+            type = :decisiontree,
             params = (max_depth = 3, min_samples_leaf = 14),
             winparams = (type = movingwindow, window_size = 12),
             features = [minimum, mean, cov, mode_5]
         ),
         (
-            model = :decisiontree,
+            type = :decisiontree,
             params = (min_samples_leaf = 30, min_samples_split = -2,)
         )
     ],
@@ -82,10 +77,9 @@ models = symbolic_analysis(X, y;
     )
 )
 
-models = symbolic_analysis(X, y;
-    models = [
-        (
-            model = :decisiontree,
+result = symbolic_analysis(X, y;
+    models = [(
+            type = :decisiontree,
             tuning = (
                 method = (type=latinhypercube,), 
                 params = (repeats=2,), 
@@ -96,7 +90,7 @@ models = symbolic_analysis(X, y;
             ),   
         ),
         (
-            model = :decisiontree,
+            type = :decisiontree,
             tuning = (
                 method = (type=latinhypercube, ntour=20,), 
                 params = (repeats=2,), 
