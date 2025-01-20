@@ -38,7 +38,7 @@ mutable struct ModelConfig <: AbstractModelConfig
     ds         :: Dataset
     classifier :: MLJ.Model
     mach       :: MLJ.Machine
-    models     :: AbstractModel
+    model      :: AbstractModel
     rules      :: AbstractDataFrame
     accuracy   :: AbstractFloat
 end

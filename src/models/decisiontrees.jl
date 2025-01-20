@@ -2,8 +2,8 @@
 #                     models from DecisionTrees package                        #
 # ---------------------------------------------------------------------------- #
 function DecisionTreeModel()
-    model = MLJDecisionTreeInterface.DecisionTreeClassifier
-    type  = (; algo=:classification, type=DecisionTree, treatment=:aggregate)
+    type = MLJDecisionTreeInterface.DecisionTreeClassifier
+    config  = (; algo=:classification, type=DecisionTree, treatment=:aggregate)
 
     params = (;
     max_depth              = -1,
@@ -39,8 +39,8 @@ function DecisionTreeModel()
     rules_method = SoleModels.PlainRuleExtractor()
 
     return SymbolicModelSet(
-        model,
         type,
+        config,
         params,
         features,
         winparams,
@@ -51,8 +51,8 @@ function DecisionTreeModel()
 end
 
 function RandomForestModel()
-    model = MLJDecisionTreeInterface.RandomForestClassifier
-    type  = (; algo=:classification, type=DecisionEnsemble, treatment=:aggregate)
+    type   = MLJDecisionTreeInterface.RandomForestClassifier
+    config = (; algo=:classification, type=DecisionEnsemble, treatment=:aggregate)
 
     params = (;
     max_depth              = -1,
@@ -99,8 +99,8 @@ function RandomForestModel()
     rules_method = SolePostHoc.LumenRuleExtractor()
 
     return SymbolicModelSet(
-        model,
         type,
+        config,
         params,
         features,
         winparams,
@@ -111,8 +111,8 @@ function RandomForestModel()
 end
 
 function AdaBoostModel()
-    model = MLJDecisionTreeInterface.AdaBoostStumpClassifier
-    type  = (; algo=:classification, type=DecisionEnsemble, treatment=:aggregate)
+    type   = MLJDecisionTreeInterface.AdaBoostStumpClassifier
+    config = (; algo=:classification, type=DecisionEnsemble, treatment=:aggregate)
 
     params = (;
     n_iter             = 10,
@@ -155,8 +155,8 @@ function AdaBoostModel()
     rules_method = SolePostHoc.LumenRuleExtractor()
 
     return SymbolicModelSet(
-        model,
         type,
+        config,
         params,
         features,
         winparams,

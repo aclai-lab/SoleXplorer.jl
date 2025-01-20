@@ -174,8 +174,8 @@ function validate_modelset(
     modelsets = AbstractModelSet[]
 
     for m in models
-        haskey(m, :model) || throw(ArgumentError("Each model specification must contain a 'model' field"))
-        model = validate_model(m.model)
+        haskey(m, :type) || throw(ArgumentError("Each model specification must contain a 'type' field"))
+        model = validate_model(m.type)
 
         model.params = validate_params(
             model.params,
@@ -264,15 +264,17 @@ end
 function symbolic_analysis(
     X::AbstractDataFrame, 
     y::AbstractVector; 
-    model::Union{NamedTuple, Nothing}=nothing, 
-    models::Union{AbstractVector{<:NamedTuple}, Nothing}=nothing, 
+    models::Union{NamedTuple, AbstractVector{<:NamedTuple}, Nothing}=nothing, 
     kwargs...
 )
     check_dataframe_type(X) || throw(ArgumentError("DataFrame must contain only numeric values"))
     size(X, 1) == length(y) || throw(ArgumentError("Number of rows in DataFrame must match length of class labels"))
 
-    isnothing(model) && isnothing(models) && throw(ArgumentError("At least one model must be specified"))
-    !isnothing(model) && !isnothing(models) && throw(ArgumentError("You can specify either a single model or a vector of models, not both"))
+    isnothing(models) && throw(ArgumentError("At least one model must be specified"))
 
-    isnothing(model) ? _symbolic_analysis(X, y; models=models, kwargs...) : _symbolic_analysis(X, y; models=[model], kwargs...)
+    if isa(models, NamedTuple)
+        _symbolic_analysis(X, y; models=[models], kwargs...)
+    else
+        _symbolic_analysis(X, y; models=models, kwargs...)
+    end
 end
