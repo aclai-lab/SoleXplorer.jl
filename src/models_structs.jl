@@ -18,7 +18,7 @@ end
 abstract type AbstractModelSet end
 abstract type AbstractModelConfig end
 
-mutable struct ModelSet <: AbstractModelSet
+mutable struct SymbolicModelSet <: AbstractModelSet
     model        :: Base.Callable
     type         :: NamedTuple
     params       :: NamedTuple
@@ -29,9 +29,9 @@ mutable struct ModelSet <: AbstractModelSet
     rules_method :: SoleModels.RuleExtractor
 end
 
-DecisionTreeModel(dtmodel::ModelSet) = dtmodel
-RandomForestModel(dtmodel::ModelSet) = dtmodel
-AdaBoostModel(dtmodel::ModelSet)     = dtmodel
+DecisionTreeModel(dtmodel :: SymbolicModelSet) = dtmodel
+RandomForestModel(dtmodel :: SymbolicModelSet) = dtmodel
+AdaBoostModel(dtmodel     :: SymbolicModelSet) = dtmodel
 
 mutable struct ModelConfig <: AbstractModelConfig
     setup      :: AbstractModelSet

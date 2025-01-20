@@ -38,7 +38,7 @@ function DecisionTreeModel()
 
     rules_method = SoleModels.PlainRuleExtractor()
 
-    return ModelSet(
+    return SymbolicModelSet(
         model,
         type,
         params,
@@ -98,7 +98,7 @@ function RandomForestModel()
 
     rules_method = SolePostHoc.LumenRuleExtractor()
 
-    return ModelSet(
+    return SymbolicModelSet(
         model,
         type,
         params,
@@ -154,7 +154,7 @@ function AdaBoostModel()
 
     rules_method = SolePostHoc.LumenRuleExtractor()
 
-    return ModelSet(
+    return SymbolicModelSet(
         model,
         type,
         params,
