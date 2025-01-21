@@ -4,6 +4,12 @@ function check_unknown_params(params, default_params, source)
     isempty(unknown) || throw(ArgumentError("Unknown parameters in $source: $unknown"))
 end
 
+function check_global_params(params, global_params)
+    isnothing(params) && return
+    unknown = setdiff(keys(params), collect(global_params))
+    isempty(unknown) || throw(ArgumentError("Unknown parameters $unknown in global_params"))
+end
+
 function get_function(params, avail_functions)
     isnothing(params) && return
     funcs = filter(v -> v in avail_functions, values(params))
@@ -161,9 +167,19 @@ function validate_tuning(
     return (tuning=true, method=method, params=params, ranges=ranges)
 end
 
+function validate_preprocess_params(
+    defaults::NamedTuple,
+    splits::Union{NamedTuple, Nothing}
+)
+    isnothing(splits) && return defaults
+    check_unknown_params(splits, defaults, "splits")
+    return merge(defaults, splits)
+end
+
 function validate_modelset(
     models::AbstractVector{<:NamedTuple}, 
     globals::Union{NamedTuple, Nothing}=nothing,
+    splits::Union{NamedTuple, Nothing}=nothing,
 )
     modelsets = AbstractModelSet[]
 
@@ -209,6 +225,8 @@ function validate_modelset(
 
         model.learn_method = isnothing(model.tuning.method) ? model.learn_method[1] : model.learn_method[2]
 
+        model.preprocess = validate_preprocess_params(model.preprocess, splits)
+
         push!(modelsets, model)
     end
 
@@ -244,10 +262,11 @@ function _symbolic_analysis(
     X::AbstractDataFrame, 
     y::Union{AbstractVector, Nothing}; 
     models::AbstractVector{<:NamedTuple}, 
-    globals::Union{NamedTuple, Nothing}=nothing,
+    global_params::Union{NamedTuple, Nothing}=nothing,
+    split_params::Union{NamedTuple, Nothing}=nothing,
     kwargs...
 )
-    modelsets = validate_modelset(models, globals)
+    modelsets = validate_modelset(models, global_params, split_params)
 
     models = ModelConfig[]
 

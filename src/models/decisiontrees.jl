@@ -18,7 +18,6 @@ function DecisionTreeModel()
         rng                    = Random.TaskLocalRNG()
     )
 
-    features  = DEFAULT_FEATS
     winparams = (type=SoleBase.wholewindow,)
 
     learn_method = (
@@ -42,11 +41,12 @@ function DecisionTreeModel()
         type,
         config,
         params,
-        features,
+        DEFAULT_FEATS,
         winparams,
         learn_method,
         tuning,
-        rules_method
+        rules_method,
+        DEFAULT_PREPROC
     )
 end
 
@@ -66,7 +66,6 @@ function RandomForestModel()
         rng                    = Random.TaskLocalRNG()
     )
 
-    features  = DEFAULT_FEATS
     winparams = (type=SoleBase.wholewindow,)
 
     learn_method = (
@@ -103,11 +102,12 @@ function RandomForestModel()
         type,
         config,
         params,
-        features,
+        DEFAULT_FEATS,
         winparams,
         learn_method,
         tuning,
-        rules_method
+        rules_method,
+        DEFAULT_PREPROC
     )
 end
 
@@ -121,7 +121,6 @@ function AdaBoostModel()
         rng                = Random.TaskLocalRNG()
     )
 
-    features  = DEFAULT_FEATS
     winparams = (type=SoleBase.wholewindow,)
 
     learn_method = (
@@ -160,10 +159,11 @@ function AdaBoostModel()
         type,
         config,
         params,
-        features,
+        DEFAULT_FEATS,
         winparams,
         learn_method,
         tuning,
-        rules_method
+        rules_method,
+        DEFAULT_PREPROC
     )
 end

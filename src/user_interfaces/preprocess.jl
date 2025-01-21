@@ -19,7 +19,7 @@ hasnans(X::AbstractDataFrame) = any(x -> x == 1, SoleData.hasnans.(eachcol(X)))
 # end
 
 # ---------------------------------------------------------------------------- #
-#                                 winparams                                    #
+#                                 treatment                                    #
 # ---------------------------------------------------------------------------- #
 function _treatment(
     X::DataFrame, 
@@ -77,19 +77,18 @@ end
 #                                 partitioning                                 #
 # ---------------------------------------------------------------------------- #
 function _partition(y::Union{CategoricalArray, Vector{Float64}}; 
-    stratified_sampling::Bool=false,
     train_ratio::Float64=0.7,
-    nfolds::Int64=6,
     shuffle::Bool=true,
     rng::AbstractRNG=Random.TaskLocalRNG(),
-    kwargs...
+    stratified_sampling::Bool=false,
+    nfolds::Int64=6
 )
     if stratified_sampling
-        stratified_cv = MLJ.StratifiedCV(; nfolds=nfolds, shuffle=shuffle, rng=rng)
+        stratified_cv = MLJ.StratifiedCV(; nfolds, shuffle, rng)
         tt = MLJ.MLJBase.train_test_pairs(stratified_cv, 1:length(y), y)
         return [TT_indexes(train, test) for (train, test) in tt]
     else
-        return TT_indexes(MLJ.partition(eachindex(y), train_ratio; shuffle=shuffle, rng=rng)...)
+        return TT_indexes(MLJ.partition(eachindex(y), train_ratio; shuffle, rng)...)
     end
 end
 
@@ -129,11 +128,11 @@ function preprocess_dataset(
 
     if all(t -> t <: Number, column_eltypes)
         # dataframe with numeric columns
-        SoleXplorer.Dataset(DataFrame(vnames .=> eachcol(X)), y, _partition(y; kwargs...))
+        SoleXplorer.Dataset(DataFrame(vnames .=> eachcol(X)), y, _partition(y; model.preprocess...))
 
     elseif all(t -> t <: AbstractVector{<:Number}, column_eltypes)
         # dataframe with vector-valued columns
-        SoleXplorer.Dataset(_treatment(X, model, vnames; kwargs...), y, _partition(y; kwargs...))
+        SoleXplorer.Dataset(_treatment(X, model, vnames; kwargs...), y, _partition(y; model.preprocess...))
     else
         # TODO
         throw(ArgumentError("Column type not yet supported"))

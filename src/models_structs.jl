@@ -27,6 +27,7 @@ mutable struct SymbolicModelSet <: AbstractModelSet
     learn_method :: Union{Base.Callable, Tuple{Base.Callable, Base.Callable}}
     tuning       :: NamedTuple
     rules_method :: SoleModels.RuleExtractor
+    preprocess   :: NamedTuple
 end
 
 DecisionTreeModel(dtmodel      :: SymbolicModelSet) = dtmodel
@@ -48,6 +49,14 @@ mutable struct ModelConfig <: AbstractModelConfig
 end
 
 const DEFAULT_FEATS = [maximum, minimum, mean, std]
+
+const DEFAULT_PREPROC = (
+    train_ratio         = 0.8,
+    shuffle             = true,
+    rng                 = TaskLocalRNG(),
+    stratified_sampling = false,
+    nfolds              = 6
+)
 
 const AVAIL_MODELS = Dict(
     :decisiontree      => DecisionTreeModel,

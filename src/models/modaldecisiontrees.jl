@@ -56,7 +56,8 @@ function ModalDecisionTreeModel()
         winparams,
         learn_method,
         tuning,
-        rules_method
+        rules_method,
+        DEFAULT_PREPROC
     )
 end
 
@@ -118,7 +119,8 @@ function ModalRandomForestModel()
         winparams,
         learn_method,
         tuning,
-        rules_method
+        rules_method,
+        DEFAULT_PREPROC
     )
 end
 
@@ -193,6 +195,7 @@ function ModalAdaBoostModel()
         winparams,
         learn_method,
         tuning,
-        rules_method
+        rules_method,
+        DEFAULT_PREPROC
     )
 end
