@@ -14,10 +14,10 @@ Random.seed!(train_seed)
 # ---------------------------------------------------------------------------- #
 #                           modal symbolic analysis                            #
 # ---------------------------------------------------------------------------- #
-tree_results = symbolic_analysis(X, y; models=[
-    (type=:decisiontree,),
-    (type=:modaldecisiontree, features=[mean, cov]),
-    (type=:modaldecisiontree, features=[maximum], winparams=(type=adaptivewindow, nwindows=3))])
+
+tree_results = symbolic_analysis(X, y; models=(type=:decisiontree,))
+tree_results = symbolic_analysis(X, y; models=(type=:modaldecisiontree, features=[mean, cov]))
+tree_results = symbolic_analysis(X, y; models=(type=:modaldecisiontree, features=[maximum], winparams=(type=adaptivewindow, nwindows=3)))
 
 
 forest_results = symbolic_analysis(X, y; models=(type=:randomforest,))

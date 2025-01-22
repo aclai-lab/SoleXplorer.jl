@@ -130,8 +130,8 @@ function ModalAdaBoostModel()
 
     params = (;
         max_depth              = 1, 
-        min_samples_leaf       = 1, 
-        min_purity_increase    = 0.0, 
+        min_samples_leaf       = 4, 
+        min_purity_increase    = 0.002, 
         max_purity_at_leaf     = Inf, 
         max_modal_depth        = nothing, 
         relations              = :IA7, 
@@ -155,23 +155,28 @@ function ModalAdaBoostModel()
 
     winparams = (type=SoleBase.adaptivewindow, nwindows=20)
 
+    # learn_method = (
+    #     (mach, X, y) -> begin
+    #         weights = mach.fitresult.coeffs
+    #         classlabels = sort(mach.fitresult.classes_seen)
+    #         featurenames = MLJ.report(mach).var_grouping
+    #         dt = solemodel(MLJ.fitted_params(mach).stumps; weights, classlabels, featurenames)
+    #         apply!(dt, X, y)
+    #         return dt
+    #     end,
+    #     (mach, X, y) -> begin
+    #         weights = mach.fitresult.fitresult[2]
+    #         classlabels = sort(mach.fitresult.fitresult[3])
+    #         featurenames = MLJ.report(mach).best_report.features
+    #         dt = solemodel(MLJ.fitted_params(mach).best_fitted_params.stumps; weights, classlabels, featurenames)
+    #         apply!(dt, X, y)
+    #         return dt
+    #     end
+    # )
+
     learn_method = (
-        (mach, X, y) -> begin
-            weights = mach.fitresult[2]
-            classlabels = sort(mach.fitresult[3])
-            featurenames = MLJ.report(mach).features
-            dt = solemodel(MLJ.fitted_params(mach).stumps; weights, classlabels, featurenames)
-            apply!(dt, X, y)
-            return dt
-        end,
-        (mach, X, y) -> begin
-            weights = mach.fitresult.fitresult[2]
-            classlabels = sort(mach.fitresult.fitresult[3])
-            featurenames = MLJ.report(mach).best_report.features
-            dt = solemodel(MLJ.fitted_params(mach).best_fitted_params.stumps; weights, classlabels, featurenames)
-            apply!(dt, X, y)
-            return dt
-        end
+        (mach, X, y) -> ((_, dt) = MLJ.report(mach).sprinkle(X, y); dt),
+        (mach, X, y) -> ((_, dt) = MLJ.report(mach).best_report.sprinkle(X, y); dt)
     )
 
     tuning = (

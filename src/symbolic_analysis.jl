@@ -66,12 +66,14 @@ function validate_winparams(
         defaults.type
     elseif isnothing(user_win)
         defaults = WIN_PARAMS[global_win]
-        filtered_globals = isnothing(globals) ? nothing : NamedTuple(k => v for (k,v) in pairs(globals) if k != :type)
+        # filtered_globals = isnothing(globals) ? nothing : NamedTuple(k => v for (k,v) in pairs(globals) if k != :type)
+        filtered_globals = @delete globals.type
         check_unknown_params(filtered_globals, defaults, "global_winparams")
         haskey(globals, :type) && globals.type
     else
         defaults = WIN_PARAMS[user_win]
-        filtered_users = isnothing(users) ? nothing : NamedTuple(k => v for (k,v) in pairs(users) if k != :type)
+        # filtered_users = isnothing(users) ? nothing : NamedTuple(k => v for (k,v) in pairs(users) if k != :type)
+        filtered_users = @delete users.type
         check_unknown_params(filtered_users, defaults, "user_winparams")
         haskey(users, :type) && users.type
     end
@@ -79,7 +81,8 @@ function validate_winparams(
     filter_params(p) = isnothing(p) ? NamedTuple() : NamedTuple(k => v for (k,v) in pairs(p) if haskey(defaults, k))
 
     params = merge(
-        NamedTuple(k => v for (k,v) in pairs(defaults) if k != :type),
+        # NamedTuple(k => v for (k,v) in pairs(defaults) if k != :type),
+        (@delete defaults.type),
         filter_params(globals),
         filter_params(users)
     )
@@ -88,7 +91,7 @@ function validate_winparams(
         params.nwindows ≥ 3 || throw(ArgumentError("For :reducesize treatment, nwindows must be ≥ 3"))
     end
 
-    return (type = type, params = params)
+    return (type = type, params...)
 end
 
 function validate_tuning_type(
@@ -192,7 +195,6 @@ function validate_modelset(
             isnothing(globals) ? nothing : get(globals, :params, nothing),
             get(m, :params, nothing)
         )
-
         # ModalDecisionTrees needs features to be passed also in model params
         if isnothing(model.features)
             features = validate_features(
@@ -302,4 +304,4 @@ function symbolic_analysis(
     else
         _symbolic_analysis(X, y; models=models, kwargs...)
     end
-end
+end # Use a NamedTuple type

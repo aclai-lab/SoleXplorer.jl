@@ -6,8 +6,8 @@ Sole:               on branch dev               (pulled jan,  9 2025)
 SoleLogics:         on branch dev               (pulled jan, 20 2025)
 SoleModels:         on branch gio/refractoring  (pulled jan, 20 2025)
 ModalDecisionLists: on branch dev               (pulled jan, 18 2025)
-ModalDecisionTees:  on branch devPaso           (pulled jan, 14 2025)
-SolePostHoc:        on branch dev-giominimizer  (pulled jan, 20 2025)
+ModalDecisionTees:  on branch dev               (pulled jan, 21 2025)
+SolePostHoc:        on branch dev-gio           (pulled jan, 21 2025)
 
 References
 https://github.com/ablaom/MLJTutorial.jl/blob/dev/notebooks/04_tuning/notebook.ipynb

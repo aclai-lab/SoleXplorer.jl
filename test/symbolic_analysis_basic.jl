@@ -14,7 +14,7 @@ Random.seed!(train_seed)
 # ---------------------------------------------------------------------------- #
 #                           basic symbolic analysis                            #
 # ---------------------------------------------------------------------------- #
-result = symbolic_analysis(X, y; models=(type=:decisiontree,))
+result = symbolic_analysis(X, y; models=(type=:decisiontree, params=(rng=rng,)));
 result = symbolic_analysis(X, y; models=(type=:randomforest,))
 result = symbolic_analysis(X, y; models=(type=:adaboost,))
 

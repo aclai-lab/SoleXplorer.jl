@@ -28,7 +28,8 @@ function _treatment(
     kwargs...
 )
     max_interval = maximum(length.(eachrow(X)))
-    n_intervals = model.winparams.type(max_interval; model.winparams.params...)
+    winparams = model.winparams |> x -> @delete x.type
+    n_intervals = model.winparams.type(max_interval; winparams...)
     
     if model.config.treatment == :aggregate        # propositional
         if n_intervals == 1
@@ -52,7 +53,7 @@ function _treatment(
     end
 
     for row in eachrow(X)
-        row_intervals = model.winparams.type(maximum(length.(collect(row))); model.winparams.params...)
+        row_intervals = model.winparams.type(maximum(length.(collect(row))); winparams...)
         interval_diff = length(n_intervals) - length(row_intervals)
 
         if model.config.treatment == :aggregate
