@@ -22,7 +22,7 @@ rng = Random.Xoshiro(train_seed)
 Random.seed!(train_seed)
 
 model = SoleXplorer.get_model(model_name)
-ds = SoleXplorer.preprocess_dataset(X, "MEDV", model, features=features)
+ds = SoleXplorer.prepare_dataset(X, "MEDV", model, features=features)
 
 SoleXplorer.modelfit!(model, ds; features=features, rng=rng)
 SoleXplorer.modeltest!(model, ds);
@@ -40,7 +40,7 @@ rng = Random.Xoshiro(train_seed)
 Random.seed!(train_seed)
 
 model = SoleXplorer.get_model(model_name)
-ds = SoleXplorer.preprocess_dataset(X, y, model; features=features, stratified_sampling=true, nfolds=3, rng=rng)
+ds = SoleXplorer.prepare_dataset(X, y, model; features=features, stratified_sampling=true, nfolds=3, rng=rng)
 
 SoleXplorer.modelfit!(model, ds; features=features, rng=rng)
 SoleXplorer.modeltest!(model, ds);
@@ -64,7 +64,7 @@ ranges = [
 ]
 
 model = SoleXplorer.get_model(model_name; tuning=tuning_method, ranges=ranges, n=25)
-ds = SoleXplorer.preprocess_dataset(X, y, model, features=features)
+ds = SoleXplorer.prepare_dataset(X, y, model, features=features)
 
 SoleXplorer.modelfit!(model, ds; features=features, rng=rng)
 SoleXplorer.modeltest!(model, ds);
@@ -87,7 +87,7 @@ Random.seed!(train_seed)
 
 model = SoleXplorer.get_model(model_name)
 
-ds = SoleXplorer.preprocess_dataset(X, y, model, features=features; treatment=wholewindow)
+ds = SoleXplorer.prepare_dataset(X, y, model, features=features; treatment=wholewindow)
 
 SoleXplorer.modelfit!(model, ds; features=features, rng=rng)
 SoleXplorer.modeltest!(model, ds)
@@ -106,7 +106,7 @@ Random.seed!(train_seed)
 
 model = SoleXplorer.get_model(model_name)
 
-ds = SoleXplorer.preprocess_dataset(X, y, model, features=features; treatment=movingwindow, treatment_params=(nwindows=10, relative_overlap=0.2))
+ds = SoleXplorer.prepare_dataset(X, y, model, features=features; treatment=movingwindow, treatment_params=(nwindows=10, relative_overlap=0.2))
 
 SoleXplorer.modelfit!(model, ds; features=features, rng=rng)
 SoleXplorer.modeltest!(model, ds)
@@ -125,7 +125,7 @@ Random.seed!(train_seed)
 
 model = SoleXplorer.get_model(model_name)
 
-ds = SoleXplorer.preprocess_dataset(X, y, model, features=features, treatment=adaptivewindow, treatment_params=(nwindows=15, relative_overlap=0.1))
+ds = SoleXplorer.prepare_dataset(X, y, model, features=features, treatment=adaptivewindow, treatment_params=(nwindows=15, relative_overlap=0.1))
 
 SoleXplorer.modelfit!(model, ds; features=features, rng=rng)
 SoleXplorer.modeltest!(model, ds)
@@ -152,7 +152,7 @@ Random.seed!(train_seed)
 
 model = SoleXplorer.get_model(model_name)
 
-ds = SoleXplorer.preprocess_dataset(X, y, model, features=features)
+ds = SoleXplorer.prepare_dataset(X, y, model, features=features)
 
 SoleXplorer.modelfit!(model, ds; features=features, rng=rng)
 SoleXplorer.modeltest!(model, ds)
@@ -171,7 +171,7 @@ Random.seed!(train_seed)
 
 model = SoleXplorer.get_model(model_name)
 
-ds = SoleXplorer.preprocess_dataset(X, y, model, features=features, treatment=SoleXplorer.adaptivewindow, treatment_params=(nwindows=3,))
+ds = SoleXplorer.prepare_dataset(X, y, model, features=features, treatment=SoleXplorer.adaptivewindow, treatment_params=(nwindows=3,))
 
 SoleXplorer.modelfit!(model,ds; features=features, rng=rng)
 SoleXplorer.modeltest!(model, ds)

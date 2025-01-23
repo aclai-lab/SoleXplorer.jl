@@ -21,7 +21,7 @@ features = [mean, minimum]
 
 model_name = :xgboost
 x = SoleXplorer.get_model(model_name; num_round=1)
-ds = SoleXplorer.preprocess_dataset(X, y, x)
+ds = SoleXplorer.prepare_dataset(X, y, x)
 
 SoleXplorer.modelfit!(x, ds; features=features)
 xm = SoleXplorer.modeltest(x, ds);
@@ -35,7 +35,7 @@ Random.seed!(train_seed)
 
 model_name = :decision_tree
 d = SoleXplorer.get_model(model_name)
-ds = SoleXplorer.preprocess_dataset(X, y, d)
+ds = SoleXplorer.prepare_dataset(X, y, d)
 
 SoleXplorer.modelfit!(d, ds; features=features, rng=rng)
 # d = SoleXplorer.modeltest(d, ds);

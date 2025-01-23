@@ -273,7 +273,7 @@ function _symbolic_analysis(
     models = ModelConfig[]
 
     for m in modelsets
-        ds = preprocess_dataset(X, y, m)
+        ds = prepare_dataset(X, y, m)
 
         classifier = get_model(m, ds)
 

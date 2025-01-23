@@ -78,7 +78,7 @@ rng = Random.Xoshiro(train_seed)
 Random.seed!(train_seed)
 
 model = SoleXplorer.get_model(model_name)
-ds = SoleXplorer.preprocess_dataset(X, y, model)
+ds = SoleXplorer.prepare_dataset(X, y, model)
 
 plain_classifier = MLJXGBoostInterface.XGBoostClassifier(
     # ds.tt.train,

@@ -18,7 +18,7 @@ rng = Random.Xoshiro(train_seed)
 Random.seed!(train_seed)
 
 model = SoleXplorer.get_model(model_name; relations=:IA7, features, set=X)
-ds = SoleXplorer.preprocess_dataset(X, y, model; features, treatment_params=(nwindows=20,))
+ds = SoleXplorer.prepare_dataset(X, y, model; features, treatment_params=(nwindows=20,))
 
 SoleXplorer.modelfit!(model, ds; features, rng=rng)
 SoleXplorer.modeltest!(model, ds)
@@ -42,7 +42,7 @@ ranges = [
 ]
 
 model = SoleXplorer.get_model(model_name; relations=:IA7, tuning=tuning_method, features, set=X, ranges=ranges, n=25)
-ds = SoleXplorer.preprocess_dataset(X, y, model; features)
+ds = SoleXplorer.prepare_dataset(X, y, model; features)
 
 SoleXplorer.modelfit!(model, ds; features, rng=rng)
 SoleXplorer.modeltest!(model, ds)
@@ -69,7 +69,7 @@ rng = Random.Xoshiro(train_seed)
 Random.seed!(train_seed)
 
 model = SoleXplorer.get_model(model_name; relations=:IA7, features, set=X)
-ds = SoleXplorer.preprocess_dataset(X, y, model, features, treatment=SoleXplorer.adaptivewindow, treatment_params=(nwindows=3,))
+ds = SoleXplorer.prepare_dataset(X, y, model, features, treatment=SoleXplorer.adaptivewindow, treatment_params=(nwindows=3,))
 
 SoleXplorer.modelfit!(model, ds; features, rng=rng)
 SoleXplorer.modeltest!(model, ds)

@@ -62,8 +62,8 @@ include("models/modaldecisiontrees.jl")
 include("user_interfaces/models.jl")
 export ModelConfig, range, get_model
 
-include("user_interfaces/preprocess.jl")
-export preprocess_dataset
+include("modules/prepare_dataset.jl")
+export prepare_dataset
 
 include("user_interfaces/fit.jl")
 export modelfit

@@ -19,7 +19,7 @@ rng = Random.Xoshiro(train_seed)
 Random.seed!(train_seed)
 
 model = SX.get_model(model_name)
-ds = SX.preprocess_dataset(X, y, model, features=features)
+ds = SX.prepare_dataset(X, y, model, features=features)
 
 SX.modelfit!(model, ds; features=features, rng=rng)
 SX.modeltest!(model, ds);
@@ -39,7 +39,7 @@ rng = Random.Xoshiro(train_seed)
 Random.seed!(train_seed)
 
 _model = SX.get_model(model_name)
-# ds = SX.preprocess_dataset(X, y, model, features=features)
+# ds = SX.prepare_dataset(X, y, model, features=features)
 
 SX.modelfit!(_model, ds; features=features, rng=rng)
 SX.modeltest!(_model, ds);
@@ -66,7 +66,7 @@ rng = Random.Xoshiro(train_seed)
 Random.seed!(train_seed)
 
 model = SX.get_model(model_name)
-ds = SX.preprocess_dataset(X, y, model; features=features, stratified_sampling=true, nfolds=3, rng=rng)
+ds = SX.prepare_dataset(X, y, model; features=features, stratified_sampling=true, nfolds=3, rng=rng)
 
 SX.modelfit!(model, ds; features=features, rng=rng)
 SX.modeltest!(model, ds);
@@ -90,7 +90,7 @@ ranges = [
 ]
 
 model = SX.get_model(model_name; tuning=tuning_method, ranges=ranges, n=25)
-ds = SX.preprocess_dataset(X, y, model, features=features)
+ds = SX.prepare_dataset(X, y, model, features=features)
 
 SX.modelfit!(model, ds; features=features, rng=rng)
 SX.modeltest!(model, ds);
@@ -113,7 +113,7 @@ Random.seed!(train_seed)
 
 model = SX.get_model(model_name)
 
-ds = SX.preprocess_dataset(X, y, model, features=features; treatment=wholewindow)
+ds = SX.prepare_dataset(X, y, model, features=features; treatment=wholewindow)
 
 SX.modelfit!(model, ds; features=features, rng=rng)
 SX.modeltest!(model, ds)
@@ -132,7 +132,7 @@ Random.seed!(train_seed)
 
 model = SX.get_model(model_name)
 
-ds = SX.preprocess_dataset(X, y, model, features=features; treatment=movingwindow, treatment_params=(nwindows=10, relative_overlap=0.2))
+ds = SX.prepare_dataset(X, y, model, features=features; treatment=movingwindow, treatment_params=(nwindows=10, relative_overlap=0.2))
 
 SX.modelfit!(model, ds; features=features, rng=rng)
 SX.modeltest!(model, ds)
@@ -151,7 +151,7 @@ Random.seed!(train_seed)
 
 model = SX.get_model(model_name)
 
-ds = SX.preprocess_dataset(X, y, model, features=features, treatment=adaptivewindow, treatment_params=(nwindows=15, relative_overlap=0.1))
+ds = SX.prepare_dataset(X, y, model, features=features, treatment=adaptivewindow, treatment_params=(nwindows=15, relative_overlap=0.1))
 
 SX.modelfit!(model, ds; features=features, rng=rng)
 SX.modeltest!(model, ds)
@@ -178,7 +178,7 @@ Random.seed!(train_seed)
 
 model = SX.get_model(model_name)
 
-ds = SX.preprocess_dataset(X, y, model, features=features)
+ds = SX.prepare_dataset(X, y, model, features=features)
 
 SX.modelfit!(model, ds; features=features, rng=rng)
 SX.modeltest!(model, ds)
@@ -197,7 +197,7 @@ Random.seed!(train_seed)
 
 model = SX.get_model(model_name)
 
-ds = SX.preprocess_dataset(X, y, model, features=features, treatment=SX.adaptivewindow, treatment_params=(nwindows=3,))
+ds = SX.prepare_dataset(X, y, model, features=features, treatment=SX.adaptivewindow, treatment_params=(nwindows=3,))
 
 SX.modelfit!(model,ds; features=features, rng=rng)
 SX.modeltest!(model, ds)

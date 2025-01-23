@@ -10,7 +10,7 @@ features = [mean, minimum]
 
 model_name = :xgboost
 xgb = SoleXplorer.get_model(model_name; num_round=10, objective="multi:softmax")
-ds = SoleXplorer.preprocess_dataset(X, y, xgb)
+ds = SoleXplorer.prepare_dataset(X, y, xgb)
 
 SoleXplorer.modelfit!(xgb, ds; features=features)
 xm = SoleXplorer.modeltest(xgb, ds)

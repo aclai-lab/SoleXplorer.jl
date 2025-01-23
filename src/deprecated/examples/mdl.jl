@@ -25,7 +25,7 @@ rng = Random.Xoshiro(train_seed)
 Random.seed!(train_seed)
 
 model = SoleXplorer.get_model(model_name)
-ds = SoleXplorer.preprocess_dataset(X, y, model)
+ds = SoleXplorer.prepare_dataset(X, y, model)
 
 SoleXplorer.modelfit!(model, ds; features=features, rng=rng)
 
@@ -52,7 +52,7 @@ rng = Random.Xoshiro(train_seed)
 Random.seed!(train_seed)
 
 model = SoleXplorer.get_model(model_name)
-ds = SoleXplorer.preprocess_dataset(X, y, model; treatment=SoleXplorer.wholewindow)
+ds = SoleXplorer.prepare_dataset(X, y, model; treatment=SoleXplorer.wholewindow)
 
 SoleXplorer.modelfit!(model, ds; features=features, rng=rng)
 

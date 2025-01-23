@@ -20,7 +20,7 @@ end
 function symbolic_analysis(model::Union{ModelConfig,Symbol}, X, y, features, treatment, treatment_params; rng)
   model = SoleXplorer.get_model(model)
 
-  ds = SoleXplorer.preprocess_dataset(X, y, model, features, treatment, treatment_params)
+  ds = SoleXplorer.prepare_dataset(X, y, model, features, treatment, treatment_params)
 
   SoleXplorer.modelfit!(model, ds; features=features, rng=rng)
   SoleXplorer.modeltest!(model, ds)

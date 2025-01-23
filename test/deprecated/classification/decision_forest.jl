@@ -18,7 +18,7 @@ rng = Random.Xoshiro(train_seed)
 Random.seed!(train_seed)
 
 model = SX.get_model(model_name)
-ds = SX.preprocess_dataset(X, y, model; features)
+ds = SX.prepare_dataset(X, y, model; features)
 
 SX.modelfit!(model, ds);
 SX.modeltest!(model, ds);
@@ -39,7 +39,7 @@ rng = Random.Xoshiro(train_seed)
 Random.seed!(train_seed)
 
 model = SX.get_model(model_name)
-ds = SX.preprocess_dataset(X, y, model; features, stratified_sampling=true, nfolds=3, rng)
+ds = SX.prepare_dataset(X, y, model; features, stratified_sampling=true, nfolds=3, rng)
 
 SX.modelfit!(model, ds);
 SX.modeltest!(model, ds);
@@ -63,7 +63,7 @@ ranges = [
 ]
 
 model = SX.get_model(model_name; tuning=tuning_method, ranges, n=25)
-ds = SX.preprocess_dataset(X, y, model; features)
+ds = SX.prepare_dataset(X, y, model; features)
 
 SX.modelfit!(model, ds);
 SX.modeltest!(model, ds);
@@ -86,7 +86,7 @@ Random.seed!(train_seed)
 
 model = SX.get_model(model_name)
 
-ds = SX.preprocess_dataset(X, y, model; features, treatment=wholewindow)
+ds = SX.prepare_dataset(X, y, model; features, treatment=wholewindow)
 
 SX.modelfit!(model, ds);
 SX.modeltest!(model, ds);
@@ -104,7 +104,7 @@ rng = Random.Xoshiro(train_seed)
 Random.seed!(train_seed)
 
 model = SX.get_model(model_name)
-ds = SX.preprocess_dataset(X, y, model; features, treatment=movingwindow, treatment_params=(nwindows=10, relative_overlap=0.2))
+ds = SX.prepare_dataset(X, y, model; features, treatment=movingwindow, treatment_params=(nwindows=10, relative_overlap=0.2))
 
 SX.modelfit!(model, ds);
 SX.modeltest!(model, ds);
@@ -122,7 +122,7 @@ rng = Random.Xoshiro(train_seed)
 Random.seed!(train_seed)
 
 model = SX.get_model(model_name)
-ds = SX.preprocess_dataset(X, y, model; features, treatment=adaptivewindow, treatment_params=(nwindows=15, relative_overlap=0.1))
+ds = SX.prepare_dataset(X, y, model; features, treatment=adaptivewindow, treatment_params=(nwindows=15, relative_overlap=0.1))
 
 SX.modelfit!(model, ds);
 SX.modeltest!(model, ds);
@@ -148,7 +148,7 @@ rng = Random.Xoshiro(train_seed)
 Random.seed!(train_seed)
 
 model = SX.get_model(model_name)
-ds = SX.preprocess_dataset(X, y, model; features)
+ds = SX.prepare_dataset(X, y, model; features)
 
 SX.modelfit!(model, ds);
 SX.modeltest!(model, ds);
@@ -166,7 +166,7 @@ rng = Random.Xoshiro(train_seed)
 Random.seed!(train_seed)
 
 model = SX.get_model(model_name)
-ds = SX.preprocess_dataset(X, y, model; features, treatment=SX.adaptivewindow, treatment_params=(nwindows=3,))
+ds = SX.prepare_dataset(X, y, model; features, treatment=SX.adaptivewindow, treatment_params=(nwindows=3,))
 
 SX.modelfit!(model,ds);
 SX.modeltest!(model, ds);

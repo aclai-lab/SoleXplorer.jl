@@ -19,7 +19,7 @@ rng        = Random.Xoshiro(train_seed)
 Random.seed!(train_seed)
 
 model = SX.get_model(model_name; relations=:IA7, features, set=X)
-ds    = SX.preprocess_dataset(X, y, model; features, treatment_params=(nwindows=10,))
+ds    = SX.prepare_dataset(X, y, model; features, treatment_params=(nwindows=10,))
 
 SX.modelfit!(model, ds; features, rng)
 SX.modeltest!(model, ds)
@@ -30,7 +30,7 @@ SX.modeltest!(model, ds)
 ###### DEBUG
 _model_name = :adaboost
 _model = SX.get_model(_model_name)
-_ds = SX.preprocess_dataset(X, y, _model; features)
+_ds = SX.prepare_dataset(X, y, _model; features)
 SX.modelfit!(model, _ds; features, rng)
 SX.modeltest!(model, _ds)
 
@@ -50,7 +50,7 @@ ranges = [
 ]
 
 model = SX.get_model(model_name; relations=:IA7, tuning=tuning_method, features=features, set=X, ranges=ranges, n=25)
-ds = SX.preprocess_dataset(X, y, model; features=features)
+ds = SX.prepare_dataset(X, y, model; features=features)
 
 SX.modelfit!(model, ds; features=features, rng=rng)
 SX.modeltest!(model, ds)
@@ -77,7 +77,7 @@ rng = Random.Xoshiro(train_seed)
 Random.seed!(train_seed)
 
 model = SX.get_model(model_name; relations=:IA7, features=features, set=X)
-ds = SX.preprocess_dataset(X, y, model, features=features, treatment=SX.adaptivewindow, treatment_params=(nwindows=3,))
+ds = SX.prepare_dataset(X, y, model, features=features, treatment=SX.adaptivewindow, treatment_params=(nwindows=3,))
 
 SX.modelfit!(model, ds; features=features, rng=rng)
 SX.modeltest!(model, ds)

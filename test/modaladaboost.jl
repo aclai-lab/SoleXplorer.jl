@@ -18,7 +18,7 @@ Random.seed!(train_seed)
 
 m1 = SX.AdaBoostModel()
 m1.learn_method = m1.learn_method[1]
-ds1 = preprocess_dataset(X, y, m1)
+ds1 = prepare_dataset(X, y, m1)
 c1 = get_model(m1, ds1)
 mc1 = modelfit(m1, c1, ds1)
 fp1 = MLJ.fitted_params(mc1)
@@ -27,7 +27,7 @@ f1 = SX.get_predict(mc1, ds1)
 
 m2 = SX.ModalAdaBoostModel()
 m2.learn_method = m2.learn_method[1]
-ds2 = preprocess_dataset(X, y, m2)
+ds2 = prepare_dataset(X, y, m2)
 c2 = get_model(m2, ds2)
 mc2 = modelfit(m2, c2, ds2)
 fp2 = MLJ.fitted_params(mc2)
@@ -37,7 +37,7 @@ f2 = SX.get_predict(mc2, ds2)
 
 m3 = SX.ModalRandomForestModel()
 m3.learn_method = m3.learn_method[1]
-ds3 = preprocess_dataset(X, y, m3)
+ds3 = prepare_dataset(X, y, m3)
 c3 = get_model(m3, ds3)
 mc3 = modelfit(m3, c3, ds3)
 fp3 = MLJ.fitted_params(mc3)
@@ -57,7 +57,7 @@ Random.seed!(train_seed)
 
 m1 = SX.AdaBoostModel()
 m1.learn_method = m1.learn_method[1]
-ds1 = preprocess_dataset(X, y, m1)
+ds1 = prepare_dataset(X, y, m1)
 c1 = get_model(m1, ds1)
 mc1 = modelfit(m1, c1, ds1)
 fp1 = MLJ.fitted_params(mc1)
@@ -66,7 +66,7 @@ f1 = SX.get_predict(mc1, ds1)
 
 m2 = SX.ModalAdaBoostModel()
 m2.learn_method = m2.learn_method[1]
-ds2 = preprocess_dataset(X, y, m2)
+ds2 = prepare_dataset(X, y, m2)
 c2 = get_model(m2, ds2)
 mc2 = modelfit(m2, c2, ds2)
 fp2 = MLJ.fitted_params(mc2)
@@ -76,7 +76,7 @@ f2 = SX.get_predict(mc2, ds2)
 
 # m3 = SX.ModalRandomForestModel()
 # m3.learn_method = m3.learn_method[1]
-# ds3 = preprocess_dataset(X, y, m3)
+# ds3 = prepare_dataset(X, y, m3)
 # c3 = get_model(m3, ds3)
 # mc3 = modelfit(m3, c3, ds3)
 # fp3 = MLJ.fitted_params(mc3)
