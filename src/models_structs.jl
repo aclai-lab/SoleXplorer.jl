@@ -53,9 +53,9 @@ const DEFAULT_FEATS = [maximum, minimum, mean, std]
 const DEFAULT_PREPROC = (
     train_ratio         = 0.8,
     shuffle             = true,
-    rng                 = TaskLocalRNG(),
     stratified_sampling = false,
-    nfolds              = 6
+    nfolds              = 6,
+    rng                 = TaskLocalRNG()
 )
 
 const AVAIL_MODELS = Dict(
