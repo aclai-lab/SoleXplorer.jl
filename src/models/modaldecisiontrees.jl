@@ -130,8 +130,8 @@ function ModalAdaBoostModel()
 
     params = (;
         max_depth              = 1, 
-        min_samples_leaf       = 4, 
-        min_purity_increase    = 0.002, 
+        min_samples_leaf       = 1, 
+        min_purity_increase    = 0.0,
         max_purity_at_leaf     = Inf, 
         max_modal_depth        = nothing, 
         relations              = :IA7, 
@@ -145,8 +145,8 @@ function ModalAdaBoostModel()
         print_progress         = false, 
         rng                    = Random.TaskLocalRNG(), 
         display_depth          = nothing, 
-        min_samples_split      = nothing, 
-        n_subfeatures          = identity, 
+        min_samples_split      = 2, 
+        n_subfeatures          = ModalDecisionTrees.MLJInterface.sqrt_f,
         post_prune             = false, 
         merge_purity_threshold = nothing, 
         feature_importance     = :split, 
