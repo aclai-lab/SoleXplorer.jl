@@ -72,11 +72,11 @@ function _partition(
     y::Union{CategoricalArray, Vector{T}},
     train_ratio::Float64,
     shuffle::Bool,
-    stratified_sampling::Bool,
+    stratified::Bool,
     nfolds::Int,
     rng::AbstractRNG
 ) where {T<:Union{AbstractString, Number}}
-    if stratified_sampling
+    if stratified
         stratified_cv = MLJ.StratifiedCV(; nfolds, shuffle, rng)
         tt = MLJ.MLJBase.train_test_pairs(stratified_cv, 1:length(y), y)
         return [TT_indexes(train, test) for (train, test) in tt]
@@ -99,7 +99,7 @@ function prepare_dataset(
     # model.preprocess
     train_ratio::Float64=0.8,
     shuffle::Bool=true,
-    stratified_sampling::Bool=false,
+    stratified::Bool=false,
     nfolds::Int=6,
     rng::AbstractRNG=Random.TaskLocalRNG(),
     # model.winparams
@@ -129,14 +129,28 @@ function prepare_dataset(
 
     hasnans(X) && @warn "DataFrame contains NaN values"
 
-    column_eltypes = eltype.(eachcol(X))
+    column_eltypes = eltype.(eachcol(X))        
+
+    ds_info = DatasetInfo(
+        algo,
+        treatment,
+        features,
+        train_ratio,
+        shuffle,
+        stratified,
+        nfolds,
+        rng,
+        winparams,
+        vnames
+    )
 
     # case 1: dataframe with numeric columns
     if all(t -> t <: Number, column_eltypes)
         # dataframe with numeric columns
         return SoleXplorer.Dataset(
             DataFrame(vnames .=> eachcol(X)), y,
-            _partition(y, train_ratio, shuffle, stratified_sampling, nfolds, rng)
+            _partition(y, train_ratio, shuffle, stratified, nfolds, rng),
+            ds_info
         )
     # case 2: dataframe with vector-valued columns
     elseif all(t -> t <: AbstractVector{<:Number}, column_eltypes)
@@ -144,7 +158,8 @@ function prepare_dataset(
         return SoleXplorer.Dataset(
             # if winparams is nothing, then leave the dataframe as it is
             isnothing(winparams) ? DataFrame(vnames .=> eachcol(X)) : _treatment(X, vnames, treatment, features, winparams), y,
-            _partition(y, train_ratio, shuffle, stratified_sampling, nfolds, rng)
+            _partition(y, train_ratio, shuffle, stratified, nfolds, rng),
+            ds_info
         )
     else
         throw(ArgumentError("Column type not yet supported"))
@@ -164,7 +179,7 @@ function prepare_dataset(
         # model.preprocess
         train_ratio         = model.preprocess.train_ratio,
         shuffle             = model.preprocess.shuffle,
-        stratified_sampling = model.preprocess.stratified_sampling,
+        stratified          = model.preprocess.stratified,
         nfolds              = model.preprocess.nfolds,
         rng                 = model.preprocess.rng,
         winparams           = model.winparams,

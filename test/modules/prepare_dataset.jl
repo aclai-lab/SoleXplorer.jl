@@ -37,6 +37,7 @@ using Statistics
         @test ds.y isa CategoricalArray
         @test ds.tt.train isa Vector{Int}
         @test ds.tt.test isa Vector{Int}
+        @test ds.info isa SoleXplorer.DatasetInfo
         
         # Test vector-valued dataframe
         X_vec = DataFrame(
@@ -57,6 +58,7 @@ using Statistics
         @test all(eltype.(eachcol(ds_vec.X)) .<: AbstractVector{<:Number})
         @test ds.tt.train isa Vector{Int}
         @test ds.tt.test isa Vector{Int}
+        @test ds.info isa SoleXplorer.DatasetInfo
     end
 
     @testset "prepare_dataset multidispach" begin
@@ -65,7 +67,8 @@ using Statistics
         model = SoleXplorer.DecisionTreeModel()
 
         @test_nowarn ds = prepare_dataset(X, :x2)
-        @test size(ds.X, 2) == 2
+        ds = prepare_dataset(X, :x2)
+        @test size(ds.X, 2) == 1
         @test !in(:x2, names(ds.X))
 
         @test_nowarn ds = prepare_dataset(X, y)
@@ -132,21 +135,36 @@ using Statistics
         ds = prepare_dataset(
             X, 
             y,
-            stratified_sampling=true,
+            stratified=true,
             nfolds=5
         )
         @test length(ds.tt) == 5
     end
 
     @testset "prepare_dataset usage examples" begin
-        X, y = load_arff_dataset("NATOPS")
+        X, y = Sole.load_arff_dataset("NATOPS")
         train_seed = 11
         rng = Random.Xoshiro(train_seed)
         Random.seed!(train_seed)
 
-        @test_nowarn ds_class = prepare_dataset(X, y, features=[mean, std], shuffle=false, winparams=(type=splitwindow, nwindows=10),)
+        ds = prepare_dataset(
+            X, y, 
+            features=[mean, std], 
+            shuffle=false, 
+            winparams=(type=splitwindow, nwindows=10)
+        )
 
-        @test_nowarn ds_class = prepare_dataset(
+        # Test parameters are correctly set
+        @test ds.info.features == [mean, std]
+        @test ds.info.shuffle == false
+        @test ds.info.winparams.type == splitwindow
+        @test ds.info.winparams.nwindows == 10
+        # Test output structure 
+        @test ds isa SoleXplorer.Dataset
+        @test size(ds.X, 1) == length(y)
+        @test length(ds.y) == length(y)
+
+        ds = prepare_dataset(
             X, y,
             # model.config
             algo=:classification,
@@ -155,7 +173,7 @@ using Statistics
             # model.preprocess
             train_ratio=0.8,
             shuffle=true,
-            stratified_sampling=false,
+            stratified=true,
             nfolds=6,
             rng=rng,
             # model.winparams
@@ -166,5 +184,24 @@ using Statistics
         model = SoleXplorer.DecisionTreeModel()
 
         @test_nowarn ds_class = prepare_dataset(X, y, model)
+
+            # Test each parameter was set correctly
+        @test ds.info.algo == :classification
+        @test ds.info.treatment == :aggregate
+        @test ds.info.features == [mean, std]
+        @test ds.info.train_ratio == 0.8
+        @test ds.info.shuffle == true
+        @test ds.info.stratified == true
+        @test ds.info.nfolds == 6
+        @test ds.info.rng == rng
+        @test ds.info.winparams.type == adaptivewindow
+        @test ds.info.winparams.nwindows == 10
+        @test ds.info.vnames == names(X)
+        
+        # Test output structure
+        @test ds isa SoleXplorer.Dataset
+        @test size(ds.X, 1) == length(y)
+        @test length(ds.y) == length(y)
+        @test length(ds.tt) == 6  # nfolds
     end
 end

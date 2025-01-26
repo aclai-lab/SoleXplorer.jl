@@ -1,16 +1,57 @@
 # ---------------------------------------------------------------------------- #
 #                                    dataset                                   #
 # ---------------------------------------------------------------------------- #
+struct DatasetInfo
+    algo        :: Symbol
+    treatment   :: Symbol
+    features    :: AbstractVector{<:Base.Callable}
+    train_ratio :: Float64
+    shuffle     :: Bool
+    stratified  :: Bool
+    nfolds      :: Int
+    rng         :: AbstractRNG
+    winparams   :: Union{NamedTuple, Nothing}
+    vnames      :: Union{AbstractVector{<:Union{AbstractString, Symbol}}, Nothing}
+end
+
 struct TT_indexes
-    train :: AbstractVector{<:Int}
-    test  :: AbstractVector{<:Int}
+    train       :: AbstractVector{<:Int}
+    test        :: AbstractVector{<:Int}
 end
 
 struct Dataset
-    X     :: AbstractDataFrame
-    y     :: Union{CategoricalArray, Vector{<:Number}}
-    tt    :: Union{SoleXplorer.TT_indexes, AbstractVector{<:SoleXplorer.TT_indexes}}
+    X           :: AbstractDataFrame
+    y           :: Union{CategoricalArray, Vector{<:Number}}
+    tt          :: Union{SoleXplorer.TT_indexes, AbstractVector{<:SoleXplorer.TT_indexes}}
+    info        :: DatasetInfo
+    # Xtrain      :: Base.Callable
+    # Xtest       :: Base.Callable
+    # ytrain      :: Base.Callable
+    # ytest       :: Base.Callable
+
+    # function Dataset(X, y, tt, info)
+    #     Xtrain = () -> X[tt.train, :]
+    #     Xtest = () -> X[tt.test, :]
+    #     ytrain = () -> y[tt.train]
+    #     ytest = () -> y[tt.test]
+    #     new(X, y, tt, info, Xtrain, Xtest, ytrain, ytest)
+    # end
 end
+
+function Base.show(io::IO, info::DatasetInfo)
+    println(io, "DatasetInfo:")
+    println(io, "  Algorithm:      ", info.algo)
+    println(io, "  Treatment:      ", info.treatment)
+    println(io, "  Features:       ", info.features)
+    println(io, "  Train ratio:    ", info.train_ratio)
+    println(io, "  Shuffle:        ", info.shuffle)
+    println(io, "  Stratified:     ", info.stratified)
+    println(io, "  N-folds:        ", info.nfolds)
+    println(io, "  RNG:            ", info.rng)
+    println(io, "  Win params:     ", info.winparams)
+    println(io, "  Variable names: ", info.vnames)
+end
+
 
 # ---------------------------------------------------------------------------- #
 #                           model consts & structs                             #
@@ -51,11 +92,11 @@ end
 const DEFAULT_FEATS = [maximum, minimum, mean, std]
 
 const DEFAULT_PREPROC = (
-    train_ratio         = 0.8,
-    shuffle             = true,
-    stratified_sampling = false,
-    nfolds              = 6,
-    rng                 = TaskLocalRNG()
+    train_ratio = 0.8,
+    shuffle     = true,
+    stratified  = false,
+    nfolds      = 6,
+    rng         = TaskLocalRNG()
 )
 
 const AVAIL_MODELS = Dict(
