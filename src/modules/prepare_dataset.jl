@@ -15,7 +15,8 @@ function _treatment(
     winparams::NamedTuple
 )
     # check parameters
-    haskey(winparams, :type) || throw(ArgumentError("winparams must contain a type, movingwindow, wholewindow, splitwindow or adaptivewindow"))
+    haskey(winparams, :type) || throw(ArgumentError("winparams must contain a type, $(keys(WIN_PARAMS))"))
+    haskey(WIN_PARAMS, winparams.type) || throw(ArgumentError("winparams.type must be one of: $(keys(WIN_PARAMS))"))
 
     max_interval = maximum(length.(eachrow(X)))
     _wparams = winparams |> x -> @delete x.type
@@ -37,8 +38,8 @@ function _treatment(
 
     elseif treatment == :reducesize   # modal
         valid_X = DataFrame([name => Vector{Float64}[] for name in vnames])
-    else
-        throw(ArgumentError("Treatments supported, :aggregate and :reducesize"))
+    # else
+    #     throw(ArgumentError("Treatments supported, :aggregate and :reducesize"))
     end
 
     for row in eachrow(X)
@@ -46,17 +47,18 @@ function _treatment(
         interval_diff = length(n_intervals) - length(row_intervals)
 
         if treatment == :aggregate
-            push!(valid_X, vcat([vcat([f(col[r]) for r in row_intervals], 
-                                        fill(NaN, interval_diff)) 
-                                        for col in row, f in features]...)
-                                    )
+            push!(valid_X, vcat([
+                    vcat([f(col[r]) for r in row_intervals], 
+                    fill(NaN, interval_diff)) for col in row, f in features
+                ]...)
+        )
         elseif treatment == :reducesize
             f = haskey(_wparams, :reducefunc) ? _wparams.reducefunc : mean
-            push!(valid_X, [vcat([f(col[r]) for r in row_intervals], 
-                                    fill(NaN, interval_diff)) 
-                                    for col in row
-                                    ]
-                                )
+            push!(valid_X, [
+                    vcat([f(col[r]) for r in row_intervals], 
+                    fill(NaN, interval_diff)) for col in row
+                ]
+            )
         end
     end
 
@@ -67,13 +69,13 @@ end
 #                                 partitioning                                 #
 # ---------------------------------------------------------------------------- #
 function _partition(
-    y::Union{CategoricalArray, Vector{Float64}},
+    y::Union{CategoricalArray, Vector{T}},
     train_ratio::Float64,
     shuffle::Bool,
     stratified_sampling::Bool,
     nfolds::Int,
     rng::AbstractRNG
-)
+) where {T<:Union{AbstractString, Number}}
     if stratified_sampling
         stratified_cv = MLJ.StratifiedCV(; nfolds, shuffle, rng)
         tt = MLJ.MLJBase.train_test_pairs(stratified_cv, 1:length(y), y)
@@ -102,15 +104,15 @@ function prepare_dataset(
     rng::AbstractRNG=Random.TaskLocalRNG(),
     # model.winparams
     winparams::Union{NamedTuple, Nothing}=nothing,
-
-    vnames::Union{AbstractVector{Union{String, Symbol}}, Nothing}=nothing,
-    kwargs...
+    vnames::Union{AbstractVector{<:Union{AbstractString, Symbol}}, Nothing}=nothing,
 )
     # check parameters
     check_dataframe_type(X) || throw(ArgumentError("DataFrame must contain only numeric values"))
     size(X, 1) == length(y) || throw(ArgumentError("Number of rows in DataFrame must match length of class labels"))
+    treatment in AVAIL_TREATMENTS || throw(ArgumentError("Treatment must be one of: $AVAIL_TREATMENTS"))
 
     if algo == :regression
+        y isa AbstractVector{<:Number} || throw(ArgumentError("Regression requires a numeric target variable"))
         y isa AbstractFloat || (y = Float64.(y))
     elseif algo == :classification
         y isa CategoricalArray || (y = CategoricalArray(y))
@@ -132,14 +134,14 @@ function prepare_dataset(
     # case 1: dataframe with numeric columns
     if all(t -> t <: Number, column_eltypes)
         # dataframe with numeric columns
-        SoleXplorer.Dataset(
+        return SoleXplorer.Dataset(
             DataFrame(vnames .=> eachcol(X)), y,
             _partition(y, train_ratio, shuffle, stratified_sampling, nfolds, rng)
         )
     # case 2: dataframe with vector-valued columns
     elseif all(t -> t <: AbstractVector{<:Number}, column_eltypes)
         # dataframe with vector-valued columns
-        SoleXplorer.Dataset(
+        return SoleXplorer.Dataset(
             # if winparams is nothing, then leave the dataframe as it is
             isnothing(winparams) ? DataFrame(vnames .=> eachcol(X)) : _treatment(X, vnames, treatment, features, winparams), y,
             _partition(y, train_ratio, shuffle, stratified_sampling, nfolds, rng)
@@ -152,8 +154,7 @@ end
 function prepare_dataset(
     X::AbstractDataFrame, 
     y::AbstractVector, 
-    model::AbstractModelSet;
-    kwargs...
+    model::AbstractModelSet
 )
     prepare_dataset(
         X, y; 
@@ -167,7 +168,7 @@ function prepare_dataset(
         nfolds              = model.preprocess.nfolds,
         rng                 = model.preprocess.rng,
         winparams           = model.winparams,
-        kwargs...)
+    )
 end
 
 # y is not a vector, but a symbol or a string that identifies the column in X

@@ -1,0 +1,170 @@
+using Test
+using Sole, SoleXplorer
+using DataFrames
+using CategoricalArrays
+using Random
+using Statistics
+
+@testset "prepare_dataset.jl" begin
+    
+    @testset "check_dataframe_type" begin
+        df_valid = DataFrame(a = [1.0, 2.0], b = [3, 4])
+        df_invalid = DataFrame(a = ["a", "b"], b = [1, 2])
+        
+        @test SoleXplorer.check_dataframe_type(df_valid) == true
+        @test SoleXplorer.check_dataframe_type(df_invalid) == false
+    end
+
+    @testset "hasnans" begin
+        df = DataFrame(a = [1.0, 2.0], b = [3, 4])
+        df_hasnans = DataFrame(a = [1.0, NaN], b = [3, 4])
+        
+        @test SoleXplorer.hasnans(df) == false
+        @test SoleXplorer.hasnans(df_hasnans) == true
+    end
+
+    @testset "prepare_dataset check output" begin
+        # Test numeric dataframe
+        X = DataFrame(x1 = [1.0, 2.0, 3.0], x2 = [4.0, 5.0, 6.0])
+        y = [1, 0, 1]
+        
+        ds = prepare_dataset(X, y, algo=:classification)
+
+        @test ds isa SoleXplorer.Dataset
+        @test size(ds.X) == (3, 2)
+        @test all(eltype.(eachcol(ds.X)) .<: Float64)
+        @test size(ds.y) == (3,)
+        @test ds.y isa CategoricalArray
+        @test ds.tt.train isa Vector{Int}
+        @test ds.tt.test isa Vector{Int}
+        
+        # Test vector-valued dataframe
+        X_vec = DataFrame(
+            x1 = [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
+            x2 = [[7.0, 8.0], [9.0, 10.0], [11.0, 12.0]]
+        )
+        
+        ds_vec = prepare_dataset(
+            X_vec, 
+            y,
+            treatment=:reducesize,
+            algo=:classification,
+            winparams=(type=SoleXplorer.adaptivewindow, nwindows=2)
+        )
+
+        @test ds isa SoleXplorer.Dataset
+        @test size(ds_vec.X) == (3, 2)
+        @test all(eltype.(eachcol(ds_vec.X)) .<: AbstractVector{<:Number})
+        @test ds.tt.train isa Vector{Int}
+        @test ds.tt.test isa Vector{Int}
+    end
+
+    @testset "prepare_dataset multidispach" begin
+        X = DataFrame(x1 = [1.0, 2.0, 3.0], x2 = [4.0, 5.0, 6.0])
+        y = [1.5, 2.5, 3.5]
+        model = SoleXplorer.DecisionTreeModel()
+
+        @test_nowarn ds = prepare_dataset(X, :x2)
+        @test size(ds.X, 2) == 2
+        @test !in(:x2, names(ds.X))
+
+        @test_nowarn ds = prepare_dataset(X, y)
+        @test_nowarn ds = prepare_dataset(X, y, algo=:classification)
+        @test_nowarn ds = prepare_dataset(X, y, algo=:regression)
+        @test_nowarn ds = prepare_dataset(X, y, model)
+    end
+
+    @testset "prepare_dataset error handling" begin
+        # Invalid parameter
+        X = DataFrame(x1 = [1.0, 2.0], x2 = [4.0, 5.0])
+        y = [1, 0]
+
+        @test_throws MethodError prepare_dataset(X, y, invalid=:invalid)
+
+        # DataFrame must contain only numeric values
+        X = DataFrame(a = ["a", "b"], b = [1, 2])
+        y = [1, 0]
+
+        @test_throws ArgumentError prepare_dataset(X, y)
+
+        # Number of rows in DataFrame must match length of class labels
+        X = DataFrame(x1 = [1.0, 2.0], x2 = [4.0, 5.0])
+        y = [1, 0, 1]
+        
+        @test_throws ArgumentError prepare_dataset(X, y)
+        
+        # Regression requires a numeric target variable
+        X = DataFrame(x1 = [1.0, 2.0], x2 = [4.0, 5.0])
+        y = ["a", "b"]
+
+        @test_throws ArgumentError prepare_dataset(X, y, algo=:regression)
+
+        # Algorithms supported, :regression and :classification
+        X = DataFrame(x1 = [1.0, 2.0], x2 = [4.0, 5.0])
+        y = [1, 0]
+
+        @test_throws ArgumentError prepare_dataset(X, y, algo=:invalid)
+
+        # Column type not yet supported
+        X = DataFrame(a = [rand(2,2) for _ in 1:3], b = [rand(2,2) for _ in 1:3])
+        y = [1, 0, 1]
+        
+        @test_throws ArgumentError prepare_dataset(X, y)
+
+        # winparams must contain a type, movingwindow, wholewindow, splitwindow or adaptivewindow
+        X_vec = DataFrame(
+            x1 = [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
+            x2 = [[7.0, 8.0], [9.0, 10.0], [11.0, 12.0]]
+        )
+        y = ["a", "b", "c"]
+
+        @test_throws ArgumentError prepare_dataset(X_vec, y, winparams=(nwindows=20,))
+        @test_throws ArgumentError prepare_dataset(X_vec, y, winparams=(type=:invalid,))
+
+        # Treatment must be one of: $AVAIL_TREATMENTS
+        @test_throws ArgumentError prepare_dataset(X_vec, y, treatment=:invalid)
+    end
+
+    @testset "prepare_dataset stratified sampling" begin
+        X = DataFrame(x1 = collect(1.0:10.0), x2 = collect(11.0:20.0))
+        y = repeat([0, 1], 5)
+        
+        ds = prepare_dataset(
+            X, 
+            y,
+            stratified_sampling=true,
+            nfolds=5
+        )
+        @test length(ds.tt) == 5
+    end
+
+    @testset "prepare_dataset usage examples" begin
+        X, y = load_arff_dataset("NATOPS")
+        train_seed = 11
+        rng = Random.Xoshiro(train_seed)
+        Random.seed!(train_seed)
+
+        @test_nowarn ds_class = prepare_dataset(X, y, features=[mean, std], shuffle=false, winparams=(type=splitwindow, nwindows=10),)
+
+        @test_nowarn ds_class = prepare_dataset(
+            X, y,
+            # model.config
+            algo=:classification,
+            treatment=:aggregate,
+            features=[mean, std],
+            # model.preprocess
+            train_ratio=0.8,
+            shuffle=true,
+            stratified_sampling=false,
+            nfolds=6,
+            rng=rng,
+            # model.winparams
+            winparams=(type=adaptivewindow, nwindows=10),
+            vnames=names(X),
+        )
+
+        model = SoleXplorer.DecisionTreeModel()
+
+        @test_nowarn ds_class = prepare_dataset(X, y, model)
+    end
+end

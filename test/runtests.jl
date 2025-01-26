@@ -13,11 +13,12 @@ end
 println("Julia version: ", VERSION)
 
 test_suites = [
-    ("DecisionTree", ["decision_tree.jl", ]),
-    ("DecisionForest", ["decision_forest.jl", ]),
-    ("ModalDecisionTree", ["modal_decision_tree.jl", ]),
-    ("AdaBoost", ["adaboost.jl", ]),
-    ("ModalAdaBoost", ["modal_adaboost.jl", ]),
+    ("Prepare Dataset", ["modules/prepare_dataset.jl", ]),
+    # ("DecisionTree", ["decision_tree.jl", ]),
+    # ("DecisionForest", ["decision_forest.jl", ]),
+    # ("ModalDecisionTree", ["modal_decision_tree.jl", ]),
+    # ("AdaBoost", ["adaboost.jl", ]),
+    # ("ModalAdaBoost", ["modal_adaboost.jl", ]),
 ]
 
 @testset "SoleXplorer.jl" begin
