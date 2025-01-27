@@ -14,30 +14,6 @@ struct DatasetInfo
     vnames      :: Union{AbstractVector{<:Union{AbstractString, Symbol}}, Nothing}
 end
 
-struct TT_indexes
-    train       :: AbstractVector{<:Int}
-    test        :: AbstractVector{<:Int}
-end
-
-struct Dataset
-    X           :: AbstractDataFrame
-    y           :: Union{CategoricalArray, Vector{<:Number}}
-    tt          :: Union{SoleXplorer.TT_indexes, AbstractVector{<:SoleXplorer.TT_indexes}}
-    info        :: DatasetInfo
-    # Xtrain      :: Base.Callable
-    # Xtest       :: Base.Callable
-    # ytrain      :: Base.Callable
-    # ytest       :: Base.Callable
-
-    # function Dataset(X, y, tt, info)
-    #     Xtrain = () -> X[tt.train, :]
-    #     Xtest = () -> X[tt.test, :]
-    #     ytrain = () -> y[tt.train]
-    #     ytest = () -> y[tt.test]
-    #     new(X, y, tt, info, Xtrain, Xtest, ytrain, ytest)
-    # end
-end
-
 function Base.show(io::IO, info::DatasetInfo)
     println(io, "DatasetInfo:")
     println(io, "  Algorithm:      ", info.algo)
@@ -52,6 +28,54 @@ function Base.show(io::IO, info::DatasetInfo)
     println(io, "  Variable names: ", info.vnames)
 end
 
+struct TT_indexes
+    train       :: AbstractVector{<:Int}
+    test        :: AbstractVector{<:Int}
+end
+
+struct Dataset{T<:AbstractDataFrame,S}
+    X           :: T
+    y           :: S
+    tt          :: Union{TT_indexes, AbstractVector{<:TT_indexes}}
+    info        :: DatasetInfo
+    Xtrain      :: Union{SubDataFrame{T}, Vector{<:SubDataFrame{T}}}
+    Xtest       :: Union{SubDataFrame{T}, Vector{<:SubDataFrame{T}}}
+    ytrain      :: Union{SubArray{<:eltype(S)}, Vector{<:SubArray{<:eltype(S)}}}
+    ytest       :: Union{SubArray{<:eltype(S)}, Vector{<:SubArray{<:eltype(S)}}}
+
+    function Dataset(X::T, y::S, tt, info) where {T<:AbstractDataFrame,S}
+        Xtrain, Xtest, ytrain, ytest = if info.stratified
+            (
+            view.(Ref(X), getfield.(tt, :train), Ref(:)),
+            view.(Ref(X), getfield.(tt, :test), Ref(:)),
+            view.(Ref(y), getfield.(tt, :train)),
+            view.(Ref(y), getfield.(tt, :test))
+            )
+        else
+            (
+            view(X, tt.train, :),
+            view(X, tt.test, :),
+            view(y, tt.train),
+            view(y, tt.test)
+            )
+        end
+
+        new{T,S}(X, y, tt, info, Xtrain, Xtest, ytrain, ytest)
+    end
+end
+
+function Base.show(io::IO, ds::Dataset)
+    println(io, "Dataset:")
+    println(io, "  X shape:        ", size(ds.X))
+    println(io, "  y length:       ", length(ds.y))
+    if ds.tt isa AbstractVector
+        println(io, "  Train/Test:     ", length(ds.tt), " folds")
+    else
+        println(io, "  Train indices:  ", length(ds.tt.train))
+        println(io, "  Test indices:   ", length(ds.tt.test))
+    end
+    print(io, ds.info)
+end
 
 # ---------------------------------------------------------------------------- #
 #                           model consts & structs                             #

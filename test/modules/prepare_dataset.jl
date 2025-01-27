@@ -131,14 +131,26 @@ using Statistics
     @testset "prepare_dataset stratified sampling" begin
         X = DataFrame(x1 = collect(1.0:10.0), x2 = collect(11.0:20.0))
         y = repeat([0, 1], 5)
+        nfolds = 5
         
         ds = prepare_dataset(
             X, 
             y,
             stratified=true,
-            nfolds=5
+            nfolds=nfolds
         )
-        @test length(ds.tt) == 5
+        @test length(ds.tt) == nfolds
+
+        # Additional tests for train/test splits
+        @test all(size.(ds.Xtrain, 2) .== size(X, 2))
+        @test all(size.(ds.Xtest, 2) .== size(X, 2))
+        @test size(ds.Xtrain, 1) + size(ds.Xtest, 1) == size(X, 1)
+        @test length(ds.ytrain) + length(ds.ytest) == length(y)
+        @test eltype(ds.ytrain) == eltype(ds.ytest)
+        @test length(ds.Xtrain) == nfolds
+        @test length(ds.Xtest) == nfolds
+        @test length(ds.ytrain) == nfolds
+        @test length(ds.ytest) == nfolds
     end
 
     @testset "prepare_dataset usage examples" begin
