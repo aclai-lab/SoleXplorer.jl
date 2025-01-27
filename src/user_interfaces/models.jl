@@ -1,11 +1,7 @@
 # ---------------------------------------------------------------------------- #
 #                                   get model                                  #
 # ---------------------------------------------------------------------------- #
-function get_model(
-    model::ModelConfig,
-)
-    model
-end
+get_model(model::ModelConfig) = model
 
 function get_model(
     modelset::AbstractModelSet,

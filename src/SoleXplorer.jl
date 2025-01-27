@@ -77,6 +77,7 @@ export get_rules
 include("user_interfaces/predict.jl")
 export get_predict
 
+include("modules/validate_modelset.jl")
 include("symbolic_analysis.jl")
 export symbolic_analysis
 
