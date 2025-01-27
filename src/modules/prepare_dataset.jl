@@ -1,12 +1,39 @@
 # ---------------------------------------------------------------------------- #
 #                                   utils                                      #
 # ---------------------------------------------------------------------------- #
-check_dataframe_type(df::AbstractDataFrame) = all(col -> eltype(col) <: Union{Real, AbstractArray{<:Real}}, eachcol(df))
+check_dataframe_type(df::AbstractDataFrame) = all(col -> eltype(col) <: Union{Real,AbstractArray{<:Real}}, eachcol(df))
 hasnans(X::AbstractDataFrame) = any(x -> x == 1, SoleData.hasnans.(eachcol(X)))
 
 # ---------------------------------------------------------------------------- #
 #                                 treatment                                    #
 # ---------------------------------------------------------------------------- #
+"""
+    _treatment(X::DataFrame, vnames::AbstractVector{String}, treatment::Symbol, 
+               features::AbstractVector{<:Base.Callable}, winparams::NamedTuple)
+
+Processes the input DataFrame `X` based on the specified `treatment` type, 
+either aggregating or reducing the size of the data. The function applies 
+the given `features` to the columns specified by `vnames`, using window 
+parameters defined in `winparams`.
+
+# Arguments
+- `X::DataFrame`: The input data to be processed.
+- `vnames::AbstractVector{String}`: Names of the columns in `X` to be treated.
+- `treatment::Symbol`: The type of treatment to apply, either `:aggregate` 
+  or `:reducesize`.
+- `features::AbstractVector{<:Base.Callable}`: Functions to apply to the 
+  specified columns.
+- `winparams::NamedTuple`: Parameters defining the windowing strategy, 
+  including the type of window function.
+
+# Returns
+- `DataFrame`: A new DataFrame with the processed data.
+
+# Throws
+- `ArgumentError`: If `winparams` does not contain a valid `type` or if 
+  `treatment` is not supported.
+"""
+
 function _treatment(
     X::DataFrame,
     vnames::AbstractVector{String},
@@ -21,25 +48,25 @@ function _treatment(
     max_interval = maximum(length.(eachrow(X)))
     _wparams = winparams |> x -> @delete x.type
     n_intervals = winparams.type(max_interval; _wparams...)
-    
+
     if treatment == :aggregate        # propositional
         if n_intervals == 1
-            valid_X = DataFrame([v => Float64[] 
-                for v in [string(f, "(", v, ")") 
-                for f in features for v in vnames]]
+            valid_X = DataFrame([v => Float64[]
+                                 for v in [string(f, "(", v, ")")
+                                       for f in features for v in vnames]]
             )
         else
-            valid_X = DataFrame([v => Float64[] 
-                for v in [string(f, "(", v, ")w", i) 
-                for f in features for v in vnames 
-                for i in 1:length(n_intervals)]]
+            valid_X = DataFrame([v => Float64[]
+                                 for v in [string(f, "(", v, ")w", i)
+                                       for f in features for v in vnames
+                                       for i in 1:length(n_intervals)]]
             )
         end
 
     elseif treatment == :reducesize   # modal
         valid_X = DataFrame([name => Vector{Float64}[] for name in vnames])
-    # else
-    #     throw(ArgumentError("Treatments supported, :aggregate and :reducesize"))
+        # else
+        #     throw(ArgumentError("Treatments supported, :aggregate and :reducesize"))
     end
 
     for row in eachrow(X)
@@ -48,16 +75,16 @@ function _treatment(
 
         if treatment == :aggregate
             push!(valid_X, vcat([
-                    vcat([f(col[r]) for r in row_intervals], 
+                vcat([f(col[r]) for r in row_intervals],
                     fill(NaN, interval_diff)) for col in row, f in features
-                ]...)
-        )
+            ]...)
+            )
         elseif treatment == :reducesize
             f = haskey(_wparams, :reducefunc) ? _wparams.reducefunc : mean
             push!(valid_X, [
-                    vcat([f(col[r]) for r in row_intervals], 
+                vcat([f(col[r]) for r in row_intervals],
                     fill(NaN, interval_diff)) for col in row
-                ]
+            ]
             )
         end
     end
@@ -68,14 +95,41 @@ end
 # ---------------------------------------------------------------------------- #
 #                                 partitioning                                 #
 # ---------------------------------------------------------------------------- #
+"""
+    _partition(y::Union{CategoricalArray, Vector{T}}, train_ratio::Float64, 
+               shuffle::Bool, stratified::Bool, nfolds::Int, rng::AbstractRNG) 
+               where {T<:Union{AbstractString, Number}}
+
+Partitions the input vector `y` into training and testing indices based on 
+the specified parameters. Supports both stratified and non-stratified 
+partitioning.
+
+# Arguments
+- `y::Union{CategoricalArray, Vector{T}}`: The target variable to partition.
+- `train_ratio::Float64`: The ratio of data to be used for training in 
+  non-stratified partitioning.
+- `shuffle::Bool`: Whether to shuffle the data before partitioning.
+- `stratified::Bool`: Whether to perform stratified partitioning.
+- `nfolds::Int`: Number of folds for cross-validation in stratified 
+  partitioning.
+- `rng::AbstractRNG`: Random number generator for reproducibility.
+
+# Returns
+- `Vector{Tuple{Vector{Int}, Vector{Int}}}`: A vector of tuples containing 
+  training and testing indices.
+
+# Throws
+- `ArgumentError`: If `nfolds` is less than 2 when `stratified` is true.
+"""
+
 function _partition(
-    y::Union{CategoricalArray, Vector{T}},
+    y::Union{CategoricalArray,Vector{T}},
     train_ratio::Float64,
     shuffle::Bool,
     stratified::Bool,
     nfolds::Int,
     rng::AbstractRNG
-) where {T<:Union{AbstractString, Number}}
+) where {T<:Union{AbstractString,Number}}
     if stratified
         stratified_cv = MLJ.StratifiedCV(; nfolds, shuffle, rng)
         tt = MLJ.MLJBase.train_test_pairs(stratified_cv, 1:length(y), y)
@@ -88,7 +142,38 @@ end
 # ---------------------------------------------------------------------------- #
 #                               prepare dataset                                #
 # ---------------------------------------------------------------------------- #
-# TODO automatizzare classification e regression in base alla presenza di y? verificare i dataset
+"""
+    prepare_dataset(X::AbstractDataFrame, y::AbstractVector; algo::Symbol=:classification, 
+                    treatment::Symbol=:aggregate, features::AbstractVector{<:Base.Callable}=DEFAULT_FEATS, 
+                    train_ratio::Float64=0.8, shuffle::Bool=true, stratified::Bool=false, 
+                    nfolds::Int=6, rng::AbstractRNG=Random.TaskLocalRNG(), 
+                    winparams::Union{NamedTuple,Nothing}=nothing, 
+                    vnames::Union{AbstractVector{<:Union{AbstractString,Symbol}},Nothing}=nothing)
+
+Prepares a dataset for machine learning by processing the input DataFrame `X` and target vector `y`. 
+Supports both classification and regression tasks, with options for data treatment and partitioning.
+
+# Arguments
+- `X::AbstractDataFrame`: The input data containing features.
+- `y::AbstractVector`: The target variable corresponding to the rows in `X`.
+- `algo::Symbol`: The type of algorithm, either `:classification` or `:regression`.
+- `treatment::Symbol`: The data treatment method, default is `:aggregate`.
+- `features::AbstractVector{<:Base.Callable}`: Functions to apply to the data columns.
+- `train_ratio::Float64`: Ratio of data to be used for training.
+- `shuffle::Bool`: Whether to shuffle data before partitioning.
+- `stratified::Bool`: Whether to use stratified partitioning.
+- `nfolds::Int`: Number of folds for cross-validation.
+- `rng::AbstractRNG`: Random number generator for reproducibility.
+- `winparams::Union{NamedTuple,Nothing}`: Parameters for windowing strategy.
+- `vnames::Union{AbstractVector{<:Union{AbstractString,Symbol}},Nothing}`: Names of the columns in `X`.
+
+# Returns
+- `SoleXplorer.Dataset`: A dataset object containing processed data and partitioning information.
+
+# Throws
+- `ArgumentError`: If input parameters are invalid or unsupported column types are encountered.
+"""
+
 function prepare_dataset(
     X::AbstractDataFrame,
     y::AbstractVector;
@@ -103,8 +188,8 @@ function prepare_dataset(
     nfolds::Int=6,
     rng::AbstractRNG=Random.TaskLocalRNG(),
     # model.winparams
-    winparams::Union{NamedTuple, Nothing}=nothing,
-    vnames::Union{AbstractVector{<:Union{AbstractString, Symbol}}, Nothing}=nothing,
+    winparams::Union{NamedTuple,Nothing}=nothing,
+    vnames::Union{AbstractVector{<:Union{AbstractString,Symbol}},Nothing}=nothing,
 )
     # check parameters
     check_dataframe_type(X) || throw(ArgumentError("DataFrame must contain only numeric values"))
@@ -129,7 +214,7 @@ function prepare_dataset(
 
     hasnans(X) && @warn "DataFrame contains NaN values"
 
-    column_eltypes = eltype.(eachcol(X))        
+    column_eltypes = eltype.(eachcol(X))
 
     ds_info = DatasetInfo(
         algo,
@@ -152,7 +237,7 @@ function prepare_dataset(
             _partition(y, train_ratio, shuffle, stratified, nfolds, rng),
             ds_info
         )
-    # case 2: dataframe with vector-valued columns
+        # case 2: dataframe with vector-valued columns
     elseif all(t -> t <: AbstractVector{<:Number}, column_eltypes)
         # dataframe with vector-valued columns
         return SoleXplorer.Dataset(
@@ -167,29 +252,29 @@ function prepare_dataset(
 end
 
 function prepare_dataset(
-    X::AbstractDataFrame, 
-    y::AbstractVector, 
+    X::AbstractDataFrame,
+    y::AbstractVector,
     model::AbstractModelSet
 )
     prepare_dataset(
-        X, y; 
-        algo                = model.config.algo,
-        treatment           = model.config.treatment,
-        features            = model.features,
+        X, y;
+        algo=model.config.algo,
+        treatment=model.config.treatment,
+        features=model.features,
         # model.preprocess
-        train_ratio         = model.preprocess.train_ratio,
-        shuffle             = model.preprocess.shuffle,
-        stratified          = model.preprocess.stratified,
-        nfolds              = model.preprocess.nfolds,
-        rng                 = model.preprocess.rng,
-        winparams           = model.winparams,
+        train_ratio=model.preprocess.train_ratio,
+        shuffle=model.preprocess.shuffle,
+        stratified=model.preprocess.stratified,
+        nfolds=model.preprocess.nfolds,
+        rng=model.preprocess.rng,
+        winparams=model.winparams,
     )
 end
 
 # y is not a vector, but a symbol or a string that identifies the column in X
 function prepare_dataset(
-    X::AbstractDataFrame, 
-    y::Union{Symbol, AbstractString}, 
+    X::AbstractDataFrame,
+    y::Union{Symbol,AbstractString},
     args...; kwargs...
 )
     prepare_dataset(X[!, Not(y)], X[!, y], args...; kwargs...)
