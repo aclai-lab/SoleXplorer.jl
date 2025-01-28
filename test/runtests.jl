@@ -14,6 +14,7 @@ println("Julia version: ", VERSION)
 
 test_suites = [
     ("Prepare Dataset", ["modules/prepare_dataset.jl", ]),
+    ("Validate Modelset", ["modules/validate_modelset.jl", ]),
     # ("DecisionTree", ["decision_tree.jl", ]),
     # ("DecisionForest", ["decision_forest.jl", ]),
     # ("ModalDecisionTree", ["modal_decision_tree.jl", ]),

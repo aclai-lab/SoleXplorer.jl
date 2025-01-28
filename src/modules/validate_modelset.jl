@@ -2,18 +2,13 @@ function check_unknown_params(params, default_params, source)
     isnothing(params) && return
     unknown = setdiff(keys(params), keys(default_params))
     isempty(unknown) || throw(ArgumentError("Unknown parameters in $source: $unknown"))
-end
-
-function check_global_params(params, global_params)
-    isnothing(params) && return
-    unknown = setdiff(keys(params), collect(global_params))
-    isempty(unknown) || throw(ArgumentError("Unknown parameters $unknown in global_params"))
+    return nothing
 end
 
 function get_function(params, avail_functions)
     isnothing(params) && return
     funcs = filter(v -> v in avail_functions, values(params))
-    length(funcs) > 1 && throw(ArgumentError("Multiple window functions detected. Only one window function is allowed."))
+    length(funcs) > 1 && throw(ArgumentError("Multiple methods detected. Only one method is allowed."))
     return isempty(funcs) ? nothing : first(funcs)
 end
 
@@ -36,9 +31,9 @@ function validate_params(
 end
 
 function validate_features(
-    defaults::AbstractVector{<:Base.Callable},
-    globals::Union{AbstractVector{<:Base.Callable}, Nothing},
-    users::Union{AbstractVector{<:Base.Callable}, Nothing}
+    defaults::AbstractVector,
+    globals::Union{AbstractVector, Nothing},
+    users::Union{AbstractVector, Nothing}
 )
     features = if isnothing(users) && isnothing(globals)
         defaults
@@ -124,9 +119,9 @@ function validate_tuning_type(
 end
 
 function validate_tuning_ranges(
-    defaults::Union{AbstractVector{<:Base.Callable}, Nothing},
-    globals::Union{AbstractVector{<:Base.Callable}, Nothing},
-    users::Union{AbstractVector{<:Base.Callable}, Nothing}
+    defaults::Union{AbstractVector, Nothing},
+    globals::Union{AbstractVector, Nothing},
+    users::Union{AbstractVector, Nothing}
 )
     ranges = if isnothing(users) && isnothing(globals)
         defaults
@@ -172,19 +167,19 @@ end
 
 function validate_preprocess_params(
     defaults::NamedTuple,
-    splits::Union{NamedTuple, Nothing}
+    preprocess::Union{NamedTuple, Nothing}
 )
-    isnothing(splits) && return defaults
-    check_unknown_params(splits, defaults, "splits")
-    return merge(defaults, splits)
+    isnothing(preprocess) && return defaults
+    check_unknown_params(preprocess, defaults, "preprocess")
+    return merge(defaults, preprocess)
 end
 
 function validate_modelset(
     models::AbstractVector{<:NamedTuple}, 
     globals::Union{NamedTuple, Nothing}=nothing,
-    splits::Union{NamedTuple, Nothing}=nothing,
+    preprocess::Union{NamedTuple, Nothing}=nothing,
 )
-    modelsets = AbstractModelSet[]
+    modelsets = SymbolicModelSet[]
 
     for m in models
         haskey(m, :type) || throw(ArgumentError("Each model specification must contain a 'type' field"))
@@ -227,7 +222,7 @@ function validate_modelset(
 
         model.learn_method = isnothing(model.tuning.method) ? model.learn_method[1] : model.learn_method[2]
 
-        model.preprocess = validate_preprocess_params(model.preprocess, splits)
+        model.preprocess = validate_preprocess_params(model.preprocess, preprocess)
 
         push!(modelsets, model)
     end

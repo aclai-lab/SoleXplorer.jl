@@ -29,10 +29,10 @@ function _symbolic_analysis(
     y::Union{AbstractVector, Nothing}; 
     models::AbstractVector{<:NamedTuple}, 
     global_params::Union{NamedTuple, Nothing}=nothing,
-    split_params::Union{NamedTuple, Nothing}=nothing,
+    preprocess_params::Union{NamedTuple, Nothing}=nothing,
     kwargs...
 )
-    modelsets = validate_modelset(models, global_params, split_params)
+    modelsets = validate_modelset(models, global_params, preprocess_params)
 
     models = ModelConfig[]
 
