@@ -176,8 +176,8 @@ end
 
 function validate_modelset(
     models::AbstractVector{<:NamedTuple}, 
-    globals::Union{NamedTuple, Nothing}=nothing,
-    preprocess::Union{NamedTuple, Nothing}=nothing,
+    globals::Union{NamedTuple, Nothing},
+    preprocess::Union{NamedTuple, Nothing},
 )
     modelsets = SymbolicModelSet[]
 
@@ -229,3 +229,8 @@ function validate_modelset(
 
     return modelsets
 end
+
+validate_modelset(models::AbstractVector{<:NamedTuple}, globals::Union{NamedTuple, Nothing}) = validate_modelset(models, globals, nothing)
+validate_modelset(models::AbstractVector{<:NamedTuple}) = validate_modelset(models, nothing, nothing)
+
+validate_modelset(models::NamedTuple, args...) = validate_modelset([models], args...)

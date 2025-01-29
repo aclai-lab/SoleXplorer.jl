@@ -56,11 +56,12 @@ export stretch_high, entropy_pairs, rs_range, dfa, low_freq_power, centroid_freq
 export catch9
 
 include("models_structs.jl")
+export ModelConfig, range
 include("models/decisiontrees.jl")
 include("models/modaldecisiontrees.jl")
 
-include("user_interfaces/models.jl")
-export ModelConfig, range, get_model
+include("modules/models.jl")
+export get_model
 
 include("modules/prepare_dataset.jl")
 export prepare_dataset
@@ -78,6 +79,8 @@ include("user_interfaces/predict.jl")
 export get_predict
 
 include("modules/validate_modelset.jl")
+export validate_modelset
+
 include("symbolic_analysis.jl")
 export symbolic_analysis
 

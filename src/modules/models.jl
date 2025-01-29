@@ -3,11 +3,7 @@
 # ---------------------------------------------------------------------------- #
 get_model(model::ModelConfig) = model
 
-function get_model(
-    modelset::AbstractModelSet,
-    ds::Dataset;
-    kwargs...
-)
+function get_model(modelset::AbstractModelSet)
     classifier = modelset.type(; modelset.params...)
 
     if modelset.tuning.tuning
