@@ -29,9 +29,13 @@ function Base.show(io::IO, info::DatasetInfo)
 end
 
 struct TT_indexes
-    train       :: AbstractVector{<:Int}
-    test        :: AbstractVector{<:Int}
+    # train       :: AbstractVector{<:Int}
+    # test        :: AbstractVector{<:Int}
+    train       :: Vector{Int}
+    test        :: Vector{Int}
 end
+
+Base.show(io::IO, t::TT_indexes) = print(io, "TT_indexes(train=", t.train, ", test=", t.test, ")")
 
 struct Dataset{T<:AbstractDataFrame,S}
     X           :: T
