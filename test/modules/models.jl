@@ -30,11 +30,11 @@ modelsets = validate_modelset(models, global_params)
 @test modelsets isa Vector{SoleXplorer.SymbolicModelSet}
 
 for m in modelsets
-    classifier = get_model(m)
-    @test classifier isa MLJ.Model
+    _classifier = getmodel(m)
+    @test _classifier isa MLJ.Model
 end
 
-classifier = get_model(modelsets[1])
+classifier = getmodel(modelsets[1])
 
 @test classifier.max_depth == 3
 @test classifier.min_samples_leaf == 14
@@ -61,11 +61,11 @@ modelsets = validate_modelset(models)
 @test modelsets isa Vector{SoleXplorer.SymbolicModelSet}
 
 for m in modelsets
-    classifier = get_model(m)
-    @test classifier isa MLJ.Model
+    _classifier = getmodel(m)
+    @test _classifier isa MLJ.Model
 end
 
-classifier = get_model(modelsets[1])
+classifier = getmodel(modelsets[1])
 
 @test classifier isa MLJTuning.ProbabilisticTunedModel
 @test classifier.model isa MLJ.Model

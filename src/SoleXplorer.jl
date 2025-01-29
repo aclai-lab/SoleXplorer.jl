@@ -61,7 +61,7 @@ include("models/decisiontrees.jl")
 include("models/modaldecisiontrees.jl")
 
 include("modules/models.jl")
-export get_model
+export getmodel
 
 include("modules/prepare_dataset.jl")
 export prepare_dataset

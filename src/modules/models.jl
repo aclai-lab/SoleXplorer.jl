@@ -1,9 +1,9 @@
 # ---------------------------------------------------------------------------- #
 #                                   get model                                  #
 # ---------------------------------------------------------------------------- #
-get_model(model::ModelConfig) = model
+getmodel(model::ModelConfig) = model
 
-function get_model(modelset::AbstractModelSet)
+function getmodel(modelset::AbstractModelSet)
     classifier = modelset.type(; modelset.params...)
 
     if modelset.tuning.tuning

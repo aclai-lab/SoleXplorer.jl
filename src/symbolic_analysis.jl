@@ -39,7 +39,7 @@ function _symbolic_analysis(
     for m in modelsets
         ds = prepare_dataset(X, y, m)
 
-        classifier = get_model(m, ds)
+        classifier = getmodel(m)
 
         mach = modelfit(m, classifier, ds);
         model = modeltest(m, mach, ds);
