@@ -44,20 +44,16 @@ struct Dataset{T<:AbstractDataFrame,S}
     ytest       :: Union{SubArray{<:eltype(S)}, Vector{<:SubArray{<:eltype(S)}}}
 
     function Dataset(X::T, y::S, tt, info) where {T<:AbstractDataFrame,S}
-        Xtrain, Xtest, ytrain, ytest = if info.stratified
-            (
-            view.(Ref(X), getfield.(tt, :train), Ref(:)),
-            view.(Ref(X), getfield.(tt, :test), Ref(:)),
-            view.(Ref(y), getfield.(tt, :train)),
-            view.(Ref(y), getfield.(tt, :test))
-            )
+        if info.stratified
+            Xtrain = view.(Ref(X), getfield.(tt, :train), Ref(:))
+            Xtest  = view.(Ref(X), getfield.(tt, :test), Ref(:))
+            ytrain = view.(Ref(y), getfield.(tt, :train))
+            ytest  = view.(Ref(y), getfield.(tt, :test))
         else
-            (
-            view(X, tt.train, :),
-            view(X, tt.test, :),
-            view(y, tt.train),
-            view(y, tt.test)
-            )
+            Xtrain = @views X[tt.train, :]
+            Xtest  = @views X[tt.test, :]
+            ytrain = @views y[tt.train]
+            ytest  = @views y[tt.test]
         end
 
         new{T,S}(X, y, tt, info, Xtrain, Xtest, ytrain, ytest)
