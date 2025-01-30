@@ -30,3 +30,27 @@ function fitmodel(
 
     return length(mach) == 1 ? first(mach) : mach
 end
+
+# ---------------------------------------------------------------------------- #
+#                                  test model                                  #
+# ---------------------------------------------------------------------------- #
+function testmodel(
+    modelset::AbstractModelSet,
+    mach::MLJ.Machine,
+    ds::Dataset
+)
+    if ds.Xtest isa AbstractDataFrame
+        Xtest, ytest = [ds.Xtest], [ds.ytest]
+    else
+        Xtest, ytest = ds.Xtest, ds.ytest
+    end
+
+    tmodel = AbstractModel[]
+
+    for i in eachindex(ytest)
+        testset = modelset.learn_method(mach, Xtest[i], ytest[i])
+        push!(tmodel, testset)
+    end
+
+    return length(tmodel) == 1 ? first(tmodel) : tmodel
+end

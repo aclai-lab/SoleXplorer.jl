@@ -66,11 +66,8 @@ export getmodel
 include("modules/prepare_dataset.jl")
 export prepare_dataset
 
-include("user_interfaces/fit.jl")
-export fitmodel
-
-include("user_interfaces/test.jl")
-export modeltest
+include("modules/fit&test.jl")
+export fitmodel, testmodel
 
 include("user_interfaces/rules.jl")
 export get_rules
