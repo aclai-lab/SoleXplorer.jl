@@ -67,7 +67,7 @@ include("modules/prepare_dataset.jl")
 export prepare_dataset
 
 include("user_interfaces/fit.jl")
-export modelfit
+export fitmodel
 
 include("user_interfaces/test.jl")
 export modeltest

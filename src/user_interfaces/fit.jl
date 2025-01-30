@@ -1,32 +1,32 @@
 # ---------------------------------------------------------------------------- #
 #                                   fit model                                  #
 # ---------------------------------------------------------------------------- #
-function modelfit(
+function fitmodel(
     modelset::AbstractModelSet,
     classifier::MLJ.Model,
     ds::Dataset;
     kwargs...
 )
-    # ------------------------------------------------------------------------ #
-    #                         data check and treatment                         #
-    # ------------------------------------------------------------------------ #
-    check_dataframe_type(ds.X) || throw(ArgumentError("DataFrame must contain only Real or Array{<:Real} columns"))
-    size(ds.X, 1) == length(ds.y) || throw(ArgumentError("Number of rows in DataFrame must match length of class labels"))
-
-    tt_train = ds.tt isa AbstractVector ? ds.tt : [ds.tt]
-
-    fitmodel = MLJ.Machine[]
-
-    for tt in tt_train
-        mach = if modelset.config.algo == :regression
-            MLJ.machine(classifier, selectrows(ds.X, tt.train); kwargs...)
-        else
-            mach = MLJ.machine(classifier, selectrows(ds.X, tt.train), ds.y[tt.train]; kwargs...)
-        end
-        fit!(mach, verbosity=0)
-
-        push!(fitmodel, mach)
+    if ds.Xtrain isa AbstractDataFrame
+        Xtrain, ytrain = [ds.Xtrain], [ds.ytrain]
+    else
+        Xtrain, ytrain = ds.Xtrain, ds.ytrain
     end
 
-    return length(fitmodel) == 1 ? fitmodel[1] : fitmodel
+    mach = MLJ.Machine[]
+
+    for i in eachindex(ytrain)
+        fmodel = if modelset.config.algo == :regression
+            MLJ.machine(classifier, Xtrain[i]; kwargs...)
+        elseif modelset.config.algo == :classification
+            fmodel = MLJ.machine(classifier, Xtrain[i], ytrain[i]; kwargs...)
+        else
+            throw(ArgumentError("Invalid algorithm type: $(modelset.config.algo)"))
+        end
+
+        fit!(fmodel, verbosity=0)
+        push!(mach, fmodel)
+    end
+
+    return length(mach) == 1 ? first(mach) : mach
 end

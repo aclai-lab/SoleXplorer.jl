@@ -41,7 +41,7 @@ function _symbolic_analysis(
 
         classifier = getmodel(m)
 
-        mach = modelfit(m, classifier, ds);
+        mach = fitmodel(m, classifier, ds);
         model = modeltest(m, mach, ds);
 
         rules = get_rules(m, model, ds);

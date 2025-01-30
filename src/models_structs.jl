@@ -95,6 +95,18 @@ mutable struct SymbolicModelSet <: AbstractModelSet
     preprocess   :: NamedTuple
 end
 
+function Base.show(io::IO, ::MIME"text/plain", m::SymbolicModelSet)
+    println(io, "SymbolicModelSet")
+    println(io, "  Model type: ", m.type)
+    println(io, "  Features: ", isnothing(m.features) ? "None" : "$(length(m.features)) features")
+    println(io, "  Learning method: ", typeof(m.learn_method))
+    println(io, "  Rule extraction: ", typeof(m.rules_method))
+end
+
+function Base.show(io::IO, m::SymbolicModelSet)
+    print(io, "SymbolicModelSet(type=$(m.type), features=$(isnothing(m.features) ? "None" : length(m.features)))")
+end
+
 DecisionTreeModel(dtmodel      :: SymbolicModelSet) = dtmodel
 RandomForestModel(dtmodel      :: SymbolicModelSet) = dtmodel
 AdaBoostModel(dtmodel          :: SymbolicModelSet) = dtmodel
