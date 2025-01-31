@@ -23,6 +23,7 @@ Random.seed!(train_seed)
     @test classifier isa MLJ.Model
 
     fmodel = fitmodel(first(modelsets), classifier, ds)
+    tmodel = testmodel(first(modelsets), fmodel, ds)
 
     @test fmodel isa MLJ.Machine
     @test fmodel.model isa MLJ.Model
@@ -47,6 +48,7 @@ Random.seed!(train_seed)
     @test classifier isa MLJ.Model
 
     fmodel = fitmodel(first(modelsets), classifier, ds)
+    tmodel = testmodel(first(modelsets), fmodel, ds)
 
     @test fmodel isa MLJ.Machine
     @test fmodel.model isa MLJ.Model
@@ -63,6 +65,7 @@ Random.seed!(train_seed)
     @test classifier isa MLJ.Model
 
     fmodel = fitmodel(first(modelsets), classifier, ds)
+    tmodel = testmodel(first(modelsets), fmodel, ds)
 
     @test fmodel isa Vector{<:MLJ.Machine}
     @test fmodel[1].model isa MLJ.Model
@@ -70,5 +73,27 @@ Random.seed!(train_seed)
 # ---------------------------------------------------------------------------- #
 end
 
+# ---------------------------------------------------------------------------- #
+using Test
+using Sole, SoleXplorer
+using DataFrames
+using MLJ, MLJTuning
+using Random
+using Statistics
 
+X, y = Sole.load_arff_dataset("NATOPS")
+train_seed = 11
+rng = Random.Xoshiro(train_seed)
+Random.seed!(train_seed)
 
+models = (type=:randomforest, params=(n_trees=10,))
+global_params = (winparams=(type=wholewindow,), features=[mean])
+
+modelsets = validate_modelset(models, global_params)
+ds = prepare_dataset(X, y, first(modelsets))
+@test ds isa SoleXplorer.Dataset
+classifier = getmodel(first(modelsets))
+@test classifier isa MLJ.Model
+
+fmodel = fitmodel(first(modelsets), classifier, ds)
+tmodel = testmodel(first(modelsets), fmodel, ds)

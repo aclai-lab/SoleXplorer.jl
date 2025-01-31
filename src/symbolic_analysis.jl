@@ -44,6 +44,8 @@ function _symbolic_analysis(
         mach = fitmodel(m, classifier, ds);
         model = testmodel(m, mach, ds);
 
+        return model
+
         rules = get_rules(m, model, ds);
         accuracy = get_predict(mach, ds);
 
