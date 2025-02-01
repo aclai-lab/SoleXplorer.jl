@@ -17,6 +17,7 @@ Random.seed!(train_seed)
 result = traintest(X, y; models=(type=:decisiontree, params=(rng=rng,)))
 result = traintest(X, y; models=(type=:randomforest,))
 result = traintest(X, y; models=(type=:adaboost,))
+result = traintest(X, y; models=(type=:xgboost,))
 
 result = traintest(X, y; models=(type=:decisiontree, tuning=true),)
 

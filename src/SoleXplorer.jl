@@ -13,19 +13,17 @@ using Random
 using Accessors: @delete
 
 import DecisionTree as DT
-# import XGBoost as XGB
+import XGBoost as XGB
 
 using MLJ
 # using MLJBase: Probabilistic, ParamRange, train_test_pairs
 using MLJTuning
-using MLJDecisionTreeInterface
+using MLJDecisionTreeInterface, MLJXGBoostInterface
 import MLJModelInterface as MMI
 
 using MLJ: Grid as grid, RandomSearch as randomsearch, LatinHypercube as latinhypercube
 using TreeParzen: MLJTreeParzenTuning as treeparzen
 using MLJParticleSwarmOptimization: ParticleSwarm as particleswarm, AdaptiveParticleSwarm as adaptiveparticleswarm
-
-# using MLJXGBoostInterface
 
 # include("mlj/xgboost.jl")
 # using .MLJXGBoostInterface
@@ -57,8 +55,10 @@ export catch9
 
 include("models_structs.jl")
 export ModelConfig, range
+
 include("models/decisiontrees.jl")
 include("models/modaldecisiontrees.jl")
+include("models/xgboost.jl")
 
 include("modules/models.jl")
 export getmodel
