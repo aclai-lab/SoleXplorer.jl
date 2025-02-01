@@ -121,8 +121,12 @@ mutable struct ModelConfig <: AbstractModelConfig
     classifier :: MLJ.Model
     mach       :: MLJ.Machine
     model      :: AbstractModel
-    rules      :: AbstractDataFrame
-    accuracy   :: AbstractFloat
+    rules      :: Union{AbstractDataFrame, Nothing}
+    accuracy   :: Union{AbstractFloat, Nothing}
+
+    function ModelConfig(setup::AbstractModelSet, ds::Dataset, classifier::MLJ.Model, mach::MLJ.Machine, model::AbstractModel)
+        new(setup, ds, classifier, mach, model, nothing, nothing)
+    end
 end
 
 const DEFAULT_FEATS = [maximum, minimum, mean, std]

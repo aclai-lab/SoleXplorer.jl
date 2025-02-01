@@ -79,6 +79,6 @@ include("modules/validate_modelset.jl")
 export validate_modelset
 
 include("symbolic_analysis.jl")
-export symbolic_analysis
+export symbolic_analysis, traintest
 
 end
