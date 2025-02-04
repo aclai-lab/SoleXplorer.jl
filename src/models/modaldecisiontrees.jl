@@ -1,6 +1,8 @@
 # ---------------------------------------------------------------------------- #
 #                   models from ModalDecisionTrees package                     #
 # ---------------------------------------------------------------------------- #
+
+# CLASSIFIER ----------------------------------------------------------------- #
 function ModalDecisionTreeModel()
     type = ModalDecisionTrees.ModalDecisionTree
     config  = (; algo=:classification, type=DecisionTree, treatment=:reducesize)
@@ -37,11 +39,11 @@ function ModalDecisionTreeModel()
     )
 
     tuning = (
-        tuning        = false,
-        method        = (type = latinhypercube, ntour = 20),
-        params        = TUNING_PARAMS,
-        ranges        = [
-            model -> MLJ.range(:n_iter; lower=5, upper=15),
+        tuning = false,
+        method = (; type = latinhypercube, ntour = 20),
+        params = TUNING_PARAMS,
+        ranges = [
+            model -> MLJ.range(model, :merge_purity_threshold, lower=0, upper=1),
             model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])
         ]
     )
@@ -99,17 +101,16 @@ function ModalRandomForestModel()
     )
 
     tuning = (
-        tuning        = false,
-        method        = (type = latinhypercube, ntour = 20),
-        params        = TUNING_PARAMS,
-        ranges        = [
-            model -> MLJ.range(:n_iter; lower=5, upper=15),
+        tuning = false,
+        method = (; type = latinhypercube, ntour = 20),
+        params = TUNING_PARAMS,
+        ranges = [
+            model -> MLJ.range(model, :sampling_fraction, lower=0.3, upper=0.9),
             model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])
         ]
     )
 
     rules_method = SolePostHoc.LumenRuleExtractor()
-    # rules_method = SoleModels.PlainRuleExtractor() ### Lumen does not currently support symbolic feature names.
 
     return SymbolicModelSet(
         type,
@@ -161,17 +162,16 @@ function ModalAdaBoostModel()
     )
 
     tuning = (
-        tuning        = false,
-        method        = (type = latinhypercube, ntour = 20),
-        params        = TUNING_PARAMS,
-        ranges        = [
+        tuning = false,
+        method = (; type = latinhypercube, ntour = 20),
+        params = TUNING_PARAMS,
+        ranges = [
             model -> MLJ.range(:n_iter; lower=5, upper=15),
             model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])
         ]
     )
 
-    # rules_method = SolePostHoc.LumenRuleExtractor()
-    rules_method = SoleModels.PlainRuleExtractor() ### Lumen does not currently support symbolic feature names.
+    rules_method = SolePostHoc.LumenRuleExtractor()
 
     return SymbolicModelSet(
         type,

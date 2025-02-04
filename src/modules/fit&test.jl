@@ -1,56 +1,28 @@
 # ---------------------------------------------------------------------------- #
 #                                   fit model                                  #
 # ---------------------------------------------------------------------------- #
-function fitmodel(
-    modelset::AbstractModelSet,
-    classifier::MLJ.Model,
-    ds::Dataset;
-    kwargs...
-)
-    if ds.Xtrain isa AbstractDataFrame
-        Xtrain, ytrain = [ds.Xtrain], [ds.ytrain]
-    else
-        Xtrain, ytrain = ds.Xtrain, ds.ytrain
-    end
+function fitmodel(modelset::AbstractModelSet, classifier::MLJ.Model, ds::Dataset; kwargs...)
 
-    mach = MLJ.Machine[]
+    Xtrain, ytrain = ds.Xtrain isa AbstractDataFrame ? ([ds.Xtrain], [ds.ytrain]) : (ds.Xtrain, ds.ytrain)
 
-    for i in eachindex(ytrain)
-        fmodel = if modelset.config.algo == :regression
-            MLJ.machine(classifier, Xtrain[i]; kwargs...)
-        elseif modelset.config.algo == :classification
-            fmodel = MLJ.machine(classifier, Xtrain[i], ytrain[i]; kwargs...)
-        else
-            throw(ArgumentError("Invalid algorithm type: $(modelset.config.algo)"))
-        end
+    # mach = MLJ.Machine[]
+    # for i in eachindex(ytrain)
+    #     fmodel = MLJ.machine(classifier, Xtrain[i], ytrain[i]; kwargs...) |> (m -> fit!(m, verbosity=0))
+    #     push!(mach, fmodel)
+    # end
 
-        fit!(fmodel, verbosity=0)
-        push!(mach, fmodel)
-    end
+    mach = [MLJ.machine(classifier, x, y; kwargs...) |> m -> fit!(m, verbosity=0) for (x, y) in zip(Xtrain, ytrain)]
 
-    return length(mach) == 1 ? first(mach) : mach
+    return length(mach) == 1 ? only(mach) : mach
 end
 
 # ---------------------------------------------------------------------------- #
 #                                  test model                                  #
 # ---------------------------------------------------------------------------- #
-function testmodel(
-    modelset::AbstractModelSet,
-    mach::MLJ.Machine,
-    ds::Dataset
-)
-    if ds.Xtest isa AbstractDataFrame
-        Xtest, ytest = [ds.Xtest], [ds.ytest]
-    else
-        Xtest, ytest = ds.Xtest, ds.ytest
-    end
+function testmodel(modelset::AbstractModelSet, mach::MLJ.Machine, ds::Dataset)
 
-    tmodel = AbstractModel[]
+    Xtrain, ytrain = ds.Xtrain isa AbstractDataFrame ? ([ds.Xtrain], [ds.ytrain]) : (ds.Xtrain, ds.ytrain)
+    tmodel = [modelset.learn_method(mach, x, y) for (x, y) in zip(Xtrain, ytrain)]
 
-    for i in eachindex(ytest)
-        testset = modelset.learn_method(mach, Xtest[i], ytest[i])
-        push!(tmodel, testset)
-    end
-
-    return length(tmodel) == 1 ? first(tmodel) : tmodel
+    return length(tmodel) == 1 ? only(tmodel) : tmodel
 end

@@ -29,8 +29,6 @@ function Base.show(io::IO, info::DatasetInfo)
 end
 
 struct TT_indexes
-    # train       :: AbstractVector{<:Int}
-    # test        :: AbstractVector{<:Int}
     train       :: Vector{Int}
     test        :: Vector{Int}
 end
@@ -107,15 +105,18 @@ function Base.show(io::IO, m::SymbolicModelSet)
     print(io, "SymbolicModelSet(type=$(m.type), features=$(isnothing(m.features) ? "None" : length(m.features)))")
 end
 
-DecisionTreeModel(dtmodel      :: SymbolicModelSet) = dtmodel
-RandomForestModel(dtmodel      :: SymbolicModelSet) = dtmodel
-AdaBoostModel(dtmodel          :: SymbolicModelSet) = dtmodel
+DecisionTreeClassifierModel(dtmodel :: SymbolicModelSet) = dtmodel
+RandomForestClassifierModel(dtmodel :: SymbolicModelSet) = dtmodel
+AdaBoostClassifierModel(dtmodel     :: SymbolicModelSet) = dtmodel
 
-ModalDecisionTreeModel(dtmodel :: SymbolicModelSet) = dtmodel
-ModalRandomForestModel(dtmodel :: SymbolicModelSet) = dtmodel
-ModalAdaBoostModel(dtmodel     :: SymbolicModelSet) = dtmodel
+DecisionTreeRegressorModel(dtmodel  :: SymbolicModelSet) = dtmodel
+RandomForestRegressorModel(dtmodel  :: SymbolicModelSet) = dtmodel
 
-XGBoostModel(dtmodel           :: SymbolicModelSet) = dtmodel
+ModalDecisionTreeModel(dtmodel      :: SymbolicModelSet) = dtmodel
+ModalRandomForestModel(dtmodel      :: SymbolicModelSet) = dtmodel
+ModalAdaBoostModel(dtmodel          :: SymbolicModelSet) = dtmodel
+
+# XGBoostModel(dtmodel           :: SymbolicModelSet) = dtmodel
 
 mutable struct ModelConfig <: AbstractModelConfig
     setup      :: AbstractModelSet
@@ -126,9 +127,23 @@ mutable struct ModelConfig <: AbstractModelConfig
     rules      :: Union{AbstractDataFrame, Nothing}
     accuracy   :: Union{AbstractFloat, Nothing}
 
-    function ModelConfig(setup::AbstractModelSet, ds::Dataset, classifier::MLJ.Model, mach::MLJ.Machine, model::AbstractModel)
+    function ModelConfig(
+        setup::AbstractModelSet,
+        ds::Dataset,
+        classifier::MLJ.Model,
+        mach::MLJ.Machine,
+        model::AbstractModel
+    )
         new(setup, ds, classifier, mach, model, nothing, nothing)
     end
+end
+
+function Base.show(io::IO, mc::ModelConfig)
+    println(io, "ModelConfig:")
+    println(io, "    setup      =", mc.setup)
+    println(io, "    classifier =", mc.classifier)
+    println(io, "    rules      =", isnothing(mc.rules) ? "nothing" : string(mc.rules))
+    println(io, "    accuracy   =", isnothing(mc.accuracy) ? "nothing" : string(mc.accuracy))
 end
 
 const DEFAULT_FEATS = [maximum, minimum, mean, std]
@@ -142,20 +157,20 @@ const DEFAULT_PREPROC = (
 )
 
 const AVAIL_MODELS = Dict(
-    :decisiontree      => DecisionTreeModel,
-    :randomforest      => RandomForestModel,
-    :adaboost          => AdaBoostModel,
+    :decisiontree_classifier => DecisionTreeClassifierModel,
+    :randomforest_classifier => RandomForestClassifierModel,
+    :adaboost_classifier     => AdaBoostClassifierModel,
 
-    :modaldecisiontree => ModalDecisionTreeModel,
-    :modalrandomforest => ModalRandomForestModel,
-    :modaladaboost     => ModalAdaBoostModel,
+    :decisiontree_regressor  => DecisionTreeRegressorModel,
+    :randomforest_regressor  => RandomForestRegressorModel,
 
-    :xgboost           => XGBoostModel,
+    :modaldecisiontree       => ModalDecisionTreeModel,
+    :modalrandomforest       => ModalRandomForestModel,
+    :modaladaboost           => ModalAdaBoostModel,
+
+    # :xgboost           => XGBoostModel,
 
     # :modal_decision_list => ModalDecisionLists.MLJInterface.ExtendedSequentialCovering,
-
-    # :regression_tree     => MLJDecisionTreeInterface.DecisionTreeRegressor,
-    # :regression_forest   => MLJDecisionTreeInterface.RandomForestRegressor,
 )
 
 const AVAIL_WINS       = (movingwindow, wholewindow, splitwindow, adaptivewindow)

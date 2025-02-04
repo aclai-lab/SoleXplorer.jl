@@ -200,6 +200,7 @@ function prepare_dataset(
         y isa AbstractVector{<:Number} || throw(ArgumentError("Regression requires a numeric target variable"))
         y isa AbstractFloat || (y = Float64.(y))
     elseif algo == :classification
+        y isa AbstractVector{<:AbstractFloat} && throw(ArgumentError("Classification requires a categorical target variable"))
         y isa CategoricalArray || (y = CategoricalArray(y))
     else
         throw(ArgumentError("Algorithms supported, :regression and :classification"))
