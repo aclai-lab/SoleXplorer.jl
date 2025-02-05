@@ -19,10 +19,10 @@ end
 # ---------------------------------------------------------------------------- #
 #                                  test model                                  #
 # ---------------------------------------------------------------------------- #
-function testmodel(modelset::AbstractModelSet, mach::MLJ.Machine, ds::Dataset)
-
+function testmodel(modelset::AbstractModelSet, mach::Union{T, AbstractVector{<:T}}, ds::Dataset) where T<:MLJ.Machine
+    mach isa AbstractVector || (mach = [mach])
     Xtrain, ytrain = ds.Xtrain isa AbstractDataFrame ? ([ds.Xtrain], [ds.ytrain]) : (ds.Xtrain, ds.ytrain)
-    tmodel = [modelset.learn_method(mach, x, y) for (x, y) in zip(Xtrain, ytrain)]
+    tmodel = [modelset.learn_method(m, x, y) for (m, x, y) in zip(mach, Xtrain, ytrain)]
 
     return length(tmodel) == 1 ? only(tmodel) : tmodel
 end

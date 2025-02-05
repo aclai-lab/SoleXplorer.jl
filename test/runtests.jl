@@ -1,5 +1,5 @@
-using Test
 using SoleXplorer
+using Test
 using Random
 
 function run_tests(list)
@@ -16,10 +16,7 @@ test_suites = [
     ("Prepare Dataset", ["modules/prepare_dataset.jl", ]),
     ("Validate Modelset", ["modules/validate_modelset.jl", ]),
     ("Get Models", ["modules/models.jl", ]),
-    # ("DecisionForest", ["decision_forest.jl", ]),
-    # ("ModalDecisionTree", ["modal_decision_tree.jl", ]),
-    # ("AdaBoost", ["adaboost.jl", ]),
-    # ("ModalAdaBoost", ["modal_adaboost.jl", ]),
+    ("TrainTest", ["traintest.jl", ]),
 ]
 
 @testset "SoleXplorer.jl" begin

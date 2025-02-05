@@ -122,17 +122,17 @@ mutable struct ModelConfig <: AbstractModelConfig
     setup      :: AbstractModelSet
     ds         :: Dataset
     classifier :: MLJ.Model
-    mach       :: MLJ.Machine
-    model      :: AbstractModel
-    rules      :: Union{AbstractDataFrame, Nothing}
-    accuracy   :: Union{AbstractFloat, Nothing}
+    mach       :: Union{MLJ.Machine, AbstractVector{<:MLJ.Machine}}
+    model      :: Union{AbstractModel, AbstractVector{<:AbstractModel}}
+    rules      :: Union{AbstractDataFrame, AbstractVector{<:AbstractDataFrame}, Nothing}
+    accuracy   :: Union{AbstractFloat, AbstractVector{<:AbstractFloat}, Nothing}
 
     function ModelConfig(
         setup::AbstractModelSet,
         ds::Dataset,
         classifier::MLJ.Model,
-        mach::MLJ.Machine,
-        model::AbstractModel
+        mach::Union{MLJ.Machine, AbstractVector{<:MLJ.Machine}},
+        model::Union{AbstractModel, AbstractVector{<:AbstractModel}},
     )
         new(setup, ds, classifier, mach, model, nothing, nothing)
     end

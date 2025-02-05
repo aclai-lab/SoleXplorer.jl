@@ -12,7 +12,7 @@ Random.seed!(train_seed)
 
 # ---------------------------------------------------------------------------- #
 models = (
-    type=:decisiontree,
+    type=:decisiontree_classifier,
     params=(max_depth=3, min_samples_leaf=14),
     winparams=(type=movingwindow, window_size=12),
     features=[minimum, mean, cov, mode_5]
@@ -42,7 +42,7 @@ classifier = getmodel(modelsets[1])
 
 # ---------------------------------------------------------------------------- #
 models = [(
-        type=:decisiontree,
+        type=:decisiontree_classifier,
         params=(max_depth=3, min_samples_leaf=14),
         winparams=(type=movingwindow, window_size=12),
         features=[minimum, mean, cov, mode_5],
@@ -52,7 +52,7 @@ models = [(
             ranges=[SoleXplorer.range(:feature_importance; values=[:impurity, :split])]
         ),   
     ),
-    (type=:decisiontree, params=(min_samples_leaf=30, min_samples_split=3,)
+    (type=:decisiontree_classifier, params=(min_samples_leaf=30, min_samples_split=3,)
 )]
 
 modelsets = validate_modelset(models)

@@ -1,8 +1,8 @@
 using Test
 using Sole
-import SoleXplorer as SX
 using SoleXplorer
 using Random, StatsBase, JLD2, DataFrames
+using MLJTuning
 using RDatasets
 
 # ---------------------------------------------------------------------------- #
@@ -23,134 +23,220 @@ X = X[chosen_rows, chosen_cols]
 y = y[chosen_rows]
 
 # ---------------------------------------------------------------------------- #
-#                  basic train/test classification analysis                    #
+#                      basic train/test classification                         #
 # ---------------------------------------------------------------------------- #
-result = traintest(X, y; models=(type=:decisiontree_classifier, params=(; rng=rng)))
-result = traintest(X, y; models=(type=:randomforest_classifier, params=(; rng=rng)))
-result = traintest(X, y; models=(type=:adaboost_classifier,     params=(; rng=rng)))
+@testset "basic usage traintest function" begin
+    @testset "decisiontree_classifier" begin
+        result = traintest(X, y; models=(type=:decisiontree_classifier, params=(; rng=rng)))
+        @test result isa SoleXplorer.ModelConfig
+        @test result.classifier isa SoleXplorer.DecisionTreeClassifier
+        @test result.model isa SoleXplorer.DecisionTree
+    end
 
-result = traintest(X, y; models=(type=:modaldecisiontree,       params=(; rng=rng)))
-result = traintest(X, y; models=(type=:modalrandomforest,       params=(; rng=rng)))
+    @testset "randomforest_classifier" begin
+        result = traintest(X, y; models=(type=:randomforest_classifier, params=(; rng=rng)))
+        @test result isa SoleXplorer.ModelConfig
+        @test result.classifier isa SoleXplorer.RandomForestClassifier # type piracy?
+        @test result.model isa SoleXplorer.DecisionEnsemble
+    end
+
+    @testset "adaboost_classifier" begin
+        result = traintest(X, y; models=(type=:adaboost_classifier, params=(; rng=rng)))
+        @test result isa SoleXplorer.ModelConfig
+        @test result.classifier isa SoleXplorer.AdaBoostStumpClassifier
+        @test result.model isa SoleXplorer.DecisionEnsemble
+    end
+
+    @testset "modaldecisiontree" begin
+        result = traintest(X, y; models=(type=:modaldecisiontree, params=(; rng=rng)))
+        @test result isa SoleXplorer.ModelConfig
+        @test result.classifier isa SoleXplorer.ModalDecisionTree
+        @test result.model isa SoleXplorer.DecisionTree
+    end
+
+    @testset "modalrandomforest" begin
+        result = traintest(X, y; models=(type=:modalrandomforest, params=(; rng=rng)))
+        @test result isa SoleXplorer.ModelConfig
+        @test result.classifier isa SoleXplorer.ModalRandomForest
+        @test result.model isa SoleXplorer.DecisionEnsemble
+    end
+end
 
 # ---------------------------------------------------------------------------- #
-#                  tuning train/test classification analysis                   #
+#                       tuning train/test classification                       #
 # ---------------------------------------------------------------------------- #
-result = traintest(X, y; models=(type=:decisiontree_classifier, tuning=true))
-result = traintest(X, y; models=(type=:randomforest_classifier, tuning=true))
-result = traintest(X, y; models=(type=:adaboost_classifier, tuning=true))
+@testset "tuning usage traintest function" begin
+    @testset "decisiontree_classifier" begin
+        result = traintest(X, y; models=(type=:decisiontree_classifier, params=(; rng=rng), tuning=true))
+        @test result isa SoleXplorer.ModelConfig
+        @test result.classifier isa MLJTuning.ProbabilisticTunedModel{LatinHypercube, SoleXplorer.DecisionTreeClassifier}
+        @test result.model isa SoleXplorer.DecisionTree
+    end
 
-result = traintest(X, y; models=(type=:modaldecisiontree, tuning=true))
-result = traintest(X, y; models=(type=:modalrandomforest, tuning=true))
+    @testset "randomforest_classifier" begin
+        result = traintest(X, y; models=(type=:randomforest_classifier, params=(; rng=rng), tuning=true))
+        @test result isa SoleXplorer.ModelConfig
+        @test result.classifier isa MLJTuning.ProbabilisticTunedModel{LatinHypercube, SoleXplorer.RandomForestClassifier}
+        @test result.model isa SoleXplorer.DecisionEnsemble
+    end
+
+    @testset "adaboost_classifier" begin
+        result = traintest(X, y; models=(type=:adaboost_classifier, params=(; rng=rng), tuning=true))
+        @test result isa SoleXplorer.ModelConfig
+        @test result.classifier isa MLJTuning.ProbabilisticTunedModel{LatinHypercube, SoleXplorer.AdaBoostStumpClassifier}
+        @test result.model isa SoleXplorer.DecisionEnsemble
+    end
+
+    @testset "modaldecisiontree" begin
+        result = traintest(X, y; models=(type=:modaldecisiontree, params=(; rng=rng), tuning=true))
+        @test result isa SoleXplorer.ModelConfig
+        @test result.classifier isa MLJTuning.ProbabilisticTunedModel{LatinHypercube, SoleXplorer.ModalDecisionTree}
+        @test result.model isa SoleXplorer.DecisionTree
+    end
+
+    @testset "modalrandomforest" begin
+        result = traintest(X, y; models=(type=:modalrandomforest, params=(; rng=rng), tuning=true))
+        @test result isa SoleXplorer.ModelConfig
+        @test result.classifier isa MLJTuning.ProbabilisticTunedModel{LatinHypercube, SoleXplorer.ModalRandomForest}
+        @test result.model isa SoleXplorer.DecisionEnsemble
+    end
+end
 
 # ---------------------------------------------------------------------------- #
-#                parametrized train/test classification analysis               #
+#                    classification pratical usage examples                    #
 # ---------------------------------------------------------------------------- #
-result = traintest(X, y;
-    models=(
-            type=:decisiontree_classifier,
-            params=(max_depth=3, min_samples_leaf=1),
-            winparams=(type=movingwindow, window_size=6),
-            features=[minimum, mean, cov, mode_5]
-        ),
-    global_params=(
-        params=(;min_samples_split=2),
-        winparams=(;type=adaptivewindow),
-        features=[std]
+@testset "classification pratical usage examples" begin
+    @testset "decisiontree_classifier" begin
+        result = traintest(X, y;
+            models=(
+                # always declare the model you're going to use
+                type=:decisiontree_classifier,
+                # you can tweak every parameter of the model
+                params=(; max_depth=5, min_samples_leaf=1),
+                # optionally you can use different windowing strategies:
+                # in this case, even if the model is propositional, and doesnt accept data vectors,
+                # we mimic a modal behaviour splitting data vectors in 2 windows,
+                # and then, apply choosen features on each window
+                winparams=(; type=adaptivewindow, nwindows=2),
+                # you can choose which features to use, mode_5 comes from Catch22 package
+                features=[minimum, mean, cov, mode_5],
+                # optionally you can turn on tuning default settings for every model,
+                # using simply "tuning=true"
+                tuning=true
+            )
+        )
+        @test result isa SoleXplorer.ModelConfig
+        @test result.classifier isa MLJTuning.ProbabilisticTunedModel{LatinHypercube, SoleXplorer.DecisionTreeClassifier}
+        @test result.model isa SoleXplorer.DecisionTree
+    end
+
+    @testset "randomforest_classifier" begin
+        result = traintest(X, y;
+            models=(
+                type=:randomforest_classifier,
+                # params is a NamedTuple: in case you have only one parameter,
+                # remember to place a ';' at the beginning, or a ',' at the end
+                params=(; n_trees=25),
+                features=[minimum, mean, std],
+                # you can use a tuning strategy coming from MLJ library
+                tuning=(
+                    # you can choose the tuning method and adjust the parameters
+                    # specific for the choosen method
+                    method=(type=latinhypercube, rng=rng), 
+                    # you can also tweak global tuning parameters
+                    params=(repeats=10, n=5),
+                    # every model has default ranges for tuning
+                    # but it's highly recommended to choose which parameters to tune
+                    ranges=[
+                        SoleXplorer.range(:sampling_fraction, lower=0.3, upper=0.9),
+                        SoleXplorer.range(:feature_importance, values=[:impurity, :split])
+                    ]
+                ),   
+            )
+        )
+        @test result isa SoleXplorer.ModelConfig
+        @test result.classifier isa MLJTuning.ProbabilisticTunedModel{LatinHypercube, SoleXplorer.RandomForestClassifier}
+        @test result.model isa SoleXplorer.DecisionEnsemble
+    end
+
+    @testset "modaldecisiontree" begin
+        result = traintest(X, y;
+            models=(
+                type=:modaldecisiontree,
+                winparams=(; type=adaptivewindow, nwindows=20),
+                features=[minimum, mean, std]
+            )
+        )
+        @test result isa SoleXplorer.ModelConfig
+        @test result.classifier isa SoleXplorer.ModalDecisionTree
+        @test result.model isa SoleXplorer.DecisionTree
+    end
+
+    @testset "preprocess params" begin
+        result = traintest(X, y;
+            models=(
+                type=:decisiontree_classifier,
+                params=(; max_depth=5, min_samples_leaf=1),
+                winparams=(; type=adaptivewindow, nwindows=2),
+                features=[minimum, mean, cov, mode_5],
+                tuning=true
+            ),
+            # you can also specify preprocessing parameters
+            # to fine tuning train test split
+            preprocess=(
+                train_ratio = 0.7,
+                stratified=true,
+                nfolds=3,
+                rng=rng
+            )
+        )
+        @test result isa SoleXplorer.ModelConfig
+        @test result.classifier isa MLJTuning.ProbabilisticTunedModel{LatinHypercube, SoleXplorer.DecisionTreeClassifier}
+        @test result.model isa Vector{<:SoleXplorer.DecisionTree}
+    end
+end
+
+# ---------------------------------------------------------------------------- #
+#                       classification multiple models                         #
+# ---------------------------------------------------------------------------- #
+@testset "classification multiple models" begin
+    results = traintest(X, y;
+        # you can stack multiple models in a vector
+        models=[(
+                type=:decisiontree_classifier,
+                params=(max_depth=3, min_samples_leaf=14),
+                features=[minimum, mean, cov, mode_5]
+            ),
+            (
+                type=:adaboost_classifier,
+                winparams=(type=movingwindow, window_size=6),
+                tuning=true
+            ),
+            (; type=:modaldecisiontree)],
+        # you can also specify global parameters for all models
+        # note that if you specify them also in model definitions,
+        # they will be overwritten.
+        # for example, this could be very useful if you want to pass rng parameter to all models
+        globals=(
+            params=(; rng=rng),
+            features=[std],
+            tuning=false
+        )
     )
-)
+    @test results isa Vector{ModelConfig}
+    
+    @test results[1] isa SoleXplorer.ModelConfig
+    @test results[1].classifier isa SoleXplorer.DecisionTreeClassifier
+    @test results[1].model isa SoleXplorer.DecisionTree
 
-result = traintest(X, y;
-    models=(
-            type=:randomforest_classifier,
-            params=(max_depth=3, min_samples_leaf=14),
-            winparams=(type=movingwindow, window_size=6),
-            features=[minimum, mean, cov, mode_5]
-        ),
-    global_params=(
-        params=(min_samples_split=17,),
-        winparams=(type=adaptivewindow,),
-        features=[std]
-    )
-)
+    @test results[2] isa SoleXplorer.ModelConfig
+    @test results[2].classifier isa MLJTuning.ProbabilisticTunedModel{LatinHypercube, SoleXplorer.AdaBoostStumpClassifier}
+    @test results[2].model isa SoleXplorer.DecisionEnsemble
 
-result = traintest(X, y;
-    models=(
-        type=:adaboost_classifier,
-        winparams=(type=movingwindow, window_size=6),
-        features=[minimum, mean, cov, mode_5]
-    ),
-    global_params=(
-        params=(;n_iter=17),
-        winparams=(;type=adaptivewindow),
-        features=[std]
-    )
-)
-
-result = traintest(X, y;
-    models=(
-            type=:modaldecisiontree,
-            params=(max_depth=3, min_samples_leaf=1),
-            features=[minimum, mean, cov, mode_5]
-        ),
-    global_params=(
-        params=(min_samples_split=17,),
-        winparams=(type=adaptivewindow,),
-        features=[std]
-    )
-)
-
-result = traintest(X, y;
-    models=(
-            type=:modalrandomforest,
-            params=(max_depth=3, min_samples_leaf=5),
-            features=[minimum, mean, cov, mode_5]
-        ),
-    global_params=(
-        params=(min_samples_split=17,),
-        winparams=(type=adaptivewindow,),
-        features=[std]
-    )
-)
-
-# ---------------------------------------------------------------------------- #
-#                  multiple train/test classification analysis                 #
-# ---------------------------------------------------------------------------- #
-result = traintest(X, y;
-    models=[(
-            type=:decisiontree_classifier,
-            params=(max_depth=3, min_samples_leaf=14),
-            winparams=(type=movingwindow, window_size=6),
-            features=[minimum, mean, cov, mode_5],
-            tuning=(
-                method=(type=latinhypercube, ntour=20,), 
-                params=(repeats=11,), 
-                ranges=[SX.range(:feature_importance; values=[:impurity, :split])]
-            ),   
-        ),
-        (type=:randomforest_classifier, params=(min_samples_leaf=30, min_samples_split=1,)
-    )],
-)
-
-result = traintest(X, y;
-    models=[(
-            type=:adaboost_classifier,
-            features=[minimum, mean, cov, mode_5]
-        ),
-        (type=:modaldecisiontree, params=(min_samples_leaf=30, min_samples_split=-2,)),
-        (
-            type=:modalrandomforest,
-            tuning=(
-                method=(type=latinhypercube,), 
-                params=(repeats=2,), 
-                ranges=[
-                    SX.range(:merge_purity_threshold; lower=0, upper=1),
-                    SX.range(:feature_importance; values=[:impurity, :split])]),   
-        )],
-    global_params=(
-        winparams=(type=adaptivewindow, relative_overlap=0.23),
-        features=[std]
-    )
-)
+    @test results[3] isa SoleXplorer.ModelConfig
+    @test results[3].classifier isa SoleXplorer.ModalDecisionTree
+    @test results[3].model isa SoleXplorer.DecisionTree
+end
 
 # ---------------------------------------------------------------------------- #
 #                                  REGRESSION                                  #
@@ -163,70 +249,39 @@ rng = Random.Xoshiro(train_seed)
 Random.seed!(train_seed)
 
 # ---------------------------------------------------------------------------- #
-#                     basic train/test regression analysis                     #
+#                          basic train/test regression                         #
 # ---------------------------------------------------------------------------- #
-result = traintest(X, y; models=(type=:decisiontree_regressor, params=(; rng=rng)))
-result = traintest(X, y; models=(type=:randomforest_regressor, params=(; rng=rng)))
+@testset "basic usage traintest function" begin
+    @testset "decisiontree_classifier" begin
+        result = traintest(X, y; models=(type=:decisiontree_regressor, params=(; rng=rng)))
+        @test result isa SoleXplorer.ModelConfig
+        @test result.classifier isa SoleXplorer.DecisionTreeRegressor
+        @test result.model isa SoleXplorer.DecisionTree
+    end
+
+    @testset "randomforest_classifier" begin
+        result = traintest(X, y; models=(type=:randomforest_regressor, params=(; rng=rng)))
+        @test result isa SoleXplorer.ModelConfig
+        @test result.classifier isa SoleXplorer.RandomForestRegressor
+        @test result.model isa SoleXplorer.DecisionEnsemble
+    end
+end
 
 # ---------------------------------------------------------------------------- #
-#                  tuning train/test classification analysis                   #
+#                         tuning train/test regression                         #
 # ---------------------------------------------------------------------------- #
-result = traintest(X, y; models=(type=:decisiontree_regressor, tuning=true))
-result = traintest(X, y; models=(type=:randomforest_regressor, tuning=true))
+@testset "tuning usage traintest function" begin
+    @testset "decisiontree_classifier" begin
+        result = traintest(X, y; models=(type=:decisiontree_regressor, tuning=true))
+        @test result isa SoleXplorer.ModelConfig
+        @test result.classifier isa MLJTuning.DeterministicTunedModel{LatinHypercube, SoleXplorer.DecisionTreeRegressor}
+        @test result.model isa SoleXplorer.DecisionTree
+    end
 
-# ---------------------------------------------------------------------------- #
-#                parametrized train/test classification analysis               #
-# ---------------------------------------------------------------------------- #
-result = traintest(X, y;
-    models=(
-            type=:decisiontree_regressor,
-            params=(max_depth=3, min_samples_leaf=14),
-            winparams=(type=movingwindow, window_size=12),
-            features=[minimum, mean, cov, mode_5]
-        ),
-    global_params=(
-        params=(min_samples_split=17,),
-        winparams=(type=adaptivewindow,),
-        features=[std]
-    )
-)
-
-result = traintest(X, y;
-    models=(
-            type=:randomforest_regressor,
-            params=(max_depth=3, min_samples_leaf=14),
-            winparams=(type=movingwindow, window_size=12),
-            features=[minimum, mean, cov, mode_5]
-        ),
-    global_params=(
-        params=(min_samples_split=17,),
-        winparams=(type=adaptivewindow,),
-        features=[std]
-    )
-)
-
-# ---------------------------------------------------------------------------- #
-#                  multiple train/test classification analysis                 #
-# ---------------------------------------------------------------------------- #
-result=traintest(X, y;
-    models=[(
-            type=:decisiontree_regressor,
-            tuning=(
-                method=(type=latinhypercube,), 
-                params=(repeats=2,), 
-                ranges=[
-                    SX.range(:merge_purity_threshold; lower=0, upper=1),
-                    SX.range(:feature_importance; values=[:impurity, :split])]),   
-        ), (
-            type=:randomforest_regressor,
-            tuning=(
-                method=(type=latinhypercube, ntour=20,), 
-                params=(repeats=2,), 
-            ),)
-    ],
-    global_params=(
-        params=(min_samples_split=17,),
-        winparams=(type=adaptivewindow, relative_overlap=0.23),
-        features=[std]
-    )
-)
+    @testset "randomforest_classifier" begin
+        result = traintest(X, y; models=(type=:randomforest_regressor, tuning=true))
+        @test result isa SoleXplorer.ModelConfig
+        @test result.classifier isa MLJTuning.DeterministicTunedModel{LatinHypercube, SoleXplorer.RandomForestRegressor}
+        @test result.model isa SoleXplorer.DecisionEnsemble
+    end
+end

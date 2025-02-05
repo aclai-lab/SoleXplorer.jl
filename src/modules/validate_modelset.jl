@@ -139,9 +139,13 @@ function validate_tuning(
     globals::Union{NamedTuple, Bool, Nothing},
     users::Union{NamedTuple, Bool, Nothing},
 )
-    isa(globals, Bool) && (globals = NamedTuple())
-    isa(users, Bool) && (users = NamedTuple())
-    
+    if isa(globals, Bool) 
+        globals = globals ? NamedTuple() : nothing
+    end
+    if isa(users, Bool) 
+        users = users ? NamedTuple() : nothing
+    end
+
     isnothing(globals) && isnothing(users) && return (tuning=false, method=nothing, params=NamedTuple(), ranges=nothing)
 
     method = validate_tuning_type(

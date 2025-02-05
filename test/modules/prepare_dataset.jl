@@ -3,7 +3,7 @@ using Sole, SoleXplorer
 using DataFrames
 using CategoricalArrays
 using Random
-using Statistics
+using Statistics, StatsBase
 
 @testset "prepare_dataset.jl" begin
     
@@ -64,15 +64,15 @@ using Statistics
     @testset "prepare_dataset multidispach" begin
         X = DataFrame(x1 = [1.0, 2.0, 3.0], x2 = [4.0, 5.0, 6.0])
         y = [1.5, 2.5, 3.5]
-        model = SoleXplorer.DecisionTreeModel()
+        model = SoleXplorer.DecisionTreeRegressorModel()
 
-        @test_nowarn ds = prepare_dataset(X, :x2)
-        ds = prepare_dataset(X, :x2)
+        @test_throws ArgumentError ds = prepare_dataset(X, :x2)
+        ds = prepare_dataset(X, :x2, algo=:regression)
         @test size(ds.X, 2) == 1
         @test !in(:x2, names(ds.X))
 
-        @test_nowarn ds = prepare_dataset(X, y)
-        @test_nowarn ds = prepare_dataset(X, y, algo=:classification)
+        @test_throws ArgumentError ds = prepare_dataset(X, y)
+        @test_throws ArgumentError ds = prepare_dataset(X, y, algo=:classification)
         @test_nowarn ds = prepare_dataset(X, y, algo=:regression)
         @test_nowarn ds = prepare_dataset(X, y, model)
     end
@@ -159,6 +159,15 @@ using Statistics
         rng = Random.Xoshiro(train_seed)
         Random.seed!(train_seed)
 
+        # downsize dataset
+        num_cols_to_sample = 10
+        num_rows_to_sample = 50
+        chosen_cols = StatsBase.sample(rng, 1:size(X, 2), num_cols_to_sample; replace=false)
+        chosen_rows = StatsBase.sample(rng, 1:size(X, 1), num_rows_to_sample; replace=false)
+
+        X = X[chosen_rows, chosen_cols]
+        y = y[chosen_rows]
+
         ds = prepare_dataset(
             X, y, 
             features=[mean, std], 
@@ -193,11 +202,11 @@ using Statistics
             vnames=names(X),
         )
 
-        model = SoleXplorer.DecisionTreeModel()
+        model = SoleXplorer.DecisionTreeClassifierModel()
 
         @test_nowarn ds_class = prepare_dataset(X, y, model)
 
-            # Test each parameter was set correctly
+        # Test each parameter was set correctly
         @test ds.info.algo == :classification
         @test ds.info.treatment == :aggregate
         @test ds.info.features == [mean, std]
