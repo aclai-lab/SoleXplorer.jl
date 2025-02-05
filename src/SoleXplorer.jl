@@ -41,7 +41,7 @@ export outlier_timing_neg, whiten_timescale, forecast_error, ami_timescale, high
 export stretch_high, entropy_pairs, rs_range, dfa, low_freq_power, centroid_freq, transition_variance, periodicity
 export catch9
 
-include("models_structs.jl")
+include("types/models_structs.jl")
 export ModelConfig, range
 
 include("models/decisiontrees.jl")
