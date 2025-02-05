@@ -6,7 +6,6 @@ import MultiData.hasnans
 using SoleData
 using SoleData: PatchedFunction, nanpatchedfunction
 
-# Utilities
 using DataFrames
 using CategoricalArrays
 using Random
@@ -16,8 +15,6 @@ import DecisionTree as DT
 import XGBoost as XGB
 
 using MLJ
-# using MLJBase: Probabilistic, ParamRange, train_test_pairs
-using MLJTuning
 using MLJDecisionTreeInterface, MLJXGBoostInterface
 import MLJModelInterface as MMI
 
@@ -25,20 +22,11 @@ using MLJ: Grid as grid, RandomSearch as randomsearch, LatinHypercube as latinhy
 using TreeParzen: MLJTreeParzenTuning as treeparzen
 using MLJParticleSwarmOptimization: ParticleSwarm as particleswarm, AdaptiveParticleSwarm as adaptiveparticleswarm
 
-# include("mlj/xgboost.jl")
-# using .MLJXGBoostInterface
-# export MLJXGBoostInterface, XGBoostRegressor, XGBoostClassifier, XGBoostCount
-
-# include("utils/MLJAdaBoostModalInterface.jl")
-# using .MLJAdaBoostModalInterface
-# export AdaBoostModalClassifier
-
 export grid, randomsearch, latinhypercube, treeparzen, particleswarm, adaptiveparticleswarm
 
 using TreeParzen
 using Distributions
 
-# Learning algorithms
 using ModalDecisionTrees
 using ModalDecisionLists
 
@@ -69,16 +57,19 @@ export prepare_dataset
 include("modules/fit&test.jl")
 export fitmodel, testmodel
 
+include("modules/validate_modelset.jl")
+export validate_modelset
+
+include("user_interfaces/traintest.jl")
+export traintest
+
+include("user_interfaces/symbolic_analysis.jl")
+export symbolic_analysis
+
 include("user_interfaces/rules.jl")
 export get_rules
 
 include("user_interfaces/predict.jl")
 export get_predict
-
-include("modules/validate_modelset.jl")
-export validate_modelset
-
-include("symbolic_analysis.jl")
-export symbolic_analysis, traintest
 
 end
