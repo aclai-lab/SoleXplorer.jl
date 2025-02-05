@@ -201,7 +201,7 @@ function prepare_dataset(
         y isa AbstractFloat || (y = Float64.(y))
     elseif algo == :classification
         y isa AbstractVector{<:AbstractFloat} && throw(ArgumentError("Classification requires a categorical target variable"))
-        y isa CategoricalArray || (y = CategoricalArray(y))
+        y isa CategoricalArray || (y = coerce(y, MLJ.Multiclass))
     else
         throw(ArgumentError("Algorithms supported, :regression and :classification"))
     end

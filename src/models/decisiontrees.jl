@@ -30,7 +30,7 @@ function DecisionTreeClassifierModel()
     tuning = (
         tuning = false,
         method = (; type = latinhypercube, ntour = 20),
-        params = TUNING_PARAMS,
+        params = TUNING_PARAMS[:classification],
         ranges = [
             model -> MLJ.range(model, :merge_purity_threshold, lower=0, upper=1),
             model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])
@@ -90,7 +90,7 @@ function RandomForestClassifierModel()
     tuning = (
         tuning = false,
         method = (type = latinhypercube, ntour = 20),
-        params = TUNING_PARAMS,
+        params = TUNING_PARAMS[:classification],
         ranges = [
             model -> MLJ.range(model, :sampling_fraction, lower=0.3, upper=0.9),
             model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])
@@ -146,7 +146,7 @@ function AdaBoostClassifierModel()
     tuning = (
         tuning = false,
         method = (type = latinhypercube, ntour = 20),
-        params = TUNING_PARAMS,
+        params = TUNING_PARAMS[:classification],
         ranges = [
             model -> MLJ.range(model, :n_iter, lower=5, upper=50),
             model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])
@@ -195,7 +195,7 @@ function DecisionTreeRegressorModel()
     tuning = (
         tuning = false,
         method = (; type = latinhypercube, ntour = 20),
-        params = TUNING_PARAMS,
+        params = TUNING_PARAMS[:regression],
         ranges = [
             model -> MLJ.range(model, :merge_purity_threshold, lower=0, upper=1),
             model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])
@@ -253,7 +253,7 @@ function RandomForestRegressorModel()
     tuning = (
         tuning = false,
         method = (type = latinhypercube, ntour = 20),
-        params = TUNING_PARAMS,
+        params = TUNING_PARAMS[:regression],
         ranges = [
             model -> MLJ.range(model, :sampling_fraction, lower=0.3, upper=0.9),
             model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])

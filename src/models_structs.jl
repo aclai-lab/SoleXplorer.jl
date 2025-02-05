@@ -232,20 +232,37 @@ const TUNING_METHODS_PARAMS = Dict(
     )
 )
 
-const TUNING_PARAMS = (;
-    resampling              = Holdout(),
-    measure                 = LogLoss(tol = 2.22045e-16),
-    weights                 = nothing,
-    class_weights           = nothing,
-    repeats                 = 1,
-    operation               = nothing,
-    selection_heuristic     = MLJTuning.NaiveSelection(nothing),
-    n                       = 25,
-    train_best              = true,
-    acceleration            = default_resource(),
-    acceleration_resampling = CPU1(),
-    check_measure           = true,
-    cache                   = true,
+const TUNING_PARAMS = Dict(
+    :classification => (;
+        resampling              = Holdout(),
+        measure                 = LogLoss(tol = 2.22045e-16),
+        weights                 = nothing,
+        class_weights           = nothing,
+        repeats                 = 1,
+        operation               = nothing,
+        selection_heuristic     = MLJ.MLJTuning.NaiveSelection(nothing),
+        n                       = 25,
+        train_best              = true,
+        acceleration            = default_resource(),
+        acceleration_resampling = CPU1(),
+        check_measure           = true,
+        cache                   = true,
+    ),
+    :regression => (;
+        resampling              = Holdout(),
+        measure                 = MLJ.RootMeanSquaredError(),
+        weights                 = nothing,
+        class_weights           = nothing,
+        repeats                 = 1,
+        operation               = nothing,
+        selection_heuristic     = MLJ.MLJTuning.NaiveSelection(nothing),
+        n                       = 25,
+        train_best              = true,
+        acceleration            = default_resource(),
+        acceleration_resampling = CPU1(),
+        check_measure           = true,
+        cache                   = true,
+    ),
 )
 
 function range(

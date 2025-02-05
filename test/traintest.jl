@@ -13,6 +13,7 @@ train_seed = 11
 rng        = Random.Xoshiro(train_seed)
 Random.seed!(train_seed)
 
+# downsize dataset
 num_cols_to_sample = 10
 num_rows_to_sample = 50
 chosen_cols = StatsBase.sample(rng, 1:size(X, 2), num_cols_to_sample; replace=false)
