@@ -4,33 +4,169 @@ function _traintest(
     models::AbstractVector{<:NamedTuple}, 
     globals::Union{NamedTuple, Nothing}=nothing,
     preprocess::Union{NamedTuple, Nothing}=nothing,
-)
+)::AbstractVector{ModelConfig}
     modelsets = validate_modelset(models, globals, preprocess)
 
-    models = map(m -> begin
+    map(m -> begin
         ds = prepare_dataset(X, y, m)
         classifier = getmodel(m)
         mach = fitmodel(m, classifier, ds)
         model = testmodel(m, mach, ds)
         ModelConfig(m, ds, classifier, mach, model)
     end, modelsets)
-
-    return models
 end
 
+"""
+    traintest(
+        X::AbstractDataFrame, 
+        y::AbstractVector; 
+        models::Union{NamedTuple, AbstractVector{<:NamedTuple}, Nothing}=nothing, 
+        globals::Union{NamedTuple, Nothing}=nothing,
+        preprocess::Union{NamedTuple, Nothing}=nothing,
+    )
+
+Train and test machine learning models on datasets.
+
+This module provides functionality for training and testing machine learning models
+on datasets using a flexible configuration system. It supports both single and multiple
+model training with customizable preprocessing and global parameters.
+
+Main functions:
+- `traintest`: Primary interface for training and testing models
+- `_traintest`: Internal implementation handling core training/testing logic
+
+The module validates input data, handles model configuration, split dataset in train and test
+partitions and returns results as ModelConfig objects containing the trained models, dataset and
+test the models.
+
+# Arguments
+- `X::AbstractDataFrame`: Input features as a DataFrame containing only numeric values
+- `y::AbstractVector`   : Target class labels or regression targets
+- `models::Union{NamedTuple, AbstractVector{<:NamedTuple}, Nothing}=nothing`
+                        : Model configuration(s) to train and test
+- `globals::Union{NamedTuple, Nothing}=nothing`
+                        : Global parameters applied across all models
+- `preprocess::Union{NamedTuple, Nothing}=nothing`
+                        : Preprocessing configuration parameters for the dataset
+
+# Returns
+- Single `ModelConfig` if one model is provided
+- Vector of `ModelConfig` if multiple models are provided
+
+# Throws
+- `ArgumentError` if DataFrame contains non-numeric values
+- `ArgumentError` if number of rows in X doesn't match length of y
+- `ArgumentError` if no models are specified
+
+Examples:
+```julia
+result = traintest(X, y;
+    models=(
+        # Define the core model type - required field
+        type=:decisiontree_classifier,
+
+        # Fine-tune model hyperparameters
+        params=(; max_depth=5, min_samples_leaf=1),
+
+        # Configure windowing strategy:
+        # Splits data vectors into 2 windows to enable modal-like behavior
+        # even for propositional models that don't natively handle data vectors
+        winparams=(; type=adaptivewindow, nwindows=2),
+        
+        # Specify feature extractors to apply on each window
+        # mode_5 is imported from Catch22 package
+        features=[minimum, mean, cov, mode_5],
+
+        # Enable automated hyperparameter optimization
+        # Uses default tuning settings for the selected model
+        tuning=true
+    )
+)
+
+result = traintest(X, y;
+    models=(
+        type=:randomforest_classifier,
+
+        # Single parameter configuration requires semicolon or trailing comma
+        # Example: (;param=value) or (param=value,)
+        params=(; n_trees=25),
+        features=[minimum, mean, std],
+
+        # MLJ hyperparameter optimization configuration
+        tuning=(
+            # you can choose the tuning method and adjust the parameters
+            # specific for the choosen method
+            method=(type=latinhypercube, rng=rng), 
+
+            # Specify global tuning parameters
+            params=(repeats=10, n=5),
+
+            # every model has default ranges for tuning
+            # but it's highly recommended to choose which parameters ranges to tune
+            ranges=[
+                SoleXplorer.range(:sampling_fraction, lower=0.3, upper=0.9),
+                SoleXplorer.range(:feature_importance, values=[:impurity, :split])
+            ]
+        ),   
+    )
+)
+
+result = traintest(X, y;
+    models=(
+        type=:decisiontree_classifier,
+        params=(; max_depth=5, min_samples_leaf=1),
+        winparams=(; type=adaptivewindow, nwindows=2),
+        features=[minimum, mean, cov, mode_5],
+        tuning=true
+    ),
+    # Specify preprocessing parameters to fine tuning train test split
+    preprocess=(
+        train_ratio = 0.7,
+        stratified=true,
+        nfolds=3,
+        rng=rng
+    )
+)
+
+results = traintest(X, y;
+    # you can stack multiple models in a vector
+    models=[(
+            type=:decisiontree_classifier,
+            params=(max_depth=3, min_samples_leaf=14),
+            features=[minimum, mean, cov, mode_5]
+        ),
+        (
+            type=:adaboost_classifier,
+            winparams=(type=movingwindow, window_size=6),
+            tuning=true
+        ),
+        (; type=:modaldecisiontree)],
+    # Specify global parameters applied across all models
+    # note that if you specify them also in model definitions, they will be overwritten.
+    # for example, this could be very useful for passing 'rng' parameter to all models
+    globals=(
+        params=(; rng=rng),
+        features=[std],
+        tuning=false
+    )
+)
+```
+See also [`ModelConfig`](@ref), [`prepare_dataset`](@ref), [`getmodel`](@ref), [`fitmodel`](@ref), [`testmodel`](@ref).
+"""
 function traintest(
     X::AbstractDataFrame, 
     y::AbstractVector; 
     models::Union{NamedTuple, AbstractVector{<:NamedTuple}, Nothing}=nothing, 
-    kwargs...
+    globals::Union{NamedTuple, Nothing}=nothing,
+    preprocess::Union{NamedTuple, Nothing}=nothing,
 )
     check_dataframe_type(X) || throw(ArgumentError("DataFrame must contain only numeric values"))
     size(X, 1) == length(y) || throw(ArgumentError("Number of rows in DataFrame must match length of class labels"))
     isnothing(models) && throw(ArgumentError("At least one type must be specified"))
 
     if isa(models, NamedTuple)
-        first(_traintest(X, y; models=[models], kwargs...))
+        first(_traintest(X, y; models=[models], globals, preprocess))
     else
-        _traintest(X, y; models=models, kwargs...)
+        _traintest(X, y; models=models, globals, preprocess)
     end
 end
