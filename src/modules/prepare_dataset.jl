@@ -124,7 +124,9 @@ partitioning.
 
 function _partition(
     y::Union{CategoricalArray,Vector{T}},
+    # validation::Bool,
     train_ratio::Float64,
+    valid_ratio::Float64,
     shuffle::Bool,
     stratified::Bool,
     nfolds::Int,
@@ -133,9 +135,20 @@ function _partition(
     if stratified
         stratified_cv = MLJ.StratifiedCV(; nfolds, shuffle, rng)
         tt = MLJ.MLJBase.train_test_pairs(stratified_cv, 1:length(y), y)
-        return [TT_indexes(train, test) for (train, test) in tt]
+        if valid_ratio == 1.0
+            return [TT_indexes(train, eltype(tt)[], test) for (train, test) in tt]
+        else
+            tv = collect((MLJ.partition(t[1], train_ratio)..., t[2]) for t in tt)
+            return [TT_indexes(train, valid, test) for (train, valid, test) in tv]
+        end
     else
-        return TT_indexes(MLJ.partition(eachindex(y), train_ratio; shuffle, rng)...)
+        tt = MLJ.partition(eachindex(y), train_ratio; shuffle, rng)
+        if valid_ratio == 1.0
+            return TT_indexes(tt[1], eltype(tt)[], tt[2])
+        else
+            tv = MLJ.partition(tt[1], valid_ratio; shuffle, rng)
+            return TT_indexes(tv[1], tv[2], tt[2])
+        end
     end
 end
 
@@ -181,8 +194,10 @@ function prepare_dataset(
     algo::Symbol=:classification,
     treatment::Symbol=:aggregate,
     features::AbstractVector{<:Base.Callable}=DEFAULT_FEATS,
+    # validation::Bool=false,
     # model.preprocess
     train_ratio::Float64=0.8,
+    valid_ratio::Float64=1.0,
     shuffle::Bool=true,
     stratified::Bool=false,
     nfolds::Int=6,
@@ -222,12 +237,14 @@ function prepare_dataset(
         treatment,
         features,
         train_ratio,
+        valid_ratio,
         shuffle,
         stratified,
         nfolds,
         rng,
         winparams,
-        vnames
+        vnames,
+        # validation
     )
 
     # case 1: dataframe with numeric columns
@@ -235,7 +252,8 @@ function prepare_dataset(
         # dataframe with numeric columns
         return SoleXplorer.Dataset(
             DataFrame(vnames .=> eachcol(X)), y,
-            _partition(y, train_ratio, shuffle, stratified, nfolds, rng),
+            # _partition(y, validation, train_ratio, valid_ratio, shuffle, stratified, nfolds, rng),
+            _partition(y, train_ratio, valid_ratio, shuffle, stratified, nfolds, rng),
             ds_info
         )
         # case 2: dataframe with vector-valued columns
@@ -244,7 +262,8 @@ function prepare_dataset(
         return SoleXplorer.Dataset(
             # if winparams is nothing, then leave the dataframe as it is
             isnothing(winparams) ? DataFrame(vnames .=> eachcol(X)) : _treatment(X, vnames, treatment, features, winparams), y,
-            _partition(y, train_ratio, shuffle, stratified, nfolds, rng),
+            # _partition(y, validation, train_ratio, valid_ratio, shuffle, stratified, nfolds, rng),
+            _partition(y, train_ratio, valid_ratio, shuffle, stratified, nfolds, rng),
             ds_info
         )
     else
@@ -257,13 +276,19 @@ function prepare_dataset(
     y::AbstractVector,
     model::AbstractModelSet
 )
+    # check if it's needed also validation set
+    # validation = haskey(VALIDATION, model.type) && getproperty(model.params, VALIDATION[model.type][1]) != VALIDATION[model.type][2]
+    # valid_ratio = (validation && model.preprocess.valid_ratio == 1) ? 0.8 : model.preprocess.valid_ratio
+
     prepare_dataset(
         X, y;
         algo=model.config.algo,
         treatment=model.config.treatment,
         features=model.features,
+        # validation,
         # model.preprocess
         train_ratio=model.preprocess.train_ratio,
+        valid_ratio=model.preprocess.valid_ratio,
         shuffle=model.preprocess.shuffle,
         stratified=model.preprocess.stratified,
         nfolds=model.preprocess.nfolds,

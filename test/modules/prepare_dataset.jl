@@ -225,4 +225,71 @@ using Statistics, StatsBase
         @test length(ds.y) == length(y)
         @test length(ds.tt) == 6  # nfolds
     end
+
+    @testset "dataset with train/validation/test" begin
+        X, y = Sole.load_arff_dataset("NATOPS")
+        train_seed = 11
+        rng = Random.Xoshiro(train_seed)
+        Random.seed!(train_seed)
+
+        # downsize dataset
+        num_cols_to_sample = 10
+        num_rows_to_sample = 50
+        chosen_cols = StatsBase.sample(rng, 1:size(X, 2), num_cols_to_sample; replace=false)
+        chosen_rows = StatsBase.sample(rng, 1:size(X, 1), num_rows_to_sample; replace=false)
+
+        X = X[chosen_rows, chosen_cols]
+        y = y[chosen_rows]
+
+        ds = prepare_dataset(
+            X, y, 
+            valid_ratio=0.8,
+            features=[mean, std], 
+            shuffle=false, 
+            winparams=(type=splitwindow, nwindows=10)
+        )
+
+        @test !isempty(ds.Xvalid)
+        @test !isempty(ds.yvalid)
+
+        ds = prepare_dataset(
+            X, y,
+            # model.preprocess
+            train_ratio=0.8,
+            valid_ratio=0.8,
+            shuffle=true,
+            stratified=true,
+            nfolds=6,
+            rng=rng,
+        )
+
+        @test !isempty(ds.Xvalid)
+        @test !isempty(ds.yvalid)
+
+        ds = prepare_dataset(
+            X, y, 
+            # valid_ratio=0.8,
+            features=[mean, std], 
+            shuffle=false, 
+            winparams=(type=splitwindow, nwindows=10)
+        )
+
+        @test isempty(ds.Xvalid)
+        @test isempty(ds.yvalid)
+
+        ds = prepare_dataset(
+            X, y,
+            # model.preprocess
+            train_ratio=0.8,
+            # valid_ratio=0.8,
+            shuffle=true,
+            stratified=true,
+            nfolds=6,
+            rng=rng,
+        )
+
+        @test all(isempty.(ds.Xvalid))
+        @test all(isempty.(ds.yvalid))
+    end
 end
+

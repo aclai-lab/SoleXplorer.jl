@@ -1,3 +1,8 @@
+# References
+# early stopping: 
+# https://xgboost.readthedocs.io/en/latest/tutorials/model.html#early-stopping
+# https://mljar.com/blog/xgboost-early-stopping/
+
 # ---------------------------------------------------------------------------- #
 #                   models from ModalDecisionTrees package                     #
 # ---------------------------------------------------------------------------- #
@@ -13,7 +18,7 @@ function XGBoostClassifierModel()
         num_round                   = 100, 
         booster                     = "gbtree", 
         disable_default_eval_metric = 0, 
-        eta                         = 0.3, 
+        eta                         = 0.3,      # alias: learning_rate
         num_parallel_tree           = 1, 
         gamma                       = 0.0, 
         max_depth                   = 6, 

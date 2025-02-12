@@ -6,6 +6,7 @@ struct DatasetInfo
     treatment   :: Symbol
     features    :: AbstractVector{<:Base.Callable}
     train_ratio :: Float64
+    valid_ratio :: Float64
     shuffle     :: Bool
     stratified  :: Bool
     nfolds      :: Int
@@ -20,6 +21,7 @@ function Base.show(io::IO, info::DatasetInfo)
     println(io, "  Treatment:      ", info.treatment)
     println(io, "  Features:       ", info.features)
     println(io, "  Train ratio:    ", info.train_ratio)
+    println(io, "  Valid ratio:    ", info.valid_ratio)
     println(io, "  Shuffle:        ", info.shuffle)
     println(io, "  Stratified:     ", info.stratified)
     println(io, "  N-folds:        ", info.nfolds)
@@ -30,10 +32,11 @@ end
 
 struct TT_indexes
     train       :: Vector{Int}
+    valid       :: Vector{Int}
     test        :: Vector{Int}
 end
 
-Base.show(io::IO, t::TT_indexes) = print(io, "TT_indexes(train=", t.train, ", test=", t.test, ")")
+Base.show(io::IO, t::TT_indexes) = print(io, "TT_indexes(train=", t.train, ", validation=", t.valid, ", test=", t.test, ")")
 
 struct Dataset{T<:AbstractDataFrame,S}
     X           :: T
@@ -41,24 +44,30 @@ struct Dataset{T<:AbstractDataFrame,S}
     tt          :: Union{TT_indexes, AbstractVector{<:TT_indexes}}
     info        :: DatasetInfo
     Xtrain      :: Union{SubDataFrame{T}, Vector{<:SubDataFrame{T}}}
+    Xvalid      :: Union{SubDataFrame{T}, Vector{<:SubDataFrame{T}}}
     Xtest       :: Union{SubDataFrame{T}, Vector{<:SubDataFrame{T}}}
     ytrain      :: Union{SubArray{<:eltype(S)}, Vector{<:SubArray{<:eltype(S)}}}
+    yvalid      :: Union{SubArray{<:eltype(S)}, Vector{<:SubArray{<:eltype(S)}}}
     ytest       :: Union{SubArray{<:eltype(S)}, Vector{<:SubArray{<:eltype(S)}}}
 
     function Dataset(X::T, y::S, tt, info) where {T<:AbstractDataFrame,S}
         if info.stratified
             Xtrain = view.(Ref(X), getfield.(tt, :train), Ref(:))
+            Xvalid = view.(Ref(X), getfield.(tt, :valid), Ref(:))
             Xtest  = view.(Ref(X), getfield.(tt, :test), Ref(:))
             ytrain = view.(Ref(y), getfield.(tt, :train))
+            yvalid = view.(Ref(y), getfield.(tt, :valid))
             ytest  = view.(Ref(y), getfield.(tt, :test))
         else
             Xtrain = @views X[tt.train, :]
+            Xvalid = @views X[tt.valid, :]
             Xtest  = @views X[tt.test, :]
             ytrain = @views y[tt.train]
+            yvalid = @views y[tt.valid]
             ytest  = @views y[tt.test]
         end
 
-        new{T,S}(X, y, tt, info, Xtrain, Xtest, ytrain, ytest)
+        new{T,S}(X, y, tt, info, Xtrain, Xvalid, Xtest, ytrain, yvalid, ytest)
     end
 end
 
@@ -67,9 +76,10 @@ function Base.show(io::IO, ds::Dataset)
     println(io, "  X shape:        ", size(ds.X))
     println(io, "  y length:       ", length(ds.y))
     if ds.tt isa AbstractVector
-        println(io, "  Train/Test:     ", length(ds.tt), " folds")
+        println(io, "  Train/Valid/Test:     ", length(ds.tt), " folds")
     else
         println(io, "  Train indices:  ", length(ds.tt.train))
+        println(io, "  Valid indices:  ", length(ds.tt.valid))
         println(io, "  Test indices:   ", length(ds.tt.test))
     end
     print(io, ds.info)
@@ -151,6 +161,7 @@ const DEFAULT_FEATS = [maximum, minimum, mean, std]
 
 const DEFAULT_PREPROC = (
     train_ratio = 0.8,
+    valid_ratio = 1.0,
     shuffle     = true,
     stratified  = false,
     nfolds      = 6,
@@ -204,32 +215,32 @@ const TUNING_METHODS_PARAMS = Dict(
         rng                    = TaskLocalRNG()
     ),
     latinhypercube        => (
-        gens                   = 1, 
-        popsize                = 100, 
-        ntour                  = 2, 
-        ptour                  = 0.8, 
-        interSampleWeight      = 1.0, 
-        ae_power               = 2, 
-        periodic_ae            = false, 
+        gens                   = 1,
+        popsize                = 100,
+        ntour                  = 2,
+        ptour                  = 0.8,
+        interSampleWeight      = 1.0,
+        ae_power               = 2,
+        periodic_ae            = false,
         rng                    = TaskLocalRNG()
     ),
     treeparzen            => (
-        config                 = Config(0.25, 25, 24, 20, 1.0), 
+        config                 = Config(0.25, 25, 24, 20, 1.0),
         max_simultaneous_draws = 1
     ),
     particleswarm         => (
-        n_particles            = 3, 
-        w                      = 1.0, 
-        c1                     = 2.0, 
-        c2                     = 2.0, 
-        prob_shift             = 0.25, 
+        n_particles            = 3,
+        w                      = 1.0,
+        c1                     = 2.0,
+        c2                     = 2.0,
+        prob_shift             = 0.25,
         rng                    = TaskLocalRNG()
     ),
     adaptiveparticleswarm => (
-        n_particles            = 3, 
-        c1                     = 2.0, 
-        c2                     = 2.0, 
-        prob_shift             = 0.25, 
+        n_particles            = 3,
+        c1                     = 2.0,
+        c2                     = 2.0,
+        prob_shift             = 0.25,
         rng                    = TaskLocalRNG()
     )
 )
