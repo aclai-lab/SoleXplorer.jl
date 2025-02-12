@@ -24,7 +24,7 @@ global_params = (
     features=[std]
 )
 
-modelsets = validate_modelset(models, global_params)
+modelsets = validate_modelset(models, typeof(y), global_params)
 
 @test modelsets isa Vector{<:SoleXplorer.AbstractModelSet}
 @test modelsets isa Vector{SoleXplorer.SymbolicModelSet}
@@ -55,7 +55,7 @@ models = [(
     (type=:decisiontree_classifier, params=(min_samples_leaf=30, min_samples_split=3,)
 )]
 
-modelsets = validate_modelset(models)
+modelsets = validate_modelset(models, typeof(y))
 
 @test modelsets isa Vector{<:SoleXplorer.AbstractModelSet}
 @test modelsets isa Vector{SoleXplorer.SymbolicModelSet}

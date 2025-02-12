@@ -299,3 +299,44 @@ end
         @test result.model isa SoleXplorer.DecisionEnsemble
     end
 end
+
+# ---------------------------------------------------------------------------- #
+#                                auto detection                                #
+# ---------------------------------------------------------------------------- #
+# if the model type (classifier or regressor) is not specified, it will be automatically detected
+@testset "automatic detection" begin
+    X, y       = SoleData.load_arff_dataset("NATOPS")
+    train_seed = 11
+    rng        = Random.Xoshiro(train_seed)
+    Random.seed!(train_seed)
+
+    # downsize dataset
+    num_cols_to_sample = 10
+    num_rows_to_sample = 50
+    chosen_cols = StatsBase.sample(rng, 1:size(X, 2), num_cols_to_sample; replace=false)
+    chosen_rows = StatsBase.sample(rng, 1:size(X, 1), num_rows_to_sample; replace=false)
+
+    X = X[chosen_rows, chosen_cols]
+    y = y[chosen_rows]
+
+    @testset "decisiontree" begin
+        result = traintest(X, y; models=(; type=:decisiontree))
+        @test result isa SoleXplorer.ModelConfig
+        @test result.classifier isa SoleXplorer.DecisionTreeClassifier
+        @test result.model isa SoleXplorer.DecisionTree
+    end
+
+    table = RDatasets.dataset("datasets", "LifeCycleSavings")
+    y = table[:, :DDPI]
+    X = select(table, Not([:DDPI, :Country]));
+    train_seed = 11
+    rng = Random.Xoshiro(train_seed)
+    Random.seed!(train_seed)
+
+    @testset "decisiontree" begin
+        result = traintest(X, y; models=(; type=:decisiontree))
+        @test result isa SoleXplorer.ModelConfig
+        @test result.classifier isa SoleXplorer.DecisionTreeRegressor
+        @test result.model isa SoleXplorer.DecisionTree
+    end
+end

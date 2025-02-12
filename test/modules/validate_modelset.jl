@@ -2,6 +2,7 @@ using Test
 using SoleXplorer             
 using Random
 using StatsBase
+using CategoricalArrays, MLJDecisionTreeInterface
 
 model = SoleXplorer.DecisionTreeClassifierModel()
 
@@ -46,11 +47,18 @@ avail_functions = (movingwindow, wholewindow, splitwindow, adaptivewindow)
     end
 
     @testset "validate_model" begin
+        y = Vector{CategoricalValue}
         model = :decisiontree_classifier
-        @test SoleXplorer.validate_model(model) isa SoleXplorer.SymbolicModelSet
+        @test SoleXplorer.validate_model(model, y) isa SoleXplorer.SymbolicModelSet
+
+        model = :decisiontree
+        @test SoleXplorer.validate_model(model, y).type <: MLJDecisionTreeInterface.DecisionTreeClassifier
+
+        y = Vector{Float64}
+        @test SoleXplorer.validate_model(model, y).type <: MLJDecisionTreeInterface.DecisionTreeRegressor
 
         model = :invalid
-        @test_throws ArgumentError SoleXplorer.validate_model(model)
+        @test_throws ArgumentError SoleXplorer.validate_model(model, y)
     end
 
     @testset "validate_params" begin
@@ -183,6 +191,7 @@ avail_functions = (movingwindow, wholewindow, splitwindow, adaptivewindow)
             winparams=(type=movingwindow, window_size=12),
             features=[minimum, mean, cov, mode_5]
         )]
+        y = Vector{CategoricalValue}
         globals = (
             params=(min_samples_split=17,),
             winparams=(type=adaptivewindow,),
@@ -193,19 +202,19 @@ avail_functions = (movingwindow, wholewindow, splitwindow, adaptivewindow)
                 shuffle     = false,
         )
 
-        result = SoleXplorer.validate_modelset(model_spec, globals, nothing)
+        result = SoleXplorer.validate_modelset(model_spec, y, globals, nothing)
         @test length(result) == 1
         @test result[1] isa SoleXplorer.SymbolicModelSet
         @test result[1].type === SoleXplorer.DecisionTreeClassifier
         @test result[1].params.min_samples_split == 17
 
-        result = SoleXplorer.validate_modelset(model_spec, globals, preprocess)
+        result = SoleXplorer.validate_modelset(model_spec, y, globals, preprocess)
         @test length(result) == 1
         @test result[1] isa SoleXplorer.SymbolicModelSet
         @test result[1].type === SoleXplorer.DecisionTreeClassifier
         @test result[1].preprocess.train_ratio == 0.5
         
-        @test_throws ArgumentError SoleXplorer.validate_modelset([(params=(a=1,),)], nothing)
+        @test_throws ArgumentError SoleXplorer.validate_modelset([(params=(a=1,),)], y, nothing)
     end
 end
 

@@ -12,9 +12,21 @@ function get_function(params, avail_functions)
     return isempty(funcs) ? nothing : first(funcs)
 end
 
-function validate_model(model::Symbol)
-    haskey(AVAIL_MODELS, model) || throw(ArgumentError("Model $model not found in available models"))
-    return AVAIL_MODELS[model]()
+function validate_model(model::Symbol, y::DataType)
+    # haskey(AVAIL_MODELS, model) || throw(ArgumentError("Model $model not found in available models"))
+    # return AVAIL_MODELS[model]()
+
+    if haskey(AVAIL_MODELS, model)
+        return AVAIL_MODELS[model]()
+    elseif eltype(y) <: Number
+        model_r = Symbol(model, "_regressor")
+        haskey(AVAIL_MODELS, model_r) && return AVAIL_MODELS[model_r]()
+    elseif eltype(y) <: CategoricalValue
+        model_c = Symbol(model, "_classifier")
+        haskey(AVAIL_MODELS, model_c) && return AVAIL_MODELS[model_c]()        
+    end
+
+    throw(ArgumentError("Model $model not found in available models"))
 end
 
 function validate_params(
@@ -179,15 +191,16 @@ function validate_preprocess_params(
 end
 
 function validate_modelset(
-    models::AbstractVector{<:NamedTuple}, 
+    models::AbstractVector{<:NamedTuple},
+    y::Union{DataType, Nothing},
     globals::Union{NamedTuple, Nothing},
-    preprocess::Union{NamedTuple, Nothing},
+    preprocess::Union{NamedTuple, Nothing}
 )
     modelsets = SymbolicModelSet[]
 
     for m in models
         haskey(m, :type) || throw(ArgumentError("Each model specification must contain a 'type' field"))
-        model = validate_model(m.type)
+        model = validate_model(m.type, y)
 
         model.params = validate_params(
             model.params,
@@ -234,7 +247,7 @@ function validate_modelset(
     return modelsets
 end
 
-validate_modelset(models::AbstractVector{<:NamedTuple}, globals::Union{NamedTuple, Nothing}) = validate_modelset(models, globals, nothing)
-validate_modelset(models::AbstractVector{<:NamedTuple}) = validate_modelset(models, nothing, nothing)
+validate_modelset(models::AbstractVector{<:NamedTuple}, y::Union{DataType, Nothing}, globals::Union{NamedTuple, Nothing}) = validate_modelset(models, y, globals, nothing)
+validate_modelset(models::AbstractVector{<:NamedTuple}, y::Union{DataType, Nothing}) = validate_modelset(models, y, nothing, nothing)
 
 validate_modelset(models::NamedTuple, args...) = validate_modelset([models], args...)

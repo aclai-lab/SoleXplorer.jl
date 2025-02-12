@@ -5,7 +5,7 @@ function _traintest(
     globals::Union{NamedTuple, Nothing}=nothing,
     preprocess::Union{NamedTuple, Nothing}=nothing,
 )::AbstractVector{ModelConfig}
-    modelsets = validate_modelset(models, globals, preprocess)
+    modelsets = validate_modelset(models, typeof(y), globals, preprocess)
 
     map(m -> begin
         ds = prepare_dataset(X, y, m)
