@@ -5,7 +5,7 @@
 # CLASSIFIER ----------------------------------------------------------------- #
 function DecisionTreeClassifierModel()
     type = MLJDecisionTreeInterface.DecisionTreeClassifier
-    config  = (; algo=:classification, type=DecisionTree, treatment=:aggregate)
+    config  = (algo=:classification, type=DecisionTree, treatment=:aggregate)
 
     params = (;
         max_depth              = -1,
@@ -20,7 +20,7 @@ function DecisionTreeClassifierModel()
         rng                    = Random.TaskLocalRNG()
     )
 
-    winparams = (type=SoleBase.wholewindow,)
+    winparams = (; type=SoleBase.wholewindow)
 
     learn_method = (
         (mach, X, y) -> (dt = solemodel(MLJ.fitted_params(mach).tree); apply!(dt, X, y); dt),
@@ -54,7 +54,7 @@ end
 
 function RandomForestClassifierModel()
     type   = MLJDecisionTreeInterface.RandomForestClassifier
-    config = (; algo=:classification, type=DecisionEnsemble, treatment=:aggregate)
+    config = (algo=:classification, type=DecisionEnsemble, treatment=:aggregate)
 
     params = (;
         max_depth           = -1,
@@ -68,20 +68,20 @@ function RandomForestClassifierModel()
         rng                 = Random.TaskLocalRNG()
     )
 
-    winparams = (type=SoleBase.wholewindow,)
+    winparams = (; type=SoleBase.wholewindow)
 
     learn_method = (
         (mach, X, y) -> begin
-            classlabels = (mach).fitresult[2][sortperm((mach).fitresult[3])]
+            classlabels  = (mach).fitresult[2][sortperm((mach).fitresult[3])]
             featurenames = MLJ.report(mach).features
-            dt = solemodel(MLJ.fitted_params(mach).forest; classlabels, featurenames)
+            dt           = solemodel(MLJ.fitted_params(mach).forest; classlabels, featurenames)
             apply!(dt, X, y)
             return dt
         end,
         (mach, X, y) -> begin
-            classlabels = (mach).fitresult.fitresult[2][sortperm((mach).fitresult.fitresult[3])]
+            classlabels  = (mach).fitresult.fitresult[2][sortperm((mach).fitresult.fitresult[3])]
             featurenames = MLJ.report(mach).best_report.features
-            dt = solemodel(MLJ.fitted_params(mach).best_fitted_params.forest; classlabels, featurenames)
+            dt           = solemodel(MLJ.fitted_params(mach).best_fitted_params.forest; classlabels, featurenames)
             apply!(dt, X, y)
             return dt
         end
@@ -114,7 +114,7 @@ end
 
 function AdaBoostClassifierModel()
     type   = MLJDecisionTreeInterface.AdaBoostStumpClassifier
-    config = (; algo=:classification, type=DecisionEnsemble, treatment=:aggregate)
+    config = (algo=:classification, type=DecisionEnsemble, treatment=:aggregate)
 
     params = (;
         n_iter             = 10,
@@ -122,22 +122,22 @@ function AdaBoostClassifierModel()
         rng                = Random.TaskLocalRNG()
     )
 
-    winparams = (type=SoleBase.wholewindow,)
+    winparams = (; type=SoleBase.wholewindow)
 
     learn_method = (
         (mach, X, y) -> begin
-            weights = mach.fitresult[2]
-            classlabels = sort(mach.fitresult[3])
+            weights      = mach.fitresult[2]
+            classlabels  = sort(mach.fitresult[3])
             featurenames = MLJ.report(mach).features
-            dt = solemodel(MLJ.fitted_params(mach).stumps; weights, classlabels, featurenames)
+            dt           = solemodel(MLJ.fitted_params(mach).stumps; weights, classlabels, featurenames)
             apply!(dt, X, y)
             return dt
         end,
         (mach, X, y) -> begin
-            weights = mach.fitresult.fitresult[2]
-            classlabels = sort(mach.fitresult.fitresult[3])
+            weights      = mach.fitresult.fitresult[2]
+            classlabels  = sort(mach.fitresult.fitresult[3])
             featurenames = MLJ.report(mach).best_report.features
-            dt = solemodel(MLJ.fitted_params(mach).best_fitted_params.stumps; weights, classlabels, featurenames)
+            dt           = solemodel(MLJ.fitted_params(mach).best_fitted_params.stumps; weights, classlabels, featurenames)
             apply!(dt, X, y)
             return dt
         end
@@ -171,7 +171,7 @@ end
 # REGRESSOR ------------------------------------------------------------------ #
 function DecisionTreeRegressorModel()
     type = MLJDecisionTreeInterface.DecisionTreeRegressor
-    config  = (; algo=:regression, type=DecisionTree, treatment=:aggregate)
+    config  = (algo=:regression, type=DecisionTree, treatment=:aggregate)
 
     params = (;
         max_depth              = -1,
@@ -185,7 +185,7 @@ function DecisionTreeRegressorModel()
         rng                    = Random.TaskLocalRNG()
     )
 
-    winparams = (type=SoleBase.wholewindow,)
+    winparams = (; type=SoleBase.wholewindow)
 
     learn_method = (
         (mach, X, y) -> (dt = solemodel(MLJ.fitted_params(mach).tree); apply!(dt, X, y); dt),
@@ -219,7 +219,7 @@ end
 
 function RandomForestRegressorModel()
     type   = MLJDecisionTreeInterface.RandomForestRegressor
-    config = (; algo=:regression, type=DecisionEnsemble, treatment=:aggregate)
+    config = (algo=:regression, type=DecisionEnsemble, treatment=:aggregate)
 
     params = (;
         max_depth           = -1,
@@ -233,18 +233,18 @@ function RandomForestRegressorModel()
         rng                 = Random.TaskLocalRNG()
     )
 
-    winparams = (type=SoleBase.wholewindow,)
+    winparams = (; type=SoleBase.wholewindow)
 
     learn_method = (
         (mach, X, y) -> begin
             featurenames = MLJ.report(mach).features
-            dt = solemodel(MLJ.fitted_params(mach).forest; featurenames)
+            dt           = solemodel(MLJ.fitted_params(mach).forest; featurenames)
             apply!(dt, X, y)
             return dt
         end,
         (mach, X, y) -> begin
             featurenames = MLJ.report(mach).best_report.features
-            dt = solemodel(MLJ.fitted_params(mach).best_fitted_params.forest; featurenames)
+            dt           = solemodel(MLJ.fitted_params(mach).best_fitted_params.forest; featurenames)
             apply!(dt, X, y)
             return dt
         end

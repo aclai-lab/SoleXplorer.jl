@@ -116,7 +116,8 @@ ModalDecisionTreeModel(dtmodel      :: SymbolicModelSet) = dtmodel
 ModalRandomForestModel(dtmodel      :: SymbolicModelSet) = dtmodel
 ModalAdaBoostModel(dtmodel          :: SymbolicModelSet) = dtmodel
 
-# XGBoostModel(dtmodel           :: SymbolicModelSet) = dtmodel
+XGBoostClassifierModel(dtmodel      :: SymbolicModelSet) = dtmodel
+XGBoostRegressorModel(dtmodel       :: SymbolicModelSet) = dtmodel
 
 mutable struct ModelConfig <: AbstractModelConfig
     setup      :: AbstractModelSet
@@ -168,7 +169,8 @@ const AVAIL_MODELS = Dict(
     :modalrandomforest       => ModalRandomForestModel,
     :modaladaboost           => ModalAdaBoostModel,
 
-    # :xgboost           => XGBoostModel,
+    :xgboost_classifier      => XGBoostClassifierModel,
+    :xgboost_regressor       => XGBoostRegressorModel,
 
     # :modal_decision_list => ModalDecisionLists.MLJInterface.ExtendedSequentialCovering,
 )

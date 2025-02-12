@@ -60,6 +60,13 @@ y = y[chosen_rows]
         @test result.classifier isa SoleXplorer.ModalRandomForest
         @test result.model isa SoleXplorer.DecisionEnsemble
     end
+
+    @testset "xgboost_classifier" begin
+        result = traintest(X, y; models=(; type=:xgboost_classifier))
+        @test result isa SoleXplorer.ModelConfig
+        @test result.classifier isa SoleXplorer.XGBoostClassifier
+        @test result.model isa SoleXplorer.DecisionEnsemble
+    end
 end
 
 # ---------------------------------------------------------------------------- #
@@ -98,6 +105,13 @@ end
         result = traintest(X, y; models=(type=:modalrandomforest, params=(; rng=rng), tuning=true))
         @test result isa SoleXplorer.ModelConfig
         @test result.classifier isa MLJTuning.ProbabilisticTunedModel{LatinHypercube, SoleXplorer.ModalRandomForest}
+        @test result.model isa SoleXplorer.DecisionEnsemble
+    end
+
+    @testset "xgboost_classifier" begin
+        result = traintest(X, y; models=(type=:xgboost_classifier, tuning=true))
+        @test result isa SoleXplorer.ModelConfig
+        @test result.classifier isa MLJTuning.ProbabilisticTunedModel{LatinHypercube, SoleXplorer.XGBoostClassifier}
         @test result.model isa SoleXplorer.DecisionEnsemble
     end
 end

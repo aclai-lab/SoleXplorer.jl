@@ -1,8 +1,10 @@
 # ---------------------------------------------------------------------------- #
 #                   models from ModalDecisionTrees package                     #
 # ---------------------------------------------------------------------------- #
+get_encoding(classes_seen) = Dict(MMI.int(c) => c for c in MMI.classes(classes_seen))
+get_classlabels(encoding) = [string(encoding[i]) for i in sort(keys(encoding) |> collect)]
 
-function XGBoostModel()
+function XGBoostClassifierModel()
     type   = MLJXGBoostInterface.XGBoostClassifier
     config = (; algo=:classification, type=DecisionEnsemble, treatment=:aggregate)
 
@@ -52,32 +54,34 @@ function XGBoostModel()
         eval_metric                 = String[]
     )
 
-    winparams = (type=SoleBase.wholewindow,)
+    winparams = (; type=SoleBase.wholewindow)
 
     learn_method = (
         (mach, X, y) -> begin
-            weights = mach.fitresult[2]
-            classlabels = sort(mach.fitresult[3])
-            featurenames = MLJ.report(mach).features
-            dt = solemodel(MLJ.fitted_params(mach).stumps; weights, classlabels, featurenames)
+            trees        = XGB.trees(mach.fitresult[1])
+            encoding     = get_encoding(mach.fitresult[2])
+            classlabels  = get_classlabels(encoding)
+            featurenames = mach.report.vals[1][1]
+            dt           = solemodel(trees, X, y; classlabels, featurenames)
             apply!(dt, X, y)
             return dt
         end,
         (mach, X, y) -> begin
-            weights = mach.fitresult.fitresult[2]
-            classlabels = sort(mach.fitresult.fitresult[3])
-            featurenames = MLJ.report(mach).best_report.features
-            dt = solemodel(MLJ.fitted_params(mach).best_fitted_params.stumps; weights, classlabels, featurenames)
+            trees        = XGB.trees(mach.fitresult.fitresult[1])
+            encoding     = get_encoding(mach.fitresult.fitresult[2])
+            classlabels  = get_classlabels(encoding)
+            featurenames = mach.fitresult.report.vals[1][1]
+            dt           = solemodel(trees, X, y; classlabels, featurenames)
             apply!(dt, X, y)
             return dt
         end
     )
 
     tuning = (
-        tuning        = false,
-        method        = (type = latinhypercube, ntour = 20),
-        params        = TUNING_PARAMS,
-        ranges        = [
+        tuning = false,
+        method = (type = latinhypercube, ntour = 20),
+        params = TUNING_PARAMS[:classification],
+        ranges = [
             model -> MLJ.range(model, :max_depth, lower=3, upper=6),
             model -> MLJ.range(model, :sample_type, values=["uniform", "weighted"])
         ]
