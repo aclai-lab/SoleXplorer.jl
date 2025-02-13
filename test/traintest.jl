@@ -344,13 +344,6 @@ end
 # ---------------------------------------------------------------------------- #
 #                              XGBoost early stop                              #
 # ---------------------------------------------------------------------------- #
-using Test
-using Sole
-using SoleXplorer
-using Random, StatsBase, JLD2, DataFrames
-using MLJTuning
-using RDatasets
-
 X, y       = SoleData.load_arff_dataset("NATOPS")
 train_seed = 11
 rng        = Random.Xoshiro(train_seed)
@@ -369,19 +362,48 @@ y = y[chosen_rows]
     @testset "xgboost_classifier" begin
         result = traintest(X, y; models=(type=:xgboost_classifier,
                 params=(
-                num_round=100,
-                max_depth=6,
-                eta=0.1, 
-                objective="multi:softprob",
-                # early_stopping parameters
-                early_stopping_rounds=20,
-                watchlist=makewatchlist)
+                    num_round=100,
+                    max_depth=6,
+                    eta=0.1, 
+                    objective="multi:softprob",
+                    # early_stopping parameters
+                    early_stopping_rounds=20,
+                    watchlist=makewatchlist)
             ),
             # with early stopping a validation set is required
             preprocess=(; valid_ratio = 0.7)
         )
         @test result isa SoleXplorer.ModelConfig
         @test result.classifier isa SoleXplorer.XGBoostClassifier
+        @test result.model isa SoleXplorer.DecisionEnsemble
+
+        @test_throws ArgumentError result = traintest(X, y; models=(type=:xgboost_classifier,
+                                                params=(
+                                                    num_round=100,
+                                                    max_depth=6,
+                                                    eta=0.1, 
+                                                    objective="multi:softprob",
+                                                    # early_stopping parameters
+                                                    early_stopping_rounds=20,
+                                                    watchlist=makewatchlist)),)
+    end
+
+    @testset "xgboost_classifier with tuning" begin
+        result = traintest(X, y; models=(type=:xgboost_classifier,
+                params=(
+                    num_round=100,
+                    max_depth=6,
+                    eta=0.1, 
+                    objective="multi:softprob",
+                    # early_stopping parameters
+                    early_stopping_rounds=20,
+                    watchlist=makewatchlist),
+                tuning=true
+            ),
+            preprocess=(; valid_ratio = 0.7)
+        )
+        @test result isa SoleXplorer.ModelConfig
+        @test result.classifier isa MLJTuning.ProbabilisticTunedModel{LatinHypercube, SoleXplorer.XGBoostClassifier}
         @test result.model isa SoleXplorer.DecisionEnsemble
     end
 end

@@ -78,8 +78,8 @@ function XGBoostClassifierModel()
             encoding     = get_encoding(mach.fitresult[2])
             classlabels  = get_classlabels(encoding)
             featurenames = mach.report.vals[1][1]
-            dt           = solemodel(trees, X, y; classlabels, featurenames)
-            apply!(dt, X, y)
+            dt           = solemodel(trees, @views(Matrix(X)), @views(y); classlabels, featurenames)
+            apply!(dt, @views(X), @views(y))
             return dt
         end,
         (mach, X, y) -> begin
@@ -87,8 +87,8 @@ function XGBoostClassifierModel()
             encoding     = get_encoding(mach.fitresult.fitresult[2])
             classlabels  = get_classlabels(encoding)
             featurenames = mach.fitresult.report.vals[1][1]
-            dt           = solemodel(trees, X, y; classlabels, featurenames)
-            apply!(dt, X, y)
+            dt           = solemodel(trees, @views(Matrix(X)), @views(y); classlabels, featurenames)
+            apply!(dt, @views(X), @views(y))
             return dt
         end
     )
