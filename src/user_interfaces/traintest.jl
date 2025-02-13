@@ -155,6 +155,21 @@ results = traintest(X, y;
         tuning=false
     )
 )
+
+# xgboost classification with early stopping
+result = traintest(X, y; models=(type=:xgboost_classifier,
+        params=(
+        num_round=100,
+        max_depth=6,
+        eta=0.1, 
+        objective="multi:softprob",
+        # early_stopping parameters
+        early_stopping_rounds=20,
+        watchlist=makewatchlist)
+    ),
+    # with early stopping a validation set is required
+    preprocess=(; valid_ratio = 0.7)
+)
 ```
 See also [`ModelConfig`](@ref), [`prepare_dataset`](@ref), [`getmodel`](@ref), [`fitmodel`](@ref), [`testmodel`](@ref).
 """

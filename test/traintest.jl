@@ -377,6 +377,7 @@ y = y[chosen_rows]
                 early_stopping_rounds=20,
                 watchlist=makewatchlist)
             ),
+            # with early stopping a validation set is required
             preprocess=(; valid_ratio = 0.7)
         )
         @test result isa SoleXplorer.ModelConfig
