@@ -9,6 +9,11 @@ function _traintest(
 
     map(m -> begin
         ds = prepare_dataset(X, y, m)
+
+        if haskey(m.params, :watchlist) && m.params.watchlist == makewatchlist
+            m.params = merge(m.params, (watchlist = makewatchlist(ds.Xtrain, ds.ytrain, ds.Xvalid, ds.yvalid),))
+        end
+        
         classifier = getmodel(m)
         mach = fitmodel(m, classifier, ds)
         model = testmodel(m, mach, ds)

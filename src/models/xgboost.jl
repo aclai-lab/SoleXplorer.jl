@@ -7,7 +7,18 @@
 #                   models from ModalDecisionTrees package                     #
 # ---------------------------------------------------------------------------- #
 get_encoding(classes_seen) = Dict(MMI.int(c) => c for c in MMI.classes(classes_seen))
-get_classlabels(encoding) = [string(encoding[i]) for i in sort(keys(encoding) |> collect)]
+get_classlabels(encoding)  = [string(encoding[i]) for i in sort(keys(encoding) |> collect)]
+
+function makewatchlist(Xtrain, ytrain, Xvalid, yvalid)
+    isempty(Xvalid) && throw(ArgumentError("No validation data provided, use preprocess valid_ratio parameter"))
+
+    y_coded_train = @. CategoricalArrays.levelcode(ytrain) - 1 # convert to 0-based indexing
+    y_coded_valid = @. CategoricalArrays.levelcode(yvalid) - 1 # convert to 0-based indexing
+    dtrain        = XGB.DMatrix((Xtrain, y_coded_train); feature_names=names(Xtrain))
+    dvalid        = XGB.DMatrix((Xvalid, y_coded_valid); feature_names=names(Xvalid))
+
+    OrderedDict(["train" => dtrain, "eval" => dvalid])
+end
 
 function XGBoostClassifierModel()
     type   = MLJXGBoostInterface.XGBoostClassifier

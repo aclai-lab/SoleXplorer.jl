@@ -7,7 +7,7 @@ using SoleData
 using SoleData: PatchedFunction, nanpatchedfunction
 
 using DataFrames
-using CategoricalArrays
+using CategoricalArrays, OrderedCollections
 using Random
 using Accessors: @delete
 
@@ -47,6 +47,7 @@ export ModelConfig, range
 include("models/decisiontrees.jl")
 include("models/modaldecisiontrees.jl")
 include("models/xgboost.jl")
+export makewatchlist
 
 include("modules/models.jl")
 export getmodel

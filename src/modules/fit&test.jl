@@ -2,13 +2,9 @@
 #                                   fit model                                  #
 # ---------------------------------------------------------------------------- #
 function fitmodel(modelset::AbstractModelSet, classifier::MLJ.Model, ds::Dataset; kwargs...)
-
     Xtrain, ytrain = ds.Xtrain isa AbstractDataFrame ? ([ds.Xtrain], [ds.ytrain]) : (ds.Xtrain, ds.ytrain)
-
-    # mach = MLJ.Machine[]
-    # for i in eachindex(ytrain)
-    #     fmodel = MLJ.machine(classifier, Xtrain[i], ytrain[i]; kwargs...) |> (m -> fit!(m, verbosity=0))
-    #     push!(mach, fmodel)
+    # if haskey(modelset.params, :watchlist) && modelset.params.watchlist == makewatchlist
+    #     modelset.params = merge(modelset.params, (watchlist = makewatchlist(ds.Xtrain, ds.ytrain, ds.Xvalid, ds.yvalid),))
     # end
 
     mach = [MLJ.machine(classifier, x, y; kwargs...) |> m -> fit!(m, verbosity=0) for (x, y) in zip(Xtrain, ytrain)]

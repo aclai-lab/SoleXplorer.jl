@@ -344,3 +344,43 @@ end
 # ---------------------------------------------------------------------------- #
 #                              XGBoost early stop                              #
 # ---------------------------------------------------------------------------- #
+using Test
+using Sole
+using SoleXplorer
+using Random, StatsBase, JLD2, DataFrames
+using MLJTuning
+using RDatasets
+
+X, y       = SoleData.load_arff_dataset("NATOPS")
+train_seed = 11
+rng        = Random.Xoshiro(train_seed)
+Random.seed!(train_seed)
+
+# downsize dataset
+num_cols_to_sample = 10
+num_rows_to_sample = 50
+chosen_cols = StatsBase.sample(rng, 1:size(X, 2), num_cols_to_sample; replace=false)
+chosen_rows = StatsBase.sample(rng, 1:size(X, 1), num_rows_to_sample; replace=false)
+
+X = X[chosen_rows, chosen_cols]
+y = y[chosen_rows]
+
+@testset "XGBoost early stop" begin
+    @testset "xgboost_classifier" begin
+        result = traintest(X, y; models=(type=:xgboost_classifier,
+                params=(
+                num_round=100,
+                max_depth=6,
+                eta=0.1, 
+                objective="multi:softprob",
+                # early_stopping parameters
+                early_stopping_rounds=20,
+                watchlist=makewatchlist)
+            ),
+            preprocess=(; valid_ratio = 0.7)
+        )
+        @test result isa SoleXplorer.ModelConfig
+        @test result.classifier isa SoleXplorer.XGBoostClassifier
+        @test result.model isa SoleXplorer.DecisionEnsemble
+    end
+end
