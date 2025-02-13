@@ -1,0 +1,37 @@
+Vedere come si usa la best iteration
+
+
+Rendere generica la funzione che fa il test, ora usato per fare gli alberi xgboost
+
+
+Predict(pred_contrib) vedi cos’è 
+
+
+Provalo
+
+
+https://stackoverflow.com/questions/43702514/how-to-get-each-individual-trees-prediction-in-xgboost
+
+
+Significato dei valori in foglia
+
+
+https://stats.stackexchange.com/questions/395697/what-is-an-intuitive-interpretation-of-the-leaf-values-in-xgboost-base-learners
+
+
+C’è anche il problema delle features più usate
+
+
+https://medium.com/towards-data-science/interpretable-machine-learning-with-xgboost-9ec80d148d27
+
+
+Vedi plot_importance
+
+
+https://github.com/nredell/ShapML.jl
+
+
+Suite di machine learning H2O-3
+
+
+Estendere stratified cv a tutti i metodi

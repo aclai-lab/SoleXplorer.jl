@@ -1,7 +1,7 @@
 function _traintest(
-    X::AbstractDataFrame, 
-    y::AbstractVector; 
-    models::AbstractVector{<:NamedTuple}, 
+    X::AbstractDataFrame,
+    y::AbstractVector;
+    models::AbstractVector{<:NamedTuple},
     globals::Union{NamedTuple, Nothing}=nothing,
     preprocess::Union{NamedTuple, Nothing}=nothing,
 )::AbstractVector{ModelConfig}
