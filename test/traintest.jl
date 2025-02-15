@@ -133,7 +133,7 @@ end
                 # and then, apply choosen features on each window
                 winparams=(; type=adaptivewindow, nwindows=2),
                 # you can choose which features to use, mode_5 comes from Catch22 package
-                features=[minimum, mean, cov, mode_5],
+                features=catch9,
                 # optionally you can turn on tuning default settings for every model,
                 # using simply "tuning=true"
                 tuning=true
@@ -407,3 +407,18 @@ y = y[chosen_rows]
         @test result.model isa SoleXplorer.DecisionEnsemble
     end
 end
+
+X, y = Sole.load_arff_dataset("NATOPS")
+model = traintest(X, y; models=(type=:xgboost_classifier,
+    params=(
+        num_round=10000,
+        max_depth=6,
+        objective="multi:softprob",
+        early_stopping_rounds=20,
+        watchlist=makewatchlist,
+        seed=11),
+        winparams=(; type=adaptivewindow, nwindows=5),
+        features=catch9
+    ),
+    preprocess=(; valid_ratio = 0.8)
+)

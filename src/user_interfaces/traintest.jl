@@ -11,7 +11,7 @@ function _traintest(
         ds = prepare_dataset(X, y, m)
 
         if haskey(m.params, :watchlist) && m.params.watchlist == makewatchlist
-            m.params = merge(m.params, (watchlist = makewatchlist(ds.Xtrain, ds.ytrain, ds.Xvalid, ds.yvalid),))
+            m.params = merge(m.params, (watchlist = makewatchlist(ds),))
         end
         
         classifier = getmodel(m)

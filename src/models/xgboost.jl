@@ -9,13 +9,17 @@
 get_encoding(classes_seen) = Dict(MMI.int(c) => c for c in MMI.classes(classes_seen))
 get_classlabels(encoding)  = [string(encoding[i]) for i in sort(keys(encoding) |> collect)]
 
-function makewatchlist(Xtrain, ytrain, Xvalid, yvalid)
-    isempty(Xvalid) && throw(ArgumentError("No validation data provided, use preprocess valid_ratio parameter"))
+function makewatchlist(ds::Dataset)
+    isempty(ds.Xvalid) && throw(ArgumentError("No validation data provided, use preprocess valid_ratio parameter"))
 
-    y_coded_train = @. CategoricalArrays.levelcode(ytrain) - 1 # convert to 0-based indexing
-    y_coded_valid = @. CategoricalArrays.levelcode(yvalid) - 1 # convert to 0-based indexing
-    dtrain        = XGB.DMatrix((Xtrain, y_coded_train); feature_names=names(Xtrain))
-    dvalid        = XGB.DMatrix((Xvalid, y_coded_valid); feature_names=names(Xvalid))
+    _Xtrain, _Xvalid, _ytrain, _yvalid = ds.Xtrain isa AbstractVector ? 
+            (ds.Xtrain[1], ds.Xvalid[1], ds.ytrain[1], ds.yvalid[1]) :
+            (ds.Xtrain, ds.Xvalid, ds.ytrain, ds.yvalid)
+            
+    y_coded_train = @. CategoricalArrays.levelcode(_ytrain) - 1 # convert to 0-based indexing
+    y_coded_valid = @. CategoricalArrays.levelcode(_yvalid) - 1 # convert to 0-based indexing
+    dtrain        = XGB.DMatrix((_Xtrain, y_coded_train); feature_names=names(_Xtrain))
+    dvalid        = XGB.DMatrix((_Xvalid, y_coded_valid); feature_names=names(_Xvalid))
 
     OrderedDict(["train" => dtrain, "eval" => dvalid])
 end
