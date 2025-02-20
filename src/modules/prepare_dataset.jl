@@ -136,7 +136,7 @@ function _partition(
         stratified_cv = MLJ.StratifiedCV(; nfolds, shuffle, rng)
         tt = MLJ.MLJBase.train_test_pairs(stratified_cv, 1:length(y), y)
         if valid_ratio == 1.0
-            return [TT_indexes(train, eltype(tt)[], test) for (train, test) in tt]
+            return [TT_indexes(train, eltype(train)[], test) for (train, test) in tt]
         else
             tv = collect((MLJ.partition(t[1], train_ratio)..., t[2]) for t in tt)
             return [TT_indexes(train, valid, test) for (train, valid, test) in tv]
@@ -144,7 +144,7 @@ function _partition(
     else
         tt = MLJ.partition(eachindex(y), train_ratio; shuffle, rng)
         if valid_ratio == 1.0
-            return TT_indexes(tt[1], eltype(tt)[], tt[2])
+            return TT_indexes(tt[1], eltype(tt[1])[], tt[2])
         else
             tv = MLJ.partition(tt[1], valid_ratio; shuffle, rng)
             return TT_indexes(tv[1], tv[2], tt[2])
@@ -249,16 +249,14 @@ function prepare_dataset(
 
     # case 1: dataframe with numeric columns
     if all(t -> t <: Number, column_eltypes)
-        # dataframe with numeric columns
         return SoleXplorer.Dataset(
             DataFrame(vnames .=> eachcol(X)), y,
             # _partition(y, validation, train_ratio, valid_ratio, shuffle, stratified, nfolds, rng),
             _partition(y, train_ratio, valid_ratio, shuffle, stratified, nfolds, rng),
             ds_info
         )
-        # case 2: dataframe with vector-valued columns
+    # case 2: dataframe with vector-valued columns
     elseif all(t -> t <: AbstractVector{<:Number}, column_eltypes)
-        # dataframe with vector-valued columns
         return SoleXplorer.Dataset(
             # if winparams is nothing, then leave the dataframe as it is
             isnothing(winparams) ? DataFrame(vnames .=> eachcol(X)) : _treatment(X, vnames, treatment, features, winparams), y,
