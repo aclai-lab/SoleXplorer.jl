@@ -360,7 +360,8 @@ y = y[chosen_rows]
 
 @testset "XGBoost early stop" begin
     @testset "xgboost_classifier" begin
-        result = traintest(X, y; models=(type=:xgboost_classifier,
+        result = traintest(X, y; 
+            models=(type=:xgboost_classifier,
                 params=(
                     num_round=100,
                     max_depth=6,
@@ -386,12 +387,14 @@ y = y[chosen_rows]
                     objective="multi:softprob",
                     # early_stopping parameters
                     early_stopping_rounds=20,
-                    watchlist=makewatchlist))
-                )
+                    watchlist=makewatchlist)
+            )
+        )
     end
 
     @testset "xgboost_classifier with tuning" begin
-        result = traintest(X, y; models=(type=:xgboost_classifier,
+        result = traintest(X, y; 
+            models=(type=:xgboost_classifier,
                 params=(
                     num_round=100,
                     max_depth=6,
@@ -408,19 +411,22 @@ y = y[chosen_rows]
         @test result.classifier isa MLJTuning.ProbabilisticTunedModel{LatinHypercube, SoleXplorer.XGBoostClassifier}
         @test result.model isa SoleXplorer.DecisionEnsemble
     end
-end
 
-X, y = Sole.load_arff_dataset("NATOPS")
-model = traintest(X, y; models=(type=:xgboost_classifier,
-    params=(
-        num_round=10000,
-        max_depth=6,
-        objective="multi:softprob",
-        early_stopping_rounds=20,
-        watchlist=makewatchlist,
-        seed=11),
-        winparams=(; type=adaptivewindow, nwindows=5),
-        features=catch9
-    ),
-    preprocess=(; valid_ratio = 0.8)
-)
+    @testset "xgboost_early_stopping_rounds" begin
+        X, y = Sole.load_arff_dataset("NATOPS")
+        result = traintest(X, y; 
+            models=(type=:xgboost_classifier,
+                params=(
+                    num_round=10000,
+                    max_depth=6,
+                    objective="multi:softprob",
+                    early_stopping_rounds=20,
+                    watchlist=makewatchlist,
+                    seed=11),
+                    winparams=(; type=adaptivewindow, nwindows=5),
+                    features=catch9
+                ),
+            preprocess=(; valid_ratio = 0.8)
+        )
+    end
+end

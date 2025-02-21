@@ -25,8 +25,15 @@ https://github.com/nredell/ShapML.jl
 
 se ho nothing, allora lo split diventa foglia
 
+-- se gli alberi possono avere empty leaf
+-- come fare classificazione con valori di regressione
+
 
 #### Generali 
 
 - Suite di machine learning H2O-3
 - Estendere stratified cv a tutti i metodi
+
+#### Features Extraction
+
+ - la finestyratura deve essere pensata multidimensione (quindi vettoriale)
