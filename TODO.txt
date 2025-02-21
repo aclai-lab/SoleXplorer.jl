@@ -23,12 +23,6 @@ https://medium.com/towards-data-science/interpretable-machine-learning-with-xgbo
 Vedi plot_importance
 https://github.com/nredell/ShapML.jl
 
-se ho nothing, allora lo split diventa foglia
-
--- se gli alberi possono avere empty leaf
--- come fare classificazione con valori di regressione
-
-
 #### Generali 
 
 - Suite di machine learning H2O-3
@@ -36,4 +30,4 @@ se ho nothing, allora lo split diventa foglia
 
 #### Features Extraction
 
- - la finestyratura deve essere pensata multidimensione (quindi vettoriale)
+ - la finestratura deve essere pensata multidimensione (quindi vettoriale)
