@@ -23,6 +23,8 @@ https://medium.com/towards-data-science/interpretable-machine-learning-with-xgbo
 Vedi plot_importance
 https://github.com/nredell/ShapML.jl
 
+se ho nothing, allora lo split diventa foglia
+
 
 #### Generali 
 

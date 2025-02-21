@@ -16,7 +16,7 @@ test_suites = [
     ("Prepare Dataset", ["modules/prepare_dataset.jl", ]),
     ("Validate Modelset", ["modules/validate_modelset.jl", ]),
     ("Get Models", ["modules/models.jl", ]),
-    ("TrainTest", ["traintest.jl", ]),
+    ("TrainTest", ["user/funcs/traintest.jl", ]),
 ]
 
 @testset "SoleXplorer.jl" begin

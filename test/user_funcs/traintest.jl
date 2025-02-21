@@ -377,15 +377,17 @@ y = y[chosen_rows]
         @test result.classifier isa SoleXplorer.XGBoostClassifier
         @test result.model isa SoleXplorer.DecisionEnsemble
 
-        @test_throws ArgumentError result = traintest(X, y; models=(type=:xgboost_classifier,
-                                                params=(
-                                                    num_round=100,
-                                                    max_depth=6,
-                                                    eta=0.1, 
-                                                    objective="multi:softprob",
-                                                    # early_stopping parameters
-                                                    early_stopping_rounds=20,
-                                                    watchlist=makewatchlist)),)
+        @test_throws ArgumentError result = traintest(X, y; 
+            models=(type=:xgboost_classifier,
+                params=(
+                    num_round=100,
+                    max_depth=6,
+                    eta=0.1, 
+                    objective="multi:softprob",
+                    # early_stopping parameters
+                    early_stopping_rounds=20,
+                    watchlist=makewatchlist))
+                )
     end
 
     @testset "xgboost_classifier with tuning" begin

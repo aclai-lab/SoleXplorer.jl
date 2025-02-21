@@ -217,7 +217,7 @@ using Statistics, StatsBase
         @test ds.info.rng == rng
         @test ds.info.winparams.type == adaptivewindow
         @test ds.info.winparams.nwindows == 10
-        @test ds.info.vnames == names(X)
+        @test ds.info.vnames == Symbol.(names(X))
         
         # Test output structure
         @test ds isa SoleXplorer.Dataset
