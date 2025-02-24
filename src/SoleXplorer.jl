@@ -1,6 +1,7 @@
 module SoleXplorer
 
 using Sole
+using SoleFeatures
 using SolePostHoc
 import MultiData.hasnans
 using SoleData
@@ -9,7 +10,6 @@ using SoleData: PatchedFunction, nanpatchedfunction
 using DataFrames
 using CategoricalArrays, OrderedCollections
 using Random
-# using Accessors: @delete
 
 import DecisionTree as DT
 import XGBoost as XGB
@@ -35,11 +35,12 @@ using Catch22
 using StatsBase
 using ScientificTypes
 
-include("utils/catch9.jl")
-export mode_5, mode_10, embedding_dist, acf_timescale, acf_first_min, ami2, trev, outlier_timing_pos
-export outlier_timing_neg, whiten_timescale, forecast_error, ami_timescale, high_fluctuation, stretch_decreasing
-export stretch_high, entropy_pairs, rs_range, dfa, low_freq_power, centroid_freq, transition_variance, periodicity
-export catch9
+using Reexport
+
+@reexport using SoleFeatures: mode_5, mode_10, embedding_dist, acf_timescale, acf_first_min, ami2, trev, outlier_timing_pos
+@reexport using SoleFeatures: outlier_timing_neg, whiten_timescale, forecast_error, ami_timescale, high_fluctuation, stretch_decreasing
+@reexport using SoleFeatures: stretch_high, entropy_pairs, rs_range, dfa, low_freq_power, centroid_freq, transition_variance, periodicity
+@reexport using SoleFeatures: base_set, catch9, catch22_set, complete_set
 
 include("utils/code_dataframe.jl")
 export code_dataframe

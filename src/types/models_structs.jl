@@ -314,12 +314,12 @@ const AVAIL_MODELS = Dict(
 const AVAIL_WINS       = (movingwindow, wholewindow, splitwindow, adaptivewindow)
 const AVAIL_TREATMENTS = (:aggregate, :reducesize)
 
-const WIN_PARAMS = Dict(
-    movingwindow   => (window_size = 1024, window_step = 512),
-    wholewindow    => NamedTuple(),
-    splitwindow    => (nwindows = 20),
-    adaptivewindow => (nwindows = 20, relative_overlap = 0.5)
-)
+# const WIN_PARAMS = Dict(
+#     movingwindow   => (window_size = 1024, window_step = 512),
+#     wholewindow    => NamedTuple(),
+#     splitwindow    => (nwindows = 20),
+#     adaptivewindow => (nwindows = 20, relative_overlap = 0.5)
+# )
 
 # ---------------------------------------------------------------------------- #
 #                                   tuning                                     #

@@ -72,13 +72,13 @@ function validate_winparams(
     type = if isnothing(user_win) && isnothing(global_win)
         defaults.type
     elseif isnothing(user_win)
-        defaults = WIN_PARAMS[global_win]
+        defaults = SoleFeatures.WIN_PARAMS[global_win]
         filtered_globals = isnothing(globals) ? nothing : NamedTuple(k => v for (k,v) in pairs(globals) if k != :type)
         # filtered_globals = @delete globals.type
         check_unknown_params(filtered_globals, defaults, "global_winparams")
         haskey(globals, :type) && globals.type
     else
-        defaults = WIN_PARAMS[user_win]
+        defaults = SoleFeatures.WIN_PARAMS[user_win]
         filtered_users = isnothing(users) ? nothing : NamedTuple(k => v for (k,v) in pairs(users) if k != :type)
         # filtered_users = @delete users.type
         check_unknown_params(filtered_users, defaults, "user_winparams")
