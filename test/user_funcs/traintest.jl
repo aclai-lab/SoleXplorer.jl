@@ -1,7 +1,7 @@
+using SoleXplorer
 using Test
 using Sole
-using SoleXplorer
-using Random, StatsBase, JLD2, DataFrames
+using Random, StatsBase, DataFrames
 using MLJTuning
 using RDatasets
 

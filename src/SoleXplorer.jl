@@ -31,16 +31,16 @@ using ModalDecisionTrees
 using ModalDecisionLists
 
 # Features
-using Catch22
-using StatsBase
-using ScientificTypes
+# using Catch22
+using StatsBase, ScientificTypes
 
 using Reexport
-
 @reexport using SoleFeatures: mode_5, mode_10, embedding_dist, acf_timescale, acf_first_min, ami2, trev, outlier_timing_pos
 @reexport using SoleFeatures: outlier_timing_neg, whiten_timescale, forecast_error, ami_timescale, high_fluctuation, stretch_decreasing
 @reexport using SoleFeatures: stretch_high, entropy_pairs, rs_range, dfa, low_freq_power, centroid_freq, transition_variance, periodicity
 @reexport using SoleFeatures: base_set, catch9, catch22_set, complete_set
+
+@reexport using StatsBase: cov
 
 include("utils/code_dataframe.jl")
 export code_dataframe
