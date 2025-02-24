@@ -9,7 +9,7 @@ using SoleData: PatchedFunction, nanpatchedfunction
 using DataFrames
 using CategoricalArrays, OrderedCollections
 using Random
-using Accessors: @delete
+# using Accessors: @delete
 
 import DecisionTree as DT
 import XGBoost as XGB

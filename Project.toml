@@ -4,7 +4,6 @@ authors = ["Giovanni Pagliarini", "pglgnn@unife.it", "Riccardo Pasini", "riccard
 version = "0.0.1"
 
 [deps]
-Accessors = "7d9f7c33-5ae7-4f3b-8dc6-eff91059b697"
 Catch22 = "acdeb78f-3d39-4310-8fdf-6d75c17c6d5a"
 CategoricalArrays = "324d7699-5711-5eae-9e2f-1d82baa6b597"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
@@ -33,7 +32,6 @@ TreeParzen = "eb66a70c-a255-11e9-03ea-7ba6b2f22006"
 XGBoost = "009559a3-9522-5dbb-924b-0b6ed2b22bb9"
 
 [compat]
-Accessors = "0.1.41"
 CategoricalArrays = "0.10"
 DataFrames = "1.7"
 DecisionTree = "0.12"

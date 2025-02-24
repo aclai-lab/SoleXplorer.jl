@@ -46,7 +46,8 @@ function _treatment(
     haskey(WIN_PARAMS, winparams.type) || throw(ArgumentError("winparams.type must be one of: $(keys(WIN_PARAMS))"))
 
     max_interval = maximum(length.(eachrow(X)))
-    _wparams = winparams |> x -> @delete x.type
+    # _wparams = winparams |> x -> @delete x.type
+    _wparams = NamedTuple(k => v for (k,v) in pairs(winparams) if k != :type)
     n_intervals = winparams.type(max_interval; _wparams...)
 
     if treatment == :aggregate        # propositional
