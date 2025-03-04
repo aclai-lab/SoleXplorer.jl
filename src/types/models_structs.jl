@@ -311,7 +311,7 @@ const AVAIL_MODELS = Dict(
     # :modal_decision_list => ModalDecisionLists.MLJInterface.ExtendedSequentialCovering,
 )
 
-const AVAIL_WINS       = (movingwindow, wholewindow, splitwindow, adaptivewindow)
+# const AVAIL_WINS       = (movingwindow, wholewindow, splitwindow, adaptivewindow)
 const AVAIL_TREATMENTS = (:aggregate, :reducesize)
 
 # const WIN_PARAMS = Dict(

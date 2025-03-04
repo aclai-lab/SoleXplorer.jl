@@ -12,3 +12,5 @@ function code_dataframe(X::AbstractDataFrame, y::AbstractVector)
     
     return X, y
 end
+
+# TODO separa X da y

@@ -66,8 +66,8 @@ function validate_winparams(
     users::Union{NamedTuple, Nothing},
     treatment::Symbol
 )
-    global_win = get_function(globals, AVAIL_WINS)
-    user_win = get_function(users, AVAIL_WINS)
+    global_win = get_function(globals, SoleFeatures.AVAIL_WINS)
+    user_win = get_function(users, SoleFeatures.AVAIL_WINS)
     
     type = if isnothing(user_win) && isnothing(global_win)
         defaults.type
