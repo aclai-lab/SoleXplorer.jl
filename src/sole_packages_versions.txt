@@ -6,6 +6,7 @@ Sole:               on branch dev               (pulled jan,  9 2025)
 SoleLogics:         on branch dev               (pulled jan, 20 2025)
 SoleModels:         on branch gio/refractoring  (pulled jan, 20 2025)
 SolePostHoc:        on branch dev-gio           (pulled jan, 30 2025)
+SoleFeatures        on branch dev               (pulled mar,  4 2025)
 ModalDecisionLists: on branch dev               (pulled jan, 18 2025)
 ModalDecisionTees:  on branch dev               (pulled jan, 21 2025)
 
