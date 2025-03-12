@@ -224,16 +224,16 @@ mutable struct SymbolicModelSet <: AbstractModelSet
     winparams    :: NamedTuple
     learn_method :: Union{Base.Callable, Tuple{Base.Callable, Base.Callable}}
     tuning       :: NamedTuple
-    rules_method :: SoleModels.RuleExtractor
+    rules_params :: NamedTuple
     preprocess   :: NamedTuple
 end
 
 function Base.show(io::IO, ::MIME"text/plain", m::SymbolicModelSet)
     println(io, "SymbolicModelSet")
     println(io, "  Model type: ", m.type)
-    println(io, "  Features: ", isnothing(m.features) ? "None" : "$(length(m.features)) features")
-    println(io, "  Learning method: ", typeof(m.learn_method))
-    println(io, "  Rule extraction: ", typeof(m.rules_method))
+    println(io, "  Features:   ", isnothing(m.features) ? "None" : "$(length(m.features)) features")
+    println(io, "  Learning method:  ", typeof(m.learn_method))
+    println(io, "  Rules extraction: ", typeof(m.rules_params.type))
 end
 
 function Base.show(io::IO, m::SymbolicModelSet)
@@ -320,6 +320,28 @@ const AVAIL_TREATMENTS = (:aggregate, :reducesize)
 #     splitwindow    => (nwindows = 20),
 #     adaptivewindow => (nwindows = 20, relative_overlap = 0.5)
 # )
+
+# ---------------------------------------------------------------------------- #
+#                                    rules                                     #
+# ---------------------------------------------------------------------------- #
+plainrule   = SoleModels.PlainRuleExtractor
+lumenrule   = SolePostHoc.LumenRuleExtractor
+intreesrule = SolePostHoc.InTreesRuleExtractor
+
+const AVAIL_RULES = (plainrule, lumenrule, intreesrule)
+
+const RULES_PARAMS = Dict{Base.Callable, NamedTuple}(
+    plainrule   => NamedTuple(),
+    lumenrule   => NamedTuple(),
+    intreesrule => (
+        prune_rules             = true,
+        pruning_s               = nothing,
+        pruning_decay_threshold = nothing,
+        rule_selection_method   = :CBC,
+        rule_complexity_metric  = :natoms,
+        min_coverage            = nothing
+    )
+)
 
 # ---------------------------------------------------------------------------- #
 #                                   tuning                                     #

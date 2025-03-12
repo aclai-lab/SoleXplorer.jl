@@ -42,11 +42,14 @@ using Reexport
 
 @reexport using StatsBase: cov
 
+@reexport using SoleFeatures: movingwindow, wholewindow, splitwindow, adaptivewindow
+
 include("utils/code_dataframe.jl")
 export code_dataframe
 
 include("types/models_structs.jl")
 export ModelConfig, range
+export plainrule, lumenrule, intreesrule
 
 include("models/decisiontrees.jl")
 include("models/modaldecisiontrees.jl")

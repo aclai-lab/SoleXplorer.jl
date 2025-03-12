@@ -40,19 +40,31 @@ function get_rules(
     normalize::Bool=true,
     threshold_digits::Int=2,
     round_digits::Int=2,
+    silent::Bool=true,
     kwargs...
 )
     variable_names_map = [names(ds.X)]
 
-    rules = Sole.extractrules(modelset.rules_method,
-        model;
-        min_lift=min_lift,
-        min_ninstances=min_ninstances,
-        min_coverage=min_coverage,
-        min_ncovered=min_ncovered,
-        normalize=normalize,
-        kwargs...
-    );
+    # rules = Sole.extractrules(modelset.rules_method,
+    #     model;
+    #     min_lift=min_lift,
+    #     min_ninstances=min_ninstances,
+    #     min_coverage=min_coverage,
+    #     min_ncovered=min_ncovered,
+    #     normalize=normalize,
+    #     kwargs...
+    # );
+
+    rules = SolePostHoc.modalextractrules(modelset.rules_method,
+    model;
+    min_lift,
+    min_ninstances,
+    min_coverage,
+    min_ncovered,
+    normalize,
+    silent,
+    kwargs...
+);
 
     map(r->(consequent(r), readmetrics(r)), rules)
     irules = sort(rules, by=readmetrics)

@@ -101,6 +101,25 @@ avail_functions = (movingwindow, wholewindow, splitwindow, adaptivewindow)
         @test_throws ArgumentError SoleXplorer.validate_winparams(defwin, invalid, nothing, :reducesize)
     end
 
+    @testset "validate_rules_params" begin
+        defrule = (type=plainrule,)
+        globrule = (type=lumenrule,)
+        usrrule = (type=intreesrule, prune_rules=false)
+
+        @test SoleXplorer.validate_rules_params(defrule, nothing, nothing) == (type=plainrule,)
+        @test SoleXplorer.validate_rules_params(defrule, globrule, nothing) == (type=lumenrule,)
+        @test SoleXplorer.validate_rules_params(defrule, globrule, usrrule) == (type=intreesrule, 
+                                                                                prune_rules = false,
+                                                                                pruning_s = nothing,
+                                                                                pruning_decay_threshold = nothing,
+                                                                                rule_selection_method = :CBC,
+                                                                                rule_complexity_metric = :natoms,
+                                                                                min_coverage = nothing,)
+
+        invalid = (type=mean,)
+        @test SoleXplorer.validate_rules_params(defrule, invalid, nothing) == (type=plainrule,)
+    end
+
     @testset "validate_tuning_type" begin
         deftune = (type=latinhypercube, ntour=35)
         globtune = (type=grid,)

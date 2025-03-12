@@ -20,3 +20,5 @@ https://github.com/nredell/ShapML.jl
 - Suite di machine learning H2O-3
 - Estendere stratified cv a tutti i metodi
 
+Unificare struttura dati feature selection con solexplorer
+

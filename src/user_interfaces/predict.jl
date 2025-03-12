@@ -1,10 +1,9 @@
 function get_predict(
-    model::ModelConfig,
-    kwargs...
+    mach::MLJ.Machine,
+    ds::Dataset
 )
-
-    preds = MLJ.predict(model.mach, model.ds.Xtest)
+    preds = MLJ.predict(mach, ds.Xtest)
     yhat = MLJ.mode.(preds)
-    kp = MLJ.kappa(yhat, model.ds.ytest)
-    acc = MLJ.accuracy(yhat, model.ds.ytest)
+    kp = MLJ.kappa(yhat, ds.ytest)
+    acc = MLJ.accuracy(yhat, ds.ytest)
 end

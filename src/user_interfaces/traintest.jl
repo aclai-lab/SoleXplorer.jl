@@ -179,7 +179,7 @@ function traintest(
     models::Union{NamedTuple, AbstractVector{<:NamedTuple}, Nothing}=nothing, 
     globals::Union{NamedTuple, Nothing}=nothing,
     preprocess::Union{NamedTuple, Nothing}=nothing,
-)
+)::Union{ModelConfig, AbstractVector{ModelConfig}}
     check_dataframe_type(X) || throw(ArgumentError("DataFrame must contain only numeric values"))
     size(X, 1) == length(y) || throw(ArgumentError("Number of rows in DataFrame must match length of class labels"))
     isnothing(models) && throw(ArgumentError("At least one type must be specified"))

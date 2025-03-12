@@ -48,17 +48,17 @@ function ModalDecisionTreeModel()
         ]
     )
 
-    rules_method = SoleModels.PlainRuleExtractor()
+    rules_params = (; type = SoleModels.PlainRuleExtractor)
 
     return SymbolicModelSet(
         type,
         config,
         params,
-        nothing,
+        DEFAULT_FEATS,
         winparams,
         learn_method,
         tuning,
-        rules_method,
+        rules_params,
         DEFAULT_PREPROC
     )
 end
@@ -110,17 +110,17 @@ function ModalRandomForestModel()
         ]
     )
 
-    rules_method = SolePostHoc.LumenRuleExtractor()
+    rules_params = (; type = SolePostHoc.InTreesRuleExtractor)
 
     return SymbolicModelSet(
         type,
         config,
         params,
-        nothing,
+        DEFAULT_FEATS,
         winparams,
         learn_method,
         tuning,
-        rules_method,
+        rules_params,
         DEFAULT_PREPROC
     )
 end
@@ -171,17 +171,17 @@ function ModalAdaBoostModel()
         ]
     )
 
-    rules_method = SolePostHoc.LumenRuleExtractor()
+    rules_params = (; type = SolePostHoc.InTreesRuleExtractor)
 
     return SymbolicModelSet(
         type,
         config,
         params,
-        nothing,
+        DEFAULT_FEATS,
         winparams,
         learn_method,
         tuning,
-        rules_method,
+        rules_params,
         DEFAULT_PREPROC
     )
 end

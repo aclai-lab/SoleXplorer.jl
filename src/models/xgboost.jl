@@ -109,7 +109,7 @@ function XGBoostClassifierModel()
         ]
     )
 
-    rules_method = SolePostHoc.LumenRuleExtractor()
+    rules_params = (; type = SolePostHoc.InTreesRuleExtractor)
 
     return SymbolicModelSet(
         type,
@@ -119,7 +119,7 @@ function XGBoostClassifierModel()
         winparams,
         learn_method,
         tuning,
-        rules_method,
+        rules_params,
         DEFAULT_PREPROC
     )
 end

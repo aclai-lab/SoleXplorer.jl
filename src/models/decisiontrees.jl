@@ -29,7 +29,7 @@ function DecisionTreeClassifierModel()
 
     tuning = (
         tuning = false,
-        method = (; type = latinhypercube, ntour = 20),
+        method = (type = latinhypercube, ntour = 20),
         params = TUNING_PARAMS[:classification],
         ranges = [
             model -> MLJ.range(model, :merge_purity_threshold, lower=0, upper=1),
@@ -37,7 +37,7 @@ function DecisionTreeClassifierModel()
         ]
     )
 
-    rules_method = SoleModels.PlainRuleExtractor()
+    rules_params = (; type = SoleModels.PlainRuleExtractor)
 
     return SymbolicModelSet(
         type,
@@ -47,7 +47,7 @@ function DecisionTreeClassifierModel()
         winparams,
         learn_method,
         tuning,
-        rules_method,
+        rules_params,
         DEFAULT_PREPROC
     )
 end
@@ -97,7 +97,7 @@ function RandomForestClassifierModel()
         ]
     )
 
-    rules_method = SolePostHoc.LumenRuleExtractor()
+    rules_params = (; type = SolePostHoc.InTreesRuleExtractor)
 
     return SymbolicModelSet(
         type,
@@ -107,7 +107,7 @@ function RandomForestClassifierModel()
         winparams,
         learn_method,
         tuning,
-        rules_method,
+        rules_params,
         DEFAULT_PREPROC
     )
 end
@@ -153,7 +153,7 @@ function AdaBoostClassifierModel()
         ]
     )
 
-    rules_method = SolePostHoc.LumenRuleExtractor()
+    rules_params = (; type = SolePostHoc.InTreesRuleExtractor)
 
     return SymbolicModelSet(
         type,
@@ -163,7 +163,7 @@ function AdaBoostClassifierModel()
         winparams,
         learn_method,
         tuning,
-        rules_method,
+        rules_params,
         DEFAULT_PREPROC
     )
 end
@@ -202,7 +202,7 @@ function DecisionTreeRegressorModel()
         ]
     )
 
-    rules_method = SoleModels.PlainRuleExtractor()
+    rules_params = (; type = SoleModels.PlainRuleExtractor)
 
     return SymbolicModelSet(
         type,
@@ -212,7 +212,7 @@ function DecisionTreeRegressorModel()
         winparams,
         learn_method,
         tuning,
-        rules_method,
+        rules_params,
         DEFAULT_PREPROC
     )
 end
@@ -260,7 +260,7 @@ function RandomForestRegressorModel()
         ]
     )
 
-    rules_method = SolePostHoc.LumenRuleExtractor()
+    rules_params = (; type = SolePostHoc.InTreesRuleExtractor)
 
     return SymbolicModelSet(
         type,
@@ -270,7 +270,7 @@ function RandomForestRegressorModel()
         winparams,
         learn_method,
         tuning,
-        rules_method,
+        rules_params,
         DEFAULT_PREPROC
     )
 end

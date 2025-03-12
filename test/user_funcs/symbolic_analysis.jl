@@ -1,21 +1,22 @@
+using SoleXplorer
 using Test
 using Sole
-import SoleXplorer as SX
-using SoleXplorer
-using Random, StatsBase, JLD2, DataFrames
-using RDatasets
+using Random, StatsBase, DataFrames
+using MLJTuning
+using DecisionTree: load_data
 
 # ---------------------------------------------------------------------------- #
-X, y = SoleData.load_arff_dataset("NATOPS")
-train_seed = 11
-rng = Random.Xoshiro(train_seed)
-Random.seed!(train_seed)
+#                                CLASSIFICATION                                #
+# ---------------------------------------------------------------------------- #
+X, y = load_data("iris")
+X = DataFrame(Float64.(X), :auto)
+y = string.(y)
 
 # ---------------------------------------------------------------------------- #
 #                           basic symbolic analysis                            #
 # ---------------------------------------------------------------------------- #
-result = symbolic_analysis(X, y; models=(type=:decisiontree, params=(rng=rng,)))
-result = symbolic_analysis(X, y; models=(type=:randomforest,))
+result = symbolic_analysis(X, y; models=(type=:decisiontree_classifier, rules=(type=:plainrules,)))
+result = symbolic_analysis(X, y; models=(type=:randomforest_classifier,))
 result = symbolic_analysis(X, y; models=(type=:adaboost,))
 
 result = symbolic_analysis(X, y; models=(type=:decisiontree, tuning=true),)

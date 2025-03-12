@@ -85,11 +85,10 @@ function validate_winparams(
         haskey(users, :type) && users.type
     end
 
-    filter_params(p) = isnothing(p) ? NamedTuple() : NamedTuple(k => v for (k,v) in pairs(p) if haskey(defaults, k))
+    filter_params(p) = isnothing(p) ? NamedTuple() : NamedTuple(k => v for (k,v) in pairs(p) if haskey(defaults, k) && k != :type)
 
     params = merge(
         NamedTuple(k => v for (k,v) in pairs(defaults) if k != :type),
-        # (@delete defaults.type),
         filter_params(globals),
         filter_params(users)
     )
@@ -97,6 +96,39 @@ function validate_winparams(
     if treatment == :reducesize && haskey(params, :nwindows)
         params.nwindows ≥ 3 || throw(ArgumentError("For :reducesize treatment, nwindows must be ≥ 3"))
     end
+
+    return (type = type, params...)
+end
+
+function validate_rules_params(
+    defaults::NamedTuple,
+    globals::Union{NamedTuple, Nothing},
+    users::Union{NamedTuple, Nothing}
+)
+    global_rule = get_function(globals, SoleXplorer.AVAIL_RULES)
+    user_rule = get_function(users, SoleXplorer.AVAIL_RULES)
+    
+    type = if isnothing(user_rule) && isnothing(global_rule)
+        defaults.type
+    elseif isnothing(user_rule)
+        defaults = SoleXplorer.RULES_PARAMS[global_rule]
+        filtered_globals = isnothing(globals) ? nothing : NamedTuple(k => v for (k,v) in pairs(globals) if k != :type)
+        check_unknown_params(filtered_globals, defaults, "global_rules_params")
+        haskey(globals, :type) && globals.type
+    else
+        defaults = SoleXplorer.RULES_PARAMS[user_rule]
+        filtered_users = isnothing(users) ? nothing : NamedTuple(k => v for (k,v) in pairs(users) if k != :type)
+        check_unknown_params(filtered_users, defaults, "user_rules_params")
+        haskey(users, :type) && users.type
+    end
+
+    filter_params(p) = isnothing(p) ? NamedTuple() : NamedTuple(k => v for (k,v) in pairs(p) if haskey(defaults, k) && k != :type)
+
+    params = merge(
+        NamedTuple(k => v for (k,v) in pairs(defaults) if k != :type),
+        filter_params(globals),
+        filter_params(users)
+    )
 
     return (type = type, params...)
 end
@@ -229,6 +261,12 @@ function validate_modelset(
             isnothing(globals) ? nothing : get(globals, :winparams, nothing),
             get(m, :winparams, nothing),
             model.config.treatment
+        )
+
+        model.rules_params = validate_rules_params(
+            model.rules_params,
+            isnothing(globals) ? nothing : get(globals, :rules_params, nothing),
+            get(m, :rules_params, nothing)
         )
 
         model.tuning = validate_tuning(

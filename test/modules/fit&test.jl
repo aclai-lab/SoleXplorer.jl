@@ -15,7 +15,7 @@ Random.seed!(train_seed)
         models = (type=:decisiontree_classifier,)
         global_params = (winparams=(type=wholewindow,), features=[mean])
 
-        modelsets = validate_modelset(models, global_params)
+        modelsets = validate_modelset(models, typeof(y), global_params)
         ds = prepare_dataset(X, y, first(modelsets))
         @test ds isa SoleXplorer.Dataset
         classifier = getmodel(first(modelsets))
@@ -41,7 +41,7 @@ Random.seed!(train_seed)
             (type=:decisiontree_classifier, params=(min_samples_leaf=30, min_samples_split=3,)
         )]
 
-        modelsets = validate_modelset(models)
+        modelsets = validate_modelset(models, typeof(y))
         ds = prepare_dataset(X, y, first(modelsets))
         @test ds isa SoleXplorer.Dataset
         classifier = getmodel(first(modelsets))
@@ -59,7 +59,7 @@ Random.seed!(train_seed)
         global_params = (winparams=(type=wholewindow,), features=[mean])
         preprocess_params = (stratified=true, nfolds=5)
 
-        modelsets = validate_modelset(models, global_params, preprocess_params)
+        modelsets = validate_modelset(models, typeof(y), global_params, preprocess_params)
         ds = prepare_dataset(X, y, first(modelsets))
         @test ds isa SoleXplorer.Dataset
         classifier = getmodel(first(modelsets))
