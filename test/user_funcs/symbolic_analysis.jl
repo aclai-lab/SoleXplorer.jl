@@ -19,4 +19,13 @@ y = y[chosen_rows]
 end
 
 model = symbolic_analysis(X, y; models=(type=:decisiontree,), preprocess=(;rng=Xoshiro(11)))
+model = symbolic_analysis(X, y; models=(type=:decisiontree_classifier,), preprocess=(;rng=Xoshiro(11)))
 model = symbolic_analysis(X, y; models=(type=:randomforest,), preprocess=(;rng=Xoshiro(11)))
+model = symbolic_analysis(X, y; models=(type=:randomforest_classifier,), preprocess=(;rng=Xoshiro(11)))
+model = symbolic_analysis(X, y; models=(type=:adaboost,), preprocess=(;rng=Xoshiro(11)))
+model = symbolic_analysis(X, y; models=(type=:adaboost_classifier,), preprocess=(;rng=Xoshiro(11)))
+model = symbolic_analysis(X, y; models=(type=:modaldecisiontree,), preprocess=(;rng=Xoshiro(11)))
+model = symbolic_analysis(X, y; models=(type=:modalrandomforest,), preprocess=(;rng=Xoshiro(11)))
+model = symbolic_analysis(X, y; models=(type=:modaladaboost,), preprocess=(;rng=Xoshiro(11)))
+model = symbolic_analysis(X, y; models=(type=:xgboost,), preprocess=(;rng=Xoshiro(11)))
+model = symbolic_analysis(X, y; models=(type=:xgboost_classifier,), preprocess=(;rng=Xoshiro(11)))

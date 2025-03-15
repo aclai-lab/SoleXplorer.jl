@@ -65,9 +65,11 @@ function validate_params(
     check_params(globals, keys(defaults))
     check_params(users, keys(defaults))
 
-    isnothing(rng) && haskey(defaults, :rng) ?
-        merge(defaults, filter_params(globals), filter_params(users)) :
+    if !isnothing(rng) && haskey(defaults, :rng)
         merge(defaults, filter_params(globals), filter_params(users), (rng=rng,))
+    else
+        merge(defaults, filter_params(globals), filter_params(users))
+    end
 end
 
 function validate_features(
