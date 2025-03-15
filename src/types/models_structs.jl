@@ -1,5 +1,5 @@
 # ---------------------------------------------------------------------------- #
-#                                    dataset                                   #
+#                               abstract types                                 #
 # ---------------------------------------------------------------------------- #
 """
 Abstract type for dataset configuration outputs
@@ -16,6 +16,35 @@ Abstract type for dataset train, test and validation indexing
 """
 abstract type AbstractIndexCollection end
 
+# """
+# Abstract type for modeldataset sub struct
+# """
+# abstract type AbstractTypeParams end
+
+"""
+Abstract type for model configuration and parameters
+"""
+abstract type AbstractModelSet end
+
+"""
+Abstract type for fitted model configurations
+"""
+abstract type AbstractModelConfig end
+
+# ---------------------------------------------------------------------------- #
+#                                     types                                    #
+# ---------------------------------------------------------------------------- #
+const Categorical = Union{AbstractString, Symbol, CategoricalValue}
+const Rule        = Union{SoleModels.ClassificationRule, SoleModels.DecisionSet}
+
+struct RulesParams
+    type         :: SoleModels.RuleExtractor
+    params       :: NamedTuple
+end
+
+# ---------------------------------------------------------------------------- #
+#                                  dataset info                                #
+# ---------------------------------------------------------------------------- #
 """
     DatasetInfo{F<:Base.Callable, R<:Real, I<:Integer, RNG<:AbstractRNG} <: AbstractDatasetConfig
 
@@ -66,7 +95,7 @@ struct DatasetInfo{F<:Base.Callable, R<:Real, I<:Integer, RNG<:AbstractRNG} <: A
     stratified  :: Bool
     nfolds      :: I
     rng         :: RNG
-    winparams   :: Union{NamedTuple, Nothing}
+    winparams   :: SoleFeatures.WinParams
     vnames      :: Union{Vector{Symbol}, Nothing}
 end
 
@@ -80,7 +109,7 @@ function DatasetInfo(
     stratified::Bool,
     nfolds::I,
     rng::RNG,
-    winparams::Union{NamedTuple, Nothing},
+    winparams::SoleFeatures.WinParams,
     vnames::Union{AbstractVector{<:Union{AbstractString,Symbol}}, Nothing}
 ) where {F<:Base.Callable, R<:Real, I<:Integer, RNG<:AbstractRNG}
     # Validate ratios
@@ -211,20 +240,17 @@ function Base.show(io::IO, ds::Dataset)
 end
 
 # ---------------------------------------------------------------------------- #
-#                           model consts & structs                             #
+#                                 ModelConfig                                  #
 # ---------------------------------------------------------------------------- #
-abstract type AbstractModelSet end
-abstract type AbstractModelConfig end
-
 mutable struct SymbolicModelSet <: AbstractModelSet
     type         :: Base.Callable
     config       :: NamedTuple
     params       :: NamedTuple
     features     :: Union{AbstractVector{<:Base.Callable}, Nothing}
-    winparams    :: NamedTuple
+    winparams    :: SoleFeatures.WinParams
     learn_method :: Union{Base.Callable, Tuple{Base.Callable, Base.Callable}}
     tuning       :: NamedTuple
-    rules_params :: NamedTuple
+    rulesparams  :: RulesParams
     preprocess   :: NamedTuple
 end
 
@@ -232,14 +258,17 @@ function Base.show(io::IO, ::MIME"text/plain", m::SymbolicModelSet)
     println(io, "SymbolicModelSet")
     println(io, "  Model type: ", m.type)
     println(io, "  Features:   ", isnothing(m.features) ? "None" : "$(length(m.features)) features")
-    println(io, "  Learning method:  ", typeof(m.learn_method))
-    println(io, "  Rules extraction: ", typeof(m.rules_params.type))
+    println(io, "  Learning method:  ", m.learn_method)
+    println(io, "  Rules extraction: ", typeof(m.rulesparams.type))
 end
 
 function Base.show(io::IO, m::SymbolicModelSet)
     print(io, "SymbolicModelSet(type=$(m.type), features=$(isnothing(m.features) ? "None" : length(m.features)))")
 end
 
+# ---------------------------------------------------------------------------- #
+#                              default parameters                              #
+# ---------------------------------------------------------------------------- #
 DecisionTreeClassifierModel(dtmodel :: SymbolicModelSet) = dtmodel
 RandomForestClassifierModel(dtmodel :: SymbolicModelSet) = dtmodel
 AdaBoostClassifierModel(dtmodel     :: SymbolicModelSet) = dtmodel
@@ -254,34 +283,6 @@ ModalAdaBoostModel(dtmodel          :: SymbolicModelSet) = dtmodel
 XGBoostClassifierModel(dtmodel      :: SymbolicModelSet) = dtmodel
 XGBoostRegressorModel(dtmodel       :: SymbolicModelSet) = dtmodel
 
-mutable struct ModelConfig <: AbstractModelConfig
-    setup      :: AbstractModelSet
-    ds         :: Dataset
-    classifier :: MLJ.Model
-    mach       :: Union{MLJ.Machine, AbstractVector{<:MLJ.Machine}}
-    model      :: Union{AbstractModel, AbstractVector{<:AbstractModel}}
-    rules      :: Union{AbstractDataFrame, AbstractVector{<:AbstractDataFrame}, Nothing}
-    accuracy   :: Union{AbstractFloat, AbstractVector{<:AbstractFloat}, Nothing}
-
-    function ModelConfig(
-        setup::AbstractModelSet,
-        ds::Dataset,
-        classifier::MLJ.Model,
-        mach::Union{MLJ.Machine, AbstractVector{<:MLJ.Machine}},
-        model::Union{AbstractModel, AbstractVector{<:AbstractModel}},
-    )
-        new(setup, ds, classifier, mach, model, nothing, nothing)
-    end
-end
-
-function Base.show(io::IO, mc::ModelConfig)
-    println(io, "ModelConfig:")
-    println(io, "    setup      =", mc.setup)
-    println(io, "    classifier =", mc.classifier)
-    println(io, "    rules      =", isnothing(mc.rules) ? "nothing" : string(mc.rules))
-    println(io, "    accuracy   =", isnothing(mc.accuracy) ? "nothing" : string(mc.accuracy))
-end
-
 const DEFAULT_FEATS = [maximum, minimum, mean, std]
 
 const DEFAULT_PREPROC = (
@@ -292,6 +293,9 @@ const DEFAULT_PREPROC = (
     nfolds      = 6,
     rng         = TaskLocalRNG()
 )
+
+const MODEL_KEYS = (:type, :params, :features, :winparams, :rulesparams)
+const PREPROC_KEYS = (:train_ratio, :valid_ratio, :shuffle, :stratified, :nfolds, :rng)
 
 const AVAIL_MODELS = Dict(
     :decisiontree_classifier => DecisionTreeClassifierModel,
@@ -322,24 +326,69 @@ const AVAIL_TREATMENTS = (:aggregate, :reducesize)
 # )
 
 # ---------------------------------------------------------------------------- #
+#                                 ModelData                                    #
+# ---------------------------------------------------------------------------- #
+mutable struct ModelConfig <: AbstractModelConfig
+    setup      :: AbstractModelSet
+    ds         :: Dataset
+    classifier :: MLJ.Model
+    mach       :: Union{MLJ.Machine, AbstractVector{<:MLJ.Machine}}
+    model      :: Union{AbstractModel, AbstractVector{<:AbstractModel}}
+    rules      :: Union{Rule, AbstractVector{<:Rule}, Nothing}
+    accuracy   :: Union{AbstractFloat, AbstractVector{<:AbstractFloat}, Nothing}
+
+    function ModelConfig(
+        setup::AbstractModelSet,
+        ds::Dataset,
+        classifier::MLJ.Model,
+        mach::Union{MLJ.Machine, AbstractVector{<:MLJ.Machine}},
+        model::Union{AbstractModel, AbstractVector{<:AbstractModel}},
+    )
+        new(setup, ds, classifier, mach, model, nothing, nothing)
+    end
+end
+
+function Base.show(io::IO, mc::ModelConfig)
+    println(io, "ModelConfig:")
+    println(io, "    setup      =", mc.setup)
+    println(io, "    classifier =", mc.classifier)
+    println(io, "    rules      =", isnothing(mc.rules) ? "nothing" : string(mc.rules))
+    println(io, "    accuracy   =", isnothing(mc.accuracy) ? "nothing" : string(mc.accuracy))
+end
+
+# ---------------------------------------------------------------------------- #
 #                                    rules                                     #
 # ---------------------------------------------------------------------------- #
-plainrule   = SoleModels.PlainRuleExtractor
-lumenrule   = SolePostHoc.LumenRuleExtractor
-intreesrule = SolePostHoc.InTreesRuleExtractor
+const AVAIL_RULES = (PlainRuleExtractor(), InTreesRuleExtractor())
 
-const AVAIL_RULES = (plainrule, lumenrule, intreesrule)
-
-const RULES_PARAMS = Dict{Base.Callable, NamedTuple}(
-    plainrule   => NamedTuple(),
-    lumenrule   => NamedTuple(),
-    intreesrule => (
+const RULES_PARAMS = Dict{SoleModels.RuleExtractor, NamedTuple}(
+    PlainRuleExtractor()   => (
+        compute_metrics         = false,
+        metrics_kwargs          = (;),
+        use_shortforms          = true,
+        use_leftmostlinearform  = nothing,
+        normalize               = false,
+        normalize_kwargs        = (allow_atom_flipping=true, rotate_commutatives=false),
+        scalar_simplification   = false,
+        force_syntaxtree        = false,
+        min_coverage            = nothing,
+        min_ncovered            = nothing,
+        min_ninstances          = nothing,
+        min_confidence          = nothing,
+        min_lift                = nothing,
+        metric_filter_callback  = nothing
+    ),
+    InTreesRuleExtractor() => (
         prune_rules             = true,
         pruning_s               = nothing,
         pruning_decay_threshold = nothing,
         rule_selection_method   = :CBC,
         rule_complexity_metric  = :natoms,
-        min_coverage            = nothing
+        max_rules               = -1,
+        min_coverage            = nothing,
+        silent                  = true,
+        rng                     = Random.MersenneTwister(1),
+        return_info             = false
     )
 )
 

@@ -10,6 +10,7 @@ function _traintest(
     map(m -> begin
         ds = prepare_dataset(X, y, m)
 
+        # TODO document this
         if haskey(m.params, :watchlist) && m.params.watchlist == makewatchlist
             m.params = merge(m.params, (watchlist = makewatchlist(ds),))
         end
@@ -176,17 +177,16 @@ See also [`ModelConfig`](@ref), [`prepare_dataset`](@ref), [`getmodel`](@ref), [
 function traintest(
     X::AbstractDataFrame, 
     y::AbstractVector; 
-    models::Union{NamedTuple, AbstractVector{<:NamedTuple}, Nothing}=nothing, 
-    globals::Union{NamedTuple, Nothing}=nothing,
-    preprocess::Union{NamedTuple, Nothing}=nothing,
+    models::Union{NamedTuple, AbstractVector{<:NamedTuple}, Nothing}=nothing,
+    kwargs...
 )::Union{ModelConfig, AbstractVector{ModelConfig}}
     check_dataframe_type(X) || throw(ArgumentError("DataFrame must contain only numeric values"))
     size(X, 1) == length(y) || throw(ArgumentError("Number of rows in DataFrame must match length of class labels"))
     isnothing(models) && throw(ArgumentError("At least one type must be specified"))
 
     if isa(models, NamedTuple)
-        first(_traintest(X, y; models=[models], globals, preprocess))
+        first(_traintest(X, y; models=[models], kwargs...))
     else
-        _traintest(X, y; models=models, globals, preprocess)
+        _traintest(X, y; models=models, kwargs...)
     end
 end

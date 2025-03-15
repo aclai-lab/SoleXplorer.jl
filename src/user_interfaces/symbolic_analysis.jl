@@ -1,7 +1,13 @@
 function _symbolic_analysis!(tt::AbstractVector{ModelConfig})
     for t in tt
-        t.rules = get_rules(t.setup, t.model, t.ds);
-        t.accuracy = get_predict(t.mach, t.ds);
+        t.rules = SolePostHoc.modalextractrules(
+            t.setup.rulesparams.type,
+            t.model,
+            t.ds.Xtrain,
+            t.ds.ytrain;
+            t.setup.rulesparams.params...
+        )
+        t.accuracy = get_predict(t.mach, t.ds)
     end
 end
 
@@ -11,7 +17,8 @@ function symbolic_analysis(
     models::Union{NamedTuple, AbstractVector{<:NamedTuple}, Nothing}=nothing, 
     globals::Union{NamedTuple, Nothing}=nothing,
     preprocess::Union{NamedTuple, Nothing}=nothing,
-)::Union{ModelConfig, AbstractVector{ModelConfig}}
+# )::Union{ModelConfig, AbstractVector{ModelConfig}}
+)
     tt = traintest(X, y; models, globals, preprocess)
 
     if isa(tt, AbstractVector)
@@ -22,3 +29,4 @@ function symbolic_analysis(
 
     return tt
 end
+

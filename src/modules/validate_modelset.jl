@@ -1,9 +1,36 @@
-function check_unknown_params(params, default_params, source)
+# ---------------------------------------------------------------------------- #
+#                                  utilities                                   #
+# ---------------------------------------------------------------------------- #
+function check_params(
+    params::Union{NamedTuple, Nothing},
+    allowed_keys::Tuple
+)
     isnothing(params) && return
-    unknown = setdiff(keys(params), keys(default_params))
-    isempty(unknown) || throw(ArgumentError("Unknown parameters in $source: $unknown"))
-    return nothing
+
+    unknown_keys = setdiff(keys(params), allowed_keys)
+    isempty(unknown_keys) || throw(ArgumentError("Unknown fields: $unknown_keys"))
 end
+
+filter_params(p) = isnothing(p) ? NamedTuple() : p
+
+function get_type(
+    params::Union{NamedTuple, Nothing},
+    avail_types::Tuple
+)
+    isnothing(params) && return nothing
+    p_type = get(params, :type, nothing)
+    isnothing(p_type) && return nothing
+
+    p_type ∈ avail_types || throw(ArgumentError("Type $p_type not found in available types"))
+    return p_type
+end
+
+# function check_unknown_params(params, default_params, source)
+#     isnothing(params) && return
+#     unknown = setdiff(keys(params), keys(default_params))
+#     isempty(unknown) || throw(ArgumentError("Unknown parameters in $source: $unknown"))
+#     return nothing
+# end
 
 function get_function(params, avail_functions)
     isnothing(params) && return
@@ -12,16 +39,16 @@ function get_function(params, avail_functions)
     return isempty(funcs) ? nothing : first(funcs)
 end
 
+# ---------------------------------------------------------------------------- #
+#                             validating functions                             #
+# ---------------------------------------------------------------------------- #
 function validate_model(model::Symbol, y::DataType)
-    # haskey(AVAIL_MODELS, model) || throw(ArgumentError("Model $model not found in available models"))
-    # return AVAIL_MODELS[model]()
-
     if haskey(AVAIL_MODELS, model)
         return AVAIL_MODELS[model]()
     elseif eltype(y) <: Number
         model_r = Symbol(model, "_regressor")
         haskey(AVAIL_MODELS, model_r) && return AVAIL_MODELS[model_r]()
-    elseif eltype(y) <: CategoricalValue
+    elseif eltype(y) <: Categorical
         model_c = Symbol(model, "_classifier")
         haskey(AVAIL_MODELS, model_c) && return AVAIL_MODELS[model_c]()        
     end
@@ -34,10 +61,8 @@ function validate_params(
     globals::Union{NamedTuple, Nothing},
     users::Union{NamedTuple, Nothing},
 )        
-    check_unknown_params(globals, defaults, "globals")
-    check_unknown_params(users, defaults, "users")
-
-    filter_params(p) = isnothing(p) ? NamedTuple() : NamedTuple(k => v for (k,v) in pairs(p) if haskey(defaults, k))
+    check_params(globals, keys(defaults))
+    check_params(users, keys(defaults))
 
     merge(defaults, filter_params(globals), filter_params(users))
 end
@@ -47,90 +72,93 @@ function validate_features(
     globals::Union{AbstractVector, Nothing},
     users::Union{AbstractVector, Nothing}
 )
-    features = if isnothing(users) && isnothing(globals)
-        defaults
-    elseif isnothing(users)
-        globals
-    else
-        users
-    end
+    # select features with proper priority: defaults -> globals -> users
+    features = isnothing(users) ? isnothing(globals) ? defaults : globals : users
 
+    # check if all features are functions
     all(f -> f isa Base.Callable, features) || throw(ArgumentError("All features must be functions"))
 
     return features
 end
 
 function validate_winparams(
-    defaults::NamedTuple,
+    defaults::SoleFeatures.WinParams,
     globals::Union{NamedTuple, Nothing},
     users::Union{NamedTuple, Nothing},
     treatment::Symbol
-)
-    global_win = get_function(globals, SoleFeatures.AVAIL_WINS)
-    user_win = get_function(users, SoleFeatures.AVAIL_WINS)
-    
-    type = if isnothing(user_win) && isnothing(global_win)
-        defaults.type
-    elseif isnothing(user_win)
-        defaults = SoleFeatures.WIN_PARAMS[global_win]
-        filtered_globals = isnothing(globals) ? nothing : NamedTuple(k => v for (k,v) in pairs(globals) if k != :type)
-        # filtered_globals = @delete globals.type
-        check_unknown_params(filtered_globals, defaults, "global_winparams")
-        haskey(globals, :type) && globals.type
-    else
-        defaults = SoleFeatures.WIN_PARAMS[user_win]
-        filtered_users = isnothing(users) ? nothing : NamedTuple(k => v for (k,v) in pairs(users) if k != :type)
-        # filtered_users = @delete users.type
-        check_unknown_params(filtered_users, defaults, "user_winparams")
-        haskey(users, :type) && users.type
-    end
+)::SoleFeatures.WinParams
+    # check if globals and users are valid TypeParams
+    check_params(globals, (:type, :params))
+    check_params(users, (:type, :params))
 
-    filter_params(p) = isnothing(p) ? NamedTuple() : NamedTuple(k => v for (k,v) in pairs(p) if haskey(defaults, k) && k != :type)
+    # get type
+    global_type = get_type(globals, SoleFeatures.AVAIL_WINS)
+    user_type = get_type(users, SoleFeatures.AVAIL_WINS)
+
+    # select the final type with proper priority: defaults -> globals -> users
+    type = isnothing(user_type) ? isnothing(global_type) ? defaults.type : global_type : user_type
+
+    def_params = SoleFeatures.WIN_PARAMS[type]
+
+    # validate parameters
+    global_params = isnothing(globals) ? NamedTuple() : (haskey(globals, :params) ? begin
+        check_params(globals.params, keys(SoleFeatures.WIN_PARAMS[global_type]))
+        NamedTuple(k => v for (k, v) in pairs(globals.params))
+    end : NamedTuple())
+    user_params = isnothing(users) ? NamedTuple() : (haskey(users, :params) ? begin
+        check_params(users.params, keys(SoleFeatures.WIN_PARAMS[user_type]))
+        NamedTuple(k => v for (k, v) in pairs(users.params))
+    end : NamedTuple())
 
     params = merge(
-        NamedTuple(k => v for (k,v) in pairs(defaults) if k != :type),
-        filter_params(globals),
-        filter_params(users)
+        def_params,
+        global_params,
+        user_params
     )
 
+    # ModalDecisionTrees package needs at least 3 windows to work properly
     if treatment == :reducesize && haskey(params, :nwindows)
         params.nwindows ≥ 3 || throw(ArgumentError("For :reducesize treatment, nwindows must be ≥ 3"))
     end
 
-    return (type = type, params...)
+    return SoleFeatures.WinParams(type, params)
 end
 
-function validate_rules_params(
-    defaults::NamedTuple,
+function validate_rulesparams(
+    defaults::RulesParams,
     globals::Union{NamedTuple, Nothing},
     users::Union{NamedTuple, Nothing}
-)
-    global_rule = get_function(globals, SoleXplorer.AVAIL_RULES)
-    user_rule = get_function(users, SoleXplorer.AVAIL_RULES)
-    
-    type = if isnothing(user_rule) && isnothing(global_rule)
-        defaults.type
-    elseif isnothing(user_rule)
-        defaults = SoleXplorer.RULES_PARAMS[global_rule]
-        filtered_globals = isnothing(globals) ? nothing : NamedTuple(k => v for (k,v) in pairs(globals) if k != :type)
-        check_unknown_params(filtered_globals, defaults, "global_rules_params")
-        haskey(globals, :type) && globals.type
-    else
-        defaults = SoleXplorer.RULES_PARAMS[user_rule]
-        filtered_users = isnothing(users) ? nothing : NamedTuple(k => v for (k,v) in pairs(users) if k != :type)
-        check_unknown_params(filtered_users, defaults, "user_rules_params")
-        haskey(users, :type) && users.type
-    end
+)::RulesParams
+    # check if globals and users are valid TypeParams
+    check_params(globals, (:type, :params))
+    check_params(users, (:type, :params))
 
-    filter_params(p) = isnothing(p) ? NamedTuple() : NamedTuple(k => v for (k,v) in pairs(p) if haskey(defaults, k) && k != :type)
+    # get type
+    global_type = get_type(globals, SoleXplorer.AVAIL_RULES)
+    user_type = get_type(users, SoleXplorer.AVAIL_RULES)
+
+    # select the final type with proper priority: defaults -> globals -> users
+    type = isnothing(user_type) ? isnothing(global_type) ? defaults.type : global_type : user_type
+
+    def_params = SoleXplorer.RULES_PARAMS[type]
+
+    # validate parameters
+    global_params = isnothing(globals) ? NamedTuple() : haskey(globals, :params) ? begin
+        check_params(globals.params, keys(SoleXplorer.RULES_PARAMS[global_type]))
+        NamedTuple(k => v for (k, v) in pairs(globals.params))
+    end : NamedTuple()
+    user_params = isnothing(users) ? NamedTuple() : haskey(users, :params) ? begin
+        check_params(users.params, keys(SoleXplorer.RULES_PARAMS[user_type]))
+        NamedTuple(k => v for (k, v) in pairs(users.params))
+    end : NamedTuple()
 
     params = merge(
-        NamedTuple(k => v for (k,v) in pairs(defaults) if k != :type),
-        filter_params(globals),
-        filter_params(users)
+        def_params,
+        global_params,
+        user_params
     )
 
-    return (type = type, params...)
+    return RulesParams(type, params)
 end
 
 function validate_tuning_type(
@@ -218,7 +246,7 @@ function validate_preprocess_params(
     preprocess::Union{NamedTuple, Nothing}
 )
     isnothing(preprocess) && return defaults
-    check_unknown_params(preprocess, defaults, "preprocess")
+    check_params(preprocess, keys(defaults))
     return merge(defaults, preprocess)
 end
 
@@ -228,10 +256,15 @@ function validate_modelset(
     globals::Union{NamedTuple, Nothing},
     preprocess::Union{NamedTuple, Nothing}
 )
+    # check globals and preprocess keys
+    check_params(globals, MODEL_KEYS)
+    check_params(preprocess, PREPROC_KEYS)
+
     modelsets = SymbolicModelSet[]
 
     for m in models
         haskey(m, :type) || throw(ArgumentError("Each model specification must contain a 'type' field"))
+        check_params(m, MODEL_KEYS)
         model = validate_model(m.type, y)
 
         model.params = validate_params(
@@ -239,7 +272,8 @@ function validate_modelset(
             isnothing(globals) ? nothing : get(globals, :params, nothing),
             get(m, :params, nothing)
         )
-        # ModalDecisionTrees needs features to be passed also in model params
+
+        # ModalDecisionTrees package needs features to be passed also in model params
         if isnothing(model.features)
             features = validate_features(
                 model.params.features,
@@ -263,10 +297,10 @@ function validate_modelset(
             model.config.treatment
         )
 
-        model.rules_params = validate_rules_params(
-            model.rules_params,
-            isnothing(globals) ? nothing : get(globals, :rules_params, nothing),
-            get(m, :rules_params, nothing)
+        model.rulesparams = validate_rulesparams(
+            model.rulesparams,
+            isnothing(globals) ? nothing : get(globals, :rulesparams, nothing),
+            get(m, :rulesparams, nothing)
         )
 
         model.tuning = validate_tuning(

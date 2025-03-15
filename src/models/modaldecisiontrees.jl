@@ -31,7 +31,7 @@ function ModalDecisionTreeModel()
         feature_importance     = :split,
     )
 
-    winparams = (type=SoleBase.adaptivewindow, nwindows=20)
+    winparams = SoleFeatures.WinParams(SoleBase.adaptivewindow, NamedTuple())
 
     learn_method = (
         (mach, X, y) -> ((_, dt) = MLJ.report(mach).sprinkle(X, y); dt),
@@ -48,7 +48,7 @@ function ModalDecisionTreeModel()
         ]
     )
 
-    rules_params = (; type = SoleModels.PlainRuleExtractor)
+    rulesparams = RulesParams(PlainRuleExtractor(), NamedTuple())
 
     return SymbolicModelSet(
         type,
@@ -58,7 +58,7 @@ function ModalDecisionTreeModel()
         winparams,
         learn_method,
         tuning,
-        rules_params,
+        rulesparams,
         DEFAULT_PREPROC
     )
 end
@@ -93,7 +93,7 @@ function ModalRandomForestModel()
         feature_importance     = :split
     )
 
-    winparams = (type=SoleBase.adaptivewindow, nwindows=20)
+    winparams = SoleFeatures.WinParams(SoleBase.adaptivewindow, NamedTuple())
 
     learn_method = (
         (mach, X, y) -> ((_, dt) = MLJ.report(mach).sprinkle(X, y); dt),
@@ -110,7 +110,7 @@ function ModalRandomForestModel()
         ]
     )
 
-    rules_params = (; type = SolePostHoc.InTreesRuleExtractor)
+    rulesparams = RulesParams(InTreesRuleExtractor(), NamedTuple())
 
     return SymbolicModelSet(
         type,
@@ -120,7 +120,7 @@ function ModalRandomForestModel()
         winparams,
         learn_method,
         tuning,
-        rules_params,
+        rulesparams,
         DEFAULT_PREPROC
     )
 end
@@ -154,7 +154,7 @@ function ModalAdaBoostModel()
         n_iter                 = 10
     )
 
-    winparams = (type=SoleBase.adaptivewindow, nwindows=20)
+    winparams = SoleFeatures.WinParams(SoleBase.adaptivewindow, NamedTuple())
 
     learn_method = (
         (mach, X, y) -> ((_, dt) = MLJ.report(mach).sprinkle(X, y); dt),
@@ -171,7 +171,7 @@ function ModalAdaBoostModel()
         ]
     )
 
-    rules_params = (; type = SolePostHoc.InTreesRuleExtractor)
+    rulesparams = RulesParams(InTreesRuleExtractor(), NamedTuple())
 
     return SymbolicModelSet(
         type,
@@ -181,7 +181,7 @@ function ModalAdaBoostModel()
         winparams,
         learn_method,
         tuning,
-        rules_params,
+        rulesparams,
         DEFAULT_PREPROC
     )
 end

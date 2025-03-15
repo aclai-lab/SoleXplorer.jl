@@ -20,5 +20,18 @@ https://github.com/nredell/ShapML.jl
 - Suite di machine learning H2O-3
 - Estendere stratified cv a tutti i metodi
 
-Unificare struttura dati feature selection con solexplorer
+#### Importanza Massima
 
+- Unificare struttura dati feature selection con solexplorer: in features selection uso una matrice e un vettore di Xinfo.
+  in realtà la struttura Dataset ha già una sorta di Xinfo dove salvo tutti i dati.
+
+- passare a matrici?
+  sicuramente salvare una matrice anzichè un dataframe è meglio, ma poi quando si va su MLJ dobbiamo tornare a DataFrame.
+  da verificare con BenchmarkTools
+
+- In prepare dataset, verificare se il dataset è bilanciato.
+  se non lo, è da errore e suggerisce di lanciare prepare dataset con l'opzione balance=true.
+  Se in prepare dataset fornisco l'opzione balance=true, che di default sarà false,
+  esegue una funzione che verifica il numero di istanze del gruppo più piccolo,
+  e prende quell'esatto numero di istanze (a random) dagli altri gruppi con maggiori istanze,
+  restituendo un dataset bilanciato.

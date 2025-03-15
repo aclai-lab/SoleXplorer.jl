@@ -74,7 +74,7 @@ function XGBoostClassifierModel()
         eval_metric                 = String[]
     )
 
-    winparams = (; type=SoleBase.wholewindow)
+    winparams = SoleFeatures.WinParams(SoleBase.wholewindow, NamedTuple())
 
     learn_method = (
         (mach, X, y) -> begin
@@ -109,7 +109,7 @@ function XGBoostClassifierModel()
         ]
     )
 
-    rules_params = (; type = SolePostHoc.InTreesRuleExtractor)
+    rulesparams = RulesParams(InTreesRuleExtractor(), NamedTuple())
 
     return SymbolicModelSet(
         type,
@@ -119,7 +119,7 @@ function XGBoostClassifierModel()
         winparams,
         learn_method,
         tuning,
-        rules_params,
+        rulesparams,
         DEFAULT_PREPROC
     )
 end

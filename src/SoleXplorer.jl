@@ -40,9 +40,16 @@ using Reexport
 @reexport using SoleFeatures: stretch_high, entropy_pairs, rs_range, dfa, low_freq_power, centroid_freq, transition_variance, periodicity
 @reexport using SoleFeatures: base_set, catch9, catch22_set, complete_set
 
+@reexport using SoleFeatures: movingwindow, wholewindow, splitwindow, adaptivewindow
+
+@reexport using SoleModels: PlainRuleExtractor
+@reexport using SolePostHoc: InTreesRuleExtractor
+
 @reexport using StatsBase: cov
 
-@reexport using SoleFeatures: movingwindow, wholewindow, splitwindow, adaptivewindow
+# utility from other packages
+@reexport using SoleData: load_arff_dataset
+@reexport using Random: seed!, Xoshiro, MersenneTwister
 
 include("utils/code_dataframe.jl")
 export code_dataframe
@@ -73,9 +80,6 @@ export traintest
 
 include("user_interfaces/symbolic_analysis.jl")
 export symbolic_analysis
-
-include("user_interfaces/rules.jl")
-export get_rules
 
 include("user_interfaces/predict.jl")
 export get_predict

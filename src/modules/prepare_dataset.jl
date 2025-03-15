@@ -204,7 +204,7 @@ function prepare_dataset(
     nfolds::Int=6,
     rng::AbstractRNG=Random.TaskLocalRNG(),
     # model.winparams
-    winparams::Union{NamedTuple,Nothing}=nothing,
+    winparams::SoleFeatures.WinParams,
     vnames::Union{AbstractVector{<:Union{AbstractString,Symbol}},Nothing}=nothing,
 )
     # check parameters
@@ -252,7 +252,6 @@ function prepare_dataset(
     if all(t -> t <: Number, column_eltypes)
         return SoleXplorer.Dataset(
             DataFrame(vnames .=> eachcol(X)), y,
-            # _partition(y, validation, train_ratio, valid_ratio, shuffle, stratified, nfolds, rng),
             _partition(y, train_ratio, valid_ratio, shuffle, stratified, nfolds, rng),
             ds_info
         )
@@ -260,8 +259,8 @@ function prepare_dataset(
     elseif all(t -> t <: AbstractVector{<:Number}, column_eltypes)
         return SoleXplorer.Dataset(
             # if winparams is nothing, then leave the dataframe as it is
-            isnothing(winparams) ? DataFrame(vnames .=> eachcol(X)) : SoleFeatures._treatment(X, vnames, treatment, features, winparams), y,
-            # _partition(y, validation, train_ratio, valid_ratio, shuffle, stratified, nfolds, rng),
+            isnothing(winparams) ? DataFrame(vnames .=> eachcol(X)) : 
+                SoleFeatures._treatment(X, vnames, treatment, features, winparams), y,
             _partition(y, train_ratio, valid_ratio, shuffle, stratified, nfolds, rng),
             ds_info
         )

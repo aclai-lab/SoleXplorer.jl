@@ -20,7 +20,7 @@ function DecisionTreeClassifierModel()
         rng                    = Random.TaskLocalRNG()
     )
 
-    winparams = (; type=SoleBase.wholewindow)
+    winparams = SoleFeatures.WinParams(SoleBase.wholewindow, NamedTuple())
 
     learn_method = (
         (mach, X, y) -> (dt = solemodel(MLJ.fitted_params(mach).tree); apply!(dt, X, y); dt),
@@ -37,7 +37,7 @@ function DecisionTreeClassifierModel()
         ]
     )
 
-    rules_params = (; type = SoleModels.PlainRuleExtractor)
+    rulesparams = RulesParams(PlainRuleExtractor(), NamedTuple())
 
     return SymbolicModelSet(
         type,
@@ -47,7 +47,7 @@ function DecisionTreeClassifierModel()
         winparams,
         learn_method,
         tuning,
-        rules_params,
+        rulesparams,
         DEFAULT_PREPROC
     )
 end
@@ -68,7 +68,7 @@ function RandomForestClassifierModel()
         rng                 = Random.TaskLocalRNG()
     )
 
-    winparams = (; type=SoleBase.wholewindow)
+    winparams = SoleFeatures.WinParams(SoleBase.wholewindow, NamedTuple())
 
     learn_method = (
         (mach, X, y) -> begin
@@ -97,7 +97,7 @@ function RandomForestClassifierModel()
         ]
     )
 
-    rules_params = (; type = SolePostHoc.InTreesRuleExtractor)
+    rulesparams = RulesParams(InTreesRuleExtractor(), NamedTuple())
 
     return SymbolicModelSet(
         type,
@@ -107,7 +107,7 @@ function RandomForestClassifierModel()
         winparams,
         learn_method,
         tuning,
-        rules_params,
+        rulesparams,
         DEFAULT_PREPROC
     )
 end
@@ -122,7 +122,7 @@ function AdaBoostClassifierModel()
         rng                = Random.TaskLocalRNG()
     )
 
-    winparams = (; type=SoleBase.wholewindow)
+    winparams = SoleFeatures.WinParams(SoleBase.wholewindow, NamedTuple())
 
     learn_method = (
         (mach, X, y) -> begin
@@ -153,7 +153,7 @@ function AdaBoostClassifierModel()
         ]
     )
 
-    rules_params = (; type = SolePostHoc.InTreesRuleExtractor)
+    rulesparams = RulesParams(InTreesRuleExtractor(), NamedTuple())
 
     return SymbolicModelSet(
         type,
@@ -163,7 +163,7 @@ function AdaBoostClassifierModel()
         winparams,
         learn_method,
         tuning,
-        rules_params,
+        rulesparams,
         DEFAULT_PREPROC
     )
 end
@@ -185,7 +185,7 @@ function DecisionTreeRegressorModel()
         rng                    = Random.TaskLocalRNG()
     )
 
-    winparams = (; type=SoleBase.wholewindow)
+    winparams = SoleFeatures.WinParams(SoleBase.wholewindow, NamedTuple())
 
     learn_method = (
         (mach, X, y) -> (dt = solemodel(MLJ.fitted_params(mach).tree); apply!(dt, X, y); dt),
@@ -202,7 +202,7 @@ function DecisionTreeRegressorModel()
         ]
     )
 
-    rules_params = (; type = SoleModels.PlainRuleExtractor)
+    rulesparams = RulesParams(PlainRuleExtractor(), NamedTuple())
 
     return SymbolicModelSet(
         type,
@@ -212,7 +212,7 @@ function DecisionTreeRegressorModel()
         winparams,
         learn_method,
         tuning,
-        rules_params,
+        rulesparams,
         DEFAULT_PREPROC
     )
 end
@@ -233,7 +233,7 @@ function RandomForestRegressorModel()
         rng                 = Random.TaskLocalRNG()
     )
 
-    winparams = (; type=SoleBase.wholewindow)
+    winparams = SoleFeatures.WinParams(SoleBase.wholewindow, NamedTuple())
 
     learn_method = (
         (mach, X, y) -> begin
@@ -260,7 +260,7 @@ function RandomForestRegressorModel()
         ]
     )
 
-    rules_params = (; type = SolePostHoc.InTreesRuleExtractor)
+    rulesparams = RulesParams(InTreesRuleExtractor(), NamedTuple())
 
     return SymbolicModelSet(
         type,
@@ -270,7 +270,7 @@ function RandomForestRegressorModel()
         winparams,
         learn_method,
         tuning,
-        rules_params,
+        rulesparams,
         DEFAULT_PREPROC
     )
 end
