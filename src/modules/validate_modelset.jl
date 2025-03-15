@@ -130,7 +130,8 @@ end
 function validate_rulesparams(
     defaults::RulesParams,
     globals::Union{NamedTuple, Nothing},
-    users::Union{NamedTuple, Nothing}
+    users::Union{NamedTuple, Nothing},
+    rng::Union{Nothing, AbstractRNG}
 )::RulesParams
     # check if globals and users are valid TypeParams
     check_params(globals, (:type, :params))
@@ -155,11 +156,9 @@ function validate_rulesparams(
         NamedTuple(k => v for (k, v) in pairs(users.params))
     end : NamedTuple()
 
-    params = merge(
-        def_params,
-        global_params,
-        user_params
-    )
+    params = isnothing(rng) && haskey(def_params, :rng) ?
+        merge(def_params, global_params, user_params) :
+        merge(def_params, global_params, user_params, (rng=rng,))
 
     return RulesParams(type, params)
 end
@@ -311,7 +310,8 @@ function validate_modelset(
         model.rulesparams = validate_rulesparams(
             model.rulesparams,
             isnothing(globals) ? nothing : get(globals, :rulesparams, nothing),
-            get(m, :rulesparams, nothing)
+            get(m, :rulesparams, nothing),
+            rng
         )
 
         model.tuning = validate_tuning(

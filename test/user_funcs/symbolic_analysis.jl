@@ -19,4 +19,4 @@ y = y[chosen_rows]
 end
 
 model = symbolic_analysis(X, y; models=(type=:decisiontree,), preprocess=(;rng=Xoshiro(11)))
-model = symbolic_analysis(X, y; models=(type=:randomforest,), preprocess=(;rng=Xoshiro(11)));
+model = symbolic_analysis(X, y; models=(type=:randomforest,), preprocess=(;rng=Xoshiro(11)))
