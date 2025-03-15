@@ -75,7 +75,7 @@ export fitmodel, testmodel
 include("modules/validate_modelset.jl")
 export validate_modelset
 
-include("user_interfaces/traintest.jl")
+include("modules/traintest.jl")
 export traintest
 
 include("user_interfaces/symbolic_analysis.jl")

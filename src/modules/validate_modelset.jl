@@ -60,11 +60,14 @@ function validate_params(
     defaults::NamedTuple,
     globals::Union{NamedTuple, Nothing},
     users::Union{NamedTuple, Nothing},
+    rng::Union{Nothing, AbstractRNG}
 )        
     check_params(globals, keys(defaults))
     check_params(users, keys(defaults))
 
-    merge(defaults, filter_params(globals), filter_params(users))
+    isnothing(rng) && haskey(defaults, :rng) ?
+        merge(defaults, filter_params(globals), filter_params(users)) :
+        merge(defaults, filter_params(globals), filter_params(users), (rng=rng,))
 end
 
 function validate_features(
@@ -260,6 +263,13 @@ function validate_modelset(
     check_params(globals, MODEL_KEYS)
     check_params(preprocess, PREPROC_KEYS)
 
+    # grab rng form preprocess and feed it to every process
+    rng = if isnothing(preprocess) 
+        nothing
+    else
+        haskey(preprocess, :rng) ? preprocess.rng : nothing
+    end
+
     modelsets = SymbolicModelSet[]
 
     for m in models
@@ -270,7 +280,8 @@ function validate_modelset(
         model.params = validate_params(
             model.params,
             isnothing(globals) ? nothing : get(globals, :params, nothing),
-            get(m, :params, nothing)
+            get(m, :params, nothing),
+            rng
         )
 
         # ModalDecisionTrees package needs features to be passed also in model params

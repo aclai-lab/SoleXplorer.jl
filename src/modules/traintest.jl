@@ -14,7 +14,7 @@ function _traintest(
         if haskey(m.params, :watchlist) && m.params.watchlist == makewatchlist
             m.params = merge(m.params, (watchlist = makewatchlist(ds),))
         end
-        
+
         classifier = getmodel(m)
         mach = fitmodel(m, classifier, ds)
         model = testmodel(m, mach, ds)

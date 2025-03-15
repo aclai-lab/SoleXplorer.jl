@@ -12,9 +12,11 @@ X = X[chosen_rows, chosen_cols]
 y = y[chosen_rows]
 
 @testset "check every model" begin
-    
+    model = symbolic_analysis(X, y; models=(type=:decisiontree,), preprocess=(;rng))
+    @test model.classifier == SoleXplorer.DecisionTreeClassifier
+    model = symbolic_analysis(X, y; models=(type=:randomforest,), preprocess=(;rng))
 
 end
 
-model = symbolic_analysis(X, y; models=(type=:decisiontree,), preprocess=(;rng))
-model = symbolic_analysis(X, y; models=(type=:randomforest,), preprocess=(;rng))
+model = symbolic_analysis(X, y; models=(type=:decisiontree,), preprocess=(;rng=Xoshiro(11)))
+model = symbolic_analysis(X, y; models=(type=:randomforest,), preprocess=(;rng=Xoshiro(11)));
