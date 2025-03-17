@@ -19,17 +19,16 @@ y = y[chosen_rows]
     @test_nowarn model = symbolic_analysis(X, y; models=(type=:adaboost,), preprocess=(;rng=Xoshiro(11)))
     @test_nowarn model = symbolic_analysis(X, y; models=(type=:adaboost_classifier,), preprocess=(;rng=Xoshiro(11)))
 
+    # TODO Marco, I've made a small hack to let PostHoc working with XgBoost singular behavior:
+    # It's usual that XgBoost creates trees with no leafs.
+    # Please check PostHoc intrees.jl, line 184, branch devPaso
+    model = symbolic_analysis(X, y; models=(type=:xgboost,), preprocess=(;rng=Xoshiro(11)))
+    model = symbolic_analysis(X, y; models=(type=:xgboost_classifier,), preprocess=(;rng=Xoshiro(11)))
+end
+
+# non funzionano
     # TODO Marco, modalextractrules is not working with modal models, 
     # I don't know if it's a SoleXplorer fault or PostHoc is still in developement with that
     model = symbolic_analysis(X, y; models=(type=:modaldecisiontree,), preprocess=(;rng=Xoshiro(11)))
     model = symbolic_analysis(X, y; models=(type=:modalrandomforest,), preprocess=(;rng=Xoshiro(11)))
     model = symbolic_analysis(X, y; models=(type=:modaladaboost,), preprocess=(;rng=Xoshiro(11)))
-
-    # TODO Marco, I've made a small hack to let PostHoc working with XgBoost singular behavior:
-    # It's usual that XgBoost creates trees with no leafs.
-    # Please check PostHoc intrees.jl, line 184, branch devPaso
-    @test_nowarn model = symbolic_analysis(X, y; models=(type=:xgboost,), preprocess=(;rng=Xoshiro(11)))
-    @test_nowarn model = symbolic_analysis(X, y; models=(type=:xgboost_classifier,), preprocess=(;rng=Xoshiro(11)))
-end
-
-
