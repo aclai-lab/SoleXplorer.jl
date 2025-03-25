@@ -101,50 +101,54 @@ Supports both classification and regression tasks, with options for data treatme
 - `ArgumentError`: If input parameters are invalid or unsupported column types are encountered.
 """
 
-function prepare_dataset(
-    X::AbstractDataFrame,
+function _prepare_dataset(
+    df::AbstractDataFrame,
     y::AbstractVector;
     # model.config
-    algo::Symbol=:classification,
-    treatment::Symbol=:aggregate,
-    features::AbstractVector{<:Base.Callable}=DEFAULT_FEATS,
-    # validation::Bool=false,
+    algo::Symbol,
+    treatment::Symbol,
+    features::AbstractVector{<:Base.Callable},
     # model.preprocess
-    train_ratio::Float64=0.8,
-    valid_ratio::Float64=1.0,
-    shuffle::Bool=true,
-    stratified::Bool=false,
-    nfolds::Int=6,
-    rng::AbstractRNG=Random.TaskLocalRNG(),
+    train_ratio::Float64,
+    valid_ratio::Float64,
+    shuffle::Bool,
+    stratified::Bool,
+    nfolds::Int,
+    rng::AbstractRNG,
     # model.winparams
     winparams::SoleFeatures.WinParams,
-    vnames::Union{AbstractVector{<:Union{AbstractString,Symbol}},Nothing}=nothing,
-)
+    vnames::Union{SoleFeatures.VarNames,Nothing}=nothing,
+)::Dataset
+    X = Matrix(df)
     # check parameters
     check_dataset_type(X) || throw(ArgumentError("DataFrame must contain only numeric values"))
     size(X, 1) == length(y) || throw(ArgumentError("Number of rows in DataFrame must match length of class labels"))
     treatment in AVAIL_TREATMENTS || throw(ArgumentError("Treatment must be one of: $AVAIL_TREATMENTS"))
 
     if algo == :regression
-        y isa AbstractVector{<:Number} || throw(ArgumentError("Regression requires a numeric target variable"))
+        y isa AbstractVector{<:Reg_Value} || throw(ArgumentError("Regression requires a numeric target variable"))
         y isa AbstractFloat || (y = Float64.(y))
     elseif algo == :classification
-        y isa AbstractVector{<:AbstractFloat} && throw(ArgumentError("Classification requires a categorical target variable"))
+        y isa AbstractVector{<:Cat_Value} || throw(ArgumentError("Classification requires a categorical target variable"))
         y isa CategoricalArray || (y = coerce(y, MLJ.Multiclass))
     else
         throw(ArgumentError("Algorithms supported, :regression and :classification"))
     end
 
     if isnothing(vnames)
-        vnames = names(X)
+        vnames = names(df)
     else
         size(X, 2) == length(vnames) || throw(ArgumentError("Number of columns in DataFrame must match length of variable names"))
-        vnames = eltype(vnames) <: Symbol ? string.(vnames) : vnames
+        vnames isa AbstractVector{<:AbstractString} || (vnames = string.(vnames))
     end
 
     hasnans(X) && @warn "DataFrame contains NaN values"
 
     column_eltypes = eltype.(eachcol(X))
+
+    if all(t -> t <: AbstractVector{<:Number}, column_eltypes) && !isnothing(winparams)
+        X, vnames = SoleFeatures._treatment(X, vnames, treatment, features, winparams)
+    end
 
     ds_info = DatasetInfo(
         algo,
@@ -157,47 +161,26 @@ function prepare_dataset(
         nfolds,
         rng,
         winparams,
-        vnames,
-        # validation
+        vnames
     )
 
-    # case 1: dataframe with numeric columns
-    if all(t -> t <: Number, column_eltypes)
-        return SoleXplorer.Dataset(
-            DataFrame(vnames .=> eachcol(X)), y,
-            _partition(y, train_ratio, valid_ratio, shuffle, stratified, nfolds, rng),
-            ds_info
-        )
-    # case 2: dataframe with vector-valued columns
-    elseif all(t -> t <: AbstractVector{<:Number}, column_eltypes)
-        return SoleXplorer.Dataset(
-            # if winparams is nothing, then leave the dataframe as it is
-            isnothing(winparams) ? DataFrame(vnames .=> eachcol(X)) : 
-                SoleFeatures._treatment(X, vnames, treatment, features, winparams), y,
-            _partition(y, train_ratio, valid_ratio, shuffle, stratified, nfolds, rng),
-            ds_info
-        )
-    else
-        throw(ArgumentError("Column type not yet supported"))
-    end
+    return Dataset(
+        X, y,
+        _partition(y, train_ratio, valid_ratio, shuffle, stratified, nfolds, rng),
+        ds_info
+    )
 end
 
 function prepare_dataset(
     X::AbstractDataFrame,
     y::AbstractVector,
     model::AbstractModelSetup
-)
-    # check if it's needed also validation set
-    # validation = haskey(VALIDATION, model.type) && getproperty(model.params, VALIDATION[model.type][1]) != VALIDATION[model.type][2]
-    # valid_ratio = (validation && model.preprocess.valid_ratio == 1) ? 0.8 : model.preprocess.valid_ratio
-
-    prepare_dataset(
+)::Dataset
+    _prepare_dataset(
         X, y;
         algo=model.config.algo,
         treatment=model.config.treatment,
         features=model.features,
-        # validation,
-        # model.preprocess
         train_ratio=model.preprocess.train_ratio,
         valid_ratio=model.preprocess.valid_ratio,
         shuffle=model.preprocess.shuffle,
@@ -208,11 +191,30 @@ function prepare_dataset(
     )
 end
 
+function prepare_dataset(
+    X::AbstractDataFrame,
+    y::AbstractVector,
+    model::NamedTuple;
+    preprocess::Union{NamedTuple, Nothing}=nothing
+)::Dataset
+    modelset = validate_modelset(model, eltype(y), preprocess)
+    Modelset(modelset, prepare_dataset(X, y, modelset))
+end
+
+function prepare_dataset(
+    X::AbstractDataFrame,
+    y::AbstractVector;
+    model::NamedTuple,
+    kwargs...
+)::Dataset
+    prepare_dataset(X, y, model; kwargs...)
+end
+
 # y is not a vector, but a symbol or a string that identifies the column in X
 function prepare_dataset(
     X::AbstractDataFrame,
-    y::Union{Symbol,AbstractString},
-    args...; kwargs...
-)
-    prepare_dataset(X[!, Not(y)], X[!, y], args...; kwargs...)
+    y::Union{Symbol,AbstractString};
+    kwargs...
+)::Dataset
+    prepare_dataset(X[!, Not(y)], X[!, y]; kwargs...)
 end
