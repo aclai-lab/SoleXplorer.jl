@@ -1,97 +1,10 @@
 # ---------------------------------------------------------------------------- #
 #                                   utils                                      #
 # ---------------------------------------------------------------------------- #
-check_dataframe_type(df::AbstractDataFrame) = all(col -> eltype(col) <: Union{Real,AbstractArray{<:Real}}, eachcol(df))
-hasnans(X::AbstractDataFrame) = any(x -> x == 1, SoleData.hasnans.(eachcol(X)))
-
-# # ---------------------------------------------------------------------------- #
-# #                                 treatment                                    #
-# # ---------------------------------------------------------------------------- #
-# """
-#     _treatment(X::DataFrame, vnames::AbstractVector{String}, treatment::Symbol, 
-#                features::AbstractVector{<:Base.Callable}, winparams::NamedTuple)
-
-# Processes the input DataFrame `X` based on the specified `treatment` type, 
-# either aggregating or reducing the size of the data. The function applies 
-# the given `features` to the columns specified by `vnames`, using window 
-# parameters defined in `winparams`.
-
-# # Arguments
-# - `X::DataFrame`: The input data to be processed.
-# - `vnames::AbstractVector{String}`: Names of the columns in `X` to be treated.
-# - `treatment::Symbol`: The type of treatment to apply, either `:aggregate` 
-#   or `:reducesize`.
-# - `features::AbstractVector{<:Base.Callable}`: Functions to apply to the 
-#   specified columns.
-# - `winparams::NamedTuple`: Parameters defining the windowing strategy, 
-#   including the type of window function.
-
-# # Returns
-# - `DataFrame`: A new DataFrame with the processed data.
-
-# # Throws
-# - `ArgumentError`: If `winparams` does not contain a valid `type` or if 
-#   `treatment` is not supported.
-# """
-
-# function _treatment(
-#     X::DataFrame,
-#     vnames::AbstractVector{String},
-#     treatment::Symbol,
-#     features::AbstractVector{<:Base.Callable},
-#     winparams::NamedTuple
-# )
-#     # check parameters
-#     haskey(winparams, :type) || throw(ArgumentError("winparams must contain a type, $(keys(WIN_PARAMS))"))
-#     haskey(WIN_PARAMS, winparams.type) || throw(ArgumentError("winparams.type must be one of: $(keys(WIN_PARAMS))"))
-
-#     max_interval = maximum(length.(eachrow(X)))
-#     # _wparams = winparams |> x -> @delete x.type
-#     _wparams = NamedTuple(k => v for (k,v) in pairs(winparams) if k != :type)
-#     n_intervals = winparams.type(max_interval; _wparams...)
-
-#     if treatment == :aggregate        # propositional
-#         if n_intervals == 1
-#             valid_X = DataFrame([v => Float64[]
-#                                  for v in [string(f, "(", v, ")")
-#                                        for f in features for v in vnames]]
-#             )
-#         else
-#             valid_X = DataFrame([v => Float64[]
-#                                  for v in [string(f, "(", v, ")w", i)
-#                                        for f in features for v in vnames
-#                                        for i in 1:length(n_intervals)]]
-#             )
-#         end
-
-#     elseif treatment == :reducesize   # modal
-#         valid_X = DataFrame([name => Vector{Float64}[] for name in vnames])
-#         # else
-#         #     throw(ArgumentError("Treatments supported, :aggregate and :reducesize"))
-#     end
-
-#     for row in eachrow(X)
-#         row_intervals = winparams.type(maximum(length.(collect(row))); _wparams...)
-#         interval_diff = length(n_intervals) - length(row_intervals)
-
-#         if treatment == :aggregate
-#             push!(valid_X, vcat([
-#                 vcat([f(col[r]) for r in row_intervals],
-#                     fill(NaN, interval_diff)) for col in row, f in features
-#             ]...)
-#             )
-#         elseif treatment == :reducesize
-#             f = haskey(_wparams, :reducefunc) ? _wparams.reducefunc : mean
-#             push!(valid_X, [
-#                 vcat([f(col[r]) for r in row_intervals],
-#                     fill(NaN, interval_diff)) for col in row
-#             ]
-#             )
-#         end
-#     end
-
-#     return valid_X
-# end
+check_dataset_type(df::AbstractDataFrame) = all(col -> eltype(col) <: Union{Real,AbstractArray{<:Real}}, eachcol(df))
+check_dataset_type(X::AbstractMatrix) = eltype(X) <: Union{Real,AbstractArray{<:Real}}
+hasnans(df::AbstractDataFrame) = any(x -> x == 1, SoleData.hasnans.(eachcol(df)))
+hasnans(X::AbstractMatrix) = any(x -> x == 1, SoleData.hasnans.(eachcol(X)))
 
 # ---------------------------------------------------------------------------- #
 #                                 partitioning                                 #
