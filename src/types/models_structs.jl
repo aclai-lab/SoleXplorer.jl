@@ -4,7 +4,7 @@
 """
 Abstract type for dataset configuration outputs
 """
-abstract type AbstractDatasetConfig end
+abstract type AbstractDatasetSetup end
 
 """
 Abstract type for dataset outputs
@@ -15,11 +15,6 @@ abstract type AbstractDataset end
 Abstract type for dataset train, test and validation indexing
 """
 abstract type AbstractIndexCollection end
-
-# """
-# Abstract type for modeldataset sub struct
-# """
-# abstract type AbstractTypeParams end
 
 """
 Abstract type for model configuration and parameters
@@ -34,8 +29,11 @@ abstract type AbstractModelset end
 # ---------------------------------------------------------------------------- #
 #                                     types                                    #
 # ---------------------------------------------------------------------------- #
-const Categorical = Union{AbstractString, Symbol, CategoricalValue}
-const Rule        = Union{SoleModels.ClassificationRule, SoleModels.DecisionSet}
+const Cat_Value = Union{AbstractString, Symbol, CategoricalValue}
+const Reg_Value = Number
+const Y_Value   = Union{Cat_Value, Reg_Value}
+
+const Rule      = Union{SoleModels.ClassificationRule, SoleModels.DecisionSet}
 
 struct RulesParams
     type         :: SoleModels.RuleExtractor
@@ -46,82 +44,91 @@ end
 #                                  dataset info                                #
 # ---------------------------------------------------------------------------- #
 """
-    DatasetInfo{F<:Base.Callable, R<:Real, I<:Integer, RNG<:AbstractRNG} <: AbstractDatasetConfig
+    DatasetInfo <: AbstractDatasetSetup
 
-An immutable struct containing dataset configuration and metadata.
-It is included in Modelset and Dataset structs,
-In a Modelset object, it is reachable through the `ds.info` field. 
+An immutable struct containing dataset configuration and metadata for machine learning tasks.
+`DatasetInfo` provides all the necessary information about how a dataset is processed,
+partitioned, and what features are extracted from it.
 
 # Fields
-- `algo::Symbol`:
-    Algorithm type, can be :classification, or :regression.
-- `treatment::Symbol`: 
-    Data treatment method, specify the behaviour of data reducing if dataset is composed of time-series.
-    :aggregate, time-series will be reduced to a scalar (propositional case).
-    :reducesize, time-series will be windowed to reduce size.
-- `features::Vector{F}`: 
-    Features functions applied to the dataset.
-- `train_ratio::R`: 
-    Ratio of training data (0-1), specify the ratio between train and test partitions,
-    the higher the ratio, the more data will be used for training.
-- `valid_ratio::R`: 
-    Ratio of validation data (0-1), spoecify the ratio between train and validation partitions,
-    the higher the ratio, the more data will be used for validation.
-    If `valid_ratio` is unspecified, no validation data will be used.
-- `shuffle::Bool`: 
-    Whether to shuffle data during train, validation and test partitioning.
-- `stratified::Bool`: 
-    Whether to use cross-validation stratified sampling technique.
-- `nfolds::I`: 
-    Number of cross-validation folds.
-- `rng::RNG`: 
-    Random number generator.
-- `winparams::Union{NamedTuple, Nothing}`: 
-    Window parameters: NamedTuple should have the following fields:
-    whole window (; type=wholewindow)
-    adaptive window (type=adaptivewindow, nwindows, relative_overlap),
-    moving window (type=movingwindow, nwindows, relative_overlap, window_size, window_step)
-    split window (type=splitwindow, nwindows).
-- `vnames::Union{Vector{Symbol}, Nothing}`: 
-    Variable names, usually dataset column names.
+- `algo::Symbol`: Algorithm type:
+  - `:classification`: For categorical target variables
+  - `:regression`: For numerical target variables
+
+- `treatment::Symbol`: Data treatment method for time-series data:
+  - `:aggregate`: Reduces time-series to scalar features (propositional approach)
+  - `:reducesize`: Windows time-series to reduce dimensions while preserving temporal structure
+
+- `features::Vector{<:Base.Callable}`: Feature extraction functions applied to the dataset.
+  Each function should accept a vector/array and return a scalar value (e.g., `mean`, `std`, `maximum`).
+
+- `train_ratio::Real`: Proportion of data used for training (range: 0-1).
+  Controls the train/test split ratio: higher values allocate more data for training.
+
+- `valid_ratio::Real`: Proportion of training data used for validation (range: 0-1).
+  - When `1.0`: No separate validation set is created (empty array)
+  - When `< 1.0`: Creates validation set from the training portion
+
+- `shuffle::Bool`: Whether to randomly shuffle data before partitioning:
+  - `true`: Randomizes data order for better generalization
+  - `false`: Preserves original data order (useful for time-series with temporal dependencies)
+
+- `stratified::Bool`: Whether to use stratified sampling for cross-validation:
+  - `true`: Maintains class distribution across folds (for classification tasks)
+  - `false`: Simple random sampling without preserving class ratios
+
+- `nfolds::Int`: Number of cross-validation folds when `stratified=true`.
+  Higher values give more robust performance estimates but increase computation time.
+
+- `rng::AbstractRNG`: Random number generator for reproducible partitioning and shuffling.
+
+- `winparams::SoleFeatures.WinParams`: Windowing parameters for time-series processing:
+  - `type`: Window function type (`wholewindow`, `adaptivewindow`, `movingwindow`, `splitwindow`)
+  - Additional parameters specific to each window type:
+    - `wholewindow`: Uses entire time-series (no parameters needed)
+    - `adaptivewindow`: Uses `nwindows` and `relative_overlap`
+    - `movingwindow`: Uses `window_size` and `window_step`
+    - `splitwindow`: Uses `nwindows` for equal divisions
+
+- `vnames::Union{Vector{<:AbstractString}, Nothing}`: Variable/column names.
+  When `nothing`, column indices are used as identifiers.
 """
-struct DatasetInfo{F<:Base.Callable, R<:Real, I<:Integer, RNG<:AbstractRNG} <: AbstractDatasetConfig
+struct DatasetInfo <: AbstractDatasetSetup
     algo        :: Symbol
     treatment   :: Symbol
-    features    :: Vector{F}
-    train_ratio :: R
-    valid_ratio :: R
+    features    :: Vector{<:Base.Callable}
+    train_ratio :: Real
+    valid_ratio :: Real
     shuffle     :: Bool
     stratified  :: Bool
-    nfolds      :: I
-    rng         :: RNG
+    nfolds      :: Int
+    rng         :: AbstractRNG
     winparams   :: SoleFeatures.WinParams
-    vnames      :: Union{Vector{Symbol}, Nothing}
-end
+    vnames      :: Union{Vector{<:AbstractString}, Nothing}
 
-function DatasetInfo(
-    algo::Symbol,
-    treatment::Symbol,
-    features::AbstractVector{F},
-    train_ratio::R,
-    valid_ratio::R,
-    shuffle::Bool,
-    stratified::Bool,
-    nfolds::I,
-    rng::RNG,
-    winparams::SoleFeatures.WinParams,
-    vnames::Union{AbstractVector{<:Union{AbstractString,Symbol}}, Nothing}
-) where {F<:Base.Callable, R<:Real, I<:Integer, RNG<:AbstractRNG}
-    # Validate ratios
-    0 ≤ train_ratio ≤ 1 || throw(ArgumentError("train_ratio must be between 0 and 1"))
-    0 ≤ valid_ratio ≤ 1 || throw(ArgumentError("valid_ratio must be between 0 and 1"))
+    function DatasetInfo(
+        algo        :: Symbol,
+        treatment   :: Symbol,
+        features    :: Vector{<:Base.Callable},
+        train_ratio :: Real,
+        valid_ratio :: Real,
+        shuffle     :: Bool,
+        stratified  :: Bool,
+        nfolds      :: Int,
+        rng         :: AbstractRNG,
+        winparams   :: SoleFeatures.WinParams,
+        vnames      :: Union{Vector{<:AbstractString}, Nothing}
+    )::DatasetInfo
+        # Validate ratios
+        0 ≤ train_ratio ≤ 1 || throw(ArgumentError("train_ratio must be between 0 and 1"))
+        0 ≤ valid_ratio ≤ 1 || throw(ArgumentError("valid_ratio must be between 0 and 1"))
 
-    converted_vnames = isnothing(vnames) ? nothing : Vector{Symbol}(Symbol.(vnames))
-
-    DatasetInfo{F,R,I,RNG}(
-        algo, treatment, features, train_ratio, valid_ratio,
-        shuffle, stratified, nfolds, rng, winparams, converted_vnames
-    )
+    
+        new(
+            algo, treatment, features, train_ratio, valid_ratio,
+            shuffle, stratified, nfolds, rng, winparams, vnames
+        )
+    end
 end
 
 function Base.show(io::IO, info::DatasetInfo)
@@ -144,15 +151,15 @@ used in Dataset struct.
 - `test::Vector{T}`:  Vector of indices for the test set
 """
 struct TT_indexes{T<:Integer} <: AbstractIndexCollection
-    train       :: Vector{T}
-    valid       :: Vector{T}
-    test        :: Vector{T}
+    train :: Vector{T}
+    valid :: Vector{T}
+    test  :: Vector{T}
 end
 
 function TT_indexes(
-    train::AbstractVector{T},
-    valid::AbstractVector{T},
-    test::AbstractVector{T}
+    train :: AbstractVector{T},
+    valid :: AbstractVector{T},
+    test  :: AbstractVector{T}
 ) where {T<:Integer}
     TT_indexes{T}(train, valid, test)
 end
@@ -180,7 +187,7 @@ function _create_views(X, y, tt, stratified::Bool)
 end
 
 """
-    Dataset{T<:AbstractDataFrame,S} <: AbstractDataset
+    Dataset{T<:AbstractMatrix,S} <: AbstractDataset
 
 An immutable struct that efficiently stores dataset splits for machine learning.
 
@@ -192,19 +199,19 @@ An immutable struct that efficiently stores dataset splits for machine learning.
 - `Xtrain`, `Xvalid`, `Xtest`: Data views for features
 - `ytrain`, `yvalid`, `ytest`: Data views for targets
 """
-struct Dataset{T<:AbstractDataFrame,S} <: AbstractDataset
+struct Dataset{T<:AbstractMatrix,S} <: AbstractDataset
     X           :: T
     y           :: S
     tt          :: Union{TT_indexes, AbstractVector{<:TT_indexes}}
     info        :: DatasetInfo
-    Xtrain      :: Union{SubDataFrame{T}, Vector{<:SubDataFrame{T}}}
-    Xvalid      :: Union{SubDataFrame{T}, Vector{<:SubDataFrame{T}}}
-    Xtest       :: Union{SubDataFrame{T}, Vector{<:SubDataFrame{T}}}
+    Xtrain      :: Union{AbstractMatrix, Vector{<:AbstractMatrix}}
+    Xvalid      :: Union{AbstractMatrix, Vector{<:AbstractMatrix}}
+    Xtest       :: Union{AbstractMatrix, Vector{<:AbstractMatrix}}
     ytrain      :: Union{SubArray{<:eltype(S)}, Vector{<:SubArray{<:eltype(S)}}}
     yvalid      :: Union{SubArray{<:eltype(S)}, Vector{<:SubArray{<:eltype(S)}}}
     ytest       :: Union{SubArray{<:eltype(S)}, Vector{<:SubArray{<:eltype(S)}}}
 
-    function Dataset(X::T, y::S, tt, info) where {T<:AbstractDataFrame,S}
+    function Dataset(X::T, y::S, tt, info) where {T<:AbstractMatrix,S}
         if info.stratified
             Xtrain = view.(Ref(X), getfield.(tt, :train), Ref(:))
             Xvalid = view.(Ref(X), getfield.(tt, :valid), Ref(:))
@@ -240,26 +247,26 @@ function Base.show(io::IO, ds::Dataset)
 end
 
 # ---------------------------------------------------------------------------- #
-#                                 Modelset                                  #
+#                                   Modelset                                   #
 # ---------------------------------------------------------------------------- #
 mutable struct ModelSetup <: AbstractModelSetup
     type         :: Base.Callable
     config       :: NamedTuple
     params       :: NamedTuple
     features     :: Union{AbstractVector{<:Base.Callable}, Nothing}
-    winparams    :: SoleFeatures.WinParams
+    winparams    :: NamedTuple
     learn_method :: Union{Base.Callable, Tuple{Base.Callable, Base.Callable}}
     tuning       :: NamedTuple
-    rulesparams  :: RulesParams
+    rules_method :: SoleModels.RuleExtractor
     preprocess   :: NamedTuple
 end
 
 function Base.show(io::IO, ::MIME"text/plain", m::ModelSetup)
     println(io, "ModelSetup")
     println(io, "  Model type: ", m.type)
-    println(io, "  Features:   ", isnothing(m.features) ? "None" : "$(length(m.features)) features")
-    println(io, "  Learning method:  ", m.learn_method)
-    println(io, "  Rules extraction: ", typeof(m.rulesparams.type))
+    println(io, "  Features: ", isnothing(m.features) ? "None" : "$(length(m.features)) features")
+    println(io, "  Learning method: ", typeof(m.learn_method))
+    println(io, "  Rule extraction: ", typeof(m.rules_method))
 end
 
 function Base.show(io::IO, m::ModelSetup)
@@ -294,7 +301,7 @@ const DEFAULT_PREPROC = (
     rng         = TaskLocalRNG()
 )
 
-const MODEL_KEYS = (:type, :params, :features, :winparams, :rulesparams)
+const MODEL_KEYS   = (:type, :params, :features, :winparams, :rulesparams)
 const PREPROC_KEYS = (:train_ratio, :valid_ratio, :shuffle, :stratified, :nfolds, :rng)
 
 const AVAIL_MODELS = Dict(
@@ -324,37 +331,6 @@ const AVAIL_TREATMENTS = (:aggregate, :reducesize)
 #     splitwindow    => (nwindows = 20),
 #     adaptivewindow => (nwindows = 20, relative_overlap = 0.5)
 # )
-
-# ---------------------------------------------------------------------------- #
-#                                 ModelData                                    #
-# ---------------------------------------------------------------------------- #
-mutable struct Modelset <: AbstractModelset
-    setup      :: AbstractModelSetup
-    ds         :: Dataset
-    classifier :: MLJ.Model
-    mach       :: Union{MLJ.Machine, AbstractVector{<:MLJ.Machine}}
-    model      :: Union{AbstractModel, AbstractVector{<:AbstractModel}}
-    rules      :: Union{Rule, AbstractVector{<:Rule}, Nothing}
-    accuracy   :: Union{AbstractFloat, AbstractVector{<:AbstractFloat}, Nothing}
-
-    function Modelset(
-        setup::AbstractModelSetup,
-        ds::Dataset,
-        classifier::MLJ.Model,
-        mach::Union{MLJ.Machine, AbstractVector{<:MLJ.Machine}},
-        model::Union{AbstractModel, AbstractVector{<:AbstractModel}},
-    )
-        new(setup, ds, classifier, mach, model, nothing, nothing)
-    end
-end
-
-function Base.show(io::IO, mc::Modelset)
-    println(io, "Modelset:")
-    println(io, "    setup      =", mc.setup)
-    println(io, "    classifier =", mc.classifier)
-    println(io, "    rules      =", isnothing(mc.rules) ? "nothing" : string(mc.rules))
-    println(io, "    accuracy   =", isnothing(mc.accuracy) ? "nothing" : string(mc.accuracy))
-end
 
 # ---------------------------------------------------------------------------- #
 #                                    rules                                     #
@@ -495,4 +471,42 @@ function range(
             values = values,
         )
     end
+end
+
+# ---------------------------------------------------------------------------- #
+#                              Modelset struct                                 #
+# ---------------------------------------------------------------------------- #
+mutable struct Modelset <: AbstractModelset
+    setup      :: AbstractModelSetup
+    ds         :: Dataset
+    classifier :: Union{MLJ.Model,     Nothing}
+    mach       :: Union{MLJ.Machine,   Nothing}
+    model      :: Union{AbstractModel, Nothing}
+    rules      :: Union{Rule,          Nothing}
+    accuracy   :: Union{AbstractFloat, Nothing}
+
+    function Modelset(
+        setup      :: AbstractModelSetup,
+        ds         :: Dataset,
+        classifier :: MLJ.Model,
+        mach       :: MLJ.Machine,
+        model      :: AbstractModel
+    )
+        new(setup, ds, classifier, mach, model, nothing, nothing)
+    end
+
+    function Modelset(
+        setup      :: AbstractModelSetup,
+        ds         :: Dataset
+    )
+        new(setup, ds, nothing, nothing, nothing, nothing, nothing)
+    end
+end
+
+function Base.show(io::IO, mc::Modelset)
+    println(io, "Modelset:")
+    println(io, "    setup      =", mc.setup)
+    println(io, "    classifier =", mc.classifier)
+    println(io, "    rules      =", isnothing(mc.rules) ? "nothing" : string(mc.rules))
+    println(io, "    accuracy   =", isnothing(mc.accuracy) ? "nothing" : string(mc.accuracy))
 end
