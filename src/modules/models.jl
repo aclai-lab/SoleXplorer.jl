@@ -3,7 +3,7 @@
 # ---------------------------------------------------------------------------- #
 getmodel(model::ModelConfig) = model
 
-function getmodel(modelset::AbstractModelSet)
+function getmodel(modelset::AbstractModelSetup)
     classifier = modelset.type(; modelset.params...)
 
     if modelset.tuning.tuning

@@ -272,7 +272,7 @@ end
 function prepare_dataset(
     X::AbstractDataFrame,
     y::AbstractVector,
-    model::AbstractModelSet
+    model::AbstractModelSetup
 )
     # check if it's needed also validation set
     # validation = haskey(VALIDATION, model.type) && getproperty(model.params, VALIDATION[model.type][1]) != VALIDATION[model.type][2]

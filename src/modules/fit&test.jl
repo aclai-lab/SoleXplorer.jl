@@ -1,7 +1,7 @@
 # ---------------------------------------------------------------------------- #
 #                                   fit model                                  #
 # ---------------------------------------------------------------------------- #
-function fitmodel(modelset::AbstractModelSet, classifier::MLJ.Model, ds::Dataset; kwargs...)
+function fitmodel(modelset::AbstractModelSetup, classifier::MLJ.Model, ds::Dataset; kwargs...)
     Xtrain, ytrain = ds.Xtrain isa AbstractDataFrame ? ([ds.Xtrain], [ds.ytrain]) : (ds.Xtrain, ds.ytrain)
     # if haskey(modelset.params, :watchlist) && modelset.params.watchlist == makewatchlist
     #     modelset.params = merge(modelset.params, (watchlist = makewatchlist(ds.Xtrain, ds.ytrain, ds.Xvalid, ds.yvalid),))
@@ -15,7 +15,7 @@ end
 # ---------------------------------------------------------------------------- #
 #                                  test model                                  #
 # ---------------------------------------------------------------------------- #
-function testmodel(modelset::AbstractModelSet, mach::Union{T, AbstractVector{<:T}}, ds::Dataset) where T<:MLJ.Machine
+function testmodel(modelset::AbstractModelSetup, mach::Union{T, AbstractVector{<:T}}, ds::Dataset) where T<:MLJ.Machine
     mach isa AbstractVector || (mach = [mach])
     Xtrain, ytrain = ds.Xtrain isa AbstractDataFrame ? ([ds.Xtrain], [ds.ytrain]) : (ds.Xtrain, ds.ytrain)
     tmodel = [modelset.learn_method(m, x, y) for (m, x, y) in zip(mach, Xtrain, ytrain)]

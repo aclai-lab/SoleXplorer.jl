@@ -24,7 +24,7 @@ abstract type AbstractIndexCollection end
 """
 Abstract type for model configuration and parameters
 """
-abstract type AbstractModelSet end
+abstract type AbstractModelSetup end
 
 """
 Abstract type for fitted model configurations
@@ -242,7 +242,7 @@ end
 # ---------------------------------------------------------------------------- #
 #                                 ModelConfig                                  #
 # ---------------------------------------------------------------------------- #
-mutable struct ModelSetup <: AbstractModelSet
+mutable struct ModelSetup <: AbstractModelSetup
     type         :: Base.Callable
     config       :: NamedTuple
     params       :: NamedTuple
@@ -329,7 +329,7 @@ const AVAIL_TREATMENTS = (:aggregate, :reducesize)
 #                                 ModelData                                    #
 # ---------------------------------------------------------------------------- #
 mutable struct ModelConfig <: AbstractModelConfig
-    setup      :: AbstractModelSet
+    setup      :: AbstractModelSetup
     ds         :: Dataset
     classifier :: MLJ.Model
     mach       :: Union{MLJ.Machine, AbstractVector{<:MLJ.Machine}}
@@ -338,7 +338,7 @@ mutable struct ModelConfig <: AbstractModelConfig
     accuracy   :: Union{AbstractFloat, AbstractVector{<:AbstractFloat}, Nothing}
 
     function ModelConfig(
-        setup::AbstractModelSet,
+        setup::AbstractModelSetup,
         ds::Dataset,
         classifier::MLJ.Model,
         mach::Union{MLJ.Machine, AbstractVector{<:MLJ.Machine}},

@@ -26,7 +26,7 @@ global_params = (
 
 modelsets = validate_modelset(models, typeof(y), global_params)
 
-@test modelsets isa Vector{<:SoleXplorer.AbstractModelSet}
+@test modelsets isa Vector{<:SoleXplorer.AbstractModelSetup}
 @test modelsets isa Vector{SoleXplorer.ModelSetup}
 
 for m in modelsets
@@ -57,7 +57,7 @@ models = [(
 
 modelsets = validate_modelset(models, typeof(y))
 
-@test modelsets isa Vector{<:SoleXplorer.AbstractModelSet}
+@test modelsets isa Vector{<:SoleXplorer.AbstractModelSetup}
 @test modelsets isa Vector{SoleXplorer.ModelSetup}
 
 for m in modelsets
