@@ -6,6 +6,33 @@ check_dataset_type(X::AbstractMatrix) = eltype(X) <: Union{Real,AbstractArray{<:
 hasnans(df::AbstractDataFrame) = any(x -> x == 1, SoleData.hasnans.(eachcol(df)))
 hasnans(X::AbstractMatrix) = any(x -> x == 1, SoleData.hasnans.(eachcol(X)))
 
+"""
+    check_row_consistency(X::AbstractMatrix) -> Bool
+
+Check that all elements within each row of the matrix have consistent dimensions.
+This is important for time series or array data where operations expect 
+columns within a row to have matching dimensions.
+"""
+function check_row_consistency(X::AbstractMatrix) 
+    for row in eachrow(X)
+        # skip rows with only scalar values
+        any(el -> el isa AbstractArray, row) || continue
+        
+        # find first array element to use as reference
+        ref_idx = findfirst(el -> el isa AbstractArray, row)
+        isnothing(ref_idx) && continue
+        
+        ref_size = size(row[ref_idx])
+        
+        # check if any array element has different size (short-circuit)
+        if any(row) do el
+                el isa AbstractArray && size(el) != ref_size
+            end
+            return false
+        end
+    end
+    return true
+end
 # ---------------------------------------------------------------------------- #
 #                                 partitioning                                 #
 # ---------------------------------------------------------------------------- #
@@ -123,6 +150,7 @@ function _prepare_dataset(
     # check parameters
     check_dataset_type(X) || throw(ArgumentError("DataFrame must contain only numeric values"))
     size(X, 1) == length(y) || throw(ArgumentError("Number of rows in DataFrame must match length of class labels"))
+    check_row_consistency(X) || throw(ArgumentError("Elements within each row must have consistent dimensions"))
     treatment in AVAIL_TREATMENTS || throw(ArgumentError("Treatment must be one of: $AVAIL_TREATMENTS"))
 
     if algo == :regression
