@@ -54,7 +54,7 @@ using Reexport
 include("utils/code_dataframe.jl")
 export code_dataframe
 
-include("types/models_structs.jl")
+include("interface.jl")
 export Modelset, range
 export plainrule, lumenrule, intreesrule
 
