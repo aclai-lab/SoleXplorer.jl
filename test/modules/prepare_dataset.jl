@@ -35,11 +35,11 @@ using StatsBase: sample
     X = X[chosen_rows, chosen_cols]
     y = y[chosen_rows]
 
-    @testset "prepare_dataset check output" begin
-        # # Test numeric dataframe
-        # X = DataFrame(x1 = [1.0, 2.0, 3.0], x2 = [4.0, 5.0, 6.0])
-        # y = [1, 0, 1]
-        
+dsd = prepare_dataset(X, y; model=(type=:decisiontree,), preprocess=(rng=Xoshiro(11),))
+dsm = prepare_dataset(X, y; model=(type=:modaldecisiontree, params=(relations=:IA7, reducefunc=mean)), preprocess=(rng=Xoshiro(11),))
+dsm2 = prepare_dataset(X, y; model=(type=:modaldecisiontree, params=(relations=:IA7, reducefunc=maximum)), preprocess=(rng=Xoshiro(11),))
+
+    @testset "prepare_dataset check output" begin        
         ds = prepare_dataset(X, y; model=(type=:decisiontree,), preprocess=(;rng))
         ds = prepare_dataset(X, y; model=(type=:modaldecisiontree, params=(relations=:IA7, reducefunc=mean)), preprocess=(;rng))
 
