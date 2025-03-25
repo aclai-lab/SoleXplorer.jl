@@ -134,6 +134,7 @@ function _prepare_dataset(
     # model.config
     algo::Symbol,
     treatment::Symbol,
+    reducefunc::Union{Base.Callable, Nothing},
     features::AbstractVector{<:Base.Callable},
     # model.preprocess
     train_ratio::Float64,
@@ -174,13 +175,16 @@ function _prepare_dataset(
 
     column_eltypes = eltype.(eachcol(X))
 
+    isnothing(reducefunc) && (reducefunc = mean)
+
     if all(t -> t <: AbstractVector{<:Number}, column_eltypes) && !isnothing(winparams)
-        X, vnames = SoleFeatures._treatment(X, vnames, treatment, features, winparams)
+        X, vnames = SoleFeatures._treatment(X, vnames, treatment, features, winparams; reducefunc)
     end
 
     ds_info = DatasetInfo(
         algo,
         treatment,
+        reducefunc,
         features,
         train_ratio,
         valid_ratio,
@@ -204,10 +208,14 @@ function _prepare_dataset(
     y::AbstractVector,
     model::AbstractModelSetup
 )::Dataset
+    # modal reduce function, optional for propositional
+    reducefunc = haskey(model.config, :reducefunc) ? model.config.reducefunc : nothing
+
     _prepare_dataset(
         X, y;
         algo=model.config.algo,
         treatment=model.config.treatment,
+        reducefunc,
         features=model.features,
         train_ratio=model.preprocess.train_ratio,
         valid_ratio=model.preprocess.valid_ratio,

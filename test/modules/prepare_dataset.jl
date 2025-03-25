@@ -41,7 +41,7 @@ using StatsBase: sample
         # y = [1, 0, 1]
         
         ds = prepare_dataset(X, y; model=(type=:decisiontree,), preprocess=(;rng))
-        ds = prepare_dataset(X, y; model=(type=:modaldecisiontree,), preprocess=(;rng))
+        ds = prepare_dataset(X, y; model=(type=:modaldecisiontree, params=(relations=:IA7, reducefunc=mean)), preprocess=(;rng))
 
         @test ds isa SoleXplorer.Dataset
         @test size(ds.X) == (3, 2)

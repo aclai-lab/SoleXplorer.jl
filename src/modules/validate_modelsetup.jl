@@ -222,9 +222,15 @@ function validate_modelset(
     check_params(model, MODEL_KEYS)
     modelset = validate_model(model.type, y)
 
+    # grab additional extra params
+    user_params = get(model, :params, nothing)
+    if !isnothing(user_params) && haskey(user_params, :reducefunc)
+        modelset.config = merge(modelset.config, (reducefunc = user_params.reducefunc,))
+        user_params = NamedTuple(k => v for (k, v) in pairs(user_params) if k != :reducefunc)
+    end
     modelset.params = validate_params(
         modelset.params,
-        get(model, :params, nothing),
+        user_params,
         rng
     )
 
