@@ -72,7 +72,7 @@ export prepare_dataset
 include("modules/fit&test.jl")
 export fitmodel, testmodel
 
-include("modules/validate_modelset.jl")
+include("modules/validate_modelsetup.jl")
 export validate_modelset
 
 include("modules/traintest.jl")
