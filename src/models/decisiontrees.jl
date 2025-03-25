@@ -39,7 +39,7 @@ function DecisionTreeClassifierModel()
 
     rulesparams = RulesParams(PlainRuleExtractor(), NamedTuple())
 
-    return SymbolicModelSet(
+    return ModelSetup(
         type,
         config,
         params,
@@ -99,7 +99,7 @@ function RandomForestClassifierModel()
 
     rulesparams = RulesParams(InTreesRuleExtractor(), NamedTuple())
 
-    return SymbolicModelSet(
+    return ModelSetup(
         type,
         config,
         params,
@@ -155,7 +155,7 @@ function AdaBoostClassifierModel()
 
     rulesparams = RulesParams(InTreesRuleExtractor(), NamedTuple())
 
-    return SymbolicModelSet(
+    return ModelSetup(
         type,
         config,
         params,
@@ -204,7 +204,7 @@ function DecisionTreeRegressorModel()
 
     rulesparams = RulesParams(PlainRuleExtractor(), NamedTuple())
 
-    return SymbolicModelSet(
+    return ModelSetup(
         type,
         config,
         params,
@@ -262,7 +262,7 @@ function RandomForestRegressorModel()
 
     rulesparams = RulesParams(InTreesRuleExtractor(), NamedTuple())
 
-    return SymbolicModelSet(
+    return ModelSetup(
         type,
         config,
         params,

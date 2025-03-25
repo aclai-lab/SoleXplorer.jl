@@ -271,7 +271,7 @@ function validate_modelset(
         haskey(preprocess, :rng) ? preprocess.rng : nothing
     end
 
-    modelsets = SymbolicModelSet[]
+    modelsets = ModelSetup[]
 
     for m in models
         haskey(m, :type) || throw(ArgumentError("Each model specification must contain a 'type' field"))

@@ -242,7 +242,7 @@ end
 # ---------------------------------------------------------------------------- #
 #                                 ModelConfig                                  #
 # ---------------------------------------------------------------------------- #
-mutable struct SymbolicModelSet <: AbstractModelSet
+mutable struct ModelSetup <: AbstractModelSet
     type         :: Base.Callable
     config       :: NamedTuple
     params       :: NamedTuple
@@ -254,34 +254,34 @@ mutable struct SymbolicModelSet <: AbstractModelSet
     preprocess   :: NamedTuple
 end
 
-function Base.show(io::IO, ::MIME"text/plain", m::SymbolicModelSet)
-    println(io, "SymbolicModelSet")
+function Base.show(io::IO, ::MIME"text/plain", m::ModelSetup)
+    println(io, "ModelSetup")
     println(io, "  Model type: ", m.type)
     println(io, "  Features:   ", isnothing(m.features) ? "None" : "$(length(m.features)) features")
     println(io, "  Learning method:  ", m.learn_method)
     println(io, "  Rules extraction: ", typeof(m.rulesparams.type))
 end
 
-function Base.show(io::IO, m::SymbolicModelSet)
-    print(io, "SymbolicModelSet(type=$(m.type), features=$(isnothing(m.features) ? "None" : length(m.features)))")
+function Base.show(io::IO, m::ModelSetup)
+    print(io, "ModelSetup(type=$(m.type), features=$(isnothing(m.features) ? "None" : length(m.features)))")
 end
 
 # ---------------------------------------------------------------------------- #
 #                              default parameters                              #
 # ---------------------------------------------------------------------------- #
-DecisionTreeClassifierModel(dtmodel :: SymbolicModelSet) = dtmodel
-RandomForestClassifierModel(dtmodel :: SymbolicModelSet) = dtmodel
-AdaBoostClassifierModel(dtmodel     :: SymbolicModelSet) = dtmodel
+DecisionTreeClassifierModel(dtmodel :: ModelSetup) = dtmodel
+RandomForestClassifierModel(dtmodel :: ModelSetup) = dtmodel
+AdaBoostClassifierModel(dtmodel     :: ModelSetup) = dtmodel
 
-DecisionTreeRegressorModel(dtmodel  :: SymbolicModelSet) = dtmodel
-RandomForestRegressorModel(dtmodel  :: SymbolicModelSet) = dtmodel
+DecisionTreeRegressorModel(dtmodel  :: ModelSetup) = dtmodel
+RandomForestRegressorModel(dtmodel  :: ModelSetup) = dtmodel
 
-ModalDecisionTreeModel(dtmodel      :: SymbolicModelSet) = dtmodel
-ModalRandomForestModel(dtmodel      :: SymbolicModelSet) = dtmodel
-ModalAdaBoostModel(dtmodel          :: SymbolicModelSet) = dtmodel
+ModalDecisionTreeModel(dtmodel      :: ModelSetup) = dtmodel
+ModalRandomForestModel(dtmodel      :: ModelSetup) = dtmodel
+ModalAdaBoostModel(dtmodel          :: ModelSetup) = dtmodel
 
-XGBoostClassifierModel(dtmodel      :: SymbolicModelSet) = dtmodel
-XGBoostRegressorModel(dtmodel       :: SymbolicModelSet) = dtmodel
+XGBoostClassifierModel(dtmodel      :: ModelSetup) = dtmodel
+XGBoostRegressorModel(dtmodel       :: ModelSetup) = dtmodel
 
 const DEFAULT_FEATS = [maximum, minimum, mean, std]
 

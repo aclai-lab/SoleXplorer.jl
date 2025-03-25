@@ -50,7 +50,7 @@ function ModalDecisionTreeModel()
 
     rulesparams = RulesParams(PlainRuleExtractor(), NamedTuple())
 
-    return SymbolicModelSet(
+    return ModelSetup(
         type,
         config,
         params,
@@ -112,7 +112,7 @@ function ModalRandomForestModel()
 
     rulesparams = RulesParams(InTreesRuleExtractor(), NamedTuple())
 
-    return SymbolicModelSet(
+    return ModelSetup(
         type,
         config,
         params,
@@ -173,7 +173,7 @@ function ModalAdaBoostModel()
 
     rulesparams = RulesParams(InTreesRuleExtractor(), NamedTuple())
 
-    return SymbolicModelSet(
+    return ModelSetup(
         type,
         config,
         params,

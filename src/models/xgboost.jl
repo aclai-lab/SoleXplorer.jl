@@ -111,7 +111,7 @@ function XGBoostClassifierModel()
 
     rulesparams = RulesParams(InTreesRuleExtractor(), NamedTuple())
 
-    return SymbolicModelSet(
+    return ModelSetup(
         type,
         config,
         params,
