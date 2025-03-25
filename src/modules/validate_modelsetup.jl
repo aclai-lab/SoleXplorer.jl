@@ -205,7 +205,7 @@ function validate_preprocess_params(
 end
 
 function validate_modelset(
-    model::AbstractVector{<:NamedTuple},
+    model::NamedTuple,
     y::Union{DataType, Nothing},
     preprocess::Union{NamedTuple, Nothing}
 )

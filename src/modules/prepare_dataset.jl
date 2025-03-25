@@ -171,7 +171,7 @@ function _prepare_dataset(
     )
 end
 
-function prepare_dataset(
+function _prepare_dataset(
     X::AbstractDataFrame,
     y::AbstractVector,
     model::AbstractModelSetup
@@ -196,9 +196,9 @@ function prepare_dataset(
     y::AbstractVector,
     model::NamedTuple;
     preprocess::Union{NamedTuple, Nothing}=nothing
-)::Dataset
+)::Modelset
     modelset = validate_modelset(model, eltype(y), preprocess)
-    Modelset(modelset, prepare_dataset(X, y, modelset))
+    Modelset(modelset, _prepare_dataset(X, y, modelset))
 end
 
 function prepare_dataset(
@@ -206,7 +206,7 @@ function prepare_dataset(
     y::AbstractVector;
     model::NamedTuple,
     kwargs...
-)::Dataset
+)::Modelset
     prepare_dataset(X, y, model; kwargs...)
 end
 
@@ -215,6 +215,6 @@ function prepare_dataset(
     X::AbstractDataFrame,
     y::Union{Symbol,AbstractString};
     kwargs...
-)::Dataset
+)::Modelset
     prepare_dataset(X[!, Not(y)], X[!, y]; kwargs...)
 end

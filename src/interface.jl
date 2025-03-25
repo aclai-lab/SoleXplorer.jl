@@ -254,10 +254,10 @@ mutable struct ModelSetup <: AbstractModelSetup
     config       :: NamedTuple
     params       :: NamedTuple
     features     :: Union{AbstractVector{<:Base.Callable}, Nothing}
-    winparams    :: NamedTuple
+    winparams    :: SoleFeatures.WinParams
     learn_method :: Union{Base.Callable, Tuple{Base.Callable, Base.Callable}}
     tuning       :: NamedTuple
-    rules_method :: SoleModels.RuleExtractor
+    rulesparams  :: RulesParams
     preprocess   :: NamedTuple
 end
 
@@ -266,7 +266,7 @@ function Base.show(io::IO, ::MIME"text/plain", m::ModelSetup)
     println(io, "  Model type: ", m.type)
     println(io, "  Features: ", isnothing(m.features) ? "None" : "$(length(m.features)) features")
     println(io, "  Learning method: ", typeof(m.learn_method))
-    println(io, "  Rule extraction: ", typeof(m.rules_method))
+    println(io, "  Rules extraction: ", typeof(m.rulesparams.type))
 end
 
 function Base.show(io::IO, m::ModelSetup)

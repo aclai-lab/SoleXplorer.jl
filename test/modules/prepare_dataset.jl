@@ -1,34 +1,46 @@
 using Test
-using Sole, SoleXplorer
+using SoleXplorer
 using DataFrames
-using CategoricalArrays
-using Random
-using Statistics, StatsBase
+using StatsBase: sample
+# using CategoricalArrays
+# using Random
+# using Statistics, StatsBase
 
 @testset "prepare_dataset.jl" begin
     
-    @testset "check_dataframe_type" begin
+    @testset "check utility: check_dataframe_type" begin
         df_valid = DataFrame(a = [1.0, 2.0], b = [3, 4])
         df_invalid = DataFrame(a = ["a", "b"], b = [1, 2])
         
-        @test SoleXplorer.check_dataframe_type(df_valid) == true
-        @test SoleXplorer.check_dataframe_type(df_invalid) == false
+        @test SoleXplorer.check_dataset_type(df_valid) == true
+        @test SoleXplorer.check_dataset_type(df_invalid) == false
+        @test SoleXplorer.check_dataset_type(Matrix(df_valid)) == true
+        @test SoleXplorer.check_dataset_type(Matrix(df_invalid)) == false
     end
 
-    @testset "hasnans" begin
+    @testset "check utility: hasnans" begin
         df = DataFrame(a = [1.0, 2.0], b = [3, 4])
         df_hasnans = DataFrame(a = [1.0, NaN], b = [3, 4])
         
         @test SoleXplorer.hasnans(df) == false
         @test SoleXplorer.hasnans(df_hasnans) == true
+        @test SoleXplorer.hasnans(Matrix(df)) == false
+        @test SoleXplorer.hasnans(Matrix(df_hasnans)) == true
     end
 
+    X, y = load_arff_dataset("NATOPS")
+    num_cols_to_sample, num_rows_to_sample, rng = 10, 50, Xoshiro(11)
+    chosen_cols = sample(rng, 1:size(X, 2), num_cols_to_sample; replace=false)
+    chosen_rows = sample(rng, 1:size(X, 1), num_rows_to_sample; replace=false)
+    X = X[chosen_rows, chosen_cols]
+    y = y[chosen_rows]
+
     @testset "prepare_dataset check output" begin
-        # Test numeric dataframe
-        X = DataFrame(x1 = [1.0, 2.0, 3.0], x2 = [4.0, 5.0, 6.0])
-        y = [1, 0, 1]
+        # # Test numeric dataframe
+        # X = DataFrame(x1 = [1.0, 2.0, 3.0], x2 = [4.0, 5.0, 6.0])
+        # y = [1, 0, 1]
         
-        ds = prepare_dataset(X, y, algo=:classification)
+        ds = prepare_dataset(X, y; model=(type=:decisiontree,), preprocess=(;rng))
 
         @test ds isa SoleXplorer.Dataset
         @test size(ds.X) == (3, 2)
