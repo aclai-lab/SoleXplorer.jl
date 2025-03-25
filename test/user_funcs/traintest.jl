@@ -28,42 +28,42 @@ y = y[chosen_rows]
 @testset "basic usage traintest function" begin
     @testset "decisiontree_classifier" begin
         result = traintest(X, y; models=(type=:decisiontree_classifier, params=(; rng=rng)))
-        @test result isa SoleXplorer.ModelConfig
+        @test result isa SoleXplorer.Modelset
         @test result.classifier isa SoleXplorer.DecisionTreeClassifier
         @test result.model isa SoleXplorer.DecisionTree
     end
 
     @testset "randomforest_classifier" begin
         result = traintest(X, y; models=(type=:randomforest_classifier, params=(; rng=rng)))
-        @test result isa SoleXplorer.ModelConfig
+        @test result isa SoleXplorer.Modelset
         @test result.classifier isa SoleXplorer.RandomForestClassifier # type piracy?
         @test result.model isa SoleXplorer.DecisionEnsemble
     end
 
     @testset "adaboost_classifier" begin
         result = traintest(X, y; models=(type=:adaboost_classifier, params=(; rng=rng)))
-        @test result isa SoleXplorer.ModelConfig
+        @test result isa SoleXplorer.Modelset
         @test result.classifier isa SoleXplorer.AdaBoostStumpClassifier
         @test result.model isa SoleXplorer.DecisionEnsemble
     end
 
     @testset "modaldecisiontree" begin
         result = traintest(X, y; models=(type=:modaldecisiontree, params=(; rng=rng)))
-        @test result isa SoleXplorer.ModelConfig
+        @test result isa SoleXplorer.Modelset
         @test result.classifier isa SoleXplorer.ModalDecisionTree
         @test result.model isa SoleXplorer.DecisionTree
     end
 
     @testset "modalrandomforest" begin
         result = traintest(X, y; models=(type=:modalrandomforest, params=(; rng=rng)))
-        @test result isa SoleXplorer.ModelConfig
+        @test result isa SoleXplorer.Modelset
         @test result.classifier isa SoleXplorer.ModalRandomForest
         @test result.model isa SoleXplorer.DecisionEnsemble
     end
 
     @testset "xgboost_classifier" begin
         result = traintest(X, y; models=(; type=:xgboost_classifier))
-        @test result isa SoleXplorer.ModelConfig
+        @test result isa SoleXplorer.Modelset
         @test result.classifier isa SoleXplorer.XGBoostClassifier
         @test result.model isa SoleXplorer.DecisionEnsemble
     end
@@ -75,42 +75,42 @@ end
 @testset "tuning usage traintest function" begin
     @testset "decisiontree_classifier" begin
         result = traintest(X, y; models=(type=:decisiontree_classifier, params=(; rng=rng), tuning=true))
-        @test result isa SoleXplorer.ModelConfig
+        @test result isa SoleXplorer.Modelset
         @test result.classifier isa MLJTuning.ProbabilisticTunedModel{LatinHypercube, SoleXplorer.DecisionTreeClassifier}
         @test result.model isa SoleXplorer.DecisionTree
     end
 
     @testset "randomforest_classifier" begin
         result = traintest(X, y; models=(type=:randomforest_classifier, params=(; rng=rng), tuning=true))
-        @test result isa SoleXplorer.ModelConfig
+        @test result isa SoleXplorer.Modelset
         @test result.classifier isa MLJTuning.ProbabilisticTunedModel{LatinHypercube, SoleXplorer.RandomForestClassifier}
         @test result.model isa SoleXplorer.DecisionEnsemble
     end
 
     @testset "adaboost_classifier" begin
         result = traintest(X, y; models=(type=:adaboost_classifier, params=(; rng=rng), tuning=true))
-        @test result isa SoleXplorer.ModelConfig
+        @test result isa SoleXplorer.Modelset
         @test result.classifier isa MLJTuning.ProbabilisticTunedModel{LatinHypercube, SoleXplorer.AdaBoostStumpClassifier}
         @test result.model isa SoleXplorer.DecisionEnsemble
     end
 
     @testset "modaldecisiontree" begin
         result = traintest(X, y; models=(type=:modaldecisiontree, params=(; rng=rng), tuning=true))
-        @test result isa SoleXplorer.ModelConfig
+        @test result isa SoleXplorer.Modelset
         @test result.classifier isa MLJTuning.ProbabilisticTunedModel{LatinHypercube, SoleXplorer.ModalDecisionTree}
         @test result.model isa SoleXplorer.DecisionTree
     end
 
     @testset "modalrandomforest" begin
         result = traintest(X, y; models=(type=:modalrandomforest, params=(; rng=rng), tuning=true))
-        @test result isa SoleXplorer.ModelConfig
+        @test result isa SoleXplorer.Modelset
         @test result.classifier isa MLJTuning.ProbabilisticTunedModel{LatinHypercube, SoleXplorer.ModalRandomForest}
         @test result.model isa SoleXplorer.DecisionEnsemble
     end
 
     @testset "xgboost_classifier" begin
         result = traintest(X, y; models=(type=:xgboost_classifier, tuning=true))
-        @test result isa SoleXplorer.ModelConfig
+        @test result isa SoleXplorer.Modelset
         @test result.classifier isa MLJTuning.ProbabilisticTunedModel{LatinHypercube, SoleXplorer.XGBoostClassifier}
         @test result.model isa SoleXplorer.DecisionEnsemble
     end
@@ -139,7 +139,7 @@ end
                 tuning=true
             )
         )
-        @test result isa SoleXplorer.ModelConfig
+        @test result isa SoleXplorer.Modelset
         @test result.classifier isa MLJTuning.ProbabilisticTunedModel{LatinHypercube, SoleXplorer.DecisionTreeClassifier}
         @test result.model isa SoleXplorer.DecisionTree
     end
@@ -168,7 +168,7 @@ end
                 ),   
             )
         )
-        @test result isa SoleXplorer.ModelConfig
+        @test result isa SoleXplorer.Modelset
         @test result.classifier isa MLJTuning.ProbabilisticTunedModel{LatinHypercube, SoleXplorer.RandomForestClassifier}
         @test result.model isa SoleXplorer.DecisionEnsemble
     end
@@ -181,7 +181,7 @@ end
                 features=[minimum, mean, std]
             )
         )
-        @test result isa SoleXplorer.ModelConfig
+        @test result isa SoleXplorer.Modelset
         @test result.classifier isa SoleXplorer.ModalDecisionTree
         @test result.model isa SoleXplorer.DecisionTree
     end
@@ -204,7 +204,7 @@ end
                 rng=rng
             )
         )
-        @test result isa SoleXplorer.ModelConfig
+        @test result isa SoleXplorer.Modelset
         @test result.classifier isa MLJTuning.ProbabilisticTunedModel{LatinHypercube, SoleXplorer.DecisionTreeClassifier}
         @test result.model isa Vector{<:SoleXplorer.DecisionTree}
     end
@@ -237,17 +237,17 @@ end
             tuning=false
         )
     )
-    @test results isa Vector{ModelConfig}
+    @test results isa Vector{Modelset}
     
-    @test results[1] isa SoleXplorer.ModelConfig
+    @test results[1] isa SoleXplorer.Modelset
     @test results[1].classifier isa SoleXplorer.DecisionTreeClassifier
     @test results[1].model isa SoleXplorer.DecisionTree
 
-    @test results[2] isa SoleXplorer.ModelConfig
+    @test results[2] isa SoleXplorer.Modelset
     @test results[2].classifier isa MLJTuning.ProbabilisticTunedModel{LatinHypercube, SoleXplorer.AdaBoostStumpClassifier}
     @test results[2].model isa SoleXplorer.DecisionEnsemble
 
-    @test results[3] isa SoleXplorer.ModelConfig
+    @test results[3] isa SoleXplorer.Modelset
     @test results[3].classifier isa SoleXplorer.ModalDecisionTree
     @test results[3].model isa SoleXplorer.DecisionTree
 end
@@ -268,14 +268,14 @@ Random.seed!(train_seed)
 @testset "basic usage traintest function" begin
     @testset "decisiontree_classifier" begin
         result = traintest(X, y; models=(type=:decisiontree_regressor, params=(; rng=rng)))
-        @test result isa SoleXplorer.ModelConfig
+        @test result isa SoleXplorer.Modelset
         @test result.classifier isa SoleXplorer.DecisionTreeRegressor
         @test result.model isa SoleXplorer.DecisionTree
     end
 
     @testset "randomforest_classifier" begin
         result = traintest(X, y; models=(type=:randomforest_regressor, params=(; rng=rng)))
-        @test result isa SoleXplorer.ModelConfig
+        @test result isa SoleXplorer.Modelset
         @test result.classifier isa SoleXplorer.RandomForestRegressor
         @test result.model isa SoleXplorer.DecisionEnsemble
     end
@@ -287,14 +287,14 @@ end
 @testset "tuning usage traintest function" begin
     @testset "decisiontree_classifier" begin
         result = traintest(X, y; models=(type=:decisiontree_regressor, tuning=true))
-        @test result isa SoleXplorer.ModelConfig
+        @test result isa SoleXplorer.Modelset
         @test result.classifier isa MLJTuning.DeterministicTunedModel{LatinHypercube, SoleXplorer.DecisionTreeRegressor}
         @test result.model isa SoleXplorer.DecisionTree
     end
 
     @testset "randomforest_classifier" begin
         result = traintest(X, y; models=(type=:randomforest_regressor, tuning=true))
-        @test result isa SoleXplorer.ModelConfig
+        @test result isa SoleXplorer.Modelset
         @test result.classifier isa MLJTuning.DeterministicTunedModel{LatinHypercube, SoleXplorer.RandomForestRegressor}
         @test result.model isa SoleXplorer.DecisionEnsemble
     end
@@ -321,7 +321,7 @@ end
 
     @testset "decisiontree" begin
         result = traintest(X, y; models=(; type=:decisiontree))
-        @test result isa SoleXplorer.ModelConfig
+        @test result isa SoleXplorer.Modelset
         @test result.classifier isa SoleXplorer.DecisionTreeClassifier
         @test result.model isa SoleXplorer.DecisionTree
     end
@@ -335,7 +335,7 @@ end
 
     @testset "decisiontree" begin
         result = traintest(X, y; models=(; type=:decisiontree))
-        @test result isa SoleXplorer.ModelConfig
+        @test result isa SoleXplorer.Modelset
         @test result.classifier isa SoleXplorer.DecisionTreeRegressor
         @test result.model isa SoleXplorer.DecisionTree
     end
@@ -374,7 +374,7 @@ y = y[chosen_rows]
             # with early stopping a validation set is required
             preprocess=(; valid_ratio = 0.7)
         )
-        @test result isa SoleXplorer.ModelConfig
+        @test result isa SoleXplorer.Modelset
         @test result.classifier isa SoleXplorer.XGBoostClassifier
         @test result.model isa SoleXplorer.DecisionEnsemble
 
@@ -407,7 +407,7 @@ y = y[chosen_rows]
             ),
             preprocess=(; valid_ratio = 0.7)
         )
-        @test result isa SoleXplorer.ModelConfig
+        @test result isa SoleXplorer.Modelset
         @test result.classifier isa MLJTuning.ProbabilisticTunedModel{LatinHypercube, SoleXplorer.XGBoostClassifier}
         @test result.model isa SoleXplorer.DecisionEnsemble
     end

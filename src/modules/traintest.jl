@@ -4,7 +4,7 @@ function _traintest(
     models::AbstractVector{<:NamedTuple},
     globals::Union{NamedTuple, Nothing}=nothing,
     preprocess::Union{NamedTuple, Nothing}=nothing,
-)::AbstractVector{ModelConfig}
+)::AbstractVector{Modelset}
     modelsets = validate_modelset(models, typeof(y), globals, preprocess)
 
     map(m -> begin
@@ -18,7 +18,7 @@ function _traintest(
         classifier = getmodel(m)
         mach = fitmodel(m, classifier, ds)
         model = testmodel(m, mach, ds)
-        ModelConfig(m, ds, classifier, mach, model)
+        Modelset(m, ds, classifier, mach, model)
     end, modelsets)
 end
 
@@ -42,7 +42,7 @@ Main functions:
 - `_traintest`: Internal implementation handling core training/testing logic
 
 The module validates input data, handles model configuration, split dataset in train and test
-partitions and returns results as ModelConfig objects containing the trained models, dataset and
+partitions and returns results as Modelset objects containing the trained models, dataset and
 test the models.
 
 # Arguments
@@ -56,8 +56,8 @@ test the models.
                         : Preprocessing configuration parameters for the dataset
 
 # Returns
-- Single `ModelConfig` if one model is provided
-- Vector of `ModelConfig` if multiple models are provided
+- Single `Modelset` if one model is provided
+- Vector of `Modelset` if multiple models are provided
 
 # Throws
 - `ArgumentError` if DataFrame contains non-numeric values
@@ -172,14 +172,14 @@ result = traintest(X, y; models=(type=:xgboost_classifier,
     preprocess=(; valid_ratio = 0.7)
 )
 ```
-See also [`ModelConfig`](@ref), [`prepare_dataset`](@ref), [`getmodel`](@ref), [`fitmodel`](@ref), [`testmodel`](@ref).
+See also [`Modelset`](@ref), [`prepare_dataset`](@ref), [`getmodel`](@ref), [`fitmodel`](@ref), [`testmodel`](@ref).
 """
 function traintest(
     X::AbstractDataFrame, 
     y::AbstractVector; 
     models::Union{NamedTuple, AbstractVector{<:NamedTuple}, Nothing}=nothing,
     kwargs...
-)::Union{ModelConfig, AbstractVector{ModelConfig}}
+)::Union{Modelset, AbstractVector{Modelset}}
     check_dataframe_type(X) || throw(ArgumentError("DataFrame must contain only numeric values"))
     size(X, 1) == length(y) || throw(ArgumentError("Number of rows in DataFrame must match length of class labels"))
     isnothing(models) && throw(ArgumentError("At least one type must be specified"))

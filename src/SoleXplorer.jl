@@ -55,7 +55,7 @@ include("utils/code_dataframe.jl")
 export code_dataframe
 
 include("types/models_structs.jl")
-export ModelConfig, range
+export Modelset, range
 export plainrule, lumenrule, intreesrule
 
 include("models/decisiontrees.jl")

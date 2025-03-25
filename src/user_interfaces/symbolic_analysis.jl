@@ -1,4 +1,4 @@
-function _symbolic_analysis!(tt::AbstractVector{ModelConfig})
+function _symbolic_analysis!(tt::AbstractVector{Modelset})
     for t in tt
         t.rules = SolePostHoc.modalextractrules(
             t.setup.rulesparams.type,
@@ -17,7 +17,7 @@ function symbolic_analysis(
     models::Union{NamedTuple, AbstractVector{<:NamedTuple}, Nothing}=nothing, 
     globals::Union{NamedTuple, Nothing}=nothing,
     preprocess::Union{NamedTuple, Nothing}=nothing,
-# )::Union{ModelConfig, AbstractVector{ModelConfig}}
+# )::Union{Modelset, AbstractVector{Modelset}}
 )
     tt = traintest(X, y; models, globals, preprocess)
 

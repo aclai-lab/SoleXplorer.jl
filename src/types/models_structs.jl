@@ -29,7 +29,7 @@ abstract type AbstractModelSetup end
 """
 Abstract type for fitted model configurations
 """
-abstract type AbstractModelConfig end
+abstract type AbstractModelset end
 
 # ---------------------------------------------------------------------------- #
 #                                     types                                    #
@@ -49,8 +49,8 @@ end
     DatasetInfo{F<:Base.Callable, R<:Real, I<:Integer, RNG<:AbstractRNG} <: AbstractDatasetConfig
 
 An immutable struct containing dataset configuration and metadata.
-It is included in ModelConfig and Dataset structs,
-In a ModelConfig object, it is reachable through the `ds.info` field. 
+It is included in Modelset and Dataset structs,
+In a Modelset object, it is reachable through the `ds.info` field. 
 
 # Fields
 - `algo::Symbol`:
@@ -240,7 +240,7 @@ function Base.show(io::IO, ds::Dataset)
 end
 
 # ---------------------------------------------------------------------------- #
-#                                 ModelConfig                                  #
+#                                 Modelset                                  #
 # ---------------------------------------------------------------------------- #
 mutable struct ModelSetup <: AbstractModelSetup
     type         :: Base.Callable
@@ -328,7 +328,7 @@ const AVAIL_TREATMENTS = (:aggregate, :reducesize)
 # ---------------------------------------------------------------------------- #
 #                                 ModelData                                    #
 # ---------------------------------------------------------------------------- #
-mutable struct ModelConfig <: AbstractModelConfig
+mutable struct Modelset <: AbstractModelset
     setup      :: AbstractModelSetup
     ds         :: Dataset
     classifier :: MLJ.Model
@@ -337,7 +337,7 @@ mutable struct ModelConfig <: AbstractModelConfig
     rules      :: Union{Rule, AbstractVector{<:Rule}, Nothing}
     accuracy   :: Union{AbstractFloat, AbstractVector{<:AbstractFloat}, Nothing}
 
-    function ModelConfig(
+    function Modelset(
         setup::AbstractModelSetup,
         ds::Dataset,
         classifier::MLJ.Model,
@@ -348,8 +348,8 @@ mutable struct ModelConfig <: AbstractModelConfig
     end
 end
 
-function Base.show(io::IO, mc::ModelConfig)
-    println(io, "ModelConfig:")
+function Base.show(io::IO, mc::Modelset)
+    println(io, "Modelset:")
     println(io, "    setup      =", mc.setup)
     println(io, "    classifier =", mc.classifier)
     println(io, "    rules      =", isnothing(mc.rules) ? "nothing" : string(mc.rules))

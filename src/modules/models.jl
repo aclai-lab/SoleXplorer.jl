@@ -1,7 +1,7 @@
 # ---------------------------------------------------------------------------- #
 #                                   get model                                  #
 # ---------------------------------------------------------------------------- #
-getmodel(model::ModelConfig) = model
+getmodel(model::Modelset) = model
 
 function getmodel(modelset::AbstractModelSetup)
     classifier = modelset.type(; modelset.params...)
