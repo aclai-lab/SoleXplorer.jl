@@ -10,34 +10,34 @@ hasnans(X::AbstractMatrix) = any(x -> x == 1, SoleData.hasnans.(eachcol(X)))
 #                                 partitioning                                 #
 # ---------------------------------------------------------------------------- #
 """
-    _partition(y::Union{CategoricalArray, Vector{T}}, train_ratio::Float64, 
-               shuffle::Bool, stratified::Bool, nfolds::Int, rng::AbstractRNG) 
-               where {T<:Union{AbstractString, Number}}
+    _partition(y::AbstractVector{<:Y_Value}, train_ratio::Float64, valid_ratio::Float64, 
+               shuffle::Bool, stratified::Bool, nfolds::Int, rng::AbstractRNG)
+               -> Union{TT_indexes, Vector{TT_indexes}}
 
-Partitions the input vector `y` into training and testing indices based on 
-the specified parameters. Supports both stratified and non-stratified 
-partitioning.
+Partitions the input vector `y` into training, validation, and testing indices based on 
+the specified parameters. Supports both stratified and non-stratified partitioning.
 
 # Arguments
-- `y::Union{CategoricalArray, Vector{T}}`: The target variable to partition.
-- `train_ratio::Float64`: The ratio of data to be used for training in 
-  non-stratified partitioning.
+- `y::AbstractVector{<:Y_Value}`: The target variable to partition.
+- `train_ratio::Float64`: The ratio of data to be used for training (from the non-test portion when valid_ratio < 1.0).
+- `valid_ratio::Float64`: Controls validation set creation:
+  - When 1.0: No validation set is created (empty array)
+  - When < 1.0: Creates validation set as a portion of the training data
 - `shuffle::Bool`: Whether to shuffle the data before partitioning.
-- `stratified::Bool`: Whether to perform stratified partitioning.
-- `nfolds::Int`: Number of folds for cross-validation in stratified 
-  partitioning.
+- `stratified::Bool`: Whether to use stratified partitioning:
+  - When true: Returns a vector of TT_indexes for cross-validation
+  - When false: Returns a single TT_indexes instance
+- `nfolds::Int`: Number of folds for cross-validation in stratified partitioning.
 - `rng::AbstractRNG`: Random number generator for reproducibility.
 
 # Returns
-- `Vector{Tuple{Vector{Int}, Vector{Int}}}`: A vector of tuples containing 
-  training and testing indices.
-
-# Throws
-- `ArgumentError`: If `nfolds` is less than 2 when `stratified` is true.
+- `Union{TT_indexes, Vector{TT_indexes}}`: Either:
+  - A single `TT_indexes` object containing train/valid/test indices (when stratified=false)
+  - A vector of `TT_indexes` objects for cross-validation folds (when stratified=true)
 """
 
 function _partition(
-    y::Union{CategoricalArray,Vector{T}},
+    y::AbstractVector{<:Y_Value},
     # validation::Bool,
     train_ratio::Float64,
     valid_ratio::Float64,
@@ -45,7 +45,7 @@ function _partition(
     stratified::Bool,
     nfolds::Int,
     rng::AbstractRNG
-) where {T<:Union{AbstractString,Number}}
+)::Union{TT_indexes, Vector{TT_indexes}}
     if stratified
         stratified_cv = MLJ.StratifiedCV(; nfolds, shuffle, rng)
         tt = MLJ.MLJBase.train_test_pairs(stratified_cv, 1:length(y), y)
@@ -121,7 +121,7 @@ function prepare_dataset(
     vnames::Union{AbstractVector{<:Union{AbstractString,Symbol}},Nothing}=nothing,
 )
     # check parameters
-    check_dataframe_type(X) || throw(ArgumentError("DataFrame must contain only numeric values"))
+    check_dataset_type(X) || throw(ArgumentError("DataFrame must contain only numeric values"))
     size(X, 1) == length(y) || throw(ArgumentError("Number of rows in DataFrame must match length of class labels"))
     treatment in AVAIL_TREATMENTS || throw(ArgumentError("Treatment must be one of: $AVAIL_TREATMENTS"))
 
