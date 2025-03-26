@@ -34,7 +34,7 @@ end
 # ---------------------------------------------------------------------------- #
 #                             validating functions                             #
 # ---------------------------------------------------------------------------- #
-function validate_model(model::Symbol, y::DataType)
+function validate_model(model::Symbol, y::DataType)::ModelSetup
     if haskey(AVAIL_MODELS, model)
         return AVAIL_MODELS[model]()
     elseif y <: Reg_Value
@@ -55,11 +55,10 @@ function validate_params(
 )        
     check_params(users, keys(defaults))
 
-    if !isnothing(rng) && haskey(defaults, :rng)
-        merge(defaults, filter_params(users), (rng=rng,))
-    else
+    isnothing(rng) && !haskey(defaults, :rng) ?
+        merge(defaults, filter_params(users), (rng=rng,)) :
         merge(defaults, filter_params(users))
-    end
+
 end
 
 function validate_features(
@@ -72,6 +71,27 @@ function validate_features(
     all(f -> f isa Base.Callable, features) || throw(ArgumentError("All features must be functions"))
 
     return features
+end
+
+function validate_resample(
+    users::Union{NamedTuple, Nothing},
+    rng::Union{AbstractRNG, Nothing}=nothing
+)::Union{Resample, Nothing}    
+    check_params(users, (:type, :params))
+    type = get_type(users, SoleXplorer.AVAIL_RESAMPLES)
+    def_params = SoleXplorer.RESAMPLE_PARAMS[type]
+
+    # validate parameters
+    user_params = isnothing(users) ? NamedTuple() : haskey(users, :params) ? begin
+        check_params(users.params, keys(SoleXplorer.RESAMPLE_PARAMS[type]))
+        NamedTuple(k => v for (k, v) in pairs(users.params))
+    end : NamedTuple()
+
+    params = isnothing(rng) && !haskey(def_params, :rng) ?
+        merge(def_params, user_params) :
+        merge(def_params, user_params, (rng=rng,))
+
+    return Resample(type, params)
 end
 
 function validate_winparams(
@@ -126,7 +146,7 @@ function validate_rulesparams(
         NamedTuple(k => v for (k, v) in pairs(users.params))
     end : NamedTuple()
 
-    params = isnothing(rng) && haskey(def_params, :rng) ?
+    params = isnothing(rng) && !haskey(def_params, :rng) ?
         merge(def_params, user_params) :
         merge(def_params, user_params, (rng=rng,))
 
@@ -206,9 +226,12 @@ end
 
 function validate_modelset(
     model::NamedTuple,
-    y::Union{DataType, Nothing},
-    preprocess::Union{NamedTuple, Nothing}
-)
+    y::Union{DataType, Nothing};
+    resample::Union{NamedTuple, Nothing}=nothing,
+    preprocess::Union{NamedTuple, Nothing}=nothing
+)::ModelSetup
+    check_params(model, (:type, :params))
+    check_params(resample, (:type, :params))
     check_params(preprocess, PREPROC_KEYS)
 
     # grab rng form preprocess and feed it to every process
@@ -219,7 +242,6 @@ function validate_modelset(
     end
 
     haskey(model, :type) || throw(ArgumentError("Each model specification must contain a 'type' field"))
-    check_params(model, MODEL_KEYS)
     modelset = validate_model(model.type, y)
 
     # grab additional extra params
@@ -249,6 +271,8 @@ function validate_modelset(
         )
     end
 
+    isnothing(resample) || (modelset.resample = validate_resample(resample, rng))
+
     modelset.winparams = validate_winparams(
         modelset.winparams,
         get(model, :winparams, nothing),
@@ -271,5 +295,3 @@ function validate_modelset(
 
     return modelset
 end
-
-validate_modelset(models::NamedTuple, y::Union{DataType, Nothing}) = validate_modelset(models, y, nothing)

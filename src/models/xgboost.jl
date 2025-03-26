@@ -116,6 +116,7 @@ function XGBoostClassifierModel()
         config,
         params,
         DEFAULT_FEATS,
+        nothing,
         winparams,
         learn_method,
         tuning,

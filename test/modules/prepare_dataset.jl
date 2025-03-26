@@ -6,19 +6,7 @@ using StatsBase: sample
 # using Random
 # using Statistics, StatsBase
 
-using MLJ
-nfolds = 5
-shuffle = true
-rng = Xoshiro(11)
-
-s0 = MLJ.CV(; nfolds,  shuffle, rng)
-s1 = MLJ.StratifiedCV(; nfolds, shuffle, rng)
-s2 = MLJ.Holdout(; fraction_train=0.7, shuffle, rng)
-s3 = MLJ.TimeSeriesCV(; nfolds)
-
-tt = MLJ.MLJBase.train_test_pairs(stratified_cv, 1:length(y), y)
-
-@testset "prepare_dataset.jl" begin
+@testset "prepare_dataset private functions" begin
     
     @testset "check utility: check_dataframe_type" begin
         df_valid = DataFrame(a = [1.0, 2.0], b = [3, 4])
@@ -47,9 +35,30 @@ tt = MLJ.MLJBase.train_test_pairs(stratified_cv, 1:length(y), y)
     X = X[chosen_rows, chosen_cols]
     y = y[chosen_rows]
 
-dsd = prepare_dataset(X, y; model=(type=:decisiontree,), preprocess=(rng=Xoshiro(11),))
-dsm = prepare_dataset(X, y; model=(type=:modaldecisiontree, params=(relations=:IA7, reducefunc=mean)), preprocess=(rng=Xoshiro(11),))
-dsm2 = prepare_dataset(X, y; model=(type=:modaldecisiontree, params=(relations=:IA7, reducefunc=maximum)), preprocess=(rng=Xoshiro(11),))
+
+    no_parameters = prepare_dataset(X, y)
+    model_type = prepare_dataset(X, y; model=(type=:modaldecisiontree,))
+    parametrized_model_type = prepare_dataset(X, y; 
+        model=(type=:xgboost,
+                params=(
+                    num_round=20, 
+                    booster="gbtree", 
+                    eta=0.5,
+                    num_parallel_tree=10, 
+                    max_depth=8, 
+                )
+        )
+    )
+    r1 = prepare_dataset(X, y; resample=(type=CV,), preprocess=(;rng))
+    r2 = prepare_dataset(X, y; resample=(type=Holdout,))
+    r3 = prepare_dataset(X, y; resample=(type=StratifiedCV,))
+    r4 = prepare_dataset(X, y; resample=(type=TimeSeriesCV,))
+    resample = prepare_dataset(X, y; resample=(type=CV, params=(nfolds=5,)))
+    resample = prepare_dataset(X, y; resample=(type=CV, params=(nfolds=5,)))
+    resample = prepare_dataset(X, y; resample=(type=CV, params=(nfolds=5,)))
+    resample = prepare_dataset(X, y; resample=(type=CV, params=(nfolds=5,)))
+
+    ds = prepare_dataset(X, y; model=(type=:decisiontree,), preprocess=(;rng))
 
     @testset "prepare_dataset check output" begin        
         ds = prepare_dataset(X, y; model=(type=:decisiontree,), preprocess=(;rng))

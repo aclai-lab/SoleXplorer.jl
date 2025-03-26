@@ -1,18 +1,13 @@
 module SoleXplorer
 
 using Sole
-using SoleFeatures
-using SolePostHoc
-import MultiData.hasnans
 using SoleData
 using SoleData: PatchedFunction, nanpatchedfunction
-
-using DataFrames
-using CategoricalArrays, OrderedCollections
-using Random
-
-import DecisionTree as DT
-import XGBoost as XGB
+using SoleFeatures
+using SolePostHoc
+using ModalDecisionTrees
+using ModalDecisionLists
+import MultiData.hasnans
 
 using MLJ
 using MLJDecisionTreeInterface, MLJXGBoostInterface
@@ -21,18 +16,20 @@ import MLJModelInterface as MMI
 using MLJ: Grid as grid, RandomSearch as randomsearch, LatinHypercube as latinhypercube
 using TreeParzen: MLJTreeParzenTuning as treeparzen
 using MLJParticleSwarmOptimization: ParticleSwarm as particleswarm, AdaptiveParticleSwarm as adaptiveparticleswarm
-
-export grid, randomsearch, latinhypercube, treeparzen, particleswarm, adaptiveparticleswarm
-
 using TreeParzen
 using Distributions
 
-using ModalDecisionTrees
-using ModalDecisionLists
+export grid, randomsearch, latinhypercube, treeparzen, particleswarm, adaptiveparticleswarm
 
-# Features
-# using Catch22
+import DecisionTree as DT
+import XGBoost as XGB
+
+using DataFrames
+using CategoricalArrays, OrderedCollections
+using Random
 using StatsBase, ScientificTypes
+
+using Base.Threads: @threads
 
 using Reexport
 @reexport using SoleFeatures: mode_5, mode_10, embedding_dist, acf_timescale, acf_first_min, ami2, trev, outlier_timing_pos
@@ -50,6 +47,8 @@ using Reexport
 # utility from other packages
 @reexport using SoleData: load_arff_dataset
 @reexport using Random: seed!, Xoshiro, MersenneTwister
+
+@reexport using MLJ: CV, Holdout, StratifiedCV, TimeSeriesCV
 
 include("utils/code_dataframe.jl")
 export code_dataframe

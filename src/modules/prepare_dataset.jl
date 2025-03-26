@@ -65,30 +65,27 @@ the specified parameters. Supports both stratified and non-stratified partitioni
 
 function _partition(
     y::AbstractVector{<:Y_Value},
-    # validation::Bool,
     train_ratio::Float64,
     valid_ratio::Float64,
-    shuffle::Bool,
-    stratified::Bool,
-    nfolds::Int,
+    resample::Union{Resample, Nothing},
     rng::AbstractRNG
-)::Union{TT_indexes, Vector{TT_indexes}}
-    if stratified
-        stratified_cv = MLJ.StratifiedCV(; nfolds, shuffle, rng)
-        tt = MLJ.MLJBase.train_test_pairs(stratified_cv, 1:length(y), y)
-        if valid_ratio == 1.0
-            return [TT_indexes(train, eltype(train)[], test) for (train, test) in tt]
-        else
-            tv = collect((MLJ.partition(t[1], train_ratio)..., t[2]) for t in tt)
-            return [TT_indexes(train, valid, test) for (train, valid, test) in tv]
-        end
-    else
-        tt = MLJ.partition(eachindex(y), train_ratio; shuffle, rng)
+)::Union{TT_indexes{Int}, Vector{TT_indexes{Int}}}
+    if isnothing(resample)
+        tt = MLJ.partition(eachindex(y), train_ratio; shuffle=true, rng)
         if valid_ratio == 1.0
             return TT_indexes(tt[1], eltype(tt[1])[], tt[2])
         else
             tv = MLJ.partition(tt[1], valid_ratio; shuffle, rng)
             return TT_indexes(tv[1], tv[2], tt[2])
+        end
+    else
+        resample_cv = resample.type(; resample.params...)
+        tt = MLJ.MLJBase.train_test_pairs(resample_cv, 1:length(y), y)
+        if valid_ratio == 1.0
+            return [TT_indexes(train, eltype(train)[], test) for (train, test) in tt]
+        else
+            tv = collect((MLJ.partition(t[1], train_ratio)..., t[2]) for t in tt)
+            return [TT_indexes(train, valid, test) for (train, valid, test) in tv]
         end
     end
 end
@@ -131,19 +128,14 @@ Supports both classification and regression tasks, with options for data treatme
 function _prepare_dataset(
     df::AbstractDataFrame,
     y::AbstractVector;
-    # model.config
     algo::Symbol,
     treatment::Symbol,
     reducefunc::Union{Base.Callable, Nothing},
     features::AbstractVector{<:Base.Callable},
-    # model.preprocess
     train_ratio::Float64,
     valid_ratio::Float64,
-    shuffle::Bool,
-    stratified::Bool,
-    nfolds::Int,
     rng::AbstractRNG,
-    # model.winparams
+    resample::Union{Resample, Nothing},
     winparams::SoleFeatures.WinParams,
     vnames::Union{SoleFeatures.VarNames,Nothing}=nothing,
 )::Dataset
@@ -184,21 +176,18 @@ function _prepare_dataset(
     ds_info = DatasetInfo(
         algo,
         treatment,
-        reducefunc,
-        features,
+        treatment == :reducesize ? reducefunc : nothing,
         train_ratio,
         valid_ratio,
-        shuffle,
-        stratified,
-        nfolds,
         rng,
-        winparams,
+        isnothing(resample) ? false : true,
         vnames
     )
 
     return Dataset(
         X, y,
-        _partition(y, train_ratio, valid_ratio, shuffle, stratified, nfolds, rng),
+        # _partition(y, train_ratio, valid_ratio, shuffle, stratified, nfolds, rng),
+        _partition(y, train_ratio, valid_ratio, resample, rng),
         ds_info
     )
 end
@@ -219,10 +208,8 @@ function _prepare_dataset(
         features=model.features,
         train_ratio=model.preprocess.train_ratio,
         valid_ratio=model.preprocess.valid_ratio,
-        shuffle=model.preprocess.shuffle,
-        stratified=model.preprocess.stratified,
-        nfolds=model.preprocess.nfolds,
         rng=model.preprocess.rng,
+        resample=model.resample,
         winparams=model.winparams,
     )
 end
@@ -231,18 +218,22 @@ function prepare_dataset(
     X::AbstractDataFrame,
     y::AbstractVector,
     model::NamedTuple;
+    resample::Union{NamedTuple, Nothing}=nothing,
     preprocess::Union{NamedTuple, Nothing}=nothing
 )::Modelset
-    modelset = validate_modelset(model, eltype(y), preprocess)
+    modelset = validate_modelset(model, eltype(y); resample, preprocess)
+    @show modelset.resample
     Modelset(modelset, _prepare_dataset(X, y, modelset))
 end
 
 function prepare_dataset(
     X::AbstractDataFrame,
     y::AbstractVector;
-    model::NamedTuple,
+    model::Union{NamedTuple, Nothing}=nothing,
     kwargs...
 )::Modelset
+    # if model is unspecified, use default model setup
+    isnothing(model) && (model = DEFAULT_MODEL_SETUP)
     prepare_dataset(X, y, model; kwargs...)
 end
 

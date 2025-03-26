@@ -33,11 +33,17 @@ const Cat_Value = Union{AbstractString, Symbol, CategoricalValue}
 const Reg_Value = Number
 const Y_Value   = Union{Cat_Value, Reg_Value}
 
+# TODO remove this
 const Rule      = Union{SoleModels.ClassificationRule, SoleModels.DecisionSet}
 
+struct Resample
+    type        :: Base.Callable
+    params      :: NamedTuple
+end
+
 struct RulesParams
-    type         :: SoleModels.RuleExtractor
-    params       :: NamedTuple
+    type        :: SoleModels.RuleExtractor
+    params      :: NamedTuple
 end
 
 # ---------------------------------------------------------------------------- #
@@ -96,39 +102,28 @@ partitioned, and what features are extracted from it.
 struct DatasetInfo <: AbstractDatasetSetup
     algo        :: Symbol
     treatment   :: Symbol
-    reducefunc  :: Union{Nothing, <:Base.Callable}
-    features    :: Vector{<:Base.Callable}
+    reducefunc  :: Union{<:Base.Callable, Nothing}
     train_ratio :: Real
     valid_ratio :: Real
-    shuffle     :: Bool
-    stratified  :: Bool
-    nfolds      :: Int
     rng         :: AbstractRNG
-    winparams   :: SoleFeatures.WinParams
+    resample    :: Bool
     vnames      :: Union{Vector{<:AbstractString}, Nothing}
 
     function DatasetInfo(
         algo        :: Symbol,
         treatment   :: Symbol,
-        reducefunc  :: Union{Nothing, <:Base.Callable},
-        features    :: Vector{<:Base.Callable},
+        reducefunc  :: Union{<:Base.Callable, Nothing},
         train_ratio :: Real,
         valid_ratio :: Real,
-        shuffle     :: Bool,
-        stratified  :: Bool,
-        nfolds      :: Int,
         rng         :: AbstractRNG,
-        winparams   :: SoleFeatures.WinParams,
+        resample    :: Bool,
         vnames      :: Union{Vector{<:AbstractString}, Nothing}
     )::DatasetInfo
         # Validate ratios
         0 ≤ train_ratio ≤ 1 || throw(ArgumentError("train_ratio must be between 0 and 1"))
         0 ≤ valid_ratio ≤ 1 || throw(ArgumentError("valid_ratio must be between 0 and 1"))
 
-        new(
-            algo, treatment, reducefunc, features, train_ratio, valid_ratio,
-            shuffle, stratified, nfolds, rng, winparams, vnames
-        )
+        new(algo, treatment, reducefunc, train_ratio, valid_ratio, rng, resample, vnames)
     end
 end
 
@@ -155,37 +150,18 @@ struct TT_indexes{T<:Integer} <: AbstractIndexCollection
     train :: Vector{T}
     valid :: Vector{T}
     test  :: Vector{T}
-end
 
-function TT_indexes(
-    train :: AbstractVector{T},
-    valid :: AbstractVector{T},
-    test  :: AbstractVector{T}
-) where {T<:Integer}
-    TT_indexes{T}(train, valid, test)
+    function TT_indexes(
+        train :: AbstractVector{T},
+        valid :: AbstractVector{T},
+        test  :: AbstractVector{T}
+    ) where {T<:Integer}
+        new{T}(train, valid, test)
+    end
 end
 
 Base.show(io::IO, t::TT_indexes) = print(io, "TT_indexes(train=", t.train, ", validation=", t.valid, ", test=", t.test, ")")
 Base.length(t::TT_indexes) = length(t.train) + length(t.valid) + length(t.test)
-
-function _create_views(X, y, tt, stratified::Bool)
-    if stratified
-        Xtrain = view.(Ref(X), getfield.(tt, :train), Ref(:))
-        Xvalid = view.(Ref(X), getfield.(tt, :valid), Ref(:))
-        Xtest  = view.(Ref(X), getfield.(tt, :test), Ref(:))
-        ytrain = view.(Ref(y), getfield.(tt, :train))
-        yvalid = view.(Ref(y), getfield.(tt, :valid))
-        ytest  = view.(Ref(y), getfield.(tt, :test))
-    else
-        Xtrain = @views X[tt.train, :]
-        Xvalid = @views X[tt.valid, :]
-        Xtest  = @views X[tt.test, :]
-        ytrain = @views y[tt.train]
-        yvalid = @views y[tt.valid]
-        ytest  = @views y[tt.test]
-    end
-    return Xtrain, Xvalid, Xtest, ytrain, yvalid, ytest
-end
 
 """
     Dataset{T<:AbstractMatrix,S} <: AbstractDataset
@@ -213,7 +189,7 @@ struct Dataset{T<:AbstractMatrix,S} <: AbstractDataset
     ytest       :: Union{SubArray{<:eltype(S)}, Vector{<:SubArray{<:eltype(S)}}}
 
     function Dataset(X::T, y::S, tt, info) where {T<:AbstractMatrix,S}
-        if info.stratified
+        if info.resample
             Xtrain = view.(Ref(X), getfield.(tt, :train), Ref(:))
             Xvalid = view.(Ref(X), getfield.(tt, :valid), Ref(:))
             Xtest  = view.(Ref(X), getfield.(tt, :test), Ref(:))
@@ -255,6 +231,7 @@ mutable struct ModelSetup <: AbstractModelSetup
     config       :: NamedTuple
     params       :: NamedTuple
     features     :: Union{AbstractVector{<:Base.Callable}, Nothing}
+    resample     :: Union{Resample, Nothing}
     winparams    :: SoleFeatures.WinParams
     learn_method :: Union{Base.Callable, Tuple{Base.Callable, Base.Callable}}
     tuning       :: NamedTuple
@@ -291,6 +268,8 @@ ModalAdaBoostModel(dtmodel          :: ModelSetup) = dtmodel
 XGBoostClassifierModel(dtmodel      :: ModelSetup) = dtmodel
 XGBoostRegressorModel(dtmodel       :: ModelSetup) = dtmodel
 
+const DEFAULT_MODEL_SETUP = (type=:decisiontree,)
+
 const DEFAULT_FEATS = [maximum, minimum, mean, std]
 
 const DEFAULT_PREPROC = (
@@ -302,8 +281,7 @@ const DEFAULT_PREPROC = (
     rng         = TaskLocalRNG()
 )
 
-const MODEL_KEYS   = (:type, :params, :features, :winparams, :rulesparams)
-const PREPROC_KEYS = (:train_ratio, :valid_ratio, :shuffle, :stratified, :nfolds, :rng)
+const PREPROC_KEYS = (:train_ratio, :valid_ratio, :rng)
 
 const AVAIL_MODELS = Dict(
     :decisiontree_classifier => DecisionTreeClassifierModel,
@@ -323,15 +301,33 @@ const AVAIL_MODELS = Dict(
     # :modal_decision_list => ModalDecisionLists.MLJInterface.ExtendedSequentialCovering,
 )
 
-# const AVAIL_WINS       = (movingwindow, wholewindow, splitwindow, adaptivewindow)
 const AVAIL_TREATMENTS = (:aggregate, :reducesize)
 
-# const WIN_PARAMS = Dict(
-#     movingwindow   => (window_size = 1024, window_step = 512),
-#     wholewindow    => NamedTuple(),
-#     splitwindow    => (nwindows = 20),
-#     adaptivewindow => (nwindows = 20, relative_overlap = 0.5)
-# )
+# ---------------------------------------------------------------------------- #
+#                                   resample                                   #
+# ---------------------------------------------------------------------------- #
+const AVAIL_RESAMPLES = (CV, Holdout, StratifiedCV, TimeSeriesCV)
+
+const RESAMPLE_PARAMS = Dict(
+    CV           => (
+        nfolds         = 6,
+        shuffle        = true,
+        rng            = TaskLocalRNG()
+    ),
+    Holdout      => (
+        fraction_train = 0.7,
+        shuffle        = true,
+        rng            = TaskLocalRNG()
+    ),
+    StratifiedCV => (
+        nfolds         = 6,
+        shuffle        = true,
+        rng            = TaskLocalRNG()
+    ),
+    TimeSeriesCV => (
+        nfolds         = 4,
+    )
+)
 
 # ---------------------------------------------------------------------------- #
 #                                    rules                                     #
@@ -479,7 +475,7 @@ end
 # ---------------------------------------------------------------------------- #
 mutable struct Modelset <: AbstractModelset
     setup      :: AbstractModelSetup
-    ds         :: Dataset
+    ds         :: AbstractDataset
     classifier :: Union{MLJ.Model,     Nothing}
     mach       :: Union{MLJ.Machine,   Nothing}
     model      :: Union{AbstractModel, Nothing}
@@ -488,7 +484,7 @@ mutable struct Modelset <: AbstractModelset
 
     function Modelset(
         setup      :: AbstractModelSetup,
-        ds         :: Dataset,
+        ds         :: AbstractDataset,
         classifier :: MLJ.Model,
         mach       :: MLJ.Machine,
         model      :: AbstractModel
