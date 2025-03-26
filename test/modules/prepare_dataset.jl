@@ -6,6 +6,18 @@ using StatsBase: sample
 # using Random
 # using Statistics, StatsBase
 
+using MLJ
+nfolds = 5
+shuffle = true
+rng = Xoshiro(11)
+
+s0 = MLJ.CV(; nfolds,  shuffle, rng)
+s1 = MLJ.StratifiedCV(; nfolds, shuffle, rng)
+s2 = MLJ.Holdout(; fraction_train=0.7, shuffle, rng)
+s3 = MLJ.TimeSeriesCV(; nfolds)
+
+tt = MLJ.MLJBase.train_test_pairs(stratified_cv, 1:length(y), y)
+
 @testset "prepare_dataset.jl" begin
     
     @testset "check utility: check_dataframe_type" begin

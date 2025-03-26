@@ -35,3 +35,6 @@ https://github.com/nredell/ShapML.jl
   esegue una funzione che verifica il numero di istanze del gruppo più piccolo,
   e prende quell'esatto numero di istanze (a random) dagli altri gruppi con maggiori istanze,
   restituendo un dataset bilanciato.
+
+  # da fare ADESSO
+  - https://juliaai.github.io/MLJBase.jl/stable/resampling/
