@@ -55,7 +55,7 @@ function validate_params(
 )        
     check_params(users, keys(defaults))
 
-    isnothing(rng) && !haskey(defaults, :rng) ?
+    !isnothing(rng) && haskey(defaults, :rng) ?
         merge(defaults, filter_params(users), (rng=rng,)) :
         merge(defaults, filter_params(users))
 
@@ -63,9 +63,9 @@ end
 
 function validate_features(
     defaults::AbstractVector,
-    users::Union{AbstractVector, Nothing}
+    users::Union{Tuple, Nothing}
 )
-    features = isnothing(users) ? defaults : users
+    features = isnothing(users) ? defaults : [users...]
 
     # check if all features are functions
     all(f -> f isa Base.Callable, features) || throw(ArgumentError("All features must be functions"))
@@ -87,10 +87,10 @@ function validate_resample(
         NamedTuple(k => v for (k, v) in pairs(users.params))
     end : NamedTuple()
 
-    params = isnothing(rng) && !haskey(def_params, :rng) ?
-        merge(def_params, user_params) :
-        merge(def_params, user_params, (rng=rng,))
-
+    params = !isnothing(rng) && haskey(def_params, :rng) ?
+        merge(def_params, user_params, (rng=rng,)) :
+        merge(def_params, user_params)
+        
     return Resample(type, params)
 end
 
@@ -99,8 +99,6 @@ function validate_winparams(
     users::Union{NamedTuple, Nothing},
     treatment::Symbol
 )::SoleFeatures.WinParams
-    check_params(users, (:type, :params))
-
     # get type
     user_type = get_type(users, SoleFeatures.AVAIL_WINS)
 
@@ -130,8 +128,6 @@ function validate_rulesparams(
     users::Union{NamedTuple, Nothing},
     rng::Union{Nothing, AbstractRNG}
 )::RulesParams
-    check_params(users, (:type, :params))
-
     # get type
     user_type = get_type(users, SoleXplorer.AVAIL_RULES)
 
@@ -146,73 +142,71 @@ function validate_rulesparams(
         NamedTuple(k => v for (k, v) in pairs(users.params))
     end : NamedTuple()
 
-    params = isnothing(rng) && !haskey(def_params, :rng) ?
-        merge(def_params, user_params) :
-        merge(def_params, user_params, (rng=rng,))
-
+    params = !isnothing(rng) && haskey(def_params, :rng) ?
+        merge(def_params, user_params, (rng=rng,)) :
+        merge(def_params, user_params)
+        
     return RulesParams(type, params)
 end
 
 function validate_tuning_type(
-    defaults::Union{NamedTuple, Nothing},
     users::Union{NamedTuple, Nothing},
-)
-    user_tuning = get_function(users, AVAIL_TUNING_METHODS)
-    
-    type = if isnothing(user_tuning)
-        isnothing(defaults) ? nothing : defaults.type
-    else
-        defaults = TUNING_METHODS_PARAMS[user_tuning]
-        filtered_users = isnothing(users) ? nothing : NamedTuple(k => v for (k,v) in pairs(users) if k != :type)
-        check_unknown_params(filtered_users, defaults, "user_tuning_type")
-        haskey(users, :type) && users.type
-    end
+    rng::Union{Nothing, AbstractRNG}
+)::TuningStrategy
+    check_params(users, (:type, :params))
+    type = get_type(users, SoleXplorer.AVAIL_TUNING_METHODS)
+    def_params = SoleXplorer.TUNING_METHODS_PARAMS[type]
 
-    filter_params(p) = isnothing(p) ? NamedTuple() : NamedTuple(k => v for (k,v) in pairs(p) if haskey(defaults, k))
-    default_filtered = isnothing(defaults) ? NamedTuple() : NamedTuple(k => v for (k,v) in pairs(defaults) if k != :type)
-    merged = merge(default_filtered, filter_params(users))
+    # validate parameters
+    user_params = isnothing(users) ? NamedTuple() : haskey(users, :params) ? begin
+        check_params(users.params, keys(SoleXplorer.TUNING_METHODS_PARAMS[type]))
+        NamedTuple(k => v for (k, v) in pairs(users.params))
+    end : NamedTuple()
 
-    isempty(merged) ? nothing : type(; merged...)
-end
-
-function validate_tuning_ranges(
-    defaults::Union{AbstractVector, Nothing},
-    users::Union{AbstractVector, Nothing}
-)
-    ranges = isnothing(users) ? defaults : users
-  
-    all(r -> r isa Base.Callable, ranges) || throw(ArgumentError("All ranges must be functions"))
-
-    return ranges
+    params = !isnothing(rng) && haskey(def_params, :rng) ?
+        merge(def_params, user_params, (rng=rng,)) :
+        merge(def_params, user_params)
+        
+    return TuningStrategy(type, params)
 end
 
 function validate_tuning(
-    defaults::NamedTuple,
+    defaults::TuningParams,
     users::Union{NamedTuple, Bool, Nothing},
-)
-    if isa(users, Bool) 
-        users = users ? NamedTuple() : nothing
+    rng::Union{Nothing, AbstractRNG},
+    algo::Symbol
+)::Union{TuningParams, Nothing}
+    isnothing(users) && return nothing
+
+    # case 1: users is a Bool
+    if isa(users, Bool) && users
+        method = !isnothing(rng) && haskey(TUNING_METHODS_PARAMS[defaults.method.type], :rng) ?
+            SoleXplorer.TuningStrategy(defaults.method.type, merge(defaults.method.params, (rng=rng,))) :
+            SoleXplorer.TuningStrategy(defaults.method.type, defaults.method.params)
+        return SoleXplorer.TuningParams(method, defaults.params, defaults.ranges)
     end
 
-    isnothing(users) && return (tuning=false, method=nothing, params=NamedTuple(), ranges=nothing)
+    # case 2: users is a NamedTuple
+    check_params(users, (:method, :params, :ranges))
+    # verify all required fields exist
+    required_fields = (:method, :ranges)
+    missing_fields = filter(field -> !haskey(users, field), required_fields)
+    isempty(missing_fields) || throw(ArgumentError("Missing required tuning fields: $missing_fields"))
 
     method = validate_tuning_type(
-        defaults.method,
-        isnothing(users) ? nothing : get(users, :method, nothing)
+        users.method,
+        rng
     )
 
     params = validate_params(
-        defaults.params,
-        isnothing(users) ? nothing : get(users, :params, nothing),
+        SoleXplorer.TUNING_PARAMS[algo],
+        get(users, :params, nothing),
         nothing
     )
 
-    ranges = validate_tuning_ranges(
-        defaults.ranges,
-        isnothing(users) ? nothing : get(users, :ranges, nothing)
-    )
+    all(r -> r isa Base.Callable, users.ranges) || throw(ArgumentError("All ranges must be functions"))
 
-    return (tuning=true, method=method, params=params, ranges=ranges)
+    return TuningParams(method, params, users.ranges)
 end
 
 function validate_preprocess_params(
@@ -228,10 +222,16 @@ function validate_modelset(
     model::NamedTuple,
     y::Union{DataType, Nothing};
     resample::Union{NamedTuple, Nothing}=nothing,
+    win::Union{NamedTuple, Nothing}=nothing,
+    features::Union{Tuple, Nothing}=nothing,
+    tuning::Union{NamedTuple, Bool, Nothing}=nothing,
+    rules::Union{NamedTuple, Nothing}=nothing,
     preprocess::Union{NamedTuple, Nothing}=nothing
 )::ModelSetup
     check_params(model, (:type, :params))
     check_params(resample, (:type, :params))
+    check_params(win, (:type, :params))
+    check_params(rules, (:type, :params))
     check_params(preprocess, PREPROC_KEYS)
 
     # grab rng form preprocess and feed it to every process
@@ -260,14 +260,14 @@ function validate_modelset(
     if isnothing(modelset.features)
         features = validate_features(
             modelset.params.features,
-            haskey(model, :features) ? model.features : nothing
+            features
         )
         modelset.params = merge(model.params, (features=features,))
         modelset.features = features
     else
         modelset.features = validate_features(
             modelset.features,
-            haskey(model, :features) ? model.features : nothing
+            features
         )
     end
 
@@ -275,22 +275,24 @@ function validate_modelset(
 
     modelset.winparams = validate_winparams(
         modelset.winparams,
-        get(model, :winparams, nothing),
+        win,
         modelset.config.treatment
     )
 
     modelset.rulesparams = validate_rulesparams(
         modelset.rulesparams,
-        get(model, :rulesparams, nothing),
+        rules,
         rng
     )
 
     modelset.tuning = validate_tuning(
         modelset.tuning,
-        get(model, :tuning, nothing)
+        tuning,
+        rng,
+        modelset.config.algo
     )
 
-    modelset.learn_method = isnothing(modelset.tuning.method) ? modelset.learn_method[1] : modelset.learn_method[2]
+    modelset.learn_method = isnothing(modelset.tuning) ? modelset.learn_method[1] : modelset.learn_method[2]
     modelset.preprocess = validate_preprocess_params(modelset.preprocess, preprocess)
 
     return modelset

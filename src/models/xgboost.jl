@@ -99,14 +99,13 @@ function XGBoostClassifierModel()
         end
     )
 
-    tuning = (
-        tuning = false,
-        method = (type = latinhypercube, ntour = 20),
-        params = TUNING_PARAMS[:classification],
-        ranges = [
-            model -> MLJ.range(model, :max_depth, lower=3, upper=6),
-            model -> MLJ.range(model, :sample_type, values=["uniform", "weighted"])
-        ]
+    tuning = SoleXplorer.TuningParams(
+        SoleXplorer.TuningStrategy(latinhypercube, (ntour = 20,)),
+        TUNING_PARAMS[:classification],
+        (
+            model -> MLJ.range(model, :sampling_fraction, lower=0.3, upper=0.9),
+            model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])
+        )
     )
 
     rulesparams = RulesParams(InTreesRuleExtractor(), NamedTuple())

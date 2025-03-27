@@ -38,14 +38,13 @@ function ModalDecisionTreeModel()
         (mach, X, y) -> ((_, dt) = MLJ.report(mach).best_report.sprinkle(X, y); dt)
     )
 
-    tuning = (
-        tuning = false,
-        method = (; type = latinhypercube, ntour = 20),
-        params = TUNING_PARAMS[:classification],
-        ranges = [
-            model -> MLJ.range(model, :merge_purity_threshold, lower=0, upper=1),
+    tuning = SoleXplorer.TuningParams(
+        SoleXplorer.TuningStrategy(latinhypercube, (ntour = 20,)),
+        TUNING_PARAMS[:classification],
+        (
+            model -> MLJ.range(model, :sampling_fraction, lower=0.3, upper=0.9),
             model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])
-        ]
+        )
     )
 
     rulesparams = RulesParams(PlainRuleExtractor(), NamedTuple())
@@ -101,14 +100,13 @@ function ModalRandomForestModel()
         (mach, X, y) -> ((_, dt) = MLJ.report(mach).best_report.sprinkle(X, y); dt)
     )
 
-    tuning = (
-        tuning = false,
-        method = (; type = latinhypercube, ntour = 20),
-        params = TUNING_PARAMS[:classification],
-        ranges = [
+    tuning = SoleXplorer.TuningParams(
+        SoleXplorer.TuningStrategy(latinhypercube, (ntour = 20,)),
+        TUNING_PARAMS[:classification],
+        (
             model -> MLJ.range(model, :sampling_fraction, lower=0.3, upper=0.9),
             model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])
-        ]
+        )
     )
 
     rulesparams = RulesParams(InTreesRuleExtractor(), NamedTuple())
@@ -163,14 +161,13 @@ function ModalAdaBoostModel()
         (mach, X, y) -> ((_, dt) = MLJ.report(mach).best_report.sprinkle(X, y); dt)
     )
 
-    tuning = (
-        tuning = false,
-        method = (; type = latinhypercube, ntour = 20),
-        params = TUNING_PARAMS[:classification],
-        ranges = [
-            model -> MLJ.range(:n_iter; lower=5, upper=15),
+    tuning = SoleXplorer.TuningParams(
+        SoleXplorer.TuningStrategy(latinhypercube, (ntour = 20,)),
+        TUNING_PARAMS[:classification],
+        (
+            model -> MLJ.range(model, :sampling_fraction, lower=0.3, upper=0.9),
             model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])
-        ]
+        )
     )
 
     rulesparams = RulesParams(InTreesRuleExtractor(), NamedTuple())

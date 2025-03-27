@@ -216,7 +216,7 @@ prepare_dataset(
             )
     )
 
-    optional parameter # 1
+    optional parameter # 2
     resample
 
     define the resample strategy (type) and relative (params)
@@ -239,5 +239,49 @@ prepare_dataset(
 
         TimeSeriesCV()
             params = (nfolds = 4,)
+    )
+
+    optional parameter # 3
+    win
+
+    this parameter is only for multi dimensional dataset, ie: time series
+    as now, it only supports dataset composed of time series (vectors) elements.
+    performs a windowing of elements to reduce size.
+
+    win = (
+        type:: Function, windowing strategy, could be:
+        movingwindow, wholewindow, splitwindow, adaptivewindow
+
+        params:: 
+
+        movingwindow()
+            params = (window_size = 1024, window_step = 512)
+
+        wholewindow()
+            params = ()
+
+        splitwindow()
+            Params = (nwindows = 5,)
+
+        adaptivewindow()
+            params = (nwindows = 5, relative_overlap = 0.1)
+    )
+
+    optional parameter # 4
+    features
+
+    function features to be used in train/test
+
+    features=(
+        can be every kind of function like:
+        maximum, minimum, mean, median, std, StatsBase.cov
+        
+        Sole uses also catch22 functions:
+        emode_5, mode_10, embedding_dist, acf_timescale, acf_first_min, ami2, trev, outlier_timing_pos
+        outlier_timing_neg, whiten_timescale, forecast_error, ami_timescale, high_fluctuation, stretch_decreasing
+        stretch_high, entropy_pairs, rs_range, dfa, low_freq_power, centroid_freq, transition_variance, periodicity
+
+        and there's also available boundle of functions:
+        base_set, catch9, catch22_set, complete_set
     )
 )

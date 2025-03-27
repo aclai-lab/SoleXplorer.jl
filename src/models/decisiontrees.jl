@@ -27,14 +27,13 @@ function DecisionTreeClassifierModel()
         (mach, X, y) -> (dt = solemodel(MLJ.fitted_params(mach).best_fitted_params.tree); apply!(dt, X, y); dt)
     )
 
-    tuning = (
-        tuning = false,
-        method = (type = latinhypercube, ntour = 20),
-        params = TUNING_PARAMS[:classification],
-        ranges = [
-            model -> MLJ.range(model, :merge_purity_threshold, lower=0, upper=1),
+    tuning = SoleXplorer.TuningParams(
+        SoleXplorer.TuningStrategy(latinhypercube, (ntour = 20,)),
+        TUNING_PARAMS[:classification],
+        (
+            model -> MLJ.range(model, :sampling_fraction, lower=0.3, upper=0.9),
             model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])
-        ]
+        )
     )
 
     rulesparams = RulesParams(PlainRuleExtractor(), NamedTuple())
@@ -88,14 +87,13 @@ function RandomForestClassifierModel()
         end
     )
 
-    tuning = (
-        tuning = false,
-        method = (type = latinhypercube, ntour = 20),
-        params = TUNING_PARAMS[:classification],
-        ranges = [
+    tuning = SoleXplorer.TuningParams(
+        SoleXplorer.TuningStrategy(latinhypercube, (ntour = 20,)),
+        TUNING_PARAMS[:classification],
+        (
             model -> MLJ.range(model, :sampling_fraction, lower=0.3, upper=0.9),
             model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])
-        ]
+        )
     )
 
     rulesparams = RulesParams(InTreesRuleExtractor(), NamedTuple())
@@ -145,14 +143,13 @@ function AdaBoostClassifierModel()
         end
     )
 
-    tuning = (
-        tuning = false,
-        method = (type = latinhypercube, ntour = 20),
-        params = TUNING_PARAMS[:classification],
-        ranges = [
-            model -> MLJ.range(model, :n_iter, lower=5, upper=50),
+    tuning = SoleXplorer.TuningParams(
+        SoleXplorer.TuningStrategy(latinhypercube, (ntour = 20,)),
+        TUNING_PARAMS[:classification],
+        (
+            model -> MLJ.range(model, :sampling_fraction, lower=0.3, upper=0.9),
             model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])
-        ]
+        )
     )
 
     rulesparams = RulesParams(InTreesRuleExtractor(), NamedTuple())
@@ -195,14 +192,13 @@ function DecisionTreeRegressorModel()
         (mach, X, y) -> (dt = solemodel(MLJ.fitted_params(mach).best_fitted_params.tree); apply!(dt, X, y); dt)
     )
 
-    tuning = (
-        tuning = false,
-        method = (; type = latinhypercube, ntour = 20),
-        params = TUNING_PARAMS[:regression],
-        ranges = [
-            model -> MLJ.range(model, :merge_purity_threshold, lower=0, upper=1),
+    tuning = SoleXplorer.TuningParams(
+        SoleXplorer.TuningStrategy(latinhypercube, (ntour = 20,)),
+        TUNING_PARAMS[:classification],
+        (
+            model -> MLJ.range(model, :sampling_fraction, lower=0.3, upper=0.9),
             model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])
-        ]
+        )
     )
 
     rulesparams = RulesParams(PlainRuleExtractor(), NamedTuple())
@@ -254,14 +250,13 @@ function RandomForestRegressorModel()
         end
     )
 
-    tuning = (
-        tuning = false,
-        method = (type = latinhypercube, ntour = 20),
-        params = TUNING_PARAMS[:regression],
-        ranges = [
+    tuning = SoleXplorer.TuningParams(
+        SoleXplorer.TuningStrategy(latinhypercube, (ntour = 20,)),
+        TUNING_PARAMS[:classification],
+        (
             model -> MLJ.range(model, :sampling_fraction, lower=0.3, upper=0.9),
             model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])
-        ]
+        )
     )
 
     rulesparams = RulesParams(InTreesRuleExtractor(), NamedTuple())

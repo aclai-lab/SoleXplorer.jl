@@ -49,14 +49,34 @@ using StatsBase: sample
                 )
         )
     )
-    r1 = prepare_dataset(X, y; resample=(type=CV,), preprocess=(;rng))
-    r2 = prepare_dataset(X, y; resample=(type=Holdout,))
-    r3 = prepare_dataset(X, y; resample=(type=StratifiedCV,))
-    r4 = prepare_dataset(X, y; resample=(type=TimeSeriesCV,))
-    resample = prepare_dataset(X, y; resample=(type=CV, params=(nfolds=5,)))
-    resample = prepare_dataset(X, y; resample=(type=CV, params=(nfolds=5,)))
-    resample = prepare_dataset(X, y; resample=(type=CV, params=(nfolds=5,)))
-    resample = prepare_dataset(X, y; resample=(type=CV, params=(nfolds=5,)))
+
+    resample = prepare_dataset(X, y; resample=(type=CV,))
+    parametrized_resample = prepare_dataset(X, y; resample=(type=StratifiedCV, params=(nfolds=10,)))
+
+    win = prepare_dataset(X, y; win=(type=adaptivewindow,))
+    parametrized_win = prepare_dataset(X, y; win=(type=adaptivewindow, params=(nwindows = 3, relative_overlap = 0.1)))
+
+    features = prepare_dataset(X, y; features=(mean, maximum, entropy_pairs))
+    features = prepare_dataset(X, y; features=(catch9))
+
+    tuning = prepare_dataset(X, y; tuning=true)
+    rng_tuning = prepare_dataset(X, y; tuning=true, preprocess=(;rng))
+    parametrized_tuning = prepare_dataset(X, y;
+        tuning=(
+            method=(type=grid, params=(resolution=25,)), 
+            params=(repeats=35, n=10),
+            ranges=(
+                SoleXplorer.range(:merge_purity_threshold, lower=0.1, upper=2.0),
+                SoleXplorer.range(:feature_importance, values=[:impurity, :split])
+            )
+        ), 
+        preprocess=(;rng)
+    )
+
+    preprocess = prepare_dataset(X, y; preprocess=(;valid_ratio=0.8))
+
+
+
 
     ds = prepare_dataset(X, y; model=(type=:decisiontree,), preprocess=(;rng))
 

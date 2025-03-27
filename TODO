@@ -39,6 +39,3 @@ https://github.com/nredell/ShapML.jl
   restituendo un dataset bilanciato.
 
 - verificare dove metter @threads
-
-  # da fare ADESSO
-  - https://juliaai.github.io/MLJBase.jl/stable/resampling/

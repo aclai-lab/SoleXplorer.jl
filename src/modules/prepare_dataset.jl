@@ -216,25 +216,19 @@ end
 
 function prepare_dataset(
     X::AbstractDataFrame,
-    y::AbstractVector,
-    model::NamedTuple;
-    resample::Union{NamedTuple, Nothing}=nothing,
-    preprocess::Union{NamedTuple, Nothing}=nothing
-)::Modelset
-    modelset = validate_modelset(model, eltype(y); resample, preprocess)
-    @show modelset.resample
-    Modelset(modelset, _prepare_dataset(X, y, modelset))
-end
-
-function prepare_dataset(
-    X::AbstractDataFrame,
     y::AbstractVector;
     model::Union{NamedTuple, Nothing}=nothing,
-    kwargs...
+    resample::Union{NamedTuple, Nothing}=nothing,
+    win::Union{NamedTuple, Nothing}=nothing,
+    features::Union{Tuple, Nothing}=nothing,
+    tuning::Union{NamedTuple, Bool, Nothing}=nothing,
+    rules::Union{NamedTuple, Nothing}=nothing,
+    preprocess::Union{NamedTuple, Nothing}=nothing
 )::Modelset
     # if model is unspecified, use default model setup
     isnothing(model) && (model = DEFAULT_MODEL_SETUP)
-    prepare_dataset(X, y, model; kwargs...)
+    modelset = validate_modelset(model, eltype(y); resample, win, features, tuning, rules, preprocess)
+    Modelset(modelset, _prepare_dataset(X, y, modelset))
 end
 
 # y is not a vector, but a symbol or a string that identifies the column in X

@@ -26,6 +26,11 @@ Abstract type for fitted model configurations
 """
 abstract type AbstractModelset end
 
+"""
+Abstract type for type/params structs
+"""
+abstract type AbstractTypeParams end
+
 # ---------------------------------------------------------------------------- #
 #                                     types                                    #
 # ---------------------------------------------------------------------------- #
@@ -36,14 +41,25 @@ const Y_Value   = Union{Cat_Value, Reg_Value}
 # TODO remove this
 const Rule      = Union{SoleModels.ClassificationRule, SoleModels.DecisionSet}
 
-struct Resample
+struct Resample <: AbstractTypeParams
     type        :: Base.Callable
     params      :: NamedTuple
 end
 
-struct RulesParams
+struct TuningStrategy <: AbstractTypeParams
+    type        :: Base.Callable
+    params      :: NamedTuple
+end
+
+struct RulesParams <: AbstractTypeParams
     type        :: SoleModels.RuleExtractor
     params      :: NamedTuple
+end
+
+struct TuningParams
+    method      :: TuningStrategy
+    params      :: NamedTuple
+    ranges      :: Tuple{Vararg{Base.Callable}}
 end
 
 # ---------------------------------------------------------------------------- #
@@ -234,7 +250,7 @@ mutable struct ModelSetup <: AbstractModelSetup
     resample     :: Union{Resample, Nothing}
     winparams    :: SoleFeatures.WinParams
     learn_method :: Union{Base.Callable, Tuple{Base.Callable, Base.Callable}}
-    tuning       :: NamedTuple
+    tuning       :: Union{TuningParams, Nothing}
     rulesparams  :: RulesParams
     preprocess   :: NamedTuple
 end
