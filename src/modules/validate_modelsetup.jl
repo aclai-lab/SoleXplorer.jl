@@ -209,6 +209,9 @@ function validate_tuning(
     return TuningParams(method, params, users.ranges)
 end
 
+# ---------------------------------------------------------------------------- #
+#                              validate modelset                               #
+# ---------------------------------------------------------------------------- #
 function validate_modelset(
     model::NamedTuple,
     y::Union{DataType, Nothing};

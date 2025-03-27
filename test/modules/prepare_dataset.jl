@@ -2,6 +2,7 @@ using Test
 using SoleXplorer
 using DataFrames
 using StatsBase: sample
+using DecisionTree: load_data
 # using CategoricalArrays
 # using Random
 # using Statistics, StatsBase
@@ -28,6 +29,14 @@ using StatsBase: sample
         @test SoleXplorer.hasnans(Matrix(df_hasnans)) == true
     end
 
+    # ---------------------------------------------------------------------------- #
+    #                                   datasetas                                  #
+    # ---------------------------------------------------------------------------- #
+    X, y = load_data("iris")
+    X = DataFrame(Float64.(X), :auto)
+    y = String.(y)
+    rng = Xoshiro(11)
+
     X, y = load_arff_dataset("NATOPS")
     num_cols_to_sample, num_rows_to_sample, rng = 10, 50, Xoshiro(11)
     chosen_cols = sample(rng, 1:size(X, 2), num_cols_to_sample; replace=false)
@@ -35,7 +44,9 @@ using StatsBase: sample
     X = X[chosen_rows, chosen_cols]
     y = y[chosen_rows]
 
-
+    # ---------------------------------------------------------------------------- #
+    #                               prepare_dataset                                #
+    # ---------------------------------------------------------------------------- #
     no_parameters = prepare_dataset(X, y)
     model_type = prepare_dataset(X, y; model=(type=:modaldecisiontree,))
     parametrized_model_type = prepare_dataset(X, y; 
@@ -77,10 +88,58 @@ using StatsBase: sample
 
     preprocess = prepare_dataset(X, y; preprocess=(valid_ratio=0.5,))
 
+    # ---------------------------------------------------------------------------- #
+    #                                 train_test                                   #
+    # ---------------------------------------------------------------------------- #
+    no_parameters = train_test(X, y)
+    model_type = train_test(X, y; model=(type=:modaldecisiontree,))
+    parametrized_model_type = train_test(X, y; 
+        model=(type=:xgboost,
+                params=(
+                    num_round=20, 
+                    booster="gbtree", 
+                    eta=0.5,
+                    num_parallel_tree=10, 
+                    max_depth=8, 
+                )
+        )
+    )
+
+    reducefunc = train_test(X, y; model=(type=:modaldecisiontree,), reducefunc=median)
+
+    resample = train_test(X, y; resample=(type=CV,))
+    parametrized_resample = train_test(X, y; resample=(type=StratifiedCV, params=(nfolds=10,)))
+
+    win = train_test(X, y; win=(type=adaptivewindow,))
+    parametrized_win = train_test(X, y; win=(type=adaptivewindow, params=(nwindows = 3, relative_overlap = 0.1)))
+
+    features = train_test(X, y; features=(mean, maximum, entropy_pairs))
+    features = train_test(X, y; features=(catch9))
+
+    tuning = train_test(X, y; tuning=true)
+    rng_tuning = train_test(X, y; tuning=true, preprocess=(;rng))
+    parametrized_tuning = train_test(X, y;
+        tuning=(
+            method=(type=grid, params=(resolution=25,)), 
+            params=(repeats=35, n=10),
+            ranges=(
+                SoleXplorer.range(:merge_purity_threshold, lower=0.1, upper=2.0),
+                SoleXplorer.range(:feature_importance, values=[:impurity, :split])
+            )
+        ), 
+        preprocess=(;rng)
+    )
+
+    preprocess = train_test(X, y; preprocess=(valid_ratio=0.5,))
 
 
 
-    ds = prepare_dataset(X, y; model=(type=:decisiontree,), preprocess=(;rng))
+
+
+
+
+
+    ds = train_test(X, y; model=(type=:decisiontree,), preprocess=(;rng))
 
     @testset "prepare_dataset check output" begin        
         ds = prepare_dataset(X, y; model=(type=:decisiontree,), preprocess=(;rng))
