@@ -3,6 +3,7 @@ using SoleXplorer
 using DataFrames
 using StatsBase: sample
 using DecisionTree: load_data
+using RDatasets
     
 @testset "check utility: check_dataframe_type" begin
     df_valid = DataFrame(a = [1.0, 2.0], b = [3, 4])
@@ -288,5 +289,57 @@ early_stop  = train_test(X, y;
     # with early stopping a validation set is required
     preprocess=(valid_ratio = 0.7,)
 )
+
+preprocess = train_test(X, y; preprocess=(valid_ratio=0.5,))
+
+# ---------------------------------------------------------------------------- #
+#                                 regression                                   #
+# ---------------------------------------------------------------------------- #
+table = RDatasets.dataset("datasets", "LifeCycleSavings")
+y = table[:, :DDPI]
+X = select(table, Not([:DDPI, :Country]));
+rng = Xoshiro(11)
+
+# ---------------------------------------------------------------------------- #
+#                                 train_test                                   #
+# ---------------------------------------------------------------------------- #
+no_parameters = train_test(X, y)
+model_type = train_test(X, y; model=(type=:randomforest,))
+parametrized_model_type = train_test(X, y; 
+    model=(type=:randomforest,
+            params=(
+                n_trees             = 50,
+                feature_importance  = :split,
+            )
+    )
+)
+
+# reducefunc = train_test(X, y; model=(type=:modaldecisiontree,), reducefunc=median)
+
+resample = train_test(X, y; resample=(type=CV,))
+parametrized_resample = train_test(X, y; resample=(type=StratifiedCV, params=(nfolds=10,)))
+
+win = train_test(X, y; win=(type=adaptivewindow,))
+parametrized_win = train_test(X, y; win=(type=adaptivewindow, params=(nwindows = 3, relative_overlap = 0.1)))
+
+features = train_test(X, y; features=(mean, maximum, entropy_pairs))
+features = train_test(X, y; features=(catch9))
+
+tuning = train_test(X, y; tuning=true)
+rng_tuning = train_test(X, y; tuning=true, preprocess=(;rng))
+parametrized_tuning = train_test(X, y;
+    tuning=(
+        method=(type=grid, params=(resolution=25,)), 
+        params=(repeats=35, n=10),
+        ranges=(
+            SoleXplorer.range(:merge_purity_threshold, lower=0.1, upper=2.0),
+            SoleXplorer.range(:feature_importance, values=[:impurity, :split])
+        )
+    ), 
+    preprocess=(;rng)
+)
+
+model_check_1 = train_test(X, y; model=(type=:decisiontree,), tuning=true, preprocess=(;rng))
+model_check_2 = train_test(X, y; model=(type=:randomforest,), tuning=true, preprocess=(;rng))
 
 preprocess = train_test(X, y; preprocess=(valid_ratio=0.5,))
