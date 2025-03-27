@@ -42,7 +42,7 @@ function ModalDecisionTreeModel()
         SoleXplorer.TuningStrategy(latinhypercube, (ntour = 20,)),
         TUNING_PARAMS[:classification],
         (
-            model -> MLJ.range(model, :sampling_fraction, lower=0.3, upper=0.9),
+            model -> MLJ.range(model, :min_samples_leaf, lower=2, upper=6),
             model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])
         )
     )
@@ -165,7 +165,7 @@ function ModalAdaBoostModel()
         SoleXplorer.TuningStrategy(latinhypercube, (ntour = 20,)),
         TUNING_PARAMS[:classification],
         (
-            model -> MLJ.range(model, :sampling_fraction, lower=0.3, upper=0.9),
+            model -> MLJ.range(model, :min_samples_leaf, lower=1, upper=3),
             model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])
         )
     )

@@ -103,8 +103,8 @@ function XGBoostClassifierModel()
         SoleXplorer.TuningStrategy(latinhypercube, (ntour = 20,)),
         TUNING_PARAMS[:classification],
         (
-            model -> MLJ.range(model, :sampling_fraction, lower=0.3, upper=0.9),
-            model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])
+            model -> MLJ.range(model, :eta, lower=0.1, upper=0.9),
+            model -> MLJ.range(model, :gamma, lower=0.0, upper=1.0),
         )
     )
 

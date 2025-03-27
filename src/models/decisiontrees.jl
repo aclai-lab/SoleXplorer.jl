@@ -31,7 +31,7 @@ function DecisionTreeClassifierModel()
         SoleXplorer.TuningStrategy(latinhypercube, (ntour = 20,)),
         TUNING_PARAMS[:classification],
         (
-            model -> MLJ.range(model, :sampling_fraction, lower=0.3, upper=0.9),
+            model -> MLJ.range(model, :merge_purity_threshold, lower=0., upper=2.0),
             model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])
         )
     )
@@ -147,7 +147,7 @@ function AdaBoostClassifierModel()
         SoleXplorer.TuningStrategy(latinhypercube, (ntour = 20,)),
         TUNING_PARAMS[:classification],
         (
-            model -> MLJ.range(model, :sampling_fraction, lower=0.3, upper=0.9),
+            model -> MLJ.range(model, :n_iter, lower=5, upper=50),
             model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])
         )
     )

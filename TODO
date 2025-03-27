@@ -22,6 +22,8 @@ https://github.com/nredell/ShapML.jl
 
 #### Importanza Massima
 
+- esperimenti di regressione!
+
 - rimuovere la dipendenza da Sole e aggiungere dipendenze da singoli pacchetti di Sole
 
 - "DIfficile da fare": Unificare struttura dati feature selection con solexplorer: in features selection uso una matrice e un vettore di Xinfo.

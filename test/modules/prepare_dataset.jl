@@ -130,6 +130,16 @@ using DecisionTree: load_data
         preprocess=(;rng)
     )
 
+    model_check_1 = train_test(X, y; model=(type=:decisiontree,), tuning=true, preprocess=(;rng))
+    model_check_2 = train_test(X, y; model=(type=:randomforest,), tuning=true, preprocess=(;rng))
+    model_check_3 = train_test(X, y; model=(type=:adaboost,), tuning=true, preprocess=(;rng))
+    model_check_4 = train_test(X, y; model=(type=:modaldecisiontree,), tuning=true, preprocess=(;rng))
+    model_check_5 = train_test(X, y; model=(type=:modalrandomforest,), tuning=true, preprocess=(;rng))
+    model_check_6 = train_test(X, y; model=(type=:modaladaboost,), tuning=true, preprocess=(;rng))
+    model_check_7 = train_test(X, y; model=(type=:xgboost,), tuning=true, preprocess=(;rng))
+
+    early_stop = train_test(X, y; model=(type=:xgboost,), tuning=true, preprocess=(;rng))
+
     preprocess = train_test(X, y; preprocess=(valid_ratio=0.5,))
 
 
