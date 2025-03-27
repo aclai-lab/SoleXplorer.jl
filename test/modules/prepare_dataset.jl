@@ -75,7 +75,7 @@ using StatsBase: sample
         preprocess=(;rng)
     )
 
-    preprocess = prepare_dataset(X, y; preprocess=(valid_ratio=0.8,))
+    preprocess = prepare_dataset(X, y; preprocess=(valid_ratio=0.5,))
 
 
 

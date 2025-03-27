@@ -75,7 +75,7 @@ function _partition(
         if valid_ratio == 1.0
             return TT_indexes(tt[1], eltype(tt[1])[], tt[2])
         else
-            tv = MLJ.partition(tt[1], valid_ratio; shuffle, rng)
+            tv = MLJ.partition(tt[1], valid_ratio; shuffle=true, rng)
             return TT_indexes(tv[1], tv[2], tt[2])
         end
     else

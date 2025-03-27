@@ -209,15 +209,6 @@ function validate_tuning(
     return TuningParams(method, params, users.ranges)
 end
 
-function validate_preprocess_params(
-    defaults::NamedTuple,
-    preprocess::Union{NamedTuple, Nothing}
-)
-    isnothing(preprocess) && return defaults
-    check_params(preprocess, keys(defaults))
-    return merge(defaults, preprocess)
-end
-
 function validate_modelset(
     model::NamedTuple,
     y::Union{DataType, Nothing};
@@ -294,7 +285,7 @@ function validate_modelset(
     )
 
     modelset.learn_method = isnothing(modelset.tuning) ? modelset.learn_method[1] : modelset.learn_method[2]
-    modelset.preprocess = validate_preprocess_params(modelset.preprocess, preprocess)
+    isnothing(preprocess) || (modelset.preprocess = merge(modelset.preprocess, preprocess))
     isnothing(reducefunc) || (modelset.config = merge(modelset.config, (reducefunc=reducefunc,)))
 
     return modelset

@@ -291,9 +291,6 @@ const DEFAULT_FEATS = [maximum, minimum, mean, std]
 const DEFAULT_PREPROC = (
     train_ratio = 0.8,
     valid_ratio = 1.0,
-    shuffle     = true,
-    stratified  = false,
-    nfolds      = 6,
     rng         = TaskLocalRNG()
 )
 
