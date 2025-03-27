@@ -490,10 +490,14 @@ mutable struct Modelset <: AbstractModelset
     setup      :: AbstractModelSetup
     ds         :: AbstractDataset
     classifier :: Union{MLJ.Model,     Nothing}
-    mach       :: Union{MLJ.Machine,   Nothing}
-    model      :: Union{AbstractModel, Nothing}
-    rules      :: Union{Rule,          Nothing}
-    accuracy   :: Union{AbstractFloat, Nothing}
+    # mach       :: Union{MLJ.Machine,   Nothing}
+    # model      :: Union{AbstractModel, Nothing}
+    # rules      :: Union{Rule,          Nothing}
+    # accuracy   :: Union{AbstractFloat, Nothing}
+    mach       :: Union{MLJ.Machine,   AbstractVector{<:MLJ.Machine},   Nothing}
+    model      :: Union{AbstractModel, AbstractVector{<:AbstractModel}, Nothing}
+    rules      :: Union{Rule,          AbstractVector{<:Rule},          Nothing}
+    accuracy   :: Union{AbstractFloat, AbstractVector{<:AbstractFloat}, Nothing}
 
     function Modelset(
         setup      :: AbstractModelSetup,

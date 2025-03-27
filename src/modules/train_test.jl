@@ -22,18 +22,47 @@ end
 #                                  train_test                                  #
 # ---------------------------------------------------------------------------- #
 function _traintest!(model::AbstractModelset)::Modelset
-    # TODO document this
+    # Early stopping is a regularization technique in XGBoost that prevents overfitting by monitoring model performance 
+    # on a validation dataset and stopping training when performance no longer improves.
     if haskey(model.setup.params, :watchlist) && model.setup.params.watchlist == makewatchlist
         model.setup.params = merge(model.setup.params, (watchlist = makewatchlist(model.ds),))
     end
 
     model.classifier = get_classifier!(model.setup)
 
-    Xtrain = DataFrame(model.ds.Xtrain, model.ds.info.vnames)
-    Xtest = DataFrame(model.ds.Xtest, model.ds.info.vnames)
+    # if model.ds.Xtrain isa AbstractVector
+    #     Xtrain = DataFrame.(model.ds.Xtrain, model.ds.info.vnames)
+    #     Xtest = DataFrame.(model.ds.Xtest, model.ds.info.vnames)
+    # else
+    #     Xtrain = DataFrame(model.ds.Xtrain, model.ds.info.vnames)
+    #     Xtest = DataFrame(model.ds.Xtest, model.ds.info.vnames)
+    # end
 
-    model.mach = MLJ.machine(model.classifier, Xtrain, model.ds.ytrain) |> m -> fit!(m, verbosity=0)
-    model.model = model.setup.learn_method(model.mach, Xtest, model.ds.ytest)
+    # model.mach = MLJ.machine(model.classifier, Xtrain, model.ds.ytrain) |> m -> fit!(m, verbosity=0)
+    # model.model = model.setup.learn_method(model.mach, Xtest, model.ds.ytest)
+
+    # return model
+
+    # convert data to DataFrame based on its structure
+    if model.ds.Xtrain isa AbstractVector
+        # case 1: Xtrain is a vector of datasets (for cross-validation or multiple folds)
+        Xtrain = [DataFrame(x, model.ds.info.vnames) for x in model.ds.Xtrain]
+        Xtest = [DataFrame(x, model.ds.info.vnames) for x in model.ds.Xtest]
+
+        model.mach = Vector{MLJ.Machine}(undef, length(Xtrain))
+        model.model = Vector{SoleXplorer.AbstractModel}(undef, length(Xtrain))
+        for i in 1:length(Xtrain)
+            model.mach[i] = MLJ.machine(model.classifier, Xtrain[i], model.ds.ytrain[i]) |> m -> fit!(m, verbosity=0)
+            model.model[i] = model.setup.learn_method(model.mach[i], Xtest[i], model.ds.ytest[i])
+        end
+    else
+        # case 2: Xtrain is a single dataset
+        Xtrain = DataFrame(model.ds.Xtrain, model.ds.info.vnames)
+        Xtest = DataFrame(model.ds.Xtest, model.ds.info.vnames)
+
+        model.mach = MLJ.machine(model.classifier, Xtrain, model.ds.ytrain) |> m -> fit!(m, verbosity=0)
+        model.model = model.setup.learn_method(model.mach, Xtest, model.ds.ytest)
+    end
 
     return model
 end

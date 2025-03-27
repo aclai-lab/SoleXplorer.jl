@@ -34,6 +34,7 @@ https://github.com/nredell/ShapML.jl
   da verificare con BenchmarkTools
 
 - In prepare dataset, verificare se il dataset è bilanciato.
+  https://github.com/JuliaAI/Imbalance.jl
   se non lo, è da errore e suggerisce di lanciare prepare dataset con l'opzione balance=true.
   Se in prepare dataset fornisco l'opzione balance=true, che di default sarà false,
   esegue una funzione che verifica il numero di istanze del gruppo più piccolo,
