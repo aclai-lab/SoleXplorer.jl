@@ -18,7 +18,6 @@ https://github.com/nredell/ShapML.jl
 #### Generali 
 
 - Suite di machine learning H2O-3
-- Estendere stratified cv a tutti i metodi
 
 #### Importanza Massima
 
@@ -29,10 +28,6 @@ https://github.com/nredell/ShapML.jl
 - "DIfficile da fare": Unificare struttura dati feature selection con solexplorer: in features selection uso una matrice e un vettore di Xinfo.
   in realtà la struttura Dataset ha già una sorta di Xinfo dove salvo tutti i dati.
 
-- passare a matrici?
-  sicuramente salvare una matrice anzichè un dataframe è meglio, ma poi quando si va su MLJ dobbiamo tornare a DataFrame.
-  da verificare con BenchmarkTools
-
 - In prepare dataset, verificare se il dataset è bilanciato.
   https://github.com/JuliaAI/Imbalance.jl
   se non lo, è da errore e suggerisce di lanciare prepare dataset con l'opzione balance=true.
@@ -42,3 +37,21 @@ https://github.com/nredell/ShapML.jl
   restituendo un dataset bilanciato.
 
 - verificare dove metter @threads
+
+
+### appunto
+Matrix
+@btime train_test(X, y; model=(type=:modaldecisiontree,))
+400.538 ms (12649687 allocations: 498.99 MiB)
+409.555 ms (12470188 allocations: 491.11 MiB)
+416.705 ms (11877911 allocations: 467.46 MiB)
+415.246 ms (12449374 allocations: 490.29 MiB)
+429.349 ms (12142905 allocations: 478.51 MiB)
+
+Dataframe
+@btime traintest(X, y; models=(type=:modaldecisiontree,))
+27.320 s (705005644 allocations: 31.04 GiB)
+31.717 s (829947525 allocations: 36.61 GiB)
+27.508 s (688818854 allocations: 30.31 GiB)
+
+ma è possibile?

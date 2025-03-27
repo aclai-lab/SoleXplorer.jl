@@ -1,8 +1,8 @@
 module SoleXplorer
 
-using Sole
 using SoleData
 using SoleData: PatchedFunction, nanpatchedfunction
+using SoleModels
 using SoleFeatures
 using SolePostHoc
 using ModalDecisionTrees
