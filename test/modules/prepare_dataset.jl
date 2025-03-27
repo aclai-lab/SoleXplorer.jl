@@ -138,7 +138,33 @@ using DecisionTree: load_data
     model_check_6 = train_test(X, y; model=(type=:modaladaboost,), tuning=true, preprocess=(;rng))
     model_check_7 = train_test(X, y; model=(type=:xgboost,), tuning=true, preprocess=(;rng))
 
-    early_stop = train_test(X, y; model=(type=:xgboost,), tuning=true, preprocess=(;rng))
+    parametrized_model_type = train_test(X, y; 
+        model=(type=:xgboost,
+                params=(
+                    num_round=20, 
+                    booster="gbtree", 
+                    eta=0.5,
+                    num_parallel_tree=10, 
+                    max_depth=8, 
+                )
+        )
+    )
+
+    early_stop  = train_test(X, y; 
+        model=(type=:xgboost_classifier,
+            params=(
+                num_round=100,
+                max_depth=6,
+                eta=0.1, 
+                objective="multi:softprob",
+                # early_stopping parameters
+                early_stopping_rounds=10,
+                watchlist=makewatchlist
+            )
+        ),
+        # with early stopping a validation set is required
+        preprocess=(valid_ratio = 0.7,)
+    )
 
     preprocess = train_test(X, y; preprocess=(valid_ratio=0.5,))
 

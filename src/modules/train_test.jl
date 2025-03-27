@@ -24,7 +24,7 @@ end
 function _traintest!(model::AbstractModelset)::Modelset
     # TODO document this
     if haskey(model.setup.params, :watchlist) && model.setup.params.watchlist == makewatchlist
-        model.params = merge(model.params, (watchlist = makewatchlist(ds),))
+        model.setup.params = merge(model.setup.params, (watchlist = makewatchlist(model.ds),))
     end
 
     model.classifier = get_classifier!(model.setup)
