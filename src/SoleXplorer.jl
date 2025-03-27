@@ -63,19 +63,13 @@ include("models/xgboost.jl")
 export makewatchlist
 
 include("modules/models.jl")
-export getmodel
+include("modules/validate_modelsetup.jl")
 
 include("modules/prepare_dataset.jl")
 export prepare_dataset
 
-include("modules/fit&test.jl")
-export fitmodel, testmodel
-
-include("modules/validate_modelsetup.jl")
-export validate_modelset
-
-include("modules/traintest.jl")
-export traintest
+include("modules/train_test.jl")
+export train_test
 
 include("user_interfaces/symbolic_analysis.jl")
 export symbolic_analysis
