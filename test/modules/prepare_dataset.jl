@@ -50,6 +50,8 @@ using StatsBase: sample
         )
     )
 
+    reducefunc = prepare_dataset(X, y; model=(type=:modaldecisiontree,), reducefunc=median)
+
     resample = prepare_dataset(X, y; resample=(type=CV,))
     parametrized_resample = prepare_dataset(X, y; resample=(type=StratifiedCV, params=(nfolds=10,)))
 
@@ -73,7 +75,7 @@ using StatsBase: sample
         preprocess=(;rng)
     )
 
-    preprocess = prepare_dataset(X, y; preprocess=(;valid_ratio=0.8))
+    preprocess = prepare_dataset(X, y; preprocess=(valid_ratio=0.8,))
 
 
 

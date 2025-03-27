@@ -226,7 +226,8 @@ function validate_modelset(
     features::Union{Tuple, Nothing}=nothing,
     tuning::Union{NamedTuple, Bool, Nothing}=nothing,
     rules::Union{NamedTuple, Nothing}=nothing,
-    preprocess::Union{NamedTuple, Nothing}=nothing
+    preprocess::Union{NamedTuple, Nothing}=nothing,
+    reducefunc::Union{Base.Callable, Nothing}=nothing,
 )::ModelSetup
     check_params(model, (:type, :params))
     check_params(resample, (:type, :params))
@@ -294,6 +295,7 @@ function validate_modelset(
 
     modelset.learn_method = isnothing(modelset.tuning) ? modelset.learn_method[1] : modelset.learn_method[2]
     modelset.preprocess = validate_preprocess_params(modelset.preprocess, preprocess)
+    isnothing(reducefunc) || (modelset.config = merge(modelset.config, (reducefunc=reducefunc,)))
 
     return modelset
 end

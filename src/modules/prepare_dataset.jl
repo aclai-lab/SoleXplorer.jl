@@ -130,7 +130,6 @@ function _prepare_dataset(
     y::AbstractVector;
     algo::Symbol,
     treatment::Symbol,
-    reducefunc::Union{Base.Callable, Nothing},
     features::AbstractVector{<:Base.Callable},
     train_ratio::Float64,
     valid_ratio::Float64,
@@ -138,6 +137,7 @@ function _prepare_dataset(
     resample::Union{Resample, Nothing},
     winparams::SoleFeatures.WinParams,
     vnames::Union{SoleFeatures.VarNames,Nothing}=nothing,
+    reducefunc::Union{Base.Callable, Nothing}=nothing
 )::Dataset
     X = Matrix(df)
     # check parameters
@@ -167,8 +167,6 @@ function _prepare_dataset(
 
     column_eltypes = eltype.(eachcol(X))
 
-    isnothing(reducefunc) && (reducefunc = mean)
-
     if all(t -> t <: AbstractVector{<:Number}, column_eltypes) && !isnothing(winparams)
         X, vnames = SoleFeatures._treatment(X, vnames, treatment, features, winparams; reducefunc)
     end
@@ -176,7 +174,7 @@ function _prepare_dataset(
     ds_info = DatasetInfo(
         algo,
         treatment,
-        treatment == :reducesize ? reducefunc : nothing,
+        reducefunc,
         train_ratio,
         valid_ratio,
         rng,
@@ -186,7 +184,6 @@ function _prepare_dataset(
 
     return Dataset(
         X, y,
-        # _partition(y, train_ratio, valid_ratio, shuffle, stratified, nfolds, rng),
         _partition(y, train_ratio, valid_ratio, resample, rng),
         ds_info
     )
@@ -223,11 +220,12 @@ function prepare_dataset(
     features::Union{Tuple, Nothing}=nothing,
     tuning::Union{NamedTuple, Bool, Nothing}=nothing,
     rules::Union{NamedTuple, Nothing}=nothing,
-    preprocess::Union{NamedTuple, Nothing}=nothing
+    preprocess::Union{NamedTuple, Nothing}=nothing,
+    reducefunc::Union{Base.Callable, Nothing}=nothing,
 )::Modelset
     # if model is unspecified, use default model setup
     isnothing(model) && (model = DEFAULT_MODEL_SETUP)
-    modelset = validate_modelset(model, eltype(y); resample, win, features, tuning, rules, preprocess)
+    modelset = validate_modelset(model, eltype(y); resample, win, features, tuning, rules, preprocess, reducefunc)
     Modelset(modelset, _prepare_dataset(X, y, modelset))
 end
 
