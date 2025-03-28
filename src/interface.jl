@@ -314,7 +314,7 @@ const AVAIL_MODELS = Dict(
     # :modal_decision_list => ModalDecisionLists.MLJInterface.ExtendedSequentialCovering,
 )
 
-const AVAIL_TREATMENTS = (:aggregate, :reducesize)
+# const AVAIL_TREATMENTS = (:aggregate, :reducesize)
 
 # ---------------------------------------------------------------------------- #
 #                                   resample                                   #

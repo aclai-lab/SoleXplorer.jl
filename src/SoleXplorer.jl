@@ -50,9 +50,6 @@ using Reexport
 
 @reexport using MLJ: CV, Holdout, StratifiedCV, TimeSeriesCV
 
-include("utils/code_dataframe.jl")
-export code_dataframe
-
 include("interface.jl")
 export Modelset, range
 export plainrule, lumenrule, intreesrule
@@ -65,6 +62,7 @@ export makewatchlist
 include("modules/validate_modelsetup.jl")
 
 include("modules/prepare_dataset.jl")
+export code_dataset
 export prepare_dataset
 
 include("modules/train_test.jl")

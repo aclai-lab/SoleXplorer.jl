@@ -33,36 +33,90 @@ function check_row_consistency(X::AbstractMatrix)
     end
     return true
 end
+
+"""
+    code_dataset(X::AbstractDataFrame) -> AbstractDataFrame
+    code_dataset(y::AbstractVector) -> AbstractVector
+    code_dataset(X::AbstractDataFrame, y::AbstractVector) -> Tuple{AbstractDataFrame, AbstractVector}
+
+Convert categorical/non-numeric data to numeric form by replacing categories with their level codes.
+
+# Arguments
+- `X::AbstractDataFrame`: DataFrame containing columns to be converted
+- `y::AbstractVector`: Vector of target values to be converted
+
+# Returns
+- The input data with non-numeric values converted to their corresponding level codes
+
+# Details
+This function converts categorical or other non-numeric data to a numeric representation:
+- For DataFrames: Each non-numeric column is replaced with integer level codes
+- For vectors: Non-numeric elements are replaced with integer level codes
+- When both X and y are provided, both are converted and returned as a tuple
+
+Level codes maintain the original categorical information while allowing algorithms
+that require numeric inputs to process the data.
+"""
+function code_dataset(X::AbstractDataFrame)
+    for (name, col) in pairs(eachcol(X))
+        if !(eltype(col) <: Number)
+            X_coded = CategoricalArrays.levelcode.(categorical(col)) 
+            X[!, name] = X_coded
+        end
+    end
+    
+    return X
+end
+
+function code_dataset(y::AbstractVector)
+    if !(eltype(y) <: Number)
+        eltype(y) <: Symbol && (y = string.(y))
+        y = CategoricalArrays.levelcode.(categorical(y)) 
+    end
+    
+    return y
+end
+
+code_dataset(X::AbstractDataFrame, y::AbstractVector) = code_dataset(X), code_dataset(y)
+
 # ---------------------------------------------------------------------------- #
 #                                 partitioning                                 #
 # ---------------------------------------------------------------------------- #
 """
     _partition(y::AbstractVector{<:Y_Value}, train_ratio::Float64, valid_ratio::Float64, 
-               shuffle::Bool, stratified::Bool, nfolds::Int, rng::AbstractRNG)
-               -> Union{TT_indexes, Vector{TT_indexes}}
+               resample::Union{Resample, Nothing}, rng::AbstractRNG)
+               -> Union{TT_indexes{Int}, Vector{TT_indexes{Int}}}
 
 Partitions the input vector `y` into training, validation, and testing indices based on 
-the specified parameters. Supports both stratified and non-stratified partitioning.
+the specified parameters. Supports both simple partitioning and cross-validation.
 
 # Arguments
-- `y::AbstractVector{<:Y_Value}`: The target variable to partition.
-- `train_ratio::Float64`: The ratio of data to be used for training (from the non-test portion when valid_ratio < 1.0).
+- `y::AbstractVector{<:Y_Value}`: The target variable to partition
+- `train_ratio::Float64`: The ratio of data to be used for training (from the non-test portion)
 - `valid_ratio::Float64`: Controls validation set creation:
   - When 1.0: No validation set is created (empty array)
-  - When < 1.0: Creates validation set as a portion of the training data
-- `shuffle::Bool`: Whether to shuffle the data before partitioning.
-- `stratified::Bool`: Whether to use stratified partitioning:
-  - When true: Returns a vector of TT_indexes for cross-validation
-  - When false: Returns a single TT_indexes instance
-- `nfolds::Int`: Number of folds for cross-validation in stratified partitioning.
-- `rng::AbstractRNG`: Random number generator for reproducibility.
+  - When < 1.0: Creates a validation set as fraction of the training data
+- `resample::Union{Resample, Nothing}`: Resampling strategy:
+  - When `nothing`: Performs a single train/valid/test split
+  - When a `Resample` object: Performs cross-validation according to the resampling strategy
+- `rng::AbstractRNG`: Random number generator for reproducibility
 
 # Returns
-- `Union{TT_indexes, Vector{TT_indexes}}`: Either:
-  - A single `TT_indexes` object containing train/valid/test indices (when stratified=false)
-  - A vector of `TT_indexes` objects for cross-validation folds (when stratified=true)
-"""
+- `Union{TT_indexes{Int}, Vector{TT_indexes{Int}}}`: Either:
+  - A single `TT_indexes{Int}` object with train/valid/test indices (when resample is `nothing`)
+  - A vector of `TT_indexes{Int}` objects for cross-validation folds (when using resampling)
 
+# Details
+## Simple Partitioning (resample = nothing)
+When `resample` is `nothing`, a single train/test split is created using `train_ratio`,
+followed by a train/validation split of the training data using `valid_ratio`.
+
+## Cross-Validation (resample != nothing)
+When a resampling strategy is provided, the function:
+1. Creates multiple train/test splits according to the strategy (e.g. k-fold CV)
+2. For each fold, optionally splits the training data to create validation sets
+3. Returns a vector of `TT_indexes` objects, one for each fold
+"""
 function _partition(
     y::AbstractVector{<:Y_Value},
     train_ratio::Float64,
@@ -94,37 +148,47 @@ end
 #                               prepare dataset                                #
 # ---------------------------------------------------------------------------- #
 """
-    prepare_dataset(X::AbstractDataFrame, y::AbstractVector; algo::Symbol=:classification, 
-                    treatment::Symbol=:aggregate, features::AbstractVector{<:Base.Callable}=DEFAULT_FEATS, 
-                    train_ratio::Float64=0.8, shuffle::Bool=true, stratified::Bool=false, 
-                    nfolds::Int=6, rng::AbstractRNG=Random.TaskLocalRNG(), 
-                    winparams::Union{NamedTuple,Nothing}=nothing, 
-                    vnames::Union{AbstractVector{<:Union{AbstractString,Symbol}},Nothing}=nothing)
+    prepare_dataset(X::AbstractDataFrame, y::AbstractVector; kwargs...)::Modelset
+    prepare_dataset(X::AbstractDataFrame, y::Union{Symbol,AbstractString}; kwargs...)::Modelset
 
-Prepares a dataset for machine learning by processing the input DataFrame `X` and target vector `y`. 
-Supports both classification and regression tasks, with options for data treatment and partitioning.
+Prepares a dataset for machine learning by processing the input data and configuring a model setup.
+Supports both classification and regression tasks, with extensive customization options.
 
 # Arguments
-- `X::AbstractDataFrame`: The input data containing features.
-- `y::AbstractVector`: The target variable corresponding to the rows in `X`.
-- `algo::Symbol`: The type of algorithm, either `:classification` or `:regression`.
-- `treatment::Symbol`: The data treatment method, default is `:aggregate`.
-- `features::AbstractVector{<:Base.Callable}`: Functions to apply to the data columns.
-- `train_ratio::Float64`: Ratio of data to be used for training.
-- `shuffle::Bool`: Whether to shuffle data before partitioning.
-- `stratified::Bool`: Whether to use stratified partitioning.
-- `nfolds::Int`: Number of folds for cross-validation.
-- `rng::AbstractRNG`: Random number generator for reproducibility.
-- `winparams::Union{NamedTuple,Nothing}`: Parameters for windowing strategy.
-- `vnames::Union{AbstractVector{<:Union{AbstractString,Symbol}},Nothing}`: Names of the columns in `X`.
+- `X::AbstractDataFrame`: The input data containing features
+- `y::AbstractVector` or `y::Union{Symbol,AbstractString}`: The target variable, either as a vector or 
+  as a column name/symbol from `X`
+
+# Optional Keyword Arguments
+- `model::Union{NamedTuple, Nothing}=nothing`: Model configuration with fields:
+  - `type`: Model type (e.g., `:xgboost`, `:randomforest`)
+  - `params`: Model-specific parameters
+- `resample::Union{NamedTuple, Nothing}=nothing`: Resampling strategy
+  - `type`: Resampling method (e.g., `:cv`, `:stratifiedcv`)
+  - `params`: Resampling parameters like `nfolds`
+- `win::Union{NamedTuple, Nothing}=nothing`: Windowing parameters for time series data
+  - `type`: Window function (e.g., `adaptivewindow`, `wholewindow`)
+  - `params`: Window parameters like `nwindows`
+- `features::Union{Tuple, Nothing}=nothing`: Statistical functions to extract from time series
+  (e.g., `(mean, std, maximum)`)
+- `tuning::Union{NamedTuple, Bool, Nothing}=nothing`: Hyperparameter tuning configuration
+- `rules::Union{NamedTuple, Nothing}=nothing`: Rules for post-hoc explanation
+- `preprocess::Union{NamedTuple, Nothing}=nothing`: Data preprocessing parameters:
+  - `train_ratio`: Ratio of data for training vs testing
+  - `valid_ratio`: Ratio of training data for validation
+  - `rng`: Random number generator
+- `reducefunc::Union{Base.Callable, Nothing}=nothing`: Function for reducing time series data
+  in `:reducesize` treatment mode (default: `mean`)
 
 # Returns
-- `SoleXplorer.Dataset`: A dataset object containing processed data and partitioning information.
+- `Modelset`: A complete modelset containing both the configured model setup and prepared dataset
 
-# Throws
-- `ArgumentError`: If input parameters are invalid or unsupported column types are encountered.
+# Notes
+- For non-numeric data in `X`, use `code_dataset(X)` before calling this function
+- Time series data should be stored as vectors within DataFrame cells
+- If `y` is provided as a column name, it will be extracted from `X`
+- When `model=nothing`, a default model setup is used
 """
-
 function _prepare_dataset(
     df::AbstractDataFrame,
     y::AbstractVector;
@@ -141,10 +205,10 @@ function _prepare_dataset(
 )::Dataset
     X = Matrix(df)
     # check parameters
-    check_dataset_type(X) || throw(ArgumentError("DataFrame must contain only numeric values"))
+    check_dataset_type(X) || throw(ArgumentError("DataFrame must contain only numeric values, use SoleXplorer.code_dataset() to convert non-numeric data"))
     size(X, 1) == length(y) || throw(ArgumentError("Number of rows in DataFrame must match length of class labels"))
     check_row_consistency(X) || throw(ArgumentError("Elements within each row must have consistent dimensions"))
-    treatment in AVAIL_TREATMENTS || throw(ArgumentError("Treatment must be one of: $AVAIL_TREATMENTS"))
+    # treatment in AVAIL_TREATMENTS || throw(ArgumentError("Treatment must be one of: $AVAIL_TREATMENTS"))
 
     if algo == :regression
         y isa AbstractVector{<:Reg_Value} || throw(ArgumentError("Regression requires a numeric target variable"))
