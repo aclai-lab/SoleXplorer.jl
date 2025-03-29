@@ -34,6 +34,7 @@ TreeParzen = "eb66a70c-a255-11e9-03ea-7ba6b2f22006"
 XGBoost = "009559a3-9522-5dbb-924b-0b6ed2b22bb9"
 
 [compat]
+Catch22 = "0.7"
 CategoricalArrays = "0.10"
 DataFrames = "1"
 DecisionTree = "0.12"
