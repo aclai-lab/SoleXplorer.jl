@@ -314,8 +314,6 @@ parametrized_model_type = train_test(X, y;
     )
 )
 
-# reducefunc = train_test(X, y; model=(type=:modaldecisiontree,), reducefunc=median)
-
 resample = train_test(X, y; resample=(type=CV,))
 parametrized_resample = train_test(X, y; resample=(type=StratifiedCV, params=(nfolds=10,)))
 
