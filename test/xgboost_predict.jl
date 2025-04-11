@@ -416,16 +416,22 @@ probability = exp_preds / row_sums = 0.299339  0.370832  0.329829
 XGBoost probability:  0.304161  0.320495  0.375344
 """
 
-# ragionamento per assurdo: problema di arrotondamento
-# "petal_length" < 4.9000001 viene valutato come false
+"""
+### ragionamento per assurdo: problema di arrotondamento ###
+"petal_length" = 4.9
+"petal_length" < 4.9000001 viene valutato come false
+
+quindi: 
 # tree 2
-# "petal_length" < 3.0 -- no > "petal_length" < 4.9000001 -- no > "petal_width" < 1.70000005 -- yes >> leaf = -0.0206896588
+"petal_length" < 3.0 -- no > "petal_length" < 4.9000001 -- no > "petal_width" < 1.70000005 -- yes >> leaf = -0.0206896588
 # tree 3
-# "petal_length" < 4.80000019 -- no > "petal_length" < 4.9000001 -- no >> leaf = 0.137288138
+"petal_length" < 4.80000019 -- no > "petal_length" < 4.9000001 -- no >> leaf = 0.137288138
+"""
 exp_preds = exp.([-0.072997041, -0.0206896588, 0.137288138])
 row_sums = sum(exp_preds)
 probability = exp_preds ./ row_sums
 
+"""
 # 3-element Vector{Float64}:
 #  0.3041612750760762
 #  0.320494608175597
@@ -433,4 +439,8 @@ probability = exp_preds ./ row_sums
 
 #  XGBoost probability:  0.304161  0.320495  0.375344
 
-### PROBLEMA RISOLTO
+PROBLEMA RISOLTO
+se si valuta
+4.9 < 4.9000001 false
+allora si ottiene il risaultato del predict XGBoost
+"""
