@@ -319,11 +319,6 @@ const AVAIL_MODELS = Dict(
     # :modal_decision_list => ModalDecisionLists.MLJInterface.ExtendedSequentialCovering,
 )
 
-const RESULTS = Dict(
-    :classification => ClassResults,
-    :regression     => RegResults
-)
-
 # const AVAIL_TREATMENTS = (:aggregate, :reducesize)
 
 # ---------------------------------------------------------------------------- #
@@ -521,6 +516,11 @@ struct RegResults <: AbstractResults
     # feature_importance :: Union{AbstractVector, Nothing}
     # predictions:: Union{AbstractVector, Nothing}
 end
+
+const RESULTS = Dict(
+    :classification => ClassResults,
+    :regression     => RegResults
+)
 
 # ---------------------------------------------------------------------------- #
 #                              Modelset struct                                 #
