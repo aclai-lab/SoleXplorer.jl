@@ -277,7 +277,10 @@ end
     end
 end
 
-@testset "prepare_dataset functions" begin    
+@testset "prepare_dataset functions" begin  
+    # Setup
+    rng = Random.MersenneTwister(123)
+
     # Numeric features for regression
     df_reg = DataFrame(
         feature1 = randn(rng, 100),
@@ -398,6 +401,9 @@ end
 end
         
 @testset "Custom reduce function" begin
+    # Setup
+    rng = Random.MersenneTwister(123)
+
     # Test setting a custom reduce function for time series
     df_ts2 = DataFrame(
         ts1 = [randn(rng, 20) for _ in 1:20],

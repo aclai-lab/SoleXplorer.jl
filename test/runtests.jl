@@ -15,8 +15,7 @@ println("Julia version: ", VERSION)
 test_suites = [
     ("Prepare Dataset", ["modules/prepare_dataset.jl", ]),
     ("Validate Modelset", ["modules/validate_modelset.jl", ]),
-    ("Get Models", ["modules/models.jl", ]),
-    ("TrainTest", ["user_funcs/traintest.jl", ]),
+    ("Train_Test", ["modules/train_test.jl", ]),
 ]
 
 @testset "SoleXplorer.jl" begin
