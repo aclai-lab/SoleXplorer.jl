@@ -293,7 +293,7 @@ function prepare_dataset(
     Modelset(modelset, _prepare_dataset(X, y, modelset))
 end
 
-# y is not a vector, but a symbol or a string that identifies the column in X
+# y is not a vector, but a symbol or a string that identifies a column in X
 function prepare_dataset(
     X::AbstractDataFrame,
     y::Union{Symbol,AbstractString};

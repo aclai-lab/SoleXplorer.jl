@@ -68,8 +68,8 @@ export prepare_dataset
 include("modules/train_test.jl")
 export train_test
 
-include("user_interfaces/symbolic_analysis.jl")
-export symbolic_analysis
+include("modules/symbolic_analysis.jl")
+export compute_results!, symbolic_analysis
 
 include("user_interfaces/predict.jl")
 export get_predict
