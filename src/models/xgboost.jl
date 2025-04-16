@@ -30,7 +30,7 @@ function XGBoostClassifierModel()
 
     params = (;
         test                        = 1, 
-        num_round                   = 100, 
+        num_round                   = 10, 
         booster                     = "gbtree", 
         disable_default_eval_metric = 0, 
         eta                         = 0.3,      # alias: learning_rate
@@ -82,8 +82,7 @@ function XGBoostClassifierModel()
             encoding     = get_encoding(mach.fitresult[2])
             classlabels  = get_classlabels(encoding)
             featurenames = mach.report.vals[1].features
-            ds_safetest  = vcat(y, "nothing")
-            dt           = solemodel(trees, @views(Matrix(X)), @views(ds_safetest); classlabels, featurenames)
+            dt           = solemodel(trees, @views(Matrix(X)), @views(y); classlabels, featurenames)
             apply!(dt, @views(X), @views(y))
             return dt
         end,
@@ -92,8 +91,7 @@ function XGBoostClassifierModel()
             encoding     = get_encoding(mach.fitresult.fitresult[2])
             classlabels  = get_classlabels(encoding)
             featurenames = mach.fitresult.report.vals[1].features
-            ds_safetest  = vcat(y, "nothing")
-            dt           = solemodel(trees, @views(Matrix(X)), @views(ds_safetest); classlabels, featurenames)
+            dt           = solemodel(trees, @views(Matrix(X)), @views(y); classlabels, featurenames)
             apply!(dt, @views(X), @views(y))
             return dt
         end
