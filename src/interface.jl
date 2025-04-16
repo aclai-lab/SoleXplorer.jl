@@ -27,6 +27,11 @@ Abstract type for fitted model configurations
 abstract type AbstractModelset end
 
 """
+Abstract type for results output
+"""
+abstract type AbstractResults end
+
+"""
 Abstract type for type/params structs
 """
 abstract type AbstractTypeParams end
@@ -314,6 +319,11 @@ const AVAIL_MODELS = Dict(
     # :modal_decision_list => ModalDecisionLists.MLJInterface.ExtendedSequentialCovering,
 )
 
+const RESULTS = Dict(
+    :classification => ClassResults,
+    :regression     => RegResults
+)
+
 # const AVAIL_TREATMENTS = (:aggregate, :reducesize)
 
 # ---------------------------------------------------------------------------- #
@@ -484,12 +494,41 @@ function range(
 end
 
 # ---------------------------------------------------------------------------- #
+#                              Results structs                                 #
+# ---------------------------------------------------------------------------- #
+struct ClassResults <: AbstractResults
+    accuracy   :: AbstractFloat
+    # rules      :: Union{Rule,          Nothing}
+    # metrics    :: Union{AbstractVector, Nothing}
+    # feature_importance :: Union{AbstractVector, Nothing}
+    # predictions:: Union{AbstractVector, Nothing}
+end
+
+# function Base.show(io::IO, ::MIME"text/plain", r::ClassResults)
+#     println(io, "Results")
+#     println(io, "  Accuracy: ", r.accuracy)
+#     println(io, "  Rules: ", r.rules)
+#     println(io, "  Feature importance: ", r.feature_importance)
+#     println(io, "  Predictions: ", r.predictions)
+# end
+
+# Base.show(io::IO, r::ClassResults) = print(io, "Results(accuracy=$(r.accuracy), rules=$(r.rules))")
+
+struct RegResults <: AbstractResults
+    accuracy   :: AbstractFloat
+    # rules      :: Union{Rule,          Nothing}
+    # metrics    :: Union{AbstractVector, Nothing}
+    # feature_importance :: Union{AbstractVector, Nothing}
+    # predictions:: Union{AbstractVector, Nothing}
+end
+
+# ---------------------------------------------------------------------------- #
 #                              Modelset struct                                 #
 # ---------------------------------------------------------------------------- #
 mutable struct Modelset <: AbstractModelset
     setup      :: AbstractModelSetup
     ds         :: AbstractDataset
-    classifier :: Union{MLJ.Model,     Nothing}
+    classifier :: Union{MLJ.Model,       Nothing}
     # mach       :: Union{MLJ.Machine,   Nothing}
     # model      :: Union{AbstractModel, Nothing}
     # rules      :: Union{Rule,          Nothing}
@@ -497,7 +536,7 @@ mutable struct Modelset <: AbstractModelset
     mach       :: Union{MLJ.Machine,   AbstractVector{<:MLJ.Machine},   Nothing}
     model      :: Union{AbstractModel, AbstractVector{<:AbstractModel}, Nothing}
     rules      :: Union{Rule,          AbstractVector{<:Rule},          Nothing}
-    accuracy   :: Union{AbstractFloat, AbstractVector{<:AbstractFloat}, Nothing}
+    results    :: Union{AbstractResults, Nothing}
 
     function Modelset(
         setup      :: AbstractModelSetup,
@@ -522,5 +561,5 @@ function Base.show(io::IO, mc::Modelset)
     println(io, "    setup      =", mc.setup)
     println(io, "    classifier =", mc.classifier)
     println(io, "    rules      =", isnothing(mc.rules) ? "nothing" : string(mc.rules))
-    println(io, "    accuracy   =", isnothing(mc.accuracy) ? "nothing" : string(mc.accuracy))
+    # println(io, "    accuracy   =", isnothing(mc.accuracy) ? "nothing" : string(mc.accuracy))
 end

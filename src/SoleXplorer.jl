@@ -59,6 +59,8 @@ include("models/modaldecisiontrees.jl")
 include("models/xgboost.jl")
 export makewatchlist
 
+include("utils/getter.jl")
+export get_algo
 include("utils/validate_modelsetup.jl")
 
 include("modules/prepare_dataset.jl")

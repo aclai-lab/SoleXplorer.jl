@@ -1,8 +1,14 @@
 # ---------------------------------------------------------------------------- #
 #                               compute_results                                #
 # ---------------------------------------------------------------------------- #
-function compute_results!(model::Modelset)
-
+function compute_results(
+    algo::Symbol,
+    labels::AbstractVector,
+    predictions::AbstractVector, 
+)::AbstractResults
+    accuracy = sum(predictions .== labels)/length(labels)
+    
+    return RESULTS[algo](accuracy)
 end
 
 # ---------------------------------------------------------------------------- #
@@ -29,7 +35,7 @@ function symbolic_analysis(
     # TODO extract rules, if needed
 
     # save results into model
-    compute_results!(model)
+    model.results = compute_results(get_algo(model), get_labels(model), get_predictions(model))
 
     return model
 end
