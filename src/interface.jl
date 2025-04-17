@@ -17,14 +17,23 @@ Abstract type for dataset train, test and validation indexing
 abstract type AbstractIndexCollection end
 
 """
+Abstract type for model type
+"""
+abstract type AbstractModelType end
+
+"""
 Abstract type for model configuration and parameters
 """
-abstract type AbstractModelSetup end
+abstract type AbstractModelSetup{T<:AbstractModelType} end
+
+modeltype(::AbstractModelSetup{T}) where {T} = T
 
 """
 Abstract type for fitted model configurations
 """
-abstract type AbstractModelset end
+abstract type AbstractModelset{T<:AbstractModelType} end
+
+modeltype(::AbstractModelset{T}) where {T} = T
 
 """
 Abstract type for results output
@@ -156,6 +165,9 @@ function Base.show(io::IO, info::DatasetInfo)
     end
 end
 
+# ---------------------------------------------------------------------------- #
+#                                    dataset                                   #
+# ---------------------------------------------------------------------------- #
 """
     TT_indexes{T<:Integer} <: AbstractVector{T}
 
@@ -247,7 +259,7 @@ end
 # ---------------------------------------------------------------------------- #
 #                                   Modelset                                   #
 # ---------------------------------------------------------------------------- #
-mutable struct ModelSetup <: AbstractModelSetup
+mutable struct ModelSetup{T<:AbstractModelType} <: AbstractModelSetup{T}
     type         :: Base.Callable
     config       :: NamedTuple
     params       :: NamedTuple
@@ -275,9 +287,16 @@ end
 # ---------------------------------------------------------------------------- #
 #                              default parameters                              #
 # ---------------------------------------------------------------------------- #
+struct TypeDTC <: AbstractModelType end
+struct TypeRFC <: AbstractModelType end
+struct TypeABC <: AbstractModelType end
+
 DecisionTreeClassifierModel(dtmodel :: ModelSetup) = dtmodel
 RandomForestClassifierModel(dtmodel :: ModelSetup) = dtmodel
 AdaBoostClassifierModel(dtmodel     :: ModelSetup) = dtmodel
+
+struct TypeDTR <: AbstractModelType end
+struct TypeRFR <: AbstractModelType end
 
 DecisionTreeRegressorModel(dtmodel  :: ModelSetup) = dtmodel
 RandomForestRegressorModel(dtmodel  :: ModelSetup) = dtmodel
@@ -525,34 +544,30 @@ const RESULTS = Dict(
 # ---------------------------------------------------------------------------- #
 #                              Modelset struct                                 #
 # ---------------------------------------------------------------------------- #
-mutable struct Modelset <: AbstractModelset
-    setup      :: AbstractModelSetup
+mutable struct Modelset{T<:AbstractModelType} <: AbstractModelset{T}
+    setup      :: AbstractModelSetup{T}
     ds         :: AbstractDataset
     classifier :: Union{MLJ.Model,       Nothing}
-    # mach       :: Union{MLJ.Machine,   Nothing}
-    # model      :: Union{AbstractModel, Nothing}
-    # rules      :: Union{Rule,          Nothing}
-    # accuracy   :: Union{AbstractFloat, Nothing}
     mach       :: Union{MLJ.Machine,   AbstractVector{<:MLJ.Machine},   Nothing}
     model      :: Union{AbstractModel, AbstractVector{<:AbstractModel}, Nothing}
     rules      :: Union{Rule,          AbstractVector{<:Rule},          Nothing}
     results    :: Union{AbstractResults, Nothing}
 
     function Modelset(
-        setup      :: AbstractModelSetup,
+        setup      :: AbstractModelSetup{T},
         ds         :: AbstractDataset,
         classifier :: MLJ.Model,
         mach       :: MLJ.Machine,
         model      :: AbstractModel
-    )
-        new(setup, ds, classifier, mach, model, nothing, nothing)
+    ) where {T<:AbstractModelType}
+        new{T}(setup, ds, classifier, mach, model, nothing, nothing)
     end
 
     function Modelset(
-        setup      :: AbstractModelSetup,
+        setup      :: AbstractModelSetup{T},
         ds         :: Dataset
-    )
-        new(setup, ds, nothing, nothing, nothing, nothing, nothing)
+    ) where {T<:AbstractModelType}
+        new{T}(setup, ds, nothing, nothing, nothing, nothing, nothing)
     end
 end
 

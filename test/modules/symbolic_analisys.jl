@@ -2,21 +2,224 @@ using Test
 using SoleXplorer
 using DataFrames
 using StatsBase: sample
-using DecisionTree: load_data
-using RDatasets
 
 # ---------------------------------------------------------------------------- #
-#                                numeric dataset                               #
+#                       numeric dataset classification                         #
 # ---------------------------------------------------------------------------- #
-X, y = load_data("iris")
-X = DataFrame(Float64.(X), :auto)
-y = String.(y)
+using MLJBase
+
+X, y = @load_iris
+X = DataFrame(X)
 rng = Xoshiro(11)
 
 # ---------------------------------------------------------------------------- #
-#                             symbolic_analysis                                #
+#                           decision tree classifier                           #
 # ---------------------------------------------------------------------------- #
-no_parameters = symbolic_analysis(X, y)
+# decision tree
+modelset = symbolic_analysis(
+    X, y;
+    model=(type=:decisiontree, params=(max_depth=3, min_samples_leaf=5, min_purity_increase=0.01)),
+    preprocess=(;rng)
+)
+println("decision tree accuracy: ", get_accuracy(modelset))
+
+# decision tree with resampling cross validation
+modelset = symbolic_analysis(
+    X, y;
+    model=(type=:decisiontree, params=(max_depth=5, min_samples_leaf=2)),
+    resample=(type=CV, params=(nfolds=10,)),
+    preprocess=(;rng)
+)
+println("decision tree with cross validation accuracy: ", get_accuracy(modelset))
+
+# decision tree with tuning strategy
+modelset = symbolic_analysis(
+    X, y;
+    model=(;type=:decisiontree, params=(max_depth=5, min_samples_leaf=2)),
+    tuning=(
+        method=(;type=latinhypercube), 
+        params=(repeats=25, n=10),
+        ranges=(
+            SoleXplorer.range(:max_depth, lower=2, upper=10),
+            SoleXplorer.range(:feature_importance, values=[:impurity, :split])
+        )
+    ), 
+    preprocess=(;rng)
+)
+println("decision tree with tuning strategy accuracy: ", get_accuracy(modelset))
+
+# ---------------------------------------------------------------------------- #
+#                           random forest classifier                           #
+# ---------------------------------------------------------------------------- #
+# random forest
+modelset = symbolic_analysis(
+    X, y;
+    model=(type=:randomforest, params=(;max_depth=5)),
+    preprocess=(;rng)
+)
+println("random forest accuracy: ", get_accuracy(modelset))
+
+# random forest with resampling cross validation
+modelset = symbolic_analysis(
+    X, y;
+    model=(type=:randomforest, params=(;max_depth=5)),
+    resample=(type=StratifiedCV, params=(nfolds=10,)),
+    preprocess=(;rng)
+)
+println("random forest with cross validation accuracy: ", get_accuracy(modelset))
+
+# random forest with tuning strategy
+modelset = symbolic_analysis(
+    X, y;
+    model=(;type=:randomforest, params=(;max_depth=5)),
+    resample=(type=StratifiedCV, params=(nfolds=10,)),
+    tuning=(
+        method=(;type=latinhypercube), 
+        params=(repeats=25, n=10),
+        ranges=(
+            SoleXplorer.range(:max_depth, lower=2, upper=10),
+            SoleXplorer.range(:feature_importance, values=[:impurity, :split])
+        )
+    ), 
+    preprocess=(;rng)
+)
+println("random forest with tuning strategy accuracy: ", get_accuracy(modelset))
+
+# ---------------------------------------------------------------------------- #
+#                             adaboost classifier                              #
+# ---------------------------------------------------------------------------- #
+# adaboost
+modelset = symbolic_analysis(
+    X, y;
+    model=(type=:adaboost, params=(;n_iter=5)),
+    preprocess=(;rng)
+)
+println("adaboost accuracy: ", get_accuracy(modelset))
+
+# adaboost with resampling cross validation
+modelset = symbolic_analysis(
+    X, y;
+    model=(type=:adaboost, params=(;n_iter=5)),
+    resample=(type=CV, params=(nfolds=10,)),
+    preprocess=(;rng)
+)
+println("adaboost with cross validation accuracy: ", get_accuracy(modelset))
+
+# adaboost with tuning strategy
+modelset = symbolic_analysis(
+    X, y;
+    model=(;type=:adaboost, params=(;n_iter=5)),
+    tuning=(
+        method=(;type=latinhypercube), 
+        params=(repeats=25, n=10),
+        ranges=(SoleXplorer.range(:n_iter, lower=2, upper=10),)
+    ), 
+    preprocess=(;rng)
+)
+println("adaboost with tuning strategy accuracy: ", get_accuracy(modelset))
+
+# ---------------------------------------------------------------------------- #
+#                                 regression                                   #
+# ---------------------------------------------------------------------------- #
+using RDatasets
+
+table = RDatasets.dataset("datasets", "LifeCycleSavings")
+y = table[:, :DDPI]
+X = DataFrames.select(table, Not([:DDPI, :Country]));
+rng = Xoshiro(11)
+
+# ---------------------------------------------------------------------------- #
+#                           decision tree regressor                            #
+# ---------------------------------------------------------------------------- #
+# decision tree regression
+modelset = symbolic_analysis(
+    X, y;
+    model=(type=:decisiontree, params=(max_depth=5, min_samples_leaf=2)),
+    preprocess=(;rng)
+)
+println("decision tree regression accuracy: ", get_accuracy(modelset))
+
+# decision tree regression with resampling cross validation
+modelset = symbolic_analysis(
+    X, y;
+    model=(type=:decisiontree, params=(max_depth=5, min_samples_leaf=2)),
+    resample=(type=CV, params=(nfolds=10,)),
+    preprocess=(;rng)
+)
+println("decision tree regression with cross validation accuracy: ", get_accuracy(modelset))
+
+# decision tree regression with tuning strategy
+modelset = symbolic_analysis(
+    X, y;
+    model=(;type=:decisiontree, params=(max_depth=5, min_samples_leaf=2)),
+    tuning=(
+        method=(;type=latinhypercube), 
+        params=(repeats=25, n=10),
+        ranges=(
+            SoleXplorer.range(:max_depth, lower=2, upper=10),
+            SoleXplorer.range(:feature_importance, values=[:impurity, :split])
+        )
+    ), 
+    preprocess=(;rng)
+)
+println("decision tree regression with tuning strategy accuracy: ", get_accuracy(modelset))
+
+# ---------------------------------------------------------------------------- #
+#                           random forest regressor                            #
+# ---------------------------------------------------------------------------- #
+# random forest regression
+modelset = symbolic_analysis(
+    X, y;
+    model=(type=:randomforest, params=(;max_depth=5)),
+    preprocess=(;rng)
+)
+println("random forest regression accuracy: ", get_accuracy(modelset))
+
+# random forest regression with resampling cross validation
+modelset = symbolic_analysis(
+    X, y;
+    model=(type=:randomforest, params=(;max_depth=5)),
+    resample=(type=StratifiedCV, params=(nfolds=10,)),
+    preprocess=(;rng)
+)
+println("random forest regression with cross validation accuracy: ", get_accuracy(modelset))
+
+# random forest regression with tuning strategy
+modelset = symbolic_analysis(
+    X, y;
+    model=(;type=:randomforest, params=(;max_depth=5)),
+    resample=(type=StratifiedCV, params=(nfolds=10,)),
+    tuning=(
+        method=(;type=latinhypercube), 
+        params=(repeats=25, n=10),
+        ranges=(
+            SoleXplorer.range(:max_depth, lower=2, upper=10),
+            SoleXplorer.range(:feature_importance, values=[:impurity, :split])
+        )
+    ), 
+    preprocess=(;rng)
+)
+println("random forest regression with tuning strategy accuracy: ", get_accuracy(modelset))
+
+# ---------------------------------------------------------------------------- #
+#                           time series classifier                             #
+# ---------------------------------------------------------------------------- #
+X, y = load_arff_dataset("NATOPS")
+num_cols_to_sample, num_rows_to_sample, rng = 10, 50, Xoshiro(11)
+chosen_cols = sample(rng, 1:size(X, 2), num_cols_to_sample; replace=false)
+chosen_rows = sample(rng, 1:size(X, 1), num_rows_to_sample; replace=false)
+X = X[chosen_rows, chosen_cols]
+y = y[chosen_rows]
+
+
+
+
+
+
+
+
+
+
 model_type = symbolic_analysis(X, y; model=(type=:modaldecisiontree,))
 parametrized_model_type = symbolic_analysis(X, y; 
     model=(type=:xgboost,
@@ -32,8 +235,10 @@ parametrized_model_type = symbolic_analysis(X, y;
 
 reducefunc = symbolic_analysis(X, y; model=(type=:modaldecisiontree,), reducefunc=median)
 
-resample = symbolic_analysis(X, y; resample=(type=CV,))
-parametrized_resample = symbolic_analysis(X, y; resample=(type=StratifiedCV, params=(nfolds=10,)))
+no_resample = symbolic_analysis(X, y, preprocess=(;rng = Xoshiro(1)))
+resample = symbolic_analysis(X, y; resample=(type=CV,), preprocess=(;rng = Xoshiro(1)))
+parametrized_resample = symbolic_analysis(X, y; resample=(type=StratifiedCV, params=(nfolds=100,)), preprocess=(;rng = Xoshiro(1)))
+@test get_accuracy(no_resample) ≤ get_accuracy(resample) ≤ get_accuracy(parametrized_resample)
 
 win = symbolic_analysis(X, y; win=(type=adaptivewindow,))
 parametrized_win = symbolic_analysis(X, y; win=(type=adaptivewindow, params=(nwindows = 3, relative_overlap = 0.1)))
@@ -96,13 +301,25 @@ preprocess = symbolic_analysis(X, y; preprocess=(valid_ratio=0.5,))
 # ---------------------------------------------------------------------------- #
 #                             time series dataset                              #
 # ---------------------------------------------------------------------------- #
-
 X, y = load_arff_dataset("NATOPS")
 num_cols_to_sample, num_rows_to_sample, rng = 10, 50, Xoshiro(11)
 chosen_cols = sample(rng, 1:size(X, 2), num_cols_to_sample; replace=false)
 chosen_rows = sample(rng, 1:size(X, 1), num_rows_to_sample; replace=false)
 X = X[chosen_rows, chosen_cols]
 y = y[chosen_rows]
+
+# ---------------------------------------------------------------------------- #
+#                                decision tree                                 #
+# ---------------------------------------------------------------------------- #
+# decision tree
+modelset = symbolic_analysis(
+    X, y;
+    model=(;type=:decisiontree, params=(max_depth=5, min_samples_leaf=2)),
+    features=(catch9),
+    win=(type=adaptivewindow, params=(nwindows=3, relative_overlap=0.1)),
+    preprocess=(;rng)
+)
+println("decision tree accuracy: ", get_accuracy(modelset))
 
 # ---------------------------------------------------------------------------- #
 #                               symbolic_analysis                                #

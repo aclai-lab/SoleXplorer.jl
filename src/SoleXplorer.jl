@@ -60,7 +60,8 @@ include("models/xgboost.jl")
 export makewatchlist
 
 include("utils/getter.jl")
-export get_algo
+export get_algo, get_labels, get_predictions
+export get_accuracy
 include("utils/validate_modelsetup.jl")
 
 include("modules/prepare_dataset.jl")

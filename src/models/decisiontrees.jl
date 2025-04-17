@@ -38,7 +38,7 @@ function DecisionTreeClassifierModel()
 
     rulesparams = RulesParams(PlainRuleExtractor(), NamedTuple())
 
-    return ModelSetup(
+    return ModelSetup{TypeDTC}(
         type,
         config,
         params,
@@ -62,7 +62,7 @@ function RandomForestClassifierModel()
         min_samples_split   = 2,
         min_purity_increase = 0.0,
         n_subfeatures       = -1,
-        n_trees             = 100,
+        n_trees             = 10,
         sampling_fraction   = 0.7,
         feature_importance  = :impurity,
         rng                 = Random.TaskLocalRNG()
@@ -98,7 +98,7 @@ function RandomForestClassifierModel()
 
     rulesparams = RulesParams(InTreesRuleExtractor(), NamedTuple())
 
-    return ModelSetup(
+    return ModelSetup{TypeRFC}(
         type,
         config,
         params,
@@ -154,7 +154,7 @@ function AdaBoostClassifierModel()
 
     rulesparams = RulesParams(InTreesRuleExtractor(), NamedTuple())
 
-    return ModelSetup(
+    return ModelSetup{TypeABC}(
         type,
         config,
         params,
@@ -203,7 +203,7 @@ function DecisionTreeRegressorModel()
 
     rulesparams = RulesParams(PlainRuleExtractor(), NamedTuple())
 
-    return ModelSetup(
+    return ModelSetup{TypeDTR}(
         type,
         config,
         params,
@@ -261,7 +261,7 @@ function RandomForestRegressorModel()
 
     rulesparams = RulesParams(InTreesRuleExtractor(), NamedTuple())
 
-    return ModelSetup(
+    return ModelSetup{TypeRFR}(
         type,
         config,
         params,

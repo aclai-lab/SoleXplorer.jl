@@ -1,6 +1,18 @@
 # ---------------------------------------------------------------------------- #
 #                               Modelset setup                                 #
 # ---------------------------------------------------------------------------- #
-get_algo(model::Modelset) = model.setup.config.algo
-get_labels(model::Modelset) = model.model.info.supporting_labels
-get_predictions(model::Modelset) = model.model.info.supporting_predictions
+
+
+function resample_guard(model::Union{AbstractModel, Vector{AbstractModel}}, label::Symbol)
+    model isa DecisionEnsemble && begin
+     return [m.info[label] for m in model.models]
+    end
+    model isa Vector ? [m.info[label] for m in model] : model.info[label]
+end
+
+
+
+# ---------------------------------------------------------------------------- #
+#                              Modelset results                                #
+# ---------------------------------------------------------------------------- #
+
