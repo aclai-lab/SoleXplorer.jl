@@ -18,6 +18,19 @@ function rules_extraction!(model::Modelset)
 @show "GINO"
 end
 
+# function _symbolic_analysis!(tt::AbstractVector{ModelConfig})
+#     for t in tt
+#         t.rules = SolePostHoc.modalextractrules(
+#             t.setup.rulesparams.type,
+#             t.model,
+#             t.ds.Xtrain,
+#             t.ds.ytrain;
+#             t.setup.rulesparams.params...
+#         )
+#         t.accuracy = get_predict(t.mach, t.ds)
+#     end
+# end
+
 # ---------------------------------------------------------------------------- #
 #                                   accuracy                                   #
 # ---------------------------------------------------------------------------- #
