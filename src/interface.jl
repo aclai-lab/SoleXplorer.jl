@@ -301,9 +301,16 @@ struct TypeRFR <: AbstractModelType end
 DecisionTreeRegressorModel(dtmodel  :: ModelSetup) = dtmodel
 RandomForestRegressorModel(dtmodel  :: ModelSetup) = dtmodel
 
+struct TypeMDT <: AbstractModelType end
+struct TypeMRF <: AbstractModelType end
+struct TypeMAB <: AbstractModelType end
+
 ModalDecisionTreeModel(dtmodel      :: ModelSetup) = dtmodel
 ModalRandomForestModel(dtmodel      :: ModelSetup) = dtmodel
 ModalAdaBoostModel(dtmodel          :: ModelSetup) = dtmodel
+
+struct TypeXGC <: AbstractModelType end
+struct TypeXGR <: AbstractModelType end
 
 XGBoostClassifierModel(dtmodel      :: ModelSetup) = dtmodel
 XGBoostRegressorModel(dtmodel       :: ModelSetup) = dtmodel

@@ -23,8 +23,8 @@ function DecisionTreeClassifierModel()
     winparams = SoleFeatures.WinParams(SoleBase.wholewindow, NamedTuple())
 
     learn_method = (
-        (mach, X, y) -> (dt = solemodel(MLJ.fitted_params(mach).tree); apply!(dt, X, y); dt),
-        (mach, X, y) -> (dt = solemodel(MLJ.fitted_params(mach).best_fitted_params.tree); apply!(dt, X, y); dt)
+        (mach, X, y) -> (solem = solemodel(MLJ.fitted_params(mach).tree); apply!(solem, X, y); solem),
+        (mach, X, y) -> (solem = solemodel(MLJ.fitted_params(mach).best_fitted_params.tree); apply!(solem, X, y); solem)
     )
 
     tuning = SoleXplorer.TuningParams(
@@ -74,16 +74,16 @@ function RandomForestClassifierModel()
         (mach, X, y) -> begin
             classlabels  = (mach).fitresult[2][sortperm((mach).fitresult[3])]
             featurenames = MLJ.report(mach).features
-            dt           = solemodel(MLJ.fitted_params(mach).forest; classlabels, featurenames)
-            apply!(dt, X, y)
-            return dt
+            solem        = solemodel(MLJ.fitted_params(mach).forest; classlabels, featurenames)
+            apply!(solem, X, y)
+            return solem
         end,
         (mach, X, y) -> begin
             classlabels  = (mach).fitresult.fitresult[2][sortperm((mach).fitresult.fitresult[3])]
             featurenames = MLJ.report(mach).best_report.features
-            dt           = solemodel(MLJ.fitted_params(mach).best_fitted_params.forest; classlabels, featurenames)
-            apply!(dt, X, y)
-            return dt
+            solem        = solemodel(MLJ.fitted_params(mach).best_fitted_params.forest; classlabels, featurenames)
+            apply!(solem, X, y)
+            return solem
         end
     )
 
@@ -129,17 +129,17 @@ function AdaBoostClassifierModel()
             weights      = mach.fitresult[2]
             classlabels  = sort(mach.fitresult[3])
             featurenames = MLJ.report(mach).features
-            dt           = solemodel(MLJ.fitted_params(mach).stumps; weights, classlabels, featurenames)
-            apply!(dt, X, y)
-            return dt
+            solem        = solemodel(MLJ.fitted_params(mach).stumps; weights, classlabels, featurenames)
+            apply!(solem, X, y)
+            return solem
         end,
         (mach, X, y) -> begin
             weights      = mach.fitresult.fitresult[2]
             classlabels  = sort(mach.fitresult.fitresult[3])
             featurenames = MLJ.report(mach).best_report.features
-            dt           = solemodel(MLJ.fitted_params(mach).best_fitted_params.stumps; weights, classlabels, featurenames)
-            apply!(dt, X, y)
-            return dt
+            solem        = solemodel(MLJ.fitted_params(mach).best_fitted_params.stumps; weights, classlabels, featurenames)
+            apply!(solem, X, y)
+            return solem
         end
     )
 
@@ -188,8 +188,8 @@ function DecisionTreeRegressorModel()
     winparams = SoleFeatures.WinParams(SoleBase.wholewindow, NamedTuple())
 
     learn_method = (
-        (mach, X, y) -> (dt = solemodel(MLJ.fitted_params(mach).tree); apply!(dt, X, y); dt),
-        (mach, X, y) -> (dt = solemodel(MLJ.fitted_params(mach).best_fitted_params.tree); apply!(dt, X, y); dt)
+        (mach, X, y) -> (solem = solemodel(MLJ.fitted_params(mach).tree); apply!(solem, X, y); solem),
+        (mach, X, y) -> (solem = solemodel(MLJ.fitted_params(mach).best_fitted_params.tree); apply!(solem, X, y); solem)
     )
 
     tuning = SoleXplorer.TuningParams(
@@ -238,15 +238,15 @@ function RandomForestRegressorModel()
     learn_method = (
         (mach, X, y) -> begin
             featurenames = MLJ.report(mach).features
-            dt           = solemodel(MLJ.fitted_params(mach).forest; featurenames)
-            apply!(dt, X, y)
-            return dt
+            solem        = solemodel(MLJ.fitted_params(mach).forest; featurenames)
+            apply!(solem, X, y)
+            return solem
         end,
         (mach, X, y) -> begin
             featurenames = MLJ.report(mach).best_report.features
-            dt           = solemodel(MLJ.fitted_params(mach).best_fitted_params.forest; featurenames)
-            apply!(dt, X, y)
-            return dt
+            solem        = solemodel(MLJ.fitted_params(mach).best_fitted_params.forest; featurenames)
+            apply!(solem, X, y)
+            return solem
         end
     )
 

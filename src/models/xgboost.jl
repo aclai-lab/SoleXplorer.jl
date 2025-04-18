@@ -82,18 +82,18 @@ function XGBoostClassifierModel()
             encoding     = get_encoding(mach.fitresult[2])
             classlabels  = get_classlabels(encoding)
             featurenames = mach.report.vals[1].features
-            dt           = solemodel(trees, @views(Matrix(X)), @views(y); classlabels, featurenames)
-            apply!(dt, @views(X), @views(y))
-            return dt
+            solem        = solemodel(trees, @views(Matrix(X)), @views(y); classlabels, featurenames)
+            apply!(solem, mapcols(col -> Float32.(col), X), @views(y))
+            return solem
         end,
         (mach, X, y) -> begin
             trees        = XGB.trees(mach.fitresult.fitresult[1])
             encoding     = get_encoding(mach.fitresult.fitresult[2])
             classlabels  = get_classlabels(encoding)
             featurenames = mach.fitresult.report.vals[1].features
-            dt           = solemodel(trees, @views(Matrix(X)), @views(y); classlabels, featurenames)
-            apply!(dt, @views(X), @views(y))
-            return dt
+            solem        = solemodel(trees, @views(Matrix(X)), @views(y); classlabels, featurenames)
+            apply!(solem, mapcols(col -> Float32.(col), X), @views(y))
+            return solem
         end
     )
 
@@ -108,7 +108,7 @@ function XGBoostClassifierModel()
 
     rulesparams = RulesParams(InTreesRuleExtractor(), NamedTuple())
 
-    return ModelSetup(
+    return ModelSetup{TypeXGC}(
         type,
         config,
         params,

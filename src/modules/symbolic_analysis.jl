@@ -1,13 +1,22 @@
 # ---------------------------------------------------------------------------- #
 #                                    utils                                     #
 # ---------------------------------------------------------------------------- #
-const TypeTreeForestC = Union{TypeDTC, TypeRFC, TypeABC}
+# TODO vedi se, finito il symbolic analisys, puoi mergiare
+const TypeTreeForestC = Union{TypeDTC, TypeRFC, TypeABC, TypeMDT, TypeXGC}
 const TypeTreeForestR = Union{TypeDTR, TypeRFR}
+const TypeModalForest = Union{TypeMRF, TypeMAB}
 
 get_algo(setup::AbstractModelSetup) = setup.config.algo
 
 get_labels(model::AbstractModel) = model.info.supporting_labels
 get_predictions(model::AbstractModel) = model.info.supporting_predictions
+
+# ---------------------------------------------------------------------------- #
+#                               rule extraction                                #
+# ---------------------------------------------------------------------------- #
+function rules_extraction!(model::Modelset)
+@show "GINO"
+end
 
 # ---------------------------------------------------------------------------- #
 #                                   accuracy                                   #
@@ -40,8 +49,6 @@ function get_accuracy(::TypeTreeForestR, model::AbstractModel)
     total_sum_squares = sum((labels .- mean_label).^2)
     residual_sum_squares = sum((predictions .- labels).^2)
     
-    # Handle edge case where variance is close to zero
-    # Return R-squared (clamped to prevent extremely negative values)
     return total_sum_squares < 1e-10 ? 0.0 : max(-1.0, 1.0 - (residual_sum_squares / total_sum_squares))
 end
 
@@ -57,6 +64,23 @@ function get_accuracy(::TypeTreeForestR, model::Vector{AbstractModel})
             
             total_sum_squares < 1e-10 ? 0.0 : max(-1.0, 1.0 - (residual_sum_squares / total_sum_squares))
         end
+        for m in model]
+    )
+end
+
+function get_accuracy(::TypeModalForest, model::AbstractModel)
+    labels = get_labels(model.models[1])
+    predictions = get_predictions(model)
+    sum(predictions .== labels)/length(labels)
+end
+
+function get_accuracy(::TypeModalForest, model::Vector{AbstractModel})
+    mean([
+        begin
+            labels = get_labels(m.models[1])
+            predictions = get_predictions(m)
+            sum(predictions .== labels)/length(labels) 
+        end 
         for m in model]
     )
 end
@@ -87,6 +111,7 @@ function symbolic_analysis(
     rules::Union{NamedTuple, Nothing}=nothing,
     preprocess::Union{NamedTuple, Nothing}=nothing,
     reducefunc::Union{Base.Callable, Nothing}=nothing,
+    rules_extraction::Bool=false
 )::Modelset
     # if model is unspecified, use default model setup
     isnothing(model) && (model = DEFAULT_MODEL_SETUP)
@@ -94,11 +119,15 @@ function symbolic_analysis(
     model = Modelset(modelset, _prepare_dataset(X, y, modelset))
     _traintest!(model)
 
-    # TODO extract rules, if needed
+    rules_extraction && rules_extraction!(model)
 
     # save results into model
     model.results = compute_results(model.setup, model.model)
 
+    # yhat = predict_mode(model.mach, DataFrame(model.ds.Xtest, model.ds.info.vnames))
+    # accuracy = MLJ.accuracy(yhat, model.ds.ytest)
+    # @show yhat
+    # @show accuracy
     return model
 end
 

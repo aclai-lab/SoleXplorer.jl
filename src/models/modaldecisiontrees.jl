@@ -34,8 +34,8 @@ function ModalDecisionTreeModel()
     winparams = SoleFeatures.WinParams(SoleBase.adaptivewindow, NamedTuple())
 
     learn_method = (
-        (mach, X, y) -> ((_, dt) = MLJ.report(mach).sprinkle(X, y); dt),
-        (mach, X, y) -> ((_, dt) = MLJ.report(mach).best_report.sprinkle(X, y); dt)
+        (mach, X, y) -> ((_, solem) = MLJ.report(mach).sprinkle(X, y); solem),
+        (mach, X, y) -> ((_, solem) = MLJ.report(mach).best_report.sprinkle(X, y); solem)
     )
 
     tuning = SoleXplorer.TuningParams(
@@ -49,7 +49,7 @@ function ModalDecisionTreeModel()
 
     rulesparams = RulesParams(PlainRuleExtractor(), NamedTuple())
 
-    return ModelSetup(
+    return ModelSetup{TypeMDT}(
         type,
         config,
         params,
@@ -96,8 +96,8 @@ function ModalRandomForestModel()
     winparams = SoleFeatures.WinParams(SoleBase.adaptivewindow, NamedTuple())
 
     learn_method = (
-        (mach, X, y) -> ((_, dt) = MLJ.report(mach).sprinkle(X, y); dt),
-        (mach, X, y) -> ((_, dt) = MLJ.report(mach).best_report.sprinkle(X, y); dt)
+        (mach, X, y) -> ((_, solem) = MLJ.report(mach).sprinkle(X, y); solem),
+        (mach, X, y) -> ((_, solem) = MLJ.report(mach).best_report.sprinkle(X, y); solem)
     )
 
     tuning = SoleXplorer.TuningParams(
@@ -111,7 +111,7 @@ function ModalRandomForestModel()
 
     rulesparams = RulesParams(InTreesRuleExtractor(), NamedTuple())
 
-    return ModelSetup(
+    return ModelSetup{TypeMRF}(
         type,
         config,
         params,
@@ -157,8 +157,8 @@ function ModalAdaBoostModel()
     winparams = SoleFeatures.WinParams(SoleBase.adaptivewindow, NamedTuple())
 
     learn_method = (
-        (mach, X, y) -> ((_, dt) = MLJ.report(mach).sprinkle(X, y); dt),
-        (mach, X, y) -> ((_, dt) = MLJ.report(mach).best_report.sprinkle(X, y); dt)
+        (mach, X, y) -> ((_, solem) = MLJ.report(mach).sprinkle(X, y); solem),
+        (mach, X, y) -> ((_, solem) = MLJ.report(mach).best_report.sprinkle(X, y); solem)
     )
 
     tuning = SoleXplorer.TuningParams(
@@ -172,7 +172,7 @@ function ModalAdaBoostModel()
 
     rulesparams = RulesParams(InTreesRuleExtractor(), NamedTuple())
 
-    return ModelSetup(
+    return ModelSetup{TypeMAB}(
         type,
         config,
         params,
