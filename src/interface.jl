@@ -376,7 +376,7 @@ const RESAMPLE_PARAMS = Dict(
 # ---------------------------------------------------------------------------- #
 #                                    rules                                     #
 # ---------------------------------------------------------------------------- #
-const AVAIL_RULES = (PlainRuleExtractor(), InTreesRuleExtractor())
+const AVAIL_RULES = (PlainRuleExtractor(), InTreesRuleExtractor(), LumenRuleExtractor())
 
 const RULES_PARAMS = Dict{SoleModels.RuleExtractor, NamedTuple}(
     PlainRuleExtractor()   => (
@@ -406,7 +406,8 @@ const RULES_PARAMS = Dict{SoleModels.RuleExtractor, NamedTuple}(
         silent                  = true,
         rng                     = Random.MersenneTwister(1),
         return_info             = false
-    )
+    ),
+    LumenRuleExtractor()   => ()
 )
 
 # ---------------------------------------------------------------------------- #

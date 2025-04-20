@@ -12,24 +12,17 @@ get_labels(model::AbstractModel) = model.info.supporting_labels
 get_predictions(model::AbstractModel) = model.info.supporting_predictions
 
 # ---------------------------------------------------------------------------- #
-#                               rule extraction                                #
+#                              rules extraction                                #
 # ---------------------------------------------------------------------------- #
 function rules_extraction!(model::Modelset)
-@show "GINO"
+    model.rules = SolePostHoc.extractrules(
+        model.setup.rulesparams.type,
+        model.model,
+        model.ds.Xtest,
+        model.ds.ytest;
+        model.setup.rulesparams.params...
+    )
 end
-
-# function _symbolic_analysis!(tt::AbstractVector{ModelConfig})
-#     for t in tt
-#         t.rules = SolePostHoc.modalextractrules(
-#             t.setup.rulesparams.type,
-#             t.model,
-#             t.ds.Xtrain,
-#             t.ds.ytrain;
-#             t.setup.rulesparams.params...
-#         )
-#         t.accuracy = get_predict(t.mach, t.ds)
-#     end
-# end
 
 # ---------------------------------------------------------------------------- #
 #                                   accuracy                                   #
@@ -124,7 +117,7 @@ function symbolic_analysis(
     rules::Union{NamedTuple, Nothing}=nothing,
     preprocess::Union{NamedTuple, Nothing}=nothing,
     reducefunc::Union{Base.Callable, Nothing}=nothing,
-    rules_extraction::Bool=false
+    extract_rules::Bool=false
 )::Modelset
     # if model is unspecified, use default model setup
     isnothing(model) && (model = DEFAULT_MODEL_SETUP)
@@ -132,7 +125,7 @@ function symbolic_analysis(
     model = Modelset(modelset, _prepare_dataset(X, y, modelset))
     _traintest!(model)
 
-    rules_extraction && rules_extraction!(model)
+    extract_rules && rules_extraction!(model)
 
     # save results into model
     model.results = compute_results(model.setup, model.model)

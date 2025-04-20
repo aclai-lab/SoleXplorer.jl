@@ -96,7 +96,7 @@ function RandomForestClassifierModel()
         )
     )
 
-    rulesparams = RulesParams(InTreesRuleExtractor(), NamedTuple())
+    rulesparams = RulesParams(LumenRuleExtractor(), NamedTuple())
 
     return ModelSetup{TypeRFC}(
         type,
