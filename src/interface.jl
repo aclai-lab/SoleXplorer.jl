@@ -53,7 +53,7 @@ const Reg_Value = Number
 const Y_Value   = Union{Cat_Value, Reg_Value}
 
 # TODO remove this
-const Rule      = Union{SoleModels.ClassificationRule, SoleModels.DecisionSet}
+const Rule      = Union{DecisionList, DecisionEnsemble, DecisionSet}
 
 struct Resample <: AbstractTypeParams
     type        :: Base.Callable
@@ -65,15 +65,15 @@ struct TuningStrategy <: AbstractTypeParams
     params      :: NamedTuple
 end
 
-struct RulesParams <: AbstractTypeParams
-    type        :: SoleModels.RuleExtractor
-    params      :: NamedTuple
-end
-
-struct TuningParams
+struct TuningParams <: AbstractTypeParams
     method      :: TuningStrategy
     params      :: NamedTuple
     ranges      :: Tuple{Vararg{Base.Callable}}
+end
+
+struct RulesParams <: AbstractTypeParams
+    type        :: Symbol
+    params      :: NamedTuple
 end
 
 # ---------------------------------------------------------------------------- #
@@ -266,9 +266,10 @@ mutable struct ModelSetup{T<:AbstractModelType} <: AbstractModelSetup{T}
     features     :: Union{AbstractVector{<:Base.Callable}, Nothing}
     resample     :: Union{Resample, Nothing}
     winparams    :: SoleFeatures.WinParams
+    rawmodel     :: Union{Base.Callable, Tuple{Base.Callable, Base.Callable}}
     learn_method :: Union{Base.Callable, Tuple{Base.Callable, Base.Callable}}
-    tuning       :: Union{TuningParams, Nothing}
-    rulesparams  :: RulesParams
+    tuning       :: Union{TuningParams, Bool}
+    rulesparams  :: Union{RulesParams, Bool}
     preprocess   :: NamedTuple
 end
 
@@ -315,6 +316,11 @@ struct TypeXGR <: AbstractModelType end
 XGBoostClassifierModel(dtmodel      :: ModelSetup) = dtmodel
 XGBoostRegressorModel(dtmodel       :: ModelSetup) = dtmodel
 
+# grouping for calc results
+const TypeTreeForestC = Union{TypeDTC, TypeRFC, TypeABC, TypeMDT, TypeXGC}
+const TypeTreeForestR = Union{TypeDTR, TypeRFR}
+const TypeModalForest = Union{TypeMRF, TypeMAB}
+
 const DEFAULT_MODEL_SETUP = (type=:decisiontree,)
 
 const DEFAULT_FEATS = [maximum, minimum, mean, std]
@@ -348,6 +354,78 @@ const AVAIL_MODELS = Dict(
 # const AVAIL_TREATMENTS = (:aggregate, :reducesize)
 
 # ---------------------------------------------------------------------------- #
+#                              Results structs                                 #
+# ---------------------------------------------------------------------------- #
+struct ClassResults <: AbstractResults
+    accuracy   :: AbstractFloat
+    # rules      :: Union{Rule,          Nothing}
+    # metrics    :: Union{AbstractVector, Nothing}
+    # feature_importance :: Union{AbstractVector, Nothing}
+    # predictions:: Union{AbstractVector, Nothing}
+end
+
+# function Base.show(io::IO, ::MIME"text/plain", r::ClassResults)
+#     println(io, "Results")
+#     println(io, "  Accuracy: ", r.accuracy)
+#     println(io, "  Rules: ", r.rules)
+#     println(io, "  Feature importance: ", r.feature_importance)
+#     println(io, "  Predictions: ", r.predictions)
+# end
+
+# Base.show(io::IO, r::ClassResults) = print(io, "Results(accuracy=$(r.accuracy), rules=$(r.rules))")
+
+struct RegResults <: AbstractResults
+    accuracy   :: AbstractFloat
+    # rules      :: Union{Rule,          Nothing}
+    # metrics    :: Union{AbstractVector, Nothing}
+    # feature_importance :: Union{AbstractVector, Nothing}
+    # predictions:: Union{AbstractVector, Nothing}
+end
+
+const RESULTS = Dict(
+    :classification => ClassResults,
+    :regression     => RegResults
+)
+
+# ---------------------------------------------------------------------------- #
+#                              Modelset struct                                 #
+# ---------------------------------------------------------------------------- #
+mutable struct Modelset{T<:AbstractModelType} <: AbstractModelset{T}
+    setup      :: AbstractModelSetup{T}
+    ds         :: AbstractDataset
+    classifier :: Union{MLJ.Model,       Nothing}
+    mach       :: Union{MLJ.Machine,   AbstractVector{<:MLJ.Machine},   Nothing}
+    model      :: Union{AbstractModel, AbstractVector{<:AbstractModel}, Nothing}
+    rules      :: Union{Rule,          AbstractVector{<:Rule},          Nothing}
+    results    :: Union{AbstractResults, Nothing}
+
+    function Modelset(
+        setup      :: AbstractModelSetup{T},
+        ds         :: AbstractDataset,
+        classifier :: MLJ.Model,
+        mach       :: MLJ.Machine,
+        model      :: AbstractModel
+    ) where {T<:AbstractModelType}
+        new{T}(setup, ds, classifier, mach, model, nothing, nothing)
+    end
+
+    function Modelset(
+        setup      :: AbstractModelSetup{T},
+        ds         :: Dataset
+    ) where {T<:AbstractModelType}
+        new{T}(setup, ds, nothing, nothing, nothing, nothing, nothing)
+    end
+end
+
+function Base.show(io::IO, mc::Modelset)
+    println(io, "Modelset:")
+    println(io, "    setup      =", mc.setup)
+    println(io, "    classifier =", mc.classifier)
+    println(io, "    rules      =", isnothing(mc.rules) ? "nothing" : string(mc.rules))
+    # println(io, "    accuracy   =", isnothing(mc.accuracy) ? "nothing" : string(mc.accuracy))
+end
+
+# ---------------------------------------------------------------------------- #
 #                                   resample                                   #
 # ---------------------------------------------------------------------------- #
 const AVAIL_RESAMPLES = (CV, Holdout, StratifiedCV, TimeSeriesCV)
@@ -371,43 +449,6 @@ const RESAMPLE_PARAMS = Dict(
     TimeSeriesCV => (
         nfolds         = 4,
     )
-)
-
-# ---------------------------------------------------------------------------- #
-#                                    rules                                     #
-# ---------------------------------------------------------------------------- #
-const AVAIL_RULES = (PlainRuleExtractor(), InTreesRuleExtractor(), LumenRuleExtractor())
-
-const RULES_PARAMS = Dict{SoleModels.RuleExtractor, NamedTuple}(
-    PlainRuleExtractor()   => (
-        compute_metrics         = false,
-        metrics_kwargs          = (;),
-        use_shortforms          = true,
-        use_leftmostlinearform  = nothing,
-        normalize               = false,
-        normalize_kwargs        = (allow_atom_flipping=true, rotate_commutatives=false),
-        scalar_simplification   = false,
-        force_syntaxtree        = false,
-        min_coverage            = nothing,
-        min_ncovered            = nothing,
-        min_ninstances          = nothing,
-        min_confidence          = nothing,
-        min_lift                = nothing,
-        metric_filter_callback  = nothing
-    ),
-    InTreesRuleExtractor() => (
-        prune_rules             = true,
-        pruning_s               = nothing,
-        pruning_decay_threshold = nothing,
-        rule_selection_method   = :CBC,
-        rule_complexity_metric  = :natoms,
-        max_rules               = -1,
-        min_coverage            = nothing,
-        silent                  = true,
-        rng                     = Random.MersenneTwister(1),
-        return_info             = false
-    ),
-    LumenRuleExtractor()   => ()
 )
 
 # ---------------------------------------------------------------------------- #
@@ -516,73 +557,156 @@ function range(
 end
 
 # ---------------------------------------------------------------------------- #
-#                              Results structs                                 #
+#                              Rules extraction                                #
 # ---------------------------------------------------------------------------- #
-struct ClassResults <: AbstractResults
-    accuracy   :: AbstractFloat
-    # rules      :: Union{Rule,          Nothing}
-    # metrics    :: Union{AbstractVector, Nothing}
-    # feature_importance :: Union{AbstractVector, Nothing}
-    # predictions:: Union{AbstractVector, Nothing}
-end
+const ba_warn = Union{Modelset{SoleXplorer.TypeDTC}, Modelset{SoleXplorer.TypeDTR}, Modelset{SoleXplorer.TypeMDT}}
 
-# function Base.show(io::IO, ::MIME"text/plain", r::ClassResults)
-#     println(io, "Results")
-#     println(io, "  Accuracy: ", r.accuracy)
-#     println(io, "  Rules: ", r.rules)
-#     println(io, "  Feature importance: ", r.feature_importance)
-#     println(io, "  Predictions: ", r.predictions)
-# end
+const RULES_PARAMS = Dict(
+    :intrees      => (
+        prune_rules             = true,
+        pruning_s               = nothing,
+        pruning_decay_threshold = nothing,
+        rule_selection_method   = :CBC,
+        rule_complexity_metric  = :natoms,
+        max_rules               = -1,
+        min_coverage            = nothing,
+        silent                  = true,
+        rng                     = TaskLocalRNG(),
+        return_info             = false
+    ),
 
-# Base.show(io::IO, r::ClassResults) = print(io, "Results(accuracy=$(r.accuracy), rules=$(r.rules))")
+    :refne        => (
+        L                       = 100,
+        perc                    = 1.0,
+        max_depth               = -1,
+        n_subfeatures           = -1,
+        partial_sampling        = 0.7,
+        min_samples_leaf        = 5,
+        min_samples_split       = 2,
+        min_purity_increase     = 0.0,
+        seed                    = 3
+    ),
 
-struct RegResults <: AbstractResults
-    accuracy   :: AbstractFloat
-    # rules      :: Union{Rule,          Nothing}
-    # metrics    :: Union{AbstractVector, Nothing}
-    # feature_importance :: Union{AbstractVector, Nothing}
-    # predictions:: Union{AbstractVector, Nothing}
-end
+    :trepan       => (
+        max_depth               = -1,
+        n_subfeatures           = -1,
+        partial_sampling        = 0.5,
+        min_samples_leaf        = 5,
+        min_samples_split       = 2,
+        min_purity_increase     = 0.0,
+        seed                    = 42
+    ),
 
-const RESULTS = Dict(
-    :classification => ClassResults,
-    :regression     => RegResults
+    :batrees      => (
+        dataset_name            = "iris",
+        num_trees               = 10,
+        max_depth               = 10,
+        dsOutput                = true
+    ),
+
+    :rulecosiplus => NamedTuple(
+        # min_coverage            = 0.0,
+        # min_ncovered            = 0,
+        # min_ninstances          = 0,
+        # min_confidence          = 0.0,
+        # min_lift                = 1.0,
+        # metric_filter_callback  = nothing
+    ),
+
+    :lumen        => (
+        minimization_scheme     = :mitespresso,
+        vertical                = 1.0,
+        horizontal              = 1.0,
+        ott_mode                = false,
+        controllo               = false,
+        start_time              = time(),
+        minimization_kwargs     = (;),
+        filteralphabetcallback  = identity,
+        silent                  = true,
+        return_info             = false,
+        vetImportance           = []
+    )
 )
 
-# ---------------------------------------------------------------------------- #
-#                              Modelset struct                                 #
-# ---------------------------------------------------------------------------- #
-mutable struct Modelset{T<:AbstractModelType} <: AbstractModelset{T}
-    setup      :: AbstractModelSetup{T}
-    ds         :: AbstractDataset
-    classifier :: Union{MLJ.Model,       Nothing}
-    mach       :: Union{MLJ.Machine,   AbstractVector{<:MLJ.Machine},   Nothing}
-    model      :: Union{AbstractModel, AbstractVector{<:AbstractModel}, Nothing}
-    rules      :: Union{Rule,          AbstractVector{<:Rule},          Nothing}
-    results    :: Union{AbstractResults, Nothing}
+# const AVAIL_RULES = Dict(
+AVAIL_RULES = Dict(
+    :intrees => m -> begin
+        if isnothing(m.setup.resample)
+            df = DataFrame(m.ds.Xtest, m.ds.info.vnames)
+            SolePostHoc.intrees(m.model, df, m.ds.ytest; m.setup.rulesparams.params...)
+        else
+            reduce(vcat, map(enumerate(m.model)) do (i, model)
+                df = DataFrame(m.ds.Xtest[i], m.ds.info.vnames)
+                SolePostHoc.intrees(model, df, m.ds.ytest[i]; m.setup.rulesparams.params...)
+            end)
+        end
+    end,
+    
+    :refne => m -> begin
+        if isnothing(m.setup.resample)
+            Xmin  = map(minimum, eachcol(m.ds.Xtest))
+            Xmax  = map(maximum, eachcol(m.ds.Xtest))
+            SolePostHoc.refne(m.model, Xmin, Xmax; m.setup.rulesparams.params...)
+        else
+            reduce(vcat, map(enumerate(m.model)) do (i, model)
+                Xmin = map(minimum, eachcol(m.ds.Xtest[i]))
+                Xmax = map(maximum, eachcol(m.ds.Xtest[i]))
+                SolePostHoc.refne(model, Xmin, Xmax; m.setup.rulesparams.params...)
+            end)
+        end
+    end,
+    
+    :trepan => m -> begin
+        if isnothing(m.setup.resample)
+            SolePostHoc.trepan(m.model, m.ds.Xtest; m.setup.rulesparams.params...)
+        else
+            reduce(vcat, map(enumerate(m.model)) do (i, model)
+                SolePostHoc.trepan(model, m.ds.Xtest[i]; m.setup.rulesparams.params...)
+            end)
+        end
+    end,
+    
+    :batrees => m -> begin
+        m isa ba_warn && throw(ArgumentError("batrees not supported for decision tree model type"))
+        if isnothing(m.setup.resample)
+            SolePostHoc.batrees(m.model; m.setup.rulesparams.params...)
+        else
+            reduce(vcat, map(enumerate(m.model)) do (i, model)
+                SolePostHoc.batrees(model; m.setup.rulesparams.params...)
+            end)
+        end
+    end,
 
-    function Modelset(
-        setup      :: AbstractModelSetup{T},
-        ds         :: AbstractDataset,
-        classifier :: MLJ.Model,
-        mach       :: MLJ.Machine,
-        model      :: AbstractModel
-    ) where {T<:AbstractModelType}
-        new{T}(setup, ds, classifier, mach, model, nothing, nothing)
-    end
+    :rulecosiplus => m -> begin
+        if isnothing(m.setup.resample)
+            df = DataFrame(m.ds.Xtest, m.ds.info.vnames)
+            dl = SolePostHoc.rulecosiplus(m.model, df, String.(m.ds.ytest); m.setup.rulesparams.params...)
+            ll = listrules(dl, use_shortforms=false) # decision list to list of rules
+            rules_obj = REFNE.convert_classification_rules(ll)
+            DecisionSet(rules_obj)
+        else
+            reduce(vcat, map(enumerate(m.model)) do (i, model)
+                df = DataFrame(m.ds.Xtest[i], m.ds.info.vnames)
+                dl = SolePostHoc.rulecosiplus(model, df, String.(m.ds.ytest[i]); m.setup.rulesparams.params...)
+                ll = listrules(dl, use_shortforms=false) # decision list to list of rules
+                rules_obj = REFNE.convert_classification_rules(ll)
+                DecisionSet(rules_obj)
+            end)
+        end
+    end,
 
-    function Modelset(
-        setup      :: AbstractModelSetup{T},
-        ds         :: Dataset
-    ) where {T<:AbstractModelType}
-        new{T}(setup, ds, nothing, nothing, nothing, nothing, nothing)
-    end
-end
+    :lumen => m -> begin
+        m isa ba_warn && throw(ArgumentError("lumen not supported for decision tree model type"))
+        if isnothing(m.setup.resample)
+            rawmodel = m.setup.rawmodel(m.mach)
+            SolePostHoc.lumen(rawmodel; solemodel=m.model, apply_function=m.setup.config.rawapply, m.setup.rulesparams.params...)
+        else
+            reduce(vcat, map(enumerate(m.model)) do (i, model)
+                rawmodel = m.setup.rawmodel(m.mach[i])
+                SolePostHoc.lumen(rawmodel; solemodel=model, apply_function=m.setup.config.rawapply, m.setup.rulesparams.params...)
+            end)
+        end
+    end,
+)
 
-function Base.show(io::IO, mc::Modelset)
-    println(io, "Modelset:")
-    println(io, "    setup      =", mc.setup)
-    println(io, "    classifier =", mc.classifier)
-    println(io, "    rules      =", isnothing(mc.rules) ? "nothing" : string(mc.rules))
-    # println(io, "    accuracy   =", isnothing(mc.accuracy) ? "nothing" : string(mc.accuracy))
-end
+

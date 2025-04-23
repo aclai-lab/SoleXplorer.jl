@@ -1,11 +1,6 @@
 # ---------------------------------------------------------------------------- #
 #                                    utils                                     #
 # ---------------------------------------------------------------------------- #
-# TODO vedi se, finito il symbolic analisys, puoi mergiare
-const TypeTreeForestC = Union{TypeDTC, TypeRFC, TypeABC, TypeMDT, TypeXGC}
-const TypeTreeForestR = Union{TypeDTR, TypeRFR}
-const TypeModalForest = Union{TypeMRF, TypeMAB}
-
 get_algo(setup::AbstractModelSetup) = setup.config.algo
 
 get_labels(model::AbstractModel) = model.info.supporting_labels
@@ -15,13 +10,7 @@ get_predictions(model::AbstractModel) = model.info.supporting_predictions
 #                              rules extraction                                #
 # ---------------------------------------------------------------------------- #
 function rules_extraction!(model::Modelset)
-    model.rules = SolePostHoc.extractrules(
-        model.setup.rulesparams.type,
-        model.model,
-        model.ds.Xtest,
-        model.ds.ytest;
-        model.setup.rulesparams.params...
-    )
+    model.rules = AVAIL_RULES[model.setup.rulesparams.type](model)
 end
 
 # ---------------------------------------------------------------------------- #
@@ -113,19 +102,20 @@ function symbolic_analysis(
     resample::Union{NamedTuple, Nothing}=nothing,
     win::Union{NamedTuple, Nothing}=nothing,
     features::Union{Tuple, Nothing}=nothing,
-    tuning::Union{NamedTuple, Bool, Nothing}=nothing,
-    rules::Union{NamedTuple, Nothing}=nothing,
+    tuning::Union{NamedTuple, Bool}=false,
+    extract_rules::Union{NamedTuple, Bool}=false,
     preprocess::Union{NamedTuple, Nothing}=nothing,
-    reducefunc::Union{Base.Callable, Nothing}=nothing,
-    extract_rules::Bool=false
+    reducefunc::Union{Base.Callable, Nothing}=nothing
 )::Modelset
     # if model is unspecified, use default model setup
     isnothing(model) && (model = DEFAULT_MODEL_SETUP)
-    modelset = validate_modelset(model, eltype(y); resample, win, features, tuning, rules, preprocess, reducefunc)
+    modelset = validate_modelset(model, eltype(y); resample, win, features, tuning, extract_rules, preprocess, reducefunc)
     model = Modelset(modelset, _prepare_dataset(X, y, modelset))
     _traintest!(model)
 
-    extract_rules && rules_extraction!(model)
+    if !isa(extract_rules, Bool) || extract_rules
+        rules_extraction!(model)
+    end
 
     # save results into model
     model.results = compute_results(model.setup, model.model)

@@ -123,32 +123,6 @@ function validate_winparams(
     return SoleFeatures.WinParams(type, params)
 end
 
-function validate_rulesparams(
-    defaults::RulesParams,
-    users::Union{NamedTuple, Nothing},
-    rng::Union{Nothing, AbstractRNG}
-)::RulesParams
-    # get type
-    user_type = get_type(users, SoleXplorer.AVAIL_RULES)
-
-    # select the final type with proper priority: defaults -> globals -> users
-    type = isnothing(user_type) ? defaults.type : user_type
-
-    def_params = SoleXplorer.RULES_PARAMS[type]
-
-    # validate parameters
-    user_params = isnothing(users) ? NamedTuple() : haskey(users, :params) ? begin
-        check_params(users.params, keys(SoleXplorer.RULES_PARAMS[user_type]))
-        NamedTuple(k => v for (k, v) in pairs(users.params))
-    end : NamedTuple()
-
-    params = !isnothing(rng) && haskey(def_params, :rng) ?
-        merge(def_params, user_params, (rng=rng,)) :
-        merge(def_params, user_params)
-        
-    return RulesParams(type, params)
-end
-
 function validate_tuning_type(
     users::Union{NamedTuple, Nothing},
     rng::Union{Nothing, AbstractRNG}
@@ -172,18 +146,19 @@ end
 
 function validate_tuning(
     defaults::TuningParams,
-    users::Union{NamedTuple, Bool, Nothing},
+    users::Union{NamedTuple, Bool},
     rng::Union{Nothing, AbstractRNG},
     algo::Symbol
-)::Union{TuningParams, Nothing}
-    isnothing(users) && return nothing
-
-    # case 1: users is a Bool
-    if isa(users, Bool) && users
-        method = !isnothing(rng) && haskey(TUNING_METHODS_PARAMS[defaults.method.type], :rng) ?
-            SoleXplorer.TuningStrategy(defaults.method.type, merge(defaults.method.params, (rng=rng,))) :
-            SoleXplorer.TuningStrategy(defaults.method.type, defaults.method.params)
-        return SoleXplorer.TuningParams(method, defaults.params, defaults.ranges)
+)::Union{TuningParams, Bool}
+    if isa(users, Bool) 
+        if users
+            method = !isnothing(rng) && haskey(TUNING_METHODS_PARAMS[defaults.method.type], :rng) ?
+                SoleXplorer.TuningStrategy(defaults.method.type, merge(defaults.method.params, (rng=rng,))) :
+                SoleXplorer.TuningStrategy(defaults.method.type, defaults.method.params)
+            return SoleXplorer.TuningParams(method, defaults.params, defaults.ranges)
+        else
+            return false
+        end
     end
 
     # case 2: users is a NamedTuple
@@ -209,6 +184,35 @@ function validate_tuning(
     return TuningParams(method, params, users.ranges)
 end
 
+function validate_rulesparams(
+    defaults::RulesParams,
+    users::Union{NamedTuple, Bool},
+    rng::Union{Nothing, AbstractRNG},
+)::Union{RulesParams, Bool}
+    # case 1: users is a Bool
+    if isa(users, Bool)
+        users ? (return defaults) : (return false)
+    end
+
+    # case 2: users is a NamedTuple
+    type = isnothing(users.type) ? defaults.type : begin
+            haskey(AVAIL_RULES, users.type) || throw(ArgumentError("Type $(users.type) not found in available extract rules methods."))
+            users.type
+        end
+
+    def_params = RULES_PARAMS[type]
+
+    user_params = isnothing(users) ? NamedTuple() : (haskey(users, :params) ? begin
+        check_params(users.params, keys(RULES_PARAMS[users.type]))
+        NamedTuple(k => v for (k, v) in pairs(users.params))
+    end : NamedTuple())
+
+    params = merge(def_params, user_params)
+    haskey(params, :rng) && merge(params, (;rng=rng))
+
+    return RulesParams(type, params)
+end
+
 # ---------------------------------------------------------------------------- #
 #                              validate modelset                               #
 # ---------------------------------------------------------------------------- #
@@ -218,15 +222,14 @@ function validate_modelset(
     resample::Union{NamedTuple, Nothing}=nothing,
     win::Union{NamedTuple, Nothing}=nothing,
     features::Union{Tuple, Nothing}=nothing,
-    tuning::Union{NamedTuple, Bool, Nothing}=nothing,
-    rules::Union{NamedTuple, Nothing}=nothing,
+    tuning::Union{NamedTuple, Bool}=false,
+    extract_rules::Union{NamedTuple, Bool}=false,
     preprocess::Union{NamedTuple, Nothing}=nothing,
     reducefunc::Union{Base.Callable, Nothing}=nothing,
 )::ModelSetup
     check_params(model, (:type, :params))
     check_params(resample, (:type, :params))
     check_params(win, (:type, :params))
-    check_params(rules, (:type, :params))
     check_params(preprocess, PREPROC_KEYS)
 
     # grab rng form preprocess and feed it to every process
@@ -274,12 +277,6 @@ function validate_modelset(
         modelset.config.treatment
     )
 
-    modelset.rulesparams = validate_rulesparams(
-        modelset.rulesparams,
-        rules,
-        rng
-    )
-
     modelset.tuning = validate_tuning(
         modelset.tuning,
         tuning,
@@ -287,7 +284,14 @@ function validate_modelset(
         modelset.config.algo
     )
 
-    modelset.learn_method = isnothing(modelset.tuning) ? modelset.learn_method[1] : modelset.learn_method[2]
+    modelset.rulesparams = validate_rulesparams(
+        modelset.rulesparams,
+        extract_rules,
+        rng
+    )
+
+    modelset.rawmodel = modelset.tuning == false ? modelset.rawmodel[1] : modelset.rawmodel[2]
+    modelset.learn_method = modelset.tuning == false ? modelset.learn_method[1] : modelset.learn_method[2]
     isnothing(preprocess) || (modelset.preprocess = merge(modelset.preprocess, preprocess))
     isnothing(reducefunc) || (modelset.config = merge(modelset.config, (reducefunc=reducefunc,)))
 

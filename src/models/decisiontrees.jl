@@ -3,9 +3,9 @@
 # ---------------------------------------------------------------------------- #
 
 # CLASSIFIER ----------------------------------------------------------------- #
-function DecisionTreeClassifierModel()
+function DecisionTreeClassifierModel()::ModelSetup{TypeDTC}
     type = MLJDecisionTreeInterface.DecisionTreeClassifier
-    config  = (algo=:classification, type=DecisionTree, treatment=:aggregate)
+    config  = (algo=:classification, type=DecisionTree, treatment=:aggregate, rawapply=DT.apply_tree)
 
     params = (;
         max_depth              = -1,
@@ -22,6 +22,11 @@ function DecisionTreeClassifierModel()
 
     winparams = SoleFeatures.WinParams(SoleBase.wholewindow, NamedTuple())
 
+    rawmodel = (
+        mach -> MLJ.fitted_params(mach).tree,
+        mach -> MLJ.fitted_params(mach).best_fitted_params.tree    
+    )
+
     learn_method = (
         (mach, X, y) -> (solem = solemodel(MLJ.fitted_params(mach).tree); apply!(solem, X, y); solem),
         (mach, X, y) -> (solem = solemodel(MLJ.fitted_params(mach).best_fitted_params.tree); apply!(solem, X, y); solem)
@@ -36,7 +41,7 @@ function DecisionTreeClassifierModel()
         )
     )
 
-    rulesparams = RulesParams(PlainRuleExtractor(), NamedTuple())
+    rulesparams = RulesParams(:intrees, NamedTuple())
 
     return ModelSetup{TypeDTC}(
         type,
@@ -45,6 +50,7 @@ function DecisionTreeClassifierModel()
         DEFAULT_FEATS,
         nothing,
         winparams,
+        rawmodel,
         learn_method,
         tuning,
         rulesparams,
@@ -52,9 +58,9 @@ function DecisionTreeClassifierModel()
     )
 end
 
-function RandomForestClassifierModel()
+function RandomForestClassifierModel()::ModelSetup{TypeRFC}
     type   = MLJDecisionTreeInterface.RandomForestClassifier
-    config = (algo=:classification, type=DecisionEnsemble, treatment=:aggregate)
+    config = (algo=:classification, type=DecisionEnsemble, treatment=:aggregate, rawapply=DT.apply_forest)
 
     params = (;
         max_depth           = -1,
@@ -69,6 +75,11 @@ function RandomForestClassifierModel()
     )
 
     winparams = SoleFeatures.WinParams(SoleBase.wholewindow, NamedTuple())
+
+    rawmodel = (
+        mach -> MLJ.fitted_params(mach).forest,
+        mach -> MLJ.fitted_params(mach).best_fitted_params.forest
+    )
 
     learn_method = (
         (mach, X, y) -> begin
@@ -96,7 +107,7 @@ function RandomForestClassifierModel()
         )
     )
 
-    rulesparams = RulesParams(LumenRuleExtractor(), NamedTuple())
+    rulesparams = RulesParams(:intrees, NamedTuple())
 
     return ModelSetup{TypeRFC}(
         type,
@@ -105,6 +116,7 @@ function RandomForestClassifierModel()
         DEFAULT_FEATS,
         nothing,
         winparams,
+        rawmodel,
         learn_method,
         tuning,
         rulesparams,
@@ -112,9 +124,9 @@ function RandomForestClassifierModel()
     )
 end
 
-function AdaBoostClassifierModel()
+function AdaBoostClassifierModel()::ModelSetup{TypeABC}
     type   = MLJDecisionTreeInterface.AdaBoostStumpClassifier
-    config = (algo=:classification, type=DecisionEnsemble, treatment=:aggregate)
+    config = (algo=:classification, type=DecisionEnsemble, treatment=:aggregate, rawapply=DT.apply_adaboost_stumps)
 
     params = (;
         n_iter             = 10,
@@ -123,6 +135,11 @@ function AdaBoostClassifierModel()
     )
 
     winparams = SoleFeatures.WinParams(SoleBase.wholewindow, NamedTuple())
+
+    rawmodel = (
+        mach -> MLJ.fitted_params(mach).stumps,
+        mach -> MLJ.fitted_params(mach).best_fitted_params.stumps
+    )
 
     learn_method = (
         (mach, X, y) -> begin
@@ -161,6 +178,7 @@ function AdaBoostClassifierModel()
         DEFAULT_FEATS,
         nothing,
         winparams,
+        rawmodel,
         learn_method,
         tuning,
         rulesparams,
@@ -169,9 +187,9 @@ function AdaBoostClassifierModel()
 end
 
 # REGRESSOR ------------------------------------------------------------------ #
-function DecisionTreeRegressorModel()
+function DecisionTreeRegressorModel()::ModelSetup{TypeDTR}
     type = MLJDecisionTreeInterface.DecisionTreeRegressor
-    config  = (algo=:regression, type=DecisionTree, treatment=:aggregate)
+    config  = (algo=:regression, type=DecisionTree, treatment=:aggregate, rawapply=DT.apply_tree)
 
     params = (;
         max_depth              = -1,
@@ -186,6 +204,11 @@ function DecisionTreeRegressorModel()
     )
 
     winparams = SoleFeatures.WinParams(SoleBase.wholewindow, NamedTuple())
+
+    rawmodel = (
+        mach -> MLJ.fitted_params(mach).tree,
+        mach -> MLJ.fitted_params(mach).best_fitted_params.tree
+    )
 
     learn_method = (
         (mach, X, y) -> (solem = solemodel(MLJ.fitted_params(mach).tree); apply!(solem, X, y); solem),
@@ -210,6 +233,7 @@ function DecisionTreeRegressorModel()
         DEFAULT_FEATS,
         nothing,
         winparams,
+        rawmodel,
         learn_method,
         tuning,
         rulesparams,
@@ -217,9 +241,9 @@ function DecisionTreeRegressorModel()
     )
 end
 
-function RandomForestRegressorModel()
+function RandomForestRegressorModel()::ModelSetup{TypeRFR}
     type   = MLJDecisionTreeInterface.RandomForestRegressor
-    config = (algo=:regression, type=DecisionEnsemble, treatment=:aggregate)
+    config = (algo=:regression, type=DecisionEnsemble, treatment=:aggregate, rawapply=DT.apply_forest)
 
     params = (;
         max_depth           = -1,
@@ -234,6 +258,11 @@ function RandomForestRegressorModel()
     )
 
     winparams = SoleFeatures.WinParams(SoleBase.wholewindow, NamedTuple())
+
+    rawmodel = (
+        mach -> MLJ.fitted_params(mach).forest,
+        mach -> MLJ.fitted_params(mach).best_fitted_params.forest
+    )
 
     learn_method = (
         (mach, X, y) -> begin
@@ -268,6 +297,7 @@ function RandomForestRegressorModel()
         DEFAULT_FEATS,
         nothing,
         winparams,
+        rawmodel,
         learn_method,
         tuning,
         rulesparams,

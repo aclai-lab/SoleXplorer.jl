@@ -4,7 +4,7 @@
 function get_classifier!(modelset::AbstractModelSetup)::MLJ.Model
     classifier = modelset.type(; modelset.params...)
 
-    isnothing(modelset.tuning) || begin
+    modelset.tuning == false || begin
         ranges = [r(classifier) for r in modelset.tuning.ranges]
 
         classifier = MLJ.TunedModel(; 
