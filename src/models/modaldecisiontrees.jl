@@ -5,7 +5,7 @@
 # CLASSIFIER ----------------------------------------------------------------- #
 function ModalDecisionTreeModel()
     type = ModalDecisionTrees.ModalDecisionTree
-    config  = (algo=:classification, type=DecisionTree, treatment=:reducesize, reducefunc=mean)
+    config  = (algo=:classification, type=DecisionTree, treatment=:reducesize, reducefunc=mean, rawapply=ModalDecisionTrees.apply)
 
     params = (;
         max_depth              = nothing, 
@@ -33,6 +33,11 @@ function ModalDecisionTreeModel()
 
     winparams = SoleFeatures.WinParams(SoleBase.adaptivewindow, NamedTuple())
 
+    rawmodel = (
+        mach -> MLJ.report(mach).rawmodel,
+        mach -> MLJ.report(mach).best_report.rawmodel
+    )
+
     learn_method = (
         (mach, X, y) -> ((_, solem) = MLJ.report(mach).sprinkle(X, y); solem),
         (mach, X, y) -> ((_, solem) = MLJ.report(mach).best_report.sprinkle(X, y); solem)
@@ -47,7 +52,7 @@ function ModalDecisionTreeModel()
         )
     )
 
-    rulesparams = RulesParams(PlainRuleExtractor(), NamedTuple())
+    rulesparams = RulesParams(:intrees, NamedTuple())
 
     return ModelSetup{TypeMDT}(
         type,
@@ -56,6 +61,7 @@ function ModalDecisionTreeModel()
         DEFAULT_FEATS,
         nothing,
         winparams,
+        rawmodel,
         learn_method,
         tuning,
         rulesparams,
@@ -65,7 +71,7 @@ end
 
 function ModalRandomForestModel()
     type   = ModalDecisionTrees.ModalRandomForest
-    config = (algo=:classification, type=DecisionForest, treatment=:reducesize, reducefunc=mean)
+    config = (algo=:classification, type=DecisionForest, treatment=:reducesize, reducefunc=mean, rawapply=ModalDecisionTrees.apply)
 
     params = (;
         sampling_fraction      = 0.7, 
@@ -95,6 +101,11 @@ function ModalRandomForestModel()
 
     winparams = SoleFeatures.WinParams(SoleBase.adaptivewindow, NamedTuple())
 
+    rawmodel = (
+        mach -> MLJ.report(mach).rawmodel,
+        mach -> MLJ.report(mach).best_report.rawmodel
+    )
+
     learn_method = (
         (mach, X, y) -> ((_, solem) = MLJ.report(mach).sprinkle(X, y); solem),
         (mach, X, y) -> ((_, solem) = MLJ.report(mach).best_report.sprinkle(X, y); solem)
@@ -109,7 +120,7 @@ function ModalRandomForestModel()
         )
     )
 
-    rulesparams = RulesParams(InTreesRuleExtractor(), NamedTuple())
+    rulesparams = RulesParams(:intrees, NamedTuple())
 
     return ModelSetup{TypeMRF}(
         type,
@@ -118,6 +129,7 @@ function ModalRandomForestModel()
         DEFAULT_FEATS,
         nothing,
         winparams,
+        rawmodel,
         learn_method,
         tuning,
         rulesparams,
@@ -127,7 +139,7 @@ end
 
 function ModalAdaBoostModel()
     type   = ModalDecisionTrees.ModalAdaBoost
-    config = (algo=:classification, type=DecisionEnsemble, treatment=:reducesize, reducefunc=mean)
+    config = (algo=:classification, type=DecisionEnsemble, treatment=:reducesize, reducefunc=mean, rawapply=ModalDecisionTrees.apply)
 
     params = (;
         max_depth              = 1, 
@@ -156,6 +168,11 @@ function ModalAdaBoostModel()
 
     winparams = SoleFeatures.WinParams(SoleBase.adaptivewindow, NamedTuple())
 
+    rawmodel = (
+        mach -> MLJ.report(mach).rawmodel,
+        mach -> MLJ.report(mach).best_report.rawmodel
+    )
+
     learn_method = (
         (mach, X, y) -> ((_, solem) = MLJ.report(mach).sprinkle(X, y); solem),
         (mach, X, y) -> ((_, solem) = MLJ.report(mach).best_report.sprinkle(X, y); solem)
@@ -170,7 +187,7 @@ function ModalAdaBoostModel()
         )
     )
 
-    rulesparams = RulesParams(InTreesRuleExtractor(), NamedTuple())
+    rulesparams = RulesParams(:intrees, NamedTuple())
 
     return ModelSetup{TypeMAB}(
         type,
@@ -179,6 +196,7 @@ function ModalAdaBoostModel()
         DEFAULT_FEATS,
         nothing,
         winparams,
+        rawmodel,
         learn_method,
         tuning,
         rulesparams,

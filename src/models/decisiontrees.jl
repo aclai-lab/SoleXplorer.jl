@@ -169,7 +169,7 @@ function AdaBoostClassifierModel()::ModelSetup{TypeABC}
         )
     )
 
-    rulesparams = RulesParams(InTreesRuleExtractor(), NamedTuple())
+    rulesparams = RulesParams(:intrees, NamedTuple())
 
     return ModelSetup{TypeABC}(
         type,

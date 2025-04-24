@@ -26,7 +26,7 @@ end
 
 function XGBoostClassifierModel()
     type   = MLJXGBoostInterface.XGBoostClassifier
-    config = (; algo=:classification, type=DecisionEnsemble, treatment=:aggregate)
+    config = (; algo=:classification, type=DecisionEnsemble, treatment=:aggregate, rawapply=XGB.predict)
 
     params = (;
         test                        = 1, 
@@ -76,6 +76,11 @@ function XGBoostClassifierModel()
 
     winparams = SoleFeatures.WinParams(SoleBase.wholewindow, NamedTuple())
 
+    rawmodel = (
+        mach -> XGB.trees(mach.fitresult[1]),
+        mach -> XGB.trees(mach.fitresult.fitresult[1])
+    )
+
     learn_method = (
         (mach, X, y) -> begin
             trees        = XGB.trees(mach.fitresult[1])
@@ -115,6 +120,7 @@ function XGBoostClassifierModel()
         DEFAULT_FEATS,
         nothing,
         winparams,
+        rawmodel,
         learn_method,
         tuning,
         rulesparams,

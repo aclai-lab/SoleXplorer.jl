@@ -374,7 +374,8 @@ modelset = symbolic_analysis(
     model=(type=:adaboost, params=(;n_iter=5)),
     features=(catch9),
     win=(type=adaptivewindow, params=(nwindows=5, relative_overlap=0.1)),
-    preprocess=(;rng=Xoshiro(11))
+    preprocess=(;rng=Xoshiro(11)),
+    extract_rules=true
 )
 println("adaboost accuracy: ", get_accuracy(modelset))
 
@@ -421,8 +422,7 @@ modelset = symbolic_analysis(
     resample=(type=CV, params=(nfolds=10,)),
     features=(catch9),
     win=(type=adaptivewindow, params=(nwindows=3, relative_overlap=0.1)),
-    preprocess=(;rng=Xoshiro(11)),
-    reducefunc=median
+    preprocess=(;rng=Xoshiro(11))
 )
 println("modal decision tree with cross validation accuracy: ", get_accuracy(modelset))
 
