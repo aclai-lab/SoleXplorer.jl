@@ -12,35 +12,35 @@ using MLJBase
 X, y = @load_iris
 X = DataFrame(X)
 
+function show_results(modelset)
+    println("rules extracted:")
+    println(modelset.rules)
+    println("accuracy: ", get_accuracy(modelset))
+end
+
 # ---------------------------------------------------------------------------- #
 #                           decision tree classifier                           #
 # ---------------------------------------------------------------------------- #
-@info "decision tree classifier"
+@info "decision tree classifier, intrees rule extractor"
 modelset = symbolic_analysis(
     X, y;
-    model=(type=:randomforest, params=(max_depth=2, min_samples_leaf=2)),
+    model=(type=:decisiontree, params=(max_depth=2, min_samples_leaf=2)),
     preprocess=(;rng=Xoshiro(11)),
-    # extract_rules=true
-    extract_rules=(type=:refne, params=(;L=10))
+    extract_rules=true
 )
-println("decision tree.")
-println("rules extracted:")
-println(modelset.rules)
-println("accuracy: ", get_accuracy(modelset))
+show_results(modelset)
 
 # decision tree with resampling cross validation
 modelset = symbolic_analysis(
     X, y;
     model=(type=:decisiontree, params=(max_depth=5, min_samples_leaf=2)),
-    resample=(type=CV,),
+    resample=(;type=CV),
     preprocess=(;rng=Xoshiro(11)),
+    extract_rules=true
 )
-println("decision tree with cross validation.")
-println("rules extracted:")
-println(modelset.rules)
-println("accuracy: ", get_accuracy(modelset))
+show_results(modelset)
 
-# decision tree with tuning strategy
+@info "decision tree classifier, tuning strategy"
 modelset = symbolic_analysis(
     X, y;
     model=(;type=:decisiontree, params=(max_depth=5, min_samples_leaf=2)),
@@ -52,28 +52,79 @@ modelset = symbolic_analysis(
             SoleXplorer.range(:feature_importance, values=[:impurity, :split])
         )
     ), 
-    preprocess=(;rng=Xoshiro(11)),
-    extract_rules=(type=:refne, params=(;L=10))
+    preprocess=(;rng=Xoshiro(11))
 )
-println("decision tree with tuning strategy accuracy.")
-println("rules extracted:")
-println(modelset.rules)
-println("accuracy: ", get_accuracy(modelset))
+show_results(modelset)
+
+@info "decision tree classifier, refne rule extractor"
+modelset = symbolic_analysis(
+    X, y;
+    model=(type=:decisiontree, params=(max_depth=2, min_samples_leaf=2)),
+    preprocess=(;rng=Xoshiro(11)),
+    extract_rules=(type=:refne, params=(;L=5))
+)
+show_results(modelset)
+
+# decision tree with resampling cross validation
+modelset = symbolic_analysis(
+    X, y;
+    model=(type=:decisiontree, params=(max_depth=5, min_samples_leaf=2)),
+    resample=(;type=StratifiedCV),
+    preprocess=(;rng=Xoshiro(11)),
+    extract_rules=(type=:refne, params=(;L=5))
+)
+show_results(modelset)
+
+@info "decision tree classifier, trepan rule extractor"
+modelset = symbolic_analysis(
+    X, y;
+    model=(type=:decisiontree, params=(max_depth=2, min_samples_leaf=2)),
+    preprocess=(;rng=Xoshiro(11)),
+    extract_rules=(;type=:trepan)
+)
+show_results(modelset)
+
+modelset = symbolic_analysis(
+    X, y;
+    model=(type=:decisiontree, params=(max_depth=5, min_samples_leaf=2)),
+    resample=(;type=Holdout),
+    preprocess=(;rng=Xoshiro(11)),
+    extract_rules=(;type=:trepan)
+)
+show_results(modelset)
+
+@test_throws ArgumentError symbolic_analysis(
+    X, y;
+    model=(type=:decisiontree, params=(max_depth=2, min_samples_leaf=2)),
+    preprocess=(;rng=Xoshiro(11)),
+    extract_rules=(;type=:batrees)
+)
+
+@test_throws ArgumentError symbolic_analysis(
+    X, y;
+    model=(type=:decisiontree, params=(max_depth=2, min_samples_leaf=2)),
+    preprocess=(;rng=Xoshiro(11)),
+    extract_rules=(;type=:rulecosi)
+)
+
+@test_throws ArgumentError symbolic_analysis(
+    X, y;
+    model=(type=:decisiontree, params=(max_depth=2, min_samples_leaf=2)),
+    preprocess=(;rng=Xoshiro(11)),
+    extract_rules=(;type=:lumen)
+)
 
 # ---------------------------------------------------------------------------- #
 #                           random forest classifier                           #
 # ---------------------------------------------------------------------------- #
-@info "random forest classifier"
+@info "random forest classifier, intrees rule extractor"
 modelset = symbolic_analysis(
     X, y;
-    model=(type=:randomforest, params=(;max_depth=2)),
+    model=(;type=:randomforest),
     preprocess=(;rng=Xoshiro(1)),
-    extract_rules=(;type=:lumen)
+    extract_rules=(;type=:intrees)
 )
-println("random forest accuracy.")
-println("rules extracted:")
-println(modelset.rules)
-println("accuracy: ", get_accuracy(modelset))
+show_results(modelset)
 
 # random forest with resampling cross validation
 modelset = symbolic_analysis(
@@ -81,12 +132,9 @@ modelset = symbolic_analysis(
     model=(type=:randomforest, params=(;max_depth=2)),
     resample=(type=CV,),
     preprocess=(;rng=Xoshiro(11)),
-    extract_rules=(type=:lumen, params=(vertical=1.0, horizontal=0.5))
+    extract_rules=(;type=:intrees)
 )
-println("random forest with cross validation accuracy.")
-println("rules extracted:")
-println(modelset.rules)
-println("accuracy: ", get_accuracy(modelset))
+show_results(modelset)
 
 # random forest with tuning strategy
 modelset = symbolic_analysis(
@@ -102,12 +150,103 @@ modelset = symbolic_analysis(
         )
     ), 
     preprocess=(;rng=Xoshiro(11)),
-    extract_rules=(;type=:rulecosiplus)
 )
-println("random forest with tuning strategy accuracy.")
-println("rules extracted:")
-println(modelset.rules)
-println("accuracy: ", get_accuracy(modelset))
+show_results(modelset)
+
+@info "random forest classifier, refne rule extractor"
+modelset = symbolic_analysis(
+    X, y;
+    model=(type=:randomforest, params=(;max_depth=2)),
+    preprocess=(;rng=Xoshiro(1)),
+    extract_rules=(;type=:refne)
+)
+show_results(modelset)
+
+# random forest with resampling cross validation
+modelset = symbolic_analysis(
+    X, y;
+    model=(type=:randomforest, params=(;max_depth=2)),
+    resample=(type=CV,),
+    preprocess=(;rng=Xoshiro(11)),
+    extract_rules=(;type=:refne)
+)
+show_results(modelset)
+
+@info "random forest classifier, trepan rule extractor"
+modelset = symbolic_analysis(
+    X, y;
+    model=(type=:randomforest, params=(;max_depth=2)),
+    preprocess=(;rng=Xoshiro(1)),
+    extract_rules=(;type=:trepan)
+)
+show_results(modelset)
+
+# random forest with resampling cross validation
+modelset = symbolic_analysis(
+    X, y;
+    model=(type=:randomforest, params=(;max_depth=2)),
+    resample=(type=CV,),
+    preprocess=(;rng=Xoshiro(11)),
+    extract_rules=(;type=:trepan)
+)
+show_results(modelset)
+
+@info "random forest classifier, batrees rule extractor"
+modelset = symbolic_analysis(
+    X, y;
+    model=(type=:randomforest, params=(;max_depth=2)),
+    preprocess=(;rng=Xoshiro(1)),
+    extract_rules=(;type=:batrees)
+)
+show_results(modelset)
+
+# random forest with resampling cross validation
+modelset = symbolic_analysis(
+    X, y;
+    model=(type=:randomforest, params=(;max_depth=2)),
+    resample=(type=CV,),
+    preprocess=(;rng=Xoshiro(11)),
+    extract_rules=(;type=:batrees)
+)
+show_results(modelset)
+
+@info "random forest classifier, rulecosi rule extractor"
+modelset = symbolic_analysis(
+    X, y;
+    model=(type=:randomforest, params=(;max_depth=2)),
+    preprocess=(;rng=Xoshiro(1)),
+    extract_rules=(;type=:rulecosi)
+)
+show_results(modelset)
+
+# random forest with resampling cross validation
+modelset = symbolic_analysis(
+    X, y;
+    model=(type=:randomforest, params=(;max_depth=2)),
+    resample=(type=CV,),
+    preprocess=(;rng=Xoshiro(11)),
+    extract_rules=(;type=:rulecosi)
+)
+show_results(modelset)
+
+@info "random forest classifier, lumen rule extractor"
+modelset = symbolic_analysis(
+    X, y;
+    model=(type=:randomforest, params=(;max_depth=2)),
+    preprocess=(;rng=Xoshiro(1)),
+    extract_rules=(;type=:lumen)
+)
+show_results(modelset)
+
+# random forest with resampling cross validation
+modelset = symbolic_analysis(
+    X, y;
+    model=(type=:randomforest, params=(;max_depth=2)),
+    resample=(type=CV,),
+    preprocess=(;rng=Xoshiro(11)),
+    extract_rules=(;type=:lumen)
+)
+show_results(modelset)
 
 # ---------------------------------------------------------------------------- #
 #                             adaboost classifier                              #
@@ -118,7 +257,7 @@ modelset = symbolic_analysis(
     model=(type=:adaboost, params=(;n_iter=5)),
     preprocess=(;rng=Xoshiro(11))
 )
-println("adaboost accuracy: ", get_accuracy(modelset))
+show_results(modelset)
 
 # adaboost with resampling cross validation
 modelset = symbolic_analysis(
@@ -127,7 +266,7 @@ modelset = symbolic_analysis(
     resample=(type=CV,),
     preprocess=(;rng=Xoshiro(11))
 )
-println("adaboost with cross validation accuracy: ", get_accuracy(modelset))
+show_results(modelset)
 
 # adaboost with tuning strategy
 modelset = symbolic_analysis(
@@ -140,7 +279,7 @@ modelset = symbolic_analysis(
     ), 
     preprocess=(;rng=Xoshiro(11))
 )
-println("adaboost with tuning strategy accuracy: ", get_accuracy(modelset))
+show_results(modelset)
 
 # ---------------------------------------------------------------------------- #
 #                             xgboost classifier                              #
@@ -157,7 +296,7 @@ modelset = symbolic_analysis(
         )),
     preprocess=(;rng=Xoshiro(11))
 )
-println("xgboost accuracy: ", get_accuracy(modelset))
+show_results(modelset)
 
 # xgboost with resampling cross validation
 modelset = symbolic_analysis(
@@ -172,7 +311,7 @@ modelset = symbolic_analysis(
     resample=(type=CV, params=(nfolds=10,)),
     preprocess=(;rng=Xoshiro(11))
 )
-println("xgboost with cross validation accuracy: ", get_accuracy(modelset))
+show_results(modelset)
 
 # xgboost with tuning strategy
 modelset = symbolic_analysis(
@@ -192,7 +331,7 @@ modelset = symbolic_analysis(
     ),
     preprocess=(;rng=Xoshiro(11))
 )
-println("xgboost with tuning strategy accuracy: ", get_accuracy(modelset))
+show_results(modelset)
 
 # ---------------------------------------------------------------------------- #
 #                                   summary                                    #
@@ -224,7 +363,7 @@ modelset = symbolic_analysis(
     model=(type=:decisiontree, params=params=(max_depth=3, min_samples_leaf=5, min_purity_increase=0.01)),
     preprocess=(;rng=Xoshiro(11))
 )
-println("decision tree regression accuracy: ", get_accuracy(modelset))
+show_results(modelset)
 
 # decision tree regression with resampling cross validation
 modelset = symbolic_analysis(
@@ -233,7 +372,7 @@ modelset = symbolic_analysis(
     resample=(type=CV, params=(nfolds=10,)),
     preprocess=(;rng=Xoshiro(11))
 )
-println("decision tree regression with cross validation accuracy: ", get_accuracy(modelset))
+show_results(modelset)
 
 # decision tree regression with tuning strategy
 modelset = symbolic_analysis(
@@ -249,7 +388,7 @@ modelset = symbolic_analysis(
     ), 
     preprocess=(;rng=Xoshiro(11))
 )
-println("decision tree regression with tuning strategy accuracy: ", get_accuracy(modelset))
+show_results(modelset)
 
 # ---------------------------------------------------------------------------- #
 #                           random forest regressor                            #
@@ -260,7 +399,7 @@ modelset = symbolic_analysis(
     model=(type=:randomforest, params=(;max_depth=5)),
     preprocess=(;rng=Xoshiro(11))
 )
-println("random forest regression accuracy: ", get_accuracy(modelset))
+show_results(modelset)
 
 # random forest regression with resampling cross validation
 modelset = symbolic_analysis(
@@ -269,7 +408,7 @@ modelset = symbolic_analysis(
     resample=(type=StratifiedCV, params=(nfolds=10,)),
     preprocess=(;rng=Xoshiro(11))
 )
-println("random forest regression with cross validation accuracy: ", get_accuracy(modelset))
+show_results(modelset)
 
 # random forest regression with tuning strategy
 modelset = symbolic_analysis(
@@ -286,7 +425,7 @@ modelset = symbolic_analysis(
     ), 
     preprocess=(;rng=Xoshiro(11))
 )
-println("random forest regression with tuning strategy accuracy: ", get_accuracy(modelset))
+show_results(modelset)
 
 # ---------------------------------------------------------------------------- #
 #                           time series classifier                             #
@@ -306,7 +445,7 @@ modelset = symbolic_analysis(
     preprocess=(;train_ratio=0.8, rng=Xoshiro(11)),
     # rules_extraction=true
 )
-println("decision tree accuracy: ", get_accuracy(modelset))
+show_results(modelset)
 
 # decision tree with resampling cross validation
 modelset = symbolic_analysis(
@@ -317,7 +456,7 @@ modelset = symbolic_analysis(
     win=(type=adaptivewindow, params=(nwindows=3, relative_overlap=0.1)),
     preprocess=(;train_ratio=0.8, rng=Xoshiro(11))
 )
-println("decision tree with cross validation accuracy: ", get_accuracy(modelset))
+show_results(modelset)
 
 # decision tree with tuning strategy
 modelset = symbolic_analysis(
@@ -328,7 +467,7 @@ modelset = symbolic_analysis(
     tuning=true,
     preprocess=(;train_ratio=0.8, rng=Xoshiro(11))
 )
-println("decision tree with tuning strategy accuracy: ", get_accuracy(modelset))
+show_results(modelset)
 
 # ---------------------------------------------------------------------------- #
 #                           random forest classifier                           #
@@ -341,7 +480,7 @@ modelset = symbolic_analysis(
     win=(type=adaptivewindow, params=(nwindows=3, relative_overlap=0.1)),
     preprocess=(;rng=Xoshiro(11))
 )
-println("random forest accuracy: ", get_accuracy(modelset))
+show_results(modelset)
 
 # random forest with resampling cross validation
 modelset = symbolic_analysis(
@@ -352,7 +491,7 @@ modelset = symbolic_analysis(
     win=(type=adaptivewindow, params=(nwindows=3, relative_overlap=0.1)),
     preprocess=(;rng=Xoshiro(11))
 )
-println("random forest with cross validation accuracy: ", get_accuracy(modelset))
+show_results(modelset)
 
 # random forest with tuning strategy
 modelset = symbolic_analysis(
@@ -364,7 +503,7 @@ modelset = symbolic_analysis(
     tuning=true,
     preprocess=(;rng=Xoshiro(11))
 )
-println("random forest with tuning strategy accuracy: ", get_accuracy(modelset))
+show_results(modelset)
 
 # ---------------------------------------------------------------------------- #
 #                             adaboost classifier                              #
@@ -378,7 +517,7 @@ modelset = symbolic_analysis(
     preprocess=(;rng=Xoshiro(11)),
     extract_rules=true
 )
-println("adaboost accuracy: ", get_accuracy(modelset))
+show_results(modelset)
 
 # adaboost with resampling cross validation
 modelset = symbolic_analysis(
@@ -389,7 +528,7 @@ modelset = symbolic_analysis(
     win=(type=adaptivewindow, params=(nwindows=5, relative_overlap=0.1)),
     preprocess=(;rng=Xoshiro(11))
 )
-println("adaboost with cross validation accuracy: ", get_accuracy(modelset))
+show_results(modelset)
 
 # adaboost with tuning strategy
 modelset = symbolic_analysis(
@@ -400,7 +539,7 @@ modelset = symbolic_analysis(
     win=(type=adaptivewindow, params=(nwindows=5, relative_overlap=0.1)),
     preprocess=(;rng=Xoshiro(11))
 )
-println("adaboost with tuning strategy accuracy: ", get_accuracy(modelset))
+show_results(modelset)
 
 # ---------------------------------------------------------------------------- #
 #                        modal decision tree classifier                        #
@@ -414,7 +553,7 @@ modelset = symbolic_analysis(
     preprocess=(;rng=Xoshiro(11)),
     reducefunc=median
 )
-println("modal decision tree accuracy: ", get_accuracy(modelset))
+show_results(modelset)
 
 # modal decision tree with resampling cross validation
 modelset = symbolic_analysis(
@@ -425,7 +564,7 @@ modelset = symbolic_analysis(
     win=(type=adaptivewindow, params=(nwindows=3, relative_overlap=0.1)),
     preprocess=(;rng=Xoshiro(11))
 )
-println("modal decision tree with cross validation accuracy: ", get_accuracy(modelset))
+show_results(modelset)
 
 # modal decision tree with tuning strategy
 modelset = symbolic_analysis(
@@ -444,7 +583,7 @@ modelset = symbolic_analysis(
     preprocess=(;rng=Xoshiro(11)),
     reducefunc=median
 )
-println("modal decision tree with tuning strategy accuracy: ", get_accuracy(modelset))
+show_results(modelset)
 
 # ---------------------------------------------------------------------------- #
 #                         modal random forest classifier                       #
@@ -457,7 +596,7 @@ modelset = symbolic_analysis(
     win=(type=adaptivewindow, params=(nwindows=3, relative_overlap=0.1)),
     preprocess=(;rng=Xoshiro(11))
 )
-println("modal random forest accuracy: ", get_accuracy(modelset))
+show_results(modelset)
 
 # modal random forest with resampling cross validation
 modelset = symbolic_analysis(
@@ -468,7 +607,7 @@ modelset = symbolic_analysis(
     win=(type=adaptivewindow, params=(nwindows=3, relative_overlap=0.1)),
     preprocess=(;rng=Xoshiro(11))
 )
-println("modal random forest with cross validation accuracy: ", get_accuracy(modelset))
+show_results(modelset)
 
 # modal random forest with tuning strategy
 modelset = symbolic_analysis(
@@ -487,7 +626,7 @@ modelset = symbolic_analysis(
     ), 
     preprocess=(;rng=Xoshiro(11))
 )
-println("modal random forest with tuning strategy accuracy: ", get_accuracy(modelset))
+show_results(modelset)
 
 # ---------------------------------------------------------------------------- #
 #                          modal adaboost classifier                           #
@@ -498,7 +637,7 @@ modelset = symbolic_analysis(
     model=(type=:modaladaboost, params=(;n_iter=5)),
     preprocess=(;rng=Xoshiro(11))
 )
-println("modal adaboost accuracy: ", get_accuracy(modelset))
+show_results(modelset)
 
 # modal adaboost with resampling cross validation
 modelset = symbolic_analysis(
@@ -507,7 +646,7 @@ modelset = symbolic_analysis(
     resample=(type=CV,),
     preprocess=(;rng=Xoshiro(11))
 )
-println("modal adaboost with cross validation accuracy: ", get_accuracy(modelset))
+show_results(modelset)
 
 # modal adaboost with tuning strategy
 modelset = symbolic_analysis(
@@ -520,7 +659,7 @@ modelset = symbolic_analysis(
     ), 
     preprocess=(;rng=Xoshiro(11))
 )
-println("modal adaboost with tuning strategy accuracy: ", get_accuracy(modelset))
+show_results(modelset)
 
 # ---------------------------------------------------------------------------- #
 #                             xgboost classifier                              #
@@ -543,7 +682,7 @@ modelset = symbolic_analysis(
     # with early stopping a validation set is required
     preprocess=(;valid_ratio=0.8, rng=Xoshiro(11))
 )
-println("xgboost accuracy: ", get_accuracy(modelset))
+show_results(modelset)
 
 # xgboost with resampling cross validation
 modelset = symbolic_analysis(
@@ -562,7 +701,7 @@ modelset = symbolic_analysis(
     win=(;type=adaptivewindow),
     preprocess=(;valid_ratio=0.8, rng=Xoshiro(11))
 )
-println("xgboost with cross validation accuracy: ", get_accuracy(modelset))
+show_results(modelset)
 
 # xgboost with tuning strategy
 modelset = symbolic_analysis(
@@ -584,6 +723,6 @@ modelset = symbolic_analysis(
     win=(;type=adaptivewindow),
     preprocess=(;valid_ratio=0.8, rng=Xoshiro(11))
 )
-println("xgboost with tuning strategy accuracy: ", get_accuracy(modelset))
+show_results(modelset)
 
 @info "end test."

@@ -559,7 +559,7 @@ end
 # ---------------------------------------------------------------------------- #
 #                              Rules extraction                                #
 # ---------------------------------------------------------------------------- #
-const list_warn = Union{Modelset{SoleXplorer.TypeDTC}, Modelset{SoleXplorer.TypeDTR}, Modelset{SoleXplorer.TypeMDT}}
+const tree_warn = Union{Modelset{SoleXplorer.TypeDTC}, Modelset{SoleXplorer.TypeDTR}, Modelset{SoleXplorer.TypeMDT}}
 
 const RULES_PARAMS = Dict(
     :intrees      => (
@@ -631,82 +631,83 @@ const RULES_PARAMS = Dict(
 # const AVAIL_RULES = Dict(
 AVAIL_RULES = Dict(
     :intrees => m -> begin
+        method = SolePostHoc.RuleExtraction.InTreesRuleExtractor()
         if isnothing(m.setup.resample)
             df = DataFrame(m.ds.Xtest, m.ds.info.vnames)
-            SolePostHoc.intrees(m.model, df, m.ds.ytest; m.setup.rulesparams.params...)
+            RuleExtraction.modalextractrules(method, m.model, df, m.ds.ytest; m.setup.rulesparams.params...)
         else
             reduce(vcat, map(enumerate(m.model)) do (i, model)
                 df = DataFrame(m.ds.Xtest[i], m.ds.info.vnames)
-                SolePostHoc.intrees(model, df, m.ds.ytest[i]; m.setup.rulesparams.params...)
+                RuleExtraction.modalextractrules(method, model, df, m.ds.ytest[i]; m.setup.rulesparams.params...)
             end)
         end
     end,
     
     :refne => m -> begin
+        method = SolePostHoc.RuleExtraction.REFNERuleExtractor()
         if isnothing(m.setup.resample)
             Xmin  = map(minimum, eachcol(m.ds.Xtest))
             Xmax  = map(maximum, eachcol(m.ds.Xtest))
-            SolePostHoc.refne(m.model, Xmin, Xmax; m.setup.rulesparams.params...)
+            RuleExtraction.modalextractrules(method, m.model, Xmin, Xmax; m.setup.rulesparams.params...)
         else
             reduce(vcat, map(enumerate(m.model)) do (i, model)
                 Xmin = map(minimum, eachcol(m.ds.Xtest[i]))
                 Xmax = map(maximum, eachcol(m.ds.Xtest[i]))
-                SolePostHoc.refne(model, Xmin, Xmax; m.setup.rulesparams.params...)
+                RuleExtraction.modalextractrules(method, model, Xmin, Xmax; m.setup.rulesparams.params...)
             end)
         end
     end,
     
     :trepan => m -> begin
+        method = SolePostHoc.RuleExtraction.TREPANRuleExtractor()
         if isnothing(m.setup.resample)
-            SolePostHoc.trepan(m.model, m.ds.Xtest; m.setup.rulesparams.params...)
+            RuleExtraction.modalextractrules(method, m.model, m.ds.Xtest; m.setup.rulesparams.params...)
         else
             reduce(vcat, map(enumerate(m.model)) do (i, model)
-                SolePostHoc.trepan(model, m.ds.Xtest[i]; m.setup.rulesparams.params...)
+                RuleExtraction.modalextractrules(method, model, m.ds.Xtest[i]; m.setup.rulesparams.params...)
             end)
         end
     end,
     
     :batrees => m -> begin
-        m isa ba_warn && throw(ArgumentError("batrees not supported for decision tree model type"))
+        m isa tree_warn && throw(ArgumentError("batrees not supported for decision tree model type"))
+        method = SolePostHoc.RuleExtraction.BATreesRuleExtractor()
         if isnothing(m.setup.resample)
-            SolePostHoc.batrees(m.model; m.setup.rulesparams.params...)
+            RuleExtraction.modalextractrules(method, m.model; m.setup.rulesparams.params...)
         else
             reduce(vcat, map(enumerate(m.model)) do (i, model)
-                SolePostHoc.batrees(model; m.setup.rulesparams.params...)
+                RuleExtraction.modalextractrules(method, model; m.setup.rulesparams.params...)
             end)
         end
     end,
 
     :rulecosi => m -> begin
+        m isa tree_warn && throw(ArgumentError("rulecosi not supported for decision tree model type"))
+        method = SolePostHoc.RuleExtraction.RULECOSIPLUSRuleExtractor()
         if isnothing(m.setup.resample)
             df = DataFrame(m.ds.Xtest, m.ds.info.vnames)
-            dl = SolePostHoc.rulecosiplus(m.model, df, String.(m.ds.ytest); m.setup.rulesparams.params...)
-            ll = listrules(dl, use_shortforms=false) # decision list to list of rules
-            rules_obj = SolePostHoc.convert_classification_rules(dl, ll)
-            DecisionSet(rules_obj)
+            RuleExtraction.modalextractrules(method, m.model, df, String.(m.ds.ytest); m.setup.rulesparams.params...)
         else
             reduce(vcat, map(enumerate(m.model)) do (i, model)
                 df = DataFrame(m.ds.Xtest[i], m.ds.info.vnames)
-                dl = SolePostHoc.rulecosiplus(model, df, String.(m.ds.ytest[i]); m.setup.rulesparams.params...)
-                ll = listrules(dl, use_shortforms=false) # decision list to list of rules
-                rules_obj = SolePostHoc.convert_classification_rules(dl, ll)
-                DecisionSet(rules_obj)
+                RuleExtraction.modalextractrules(method, model, df, String.(m.ds.ytest[i]); m.setup.rulesparams.params...)
             end)
         end
     end,
 
     :lumen => m -> begin
-        m isa ba_warn && throw(ArgumentError("lumen not supported for decision tree model type"))
+        m isa tree_warn && throw(ArgumentError("lumen not supported for decision tree model type"))
+        method = SolePostHoc.RuleExtraction.LumenRuleExtractor()
         if isnothing(m.setup.resample)
             rawmodel = m.setup.rawmodel(m.mach)
-            SolePostHoc.lumen(rawmodel; solemodel=m.model, apply_function=m.setup.config.rawapply, m.setup.rulesparams.params...)
+            RuleExtraction.modalextractrules(method, rawmodel; solemodel=m.model, apply_function=m.setup.config.rawapply, m.setup.rulesparams.params...)
         else
             reduce(vcat, map(enumerate(m.model)) do (i, model)
                 rawmodel = m.setup.rawmodel(m.mach[i])
-                SolePostHoc.lumen(rawmodel; solemodel=model, apply_function=m.setup.config.rawapply, m.setup.rulesparams.params...)
+                RuleExtraction.modalextractrules(method, rawmodel; solemodel=model, apply_function=m.setup.config.rawapply, m.setup.rulesparams.params...)
             end)
         end
-    end,
+    end
 )
 
 
