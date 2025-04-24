@@ -559,7 +559,7 @@ end
 # ---------------------------------------------------------------------------- #
 #                              Rules extraction                                #
 # ---------------------------------------------------------------------------- #
-const ba_warn = Union{Modelset{SoleXplorer.TypeDTC}, Modelset{SoleXplorer.TypeDTR}, Modelset{SoleXplorer.TypeMDT}}
+const list_warn = Union{Modelset{SoleXplorer.TypeDTC}, Modelset{SoleXplorer.TypeDTR}, Modelset{SoleXplorer.TypeMDT}}
 
 const RULES_PARAMS = Dict(
     :intrees      => (
@@ -576,7 +576,7 @@ const RULES_PARAMS = Dict(
     ),
 
     :refne        => (
-        L                       = 100,
+        L                       = 10,
         perc                    = 1.0,
         max_depth               = -1,
         n_subfeatures           = -1,
@@ -604,7 +604,7 @@ const RULES_PARAMS = Dict(
         dsOutput                = true
     ),
 
-    :rulecosiplus => NamedTuple(
+    :rulecosi => NamedTuple(
         # min_coverage            = 0.0,
         # min_ncovered            = 0,
         # min_ninstances          = 0,
@@ -677,19 +677,19 @@ AVAIL_RULES = Dict(
         end
     end,
 
-    :rulecosiplus => m -> begin
+    :rulecosi => m -> begin
         if isnothing(m.setup.resample)
             df = DataFrame(m.ds.Xtest, m.ds.info.vnames)
             dl = SolePostHoc.rulecosiplus(m.model, df, String.(m.ds.ytest); m.setup.rulesparams.params...)
             ll = listrules(dl, use_shortforms=false) # decision list to list of rules
-            rules_obj = REFNE.convert_classification_rules(ll)
+            rules_obj = SolePostHoc.convert_classification_rules(dl, ll)
             DecisionSet(rules_obj)
         else
             reduce(vcat, map(enumerate(m.model)) do (i, model)
                 df = DataFrame(m.ds.Xtest[i], m.ds.info.vnames)
                 dl = SolePostHoc.rulecosiplus(model, df, String.(m.ds.ytest[i]); m.setup.rulesparams.params...)
                 ll = listrules(dl, use_shortforms=false) # decision list to list of rules
-                rules_obj = REFNE.convert_classification_rules(ll)
+                rules_obj = SolePostHoc.convert_classification_rules(dl, ll)
                 DecisionSet(rules_obj)
             end)
         end

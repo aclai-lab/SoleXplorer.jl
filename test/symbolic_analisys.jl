@@ -18,9 +18,10 @@ X = DataFrame(X)
 @info "decision tree classifier"
 modelset = symbolic_analysis(
     X, y;
-    model=(type=:decisiontree, params=(max_depth=5, min_samples_leaf=2)),
+    model=(type=:randomforest, params=(max_depth=2, min_samples_leaf=2)),
     preprocess=(;rng=Xoshiro(11)),
-    extract_rules=true
+    # extract_rules=true
+    extract_rules=(type=:refne, params=(;L=10))
 )
 println("decision tree.")
 println("rules extracted:")
