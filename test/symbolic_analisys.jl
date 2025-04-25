@@ -1,7 +1,6 @@
 using Test
 using SoleXplorer
 using DataFrames
-using StatsBase: sample
 
 # ---------------------------------------------------------------------------- #
 #                       numeric dataset classification                         #
@@ -24,7 +23,7 @@ end
 @info "decision tree classifier, intrees rule extractor"
 modelset = symbolic_analysis(
     X, y;
-    model=(type=:decisiontree, params=(max_depth=2, min_samples_leaf=2)),
+    model=(;type=:decisiontree),
     preprocess=(;rng=Xoshiro(11)),
     extract_rules=true
 )
@@ -129,7 +128,7 @@ show_results(modelset)
 # random forest with resampling cross validation
 modelset = symbolic_analysis(
     X, y;
-    model=(type=:randomforest, params=(;max_depth=2)),
+    model=(type=:randomforest,),
     resample=(type=CV,),
     preprocess=(;rng=Xoshiro(11)),
     extract_rules=(;type=:intrees)
@@ -251,6 +250,135 @@ show_results(modelset)
 # ---------------------------------------------------------------------------- #
 #                             adaboost classifier                              #
 # ---------------------------------------------------------------------------- #
+@info "adaboost classifier, intrees rule extractor"
+modelset = symbolic_analysis(
+    X, y;
+    model=(;type=:adaboost),
+    preprocess=(;rng=Xoshiro(1)),
+    extract_rules=(;type=:intrees)
+)
+show_results(modelset)
+
+# adaboost with resampling cross validation
+modelset = symbolic_analysis(
+    X, y;
+    model=(type=:adaboost,),
+    resample=(type=CV,),
+    preprocess=(;rng=Xoshiro(11)),
+    extract_rules=(;type=:intrees)
+)
+show_results(modelset)
+
+# adaboost with tuning strategy
+modelset = symbolic_analysis(
+    X, y;
+    model=(;type=:adaboost, params=(;n_iter=5)),
+    tuning=(
+        method=(;type=latinhypercube), 
+        params=(repeats=25, n=10),
+        ranges=(SoleXplorer.range(:n_iter, lower=2, upper=10),)
+    ), 
+    preprocess=(;rng=Xoshiro(11))
+)
+show_results(modelset)
+
+@info "adaboost classifier, refne rule extractor"
+modelset = symbolic_analysis(
+    X, y;
+    model=(type=:adaboost,),
+    preprocess=(;rng=Xoshiro(1)),
+    extract_rules=(;type=:refne)
+)
+show_results(modelset)
+
+# adaboost with resampling cross validation
+modelset = symbolic_analysis(
+    X, y;
+    model=(type=:adaboost,),
+    resample=(type=CV,),
+    preprocess=(;rng=Xoshiro(11)),
+    extract_rules=(;type=:refne)
+)
+show_results(modelset)
+
+@info "adaboost classifier, trepan rule extractor"
+modelset = symbolic_analysis(
+    X, y;
+    model=(type=:adaboost,),
+    preprocess=(;rng=Xoshiro(1)),
+    extract_rules=(;type=:trepan)
+)
+show_results(modelset)
+
+# adaboost with resampling cross validation
+modelset = symbolic_analysis(
+    X, y;
+    model=(type=:adaboost,),
+    resample=(type=CV,),
+    preprocess=(;rng=Xoshiro(11)),
+    extract_rules=(;type=:trepan)
+)
+show_results(modelset)
+
+@info "adaboost classifier, batrees rule extractor"
+modelset = symbolic_analysis(
+    X, y;
+    model=(type=:adaboost,),
+    preprocess=(;rng=Xoshiro(1)),
+    extract_rules=(;type=:batrees)
+)
+show_results(modelset)
+
+# adaboost with resampling cross validation
+modelset = symbolic_analysis(
+    X, y;
+    model=(type=:adaboost,),
+    resample=(type=CV,),
+    preprocess=(;rng=Xoshiro(11)),
+    extract_rules=(;type=:batrees)
+)
+show_results(modelset)
+
+@info "adaboost classifier, rulecosi rule extractor"
+modelset = symbolic_analysis(
+    X, y;
+    model=(type=:adaboost,),
+    preprocess=(;rng=Xoshiro(1)),
+    extract_rules=(;type=:rulecosi)
+)
+show_results(modelset)
+
+# adaboost with resampling cross validation
+modelset = symbolic_analysis(
+    X, y;
+    model=(type=:adaboost,),
+    resample=(type=CV,),
+    preprocess=(;rng=Xoshiro(11)),
+    extract_rules=(;type=:rulecosi)
+)
+show_results(modelset)
+
+@info "adaboost classifier, lumen rule extractor"
+modelset = symbolic_analysis(
+    X, y;
+    model=(type=:adaboost,),
+    preprocess=(;rng=Xoshiro(1)),
+    extract_rules=(;type=:lumen)
+)
+show_results(modelset)
+
+# adaboost with resampling cross validation
+modelset = symbolic_analysis(
+    X, y;
+    model=(type=:adaboost,),
+    resample=(type=CV,),
+    preprocess=(;rng=Xoshiro(11)),
+    extract_rules=(;type=:lumen)
+)
+show_results(modelset)
+
+
+
 @info "adaboost classifier"
 modelset = symbolic_analysis(
     X, y;

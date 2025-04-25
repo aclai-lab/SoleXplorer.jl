@@ -333,7 +333,7 @@ const DEFAULT_PREPROC = (
 
 const PREPROC_KEYS = (:train_ratio, :valid_ratio, :rng)
 
-const AVAIL_MODELS = Dict(
+const AVAIL_MODELS = Dict{Symbol,Function}(
     :decisiontree_classifier => DecisionTreeClassifierModel,
     :randomforest_classifier => RandomForestClassifierModel,
     :adaboost_classifier     => AdaBoostClassifierModel,
@@ -382,7 +382,7 @@ struct RegResults <: AbstractResults
     # predictions:: Union{AbstractVector, Nothing}
 end
 
-const RESULTS = Dict(
+const RESULTS = Dict{Symbol,DataType}(
     :classification => ClassResults,
     :regression     => RegResults
 )
@@ -430,7 +430,7 @@ end
 # ---------------------------------------------------------------------------- #
 const AVAIL_RESAMPLES = (CV, Holdout, StratifiedCV, TimeSeriesCV)
 
-const RESAMPLE_PARAMS = Dict(
+const RESAMPLE_PARAMS = Dict{DataType,NamedTuple}(
     CV           => (
         nfolds         = 6,
         shuffle        = true,
@@ -456,7 +456,7 @@ const RESAMPLE_PARAMS = Dict(
 # ---------------------------------------------------------------------------- #
 const AVAIL_TUNING_METHODS = (grid, randomsearch, latinhypercube, treeparzen, particleswarm, adaptiveparticleswarm)
 
-const TUNING_METHODS_PARAMS = Dict(
+const TUNING_METHODS_PARAMS = Dict{Union{DataType, UnionAll},NamedTuple}(
     grid                  => (
         goal                   = nothing,
         resolution             = 10,
@@ -500,7 +500,7 @@ const TUNING_METHODS_PARAMS = Dict(
     )
 )
 
-const TUNING_PARAMS = Dict(
+const TUNING_PARAMS = Dict{Symbol,NamedTuple}(
     :classification => (;
         resampling              = Holdout(),
         measure                 = LogLoss(tol = 2.22045e-16),
@@ -561,7 +561,7 @@ end
 # ---------------------------------------------------------------------------- #
 const tree_warn = Union{Modelset{SoleXplorer.TypeDTC}, Modelset{SoleXplorer.TypeDTR}, Modelset{SoleXplorer.TypeMDT}}
 
-const RULES_PARAMS = Dict(
+const RULES_PARAMS = Dict{Symbol,NamedTuple}(
     :intrees      => (
         prune_rules             = true,
         pruning_s               = nothing,
@@ -628,8 +628,7 @@ const RULES_PARAMS = Dict(
     )
 )
 
-# const AVAIL_RULES = Dict(
-AVAIL_RULES = Dict(
+const AVAIL_RULES = Dict{Symbol, Function}(
     :intrees => m -> begin
         method = SolePostHoc.RuleExtraction.InTreesRuleExtractor()
         if isnothing(m.setup.resample)
