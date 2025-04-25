@@ -50,7 +50,8 @@ using Reexport
 
 @reexport using MLJ: CV, Holdout, StratifiedCV, TimeSeriesCV
 
-include("interface.jl")
+include("interfaces/dataset_interface.jl")
+include("interfaces/interface.jl")
 export Modelset, range
 export plainrule, lumenrule, intreesrule
 
