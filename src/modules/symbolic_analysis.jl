@@ -120,10 +120,6 @@ function symbolic_analysis(
     # save results into model
     model.results = compute_results(model.setup, model.model)
 
-    # yhat = predict_mode(model.mach, DataFrame(model.ds.Xtest, model.ds.info.vnames))
-    # accuracy = MLJ.accuracy(yhat, model.ds.ytest)
-    # @show yhat
-    # @show accuracy
     return model
 end
 

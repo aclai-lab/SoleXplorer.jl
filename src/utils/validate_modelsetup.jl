@@ -20,15 +20,28 @@ function get_type(
     p_type = get(params, :type, nothing)
     isnothing(p_type) && return nothing
 
-    p_type ∈ avail_types || throw(ArgumentError("Type $p_type not found in available types"))
+    p_type ∈ avail_types || throw(ArgumentError("Type :$p_type not found in available types"))
     return p_type
 end
 
-function get_function(params, avail_functions)
-    isnothing(params) && return
-    funcs = filter(v -> v in avail_functions, values(params))
-    length(funcs) > 1 && throw(ArgumentError("Multiple methods detected. Only one method is allowed."))
-    return isempty(funcs) ? nothing : first(funcs)
+function check_user_params(
+    users::Union{NamedTuple, Nothing},
+    default_params::Dict
+)
+    isnothing(users) ? NamedTuple() : (haskey(users, :params) ? begin
+        check_params(users.params, keys(default_params[users.type]))
+        NamedTuple(k => v for (k, v) in pairs(users.params))
+    end : NamedTuple())
+end
+
+function merge_params(
+    defaults::NamedTuple,
+    users::Union{NamedTuple, Nothing},
+    rng::Union{AbstractRNG, Nothing}=nothing
+)
+    !isnothing(rng) && haskey(defaults, :rng) ?
+        merge(defaults, filter_params(users), (rng=rng,)) :
+        merge(defaults, filter_params(users))
 end
 
 # ---------------------------------------------------------------------------- #
@@ -51,14 +64,10 @@ end
 function validate_params(
     defaults::NamedTuple,
     users::Union{NamedTuple, Nothing},
-    rng::Union{Nothing, AbstractRNG}
-)        
+    rng::Union{AbstractRNG, Nothing}
+)::NamedTuple     
     check_params(users, keys(defaults))
-
-    !isnothing(rng) && haskey(defaults, :rng) ?
-        merge(defaults, filter_params(users), (rng=rng,)) :
-        merge(defaults, filter_params(users))
-
+    merge_params(defaults, users, rng)
 end
 
 function validate_features(
@@ -82,14 +91,8 @@ function validate_resample(
     def_params = SoleXplorer.RESAMPLE_PARAMS[type]
 
     # validate parameters
-    user_params = isnothing(users) ? NamedTuple() : haskey(users, :params) ? begin
-        check_params(users.params, keys(SoleXplorer.RESAMPLE_PARAMS[type]))
-        NamedTuple(k => v for (k, v) in pairs(users.params))
-    end : NamedTuple()
-
-    params = !isnothing(rng) && haskey(def_params, :rng) ?
-        merge(def_params, user_params, (rng=rng,)) :
-        merge(def_params, user_params)
+    user_params = check_user_params(users, SoleXplorer.RESAMPLE_PARAMS)
+    params = merge_params(def_params, user_params, rng)
         
     return Resample(type, params)
 end
@@ -108,11 +111,7 @@ function validate_winparams(
     def_params = SoleFeatures.WIN_PARAMS[type]
 
     # validate parameters
-    user_params = isnothing(users) ? NamedTuple() : (haskey(users, :params) ? begin
-        check_params(users.params, keys(SoleFeatures.WIN_PARAMS[user_type]))
-        NamedTuple(k => v for (k, v) in pairs(users.params))
-    end : NamedTuple())
-
+    user_params = check_user_params(users, SoleFeatures.WIN_PARAMS)
     params = merge(def_params, user_params)
 
     # ModalDecisionTrees package needs at least 3 windows to work properly
@@ -132,14 +131,8 @@ function validate_tuning_type(
     def_params = SoleXplorer.TUNING_METHODS_PARAMS[type]
 
     # validate parameters
-    user_params = isnothing(users) ? NamedTuple() : haskey(users, :params) ? begin
-        check_params(users.params, keys(SoleXplorer.TUNING_METHODS_PARAMS[type]))
-        NamedTuple(k => v for (k, v) in pairs(users.params))
-    end : NamedTuple()
-
-    params = !isnothing(rng) && haskey(def_params, :rng) ?
-        merge(def_params, user_params, (rng=rng,)) :
-        merge(def_params, user_params)
+    user_params = check_user_params(users, SoleXplorer.TUNING_METHODS_PARAMS)
+    params = merge_params(def_params, user_params, rng)
         
     return TuningStrategy(type, params)
 end
@@ -202,13 +195,8 @@ function validate_rulesparams(
 
     def_params = RULES_PARAMS[type]
 
-    user_params = isnothing(users) ? NamedTuple() : (haskey(users, :params) ? begin
-        check_params(users.params, keys(RULES_PARAMS[users.type]))
-        NamedTuple(k => v for (k, v) in pairs(users.params))
-    end : NamedTuple())
-
-    params = merge(def_params, user_params)
-    haskey(params, :rng) && merge(params, (;rng=rng))
+    user_params = check_user_params(users, RULES_PARAMS)
+    params = merge_params(def_params, user_params, rng)
 
     return RulesParams(type, params)
 end
@@ -245,55 +233,33 @@ function validate_modelset(
     # grab additional extra params
     user_params = get(model, :params, nothing)
     if !isnothing(user_params) && haskey(user_params, :reducefunc)
-        modelset.config = merge(modelset.config, (reducefunc = user_params.reducefunc,))
+        set_congig!(modelset, merge(get_config(modelset), (reducefunc = user_params.reducefunc,)))
         user_params = NamedTuple(k => v for (k, v) in pairs(user_params) if k != :reducefunc)
     end
-    modelset.params = validate_params(
-        modelset.params,
-        user_params,
-        rng
-    )
+    set_params!(modelset, validate_params(get_params(modelset), user_params, rng))
 
     # ModalDecisionTrees package needs features to be passed also in model params
-    if isnothing(modelset.features)
+    if isnothing(get_features(modelset))
         features = validate_features(
-            modelset.params.features,
+            get_pfeatures(modelset),
             features
         )
-        modelset.params = merge(model.params, (features=features,))
-        modelset.features = features
+        set_params!(modelset, merge(get_params(modelset), (features=features,)))
+        set_features!(modelset, features)
     else
-        modelset.features = validate_features(
-            modelset.features,
-            features
-        )
+        set_features!(modelset, validate_features(get_features(modelset), features))
     end
 
-    isnothing(resample) || (modelset.resample = validate_resample(resample, rng))
+    isnothing(resample) || set_resample!(modelset, validate_resample(resample, rng))
 
-    modelset.winparams = validate_winparams(
-        modelset.winparams,
-        win,
-        modelset.config.treatment
-    )
+    set_winparams!(modelset, validate_winparams(get_winparams(modelset), win, get_treatment(modelset)))
+    set_tuning!(modelset, validate_tuning(get_tuning(modelset), tuning, rng, get_algo(modelset)))
+    set_rulesparams!(modelset, validate_rulesparams(get_rulesparams(modelset), extract_rules, rng))
 
-    modelset.tuning = validate_tuning(
-        modelset.tuning,
-        tuning,
-        rng,
-        modelset.config.algo
-    )
-
-    modelset.rulesparams = validate_rulesparams(
-        modelset.rulesparams,
-        extract_rules,
-        rng
-    )
-
-    modelset.rawmodel = modelset.tuning == false ? modelset.rawmodel[1] : modelset.rawmodel[2]
-    modelset.learn_method = modelset.tuning == false ? modelset.learn_method[1] : modelset.learn_method[2]
-    isnothing(preprocess) || (modelset.preprocess = merge(modelset.preprocess, preprocess))
-    isnothing(reducefunc) || (modelset.config = merge(modelset.config, (reducefunc=reducefunc,)))
+    set_rawmodel!(modelset, get_tuning(modelset) == false ? get_rawmodel(modelset) : get_resampled_rawmodel(modelset))
+    set_learn_method!(modelset, get_tuning(modelset) == false ? get_learn_method(modelset) : get_resampled_learn_method(modelset))
+    isnothing(preprocess) || (modelset.preprocess = merge(get_preprocess(modelset), preprocess))
+    isnothing(reducefunc) || (modelset.config = merge(get_config(modelset), (reducefunc=reducefunc,)))
 
     return modelset
 end

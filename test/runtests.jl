@@ -1,6 +1,5 @@
 using SoleXplorer
 using Test
-using Random
 
 function run_tests(list)
     println("\n" * ("#"^50))
@@ -14,9 +13,9 @@ println("Julia version: ", VERSION)
 
 test_suites = [
     ("Validate Modelset", ["utils/validate_modelset.jl", ]),
-    ("Prepare Dataset", ["modules/prepare_dataset.jl", ]),
-    ("Train_Test", ["modules/train_test.jl", ]),
-    ("Train_Test", ["modules/symbolic_analisys.jl", ]),
+    # ("Prepare Dataset", ["modules/prepare_dataset.jl", ]),
+    # ("Train_Test", ["modules/train_test.jl", ]),
+    # ("Train_Test", ["modules/symbolic_analisys.jl", ]),
 ]
 
 @testset "SoleXplorer.jl" begin

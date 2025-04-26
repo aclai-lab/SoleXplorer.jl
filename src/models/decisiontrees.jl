@@ -224,7 +224,7 @@ function DecisionTreeRegressorModel()::ModelSetup{TypeDTR}
         )
     )
 
-    rulesparams = RulesParams(PlainRuleExtractor(), NamedTuple())
+    rulesparams = RulesParams(:intrees, NamedTuple())
 
     return ModelSetup{TypeDTR}(
         type,
@@ -288,7 +288,7 @@ function RandomForestRegressorModel()::ModelSetup{TypeRFR}
         )
     )
 
-    rulesparams = RulesParams(InTreesRuleExtractor(), NamedTuple())
+    rulesparams = RulesParams(:intrees, NamedTuple())
 
     return ModelSetup{TypeRFR}(
         type,
