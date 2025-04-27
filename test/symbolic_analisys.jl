@@ -604,7 +604,7 @@ show_results(modelset)
 modelset = symbolic_analysis(
     X, y;
     model=(type=:randomforest, params=(;max_depth=5)),
-    features=(minimum, maximum, mean),
+    features=(minimum, maximum, StatsBase.mean),
     win=(type=adaptivewindow, params=(nwindows=3, relative_overlap=0.1)),
     preprocess=(;rng=Xoshiro(11))
 )
@@ -615,7 +615,7 @@ modelset = symbolic_analysis(
     X, y;
     model=(type=:randomforest, params=(;max_depth=5)),
     resample=(type=StratifiedCV, params=(nfolds=10,)),
-    features=(minimum, maximum, mean),
+    features=(minimum, maximum, StatsBase.mean),
     win=(type=adaptivewindow, params=(nwindows=3, relative_overlap=0.1)),
     preprocess=(;rng=Xoshiro(11))
 )
@@ -626,7 +626,7 @@ modelset = symbolic_analysis(
     X, y;
     model=(;type=:randomforest, params=(;max_depth=5)),
     resample=(type=StratifiedCV, params=(nfolds=10,)),
-    features=(minimum, maximum, mean),
+    features=(minimum, maximum, StatsBase.mean),
     win=(type=adaptivewindow, params=(nwindows=3, relative_overlap=0.1)),
     tuning=true,
     preprocess=(;rng=Xoshiro(11))

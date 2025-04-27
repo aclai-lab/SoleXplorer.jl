@@ -255,19 +255,19 @@ end
 end
 
 @testset "validate_features" begin
-    @test_nowarn train_test(X, y; model=(type=:decisiontree,), features=(minimum, mean, cov, mode_5))
+    @test_nowarn train_test(X, y; model=(type=:decisiontree,), features=(minimum, StatsBase.mean, cov, mode_5))
     
     m_feat = train_test(X, y; model=(type=:decisiontree,), features=(minimum,))
     @test m_feat.setup.features == [minimum]
 
-    @test_throws ArgumentError train_test(X, y; model=(type=:decisiontree,), features=(mean, :invalid_feature))
+    @test_throws ArgumentError train_test(X, y; model=(type=:decisiontree,), features=(StatsBase.mean, :invalid_feature))
 end
 
 @testset "validate_win" begin
     @test_nowarn train_test(X, y; model=(type=:decisiontree,), win=(type=movingwindow, params=(window_size=12,)))
 
     @test_throws ArgumentError train_test(X, y; model=(type=:decisiontree,), win=(type=movingwindow, invalid=(window_size=12,)))
-    @test_throws ArgumentError train_test(X, y; model=(type=:decisiontree,), win=(type=mean, params=(window_size=12,)))
+    @test_throws ArgumentError train_test(X, y; model=(type=:decisiontree,), win=(type=StatsBase.mean, params=(window_size=12,)))
     @test_throws ArgumentError train_test(X, y; model=(type=:decisiontree,), win=(type=movingwindow, params=(invalid=12,)))
 
     m_win = train_test(X, y; model=(type=:decisiontree,))
@@ -279,10 +279,10 @@ end
     @test_throws ArgumentError train_test(X, y; model=(type=:modaldecisiontree,), win=(type=adaptivewindow, params=(nwindows=2,)))
 
     nwindows = 5
-    win = train_test(X, y; model=(type=:decisiontree,), features=(mean,), win=(type=adaptivewindow, params=(;nwindows)))
+    win = train_test(X, y; model=(type=:decisiontree,), features=(StatsBase.mean,), win=(type=adaptivewindow, params=(;nwindows)))
     @test size(win.ds.X, 2) == size(X, 2) * nwindows
     nwindows = 15
-    win = train_test(X, y; model=(type=:decisiontree,), features=(mean,), win=(type=adaptivewindow, params=(;nwindows)))
+    win = train_test(X, y; model=(type=:decisiontree,), features=(StatsBase.mean,), win=(type=adaptivewindow, params=(;nwindows)))
     @test size(win.ds.X, 2) == size(X, 2) * nwindows
 end
 
@@ -295,7 +295,7 @@ end
     @test rule.setup.rulesparams == false
 
     @test_throws ArgumentError train_test(X, y; model=(type=:decisiontree, extract_rules=(invalid=PlainRuleExtractor(),)))
-    @test_throws ArgumentError train_test(X, y; model=(type=:decisiontree, extract_rules=(type=mean, params=(compute_metrics=true,))))
+    @test_throws ArgumentError train_test(X, y; model=(type=:decisiontree, extract_rules=(type=StatsBase.mean, params=(compute_metrics=true,))))
     @test_throws ArgumentError train_test(X, y; model=(type=:decisiontree, extract_rules=(type=:lumen, params=(invalid=12,))))
 end
 

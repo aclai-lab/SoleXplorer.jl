@@ -52,6 +52,7 @@ using Reexport
 
 include("interfaces/dataset_interface.jl")
 include("interfaces/interface.jl")
+include("interfaces/rules_extraction_interface.jl")
 export Modelset, range
 export plainrule, lumenrule, intreesrule
 

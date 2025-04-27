@@ -58,7 +58,7 @@ parametrized_resample = prepare_dataset(X, y; resample=(type=StratifiedCV, param
 win = prepare_dataset(X, y; win=(type=adaptivewindow,))
 parametrized_win = prepare_dataset(X, y; win=(type=adaptivewindow, params=(nwindows = 3, relative_overlap = 0.1)))
 
-features = prepare_dataset(X, y; features=(mean, maximum, entropy_pairs))
+features = prepare_dataset(X, y; features=(StatsBase.mean, maximum, entropy_pairs))
 features = prepare_dataset(X, y; features=(catch9))
 
 tuning = prepare_dataset(X, y; tuning=true)
@@ -102,7 +102,7 @@ parametrized_resample = train_test(X, y; resample=(type=StratifiedCV, params=(nf
 win = train_test(X, y; win=(type=adaptivewindow,))
 parametrized_win = train_test(X, y; win=(type=adaptivewindow, params=(nwindows = 3, relative_overlap = 0.1)))
 
-features = train_test(X, y; features=(mean, maximum, entropy_pairs))
+features = train_test(X, y; features=(StatsBase.mean, maximum, entropy_pairs))
 features = train_test(X, y; features=(catch9))
 
 tuning = train_test(X, y; tuning=true)
@@ -193,7 +193,7 @@ parametrized_resample = prepare_dataset(X, y; resample=(type=StratifiedCV, param
 win = prepare_dataset(X, y; win=(type=adaptivewindow,))
 parametrized_win = prepare_dataset(X, y; win=(type=adaptivewindow, params=(nwindows = 3, relative_overlap = 0.1)))
 
-features = prepare_dataset(X, y; features=(mean, maximum, entropy_pairs))
+features = prepare_dataset(X, y; features=(StatsBase.mean, maximum, entropy_pairs))
 features = prepare_dataset(X, y; features=(catch9))
 
 tuning = prepare_dataset(X, y; tuning=true)
@@ -237,7 +237,7 @@ parametrized_resample = train_test(X, y; resample=(type=StratifiedCV, params=(nf
 win = train_test(X, y; win=(type=adaptivewindow,))
 parametrized_win = train_test(X, y; win=(type=adaptivewindow, params=(nwindows = 3, relative_overlap = 0.1)))
 
-features = train_test(X, y; features=(mean, maximum, entropy_pairs))
+features = train_test(X, y; features=(StatsBase.mean, maximum, entropy_pairs))
 features = train_test(X, y; features=(catch9))
 
 tuning = train_test(X, y; tuning=true)
@@ -320,7 +320,7 @@ parametrized_resample = train_test(X, y; resample=(type=StratifiedCV, params=(nf
 win = train_test(X, y; win=(type=adaptivewindow,))
 parametrized_win = train_test(X, y; win=(type=adaptivewindow, params=(nwindows = 3, relative_overlap = 0.1)))
 
-features = train_test(X, y; features=(mean, maximum, entropy_pairs))
+features = train_test(X, y; features=(StatsBase.mean, maximum, entropy_pairs))
 features = train_test(X, y; features=(catch9))
 
 tuning = train_test(X, y; tuning=true)

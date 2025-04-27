@@ -25,7 +25,7 @@ function get_accuracy(::TypeTreeForestC, model::AbstractModel)
 end
 
 function get_accuracy(::TypeTreeForestC, model::Vector{AbstractModel})
-    mean([
+    StatsBase.mean([
         begin 
             labels = get_labels(m)
             predictions = get_predictions(m)
@@ -40,7 +40,7 @@ function get_accuracy(::TypeTreeForestR, model::AbstractModel)
     predictions = get_predictions(model)
     
     # Calculate R-squared: 1 - (sum of squared residuals / total sum of squares)
-    mean_label = mean(labels)
+    mean_label = StatsBase.mean(labels)
     total_sum_squares = sum((labels .- mean_label).^2)
     residual_sum_squares = sum((predictions .- labels).^2)
     
@@ -48,12 +48,12 @@ function get_accuracy(::TypeTreeForestR, model::AbstractModel)
 end
 
 function get_accuracy(::TypeTreeForestR, model::Vector{AbstractModel})
-    mean([
+    StatsBase.mean([
         begin
             labels = get_labels(m)
             predictions = get_predictions(m)
             
-            mean_label = mean(labels)
+            mean_label = StatsBase.mean(labels)
             total_sum_squares = sum((labels .- mean_label).^2)
             residual_sum_squares = sum((predictions .- labels).^2)
             
@@ -70,7 +70,7 @@ function get_accuracy(::TypeModalForest, model::AbstractModel)
 end
 
 function get_accuracy(::TypeModalForest, model::Vector{AbstractModel})
-    mean([
+    StatsBase.mean([
         begin
             labels = get_labels(m.models[1])
             predictions = get_predictions(m)
