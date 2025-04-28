@@ -3,10 +3,10 @@ module SoleXplorer
 using SoleData
 using SoleData: PatchedFunction, nanpatchedfunction
 using SoleModels
-using SoleFeatures
+using SoleModels: movingwindow, wholewindow, splitwindow, adaptivewindow
 using SolePostHoc
 using ModalDecisionTrees
-using ModalDecisionLists
+# using ModalDecisionLists
 import MultiData.hasnans
 
 using MLJ
@@ -31,24 +31,21 @@ using StatsBase, ScientificTypes
 
 using Base.Threads: @threads
 
-using Reexport
-@reexport using SoleFeatures: mode_5, mode_10, embedding_dist, acf_timescale, acf_first_min, ami2, trev, outlier_timing_pos
-@reexport using SoleFeatures: outlier_timing_neg, whiten_timescale, forecast_error, ami_timescale, high_fluctuation, stretch_decreasing
-@reexport using SoleFeatures: stretch_high, entropy_pairs, rs_range, dfa, low_freq_power, centroid_freq, transition_variance, periodicity
-@reexport using SoleFeatures: base_set, catch9, catch22_set, complete_set
-
-@reexport using SoleFeatures: movingwindow, wholewindow, splitwindow, adaptivewindow
-
-@reexport using SoleModels: PlainRuleExtractor
-@reexport using SolePostHoc: InTreesRuleExtractor
-
-@reexport using StatsBase: cov
+using Catch22
+include("utils/features_set.jl")
+export mode_5, mode_10, embedding_dist, acf_timescale, acf_first_min, ami2, trev, outlier_timing_pos
+export outlier_timing_neg, whiten_timescale, forecast_error, ami_timescale, high_fluctuation, stretch_decreasing
+export stretch_high, entropy_pairs, rs_range, dfa, low_freq_power, centroid_freq, transition_variance, periodicity
+export base_set, catch9, catch22_set, complete_set
 
 # utility from other packages
-@reexport using SoleData: load_arff_dataset
-@reexport using Random: seed!, Xoshiro, MersenneTwister
+# @reexport using SoleData: load_arff_dataset
+# @reexport using Random: seed!, Xoshiro, MersenneTwister
 
-@reexport using MLJ: CV, Holdout, StratifiedCV, TimeSeriesCV
+# @reexport using MLJ: CV, Holdout, StratifiedCV, TimeSeriesCV
+
+include("interfaces/windowing_interface.jl")
+export movingwindow, wholewindow, splitwindow, adaptivewindow
 
 include("interfaces/dataset_interface.jl")
 include("interfaces/interface.jl")
