@@ -25,15 +25,17 @@ const DEFAULT_FE = (features = catch9,)
 
 const AVAIL_WINS       = (movingwindow, wholewindow, splitwindow, adaptivewindow)
 const FE_AVAIL_WINS    = (wholewindow, splitwindow, adaptivewindow)
-# const AVAIL_TREATMENTS = (:aggregate, :reducesize)
 
 const WIN_PARAMS = Dict(
     movingwindow   => (window_size = 1024, window_step = 512),
     wholewindow    => NamedTuple(),
-    splitwindow    => (nwindows = 20,),
-    adaptivewindow => (nwindows = 20, relative_overlap = 0.5)
+    splitwindow    => (nwindows = 5,),
+    adaptivewindow => (nwindows = 5, relative_overlap = 0.1)
 )
 
+# ---------------------------------------------------------------------------- #
+#                                  InfoFeat                                    #
+# ---------------------------------------------------------------------------- #
 """
     InfoFeat{T<:VarName} <: AbstractFeature
 
@@ -72,4 +74,5 @@ feature_id(f::InfoFeat)    = f.id
 variable_name(f::InfoFeat) = f.var
 feature_type(f::InfoFeat)  = f.feat
 window_number(f::InfoFeat) = f.nwin
+
 

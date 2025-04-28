@@ -79,6 +79,189 @@ end
 
 code_dataset(X::AbstractDataFrame, y::AbstractVector) = code_dataset(X), code_dataset(y)
 
+"""
+    check_dimensions(X::AbstractMatrix) -> Int
+
+Check that all elements in a matrix have consistent dimensions.
+
+# Arguments
+- `X::AbstractMatrix`: Matrix containing array-like elements to check for dimension consistency
+
+# Returns
+- `Int`: The number of dimensions of the elements (0 if matrix is empty)
+
+# Throws
+- `ArgumentError`: If elements have more than 1 dimension
+- `DimensionMismatch`: If elements have inconsistent dimensions
+"""
+function check_dimensions(X::AbstractMatrix)
+    isempty(X) && return 0
+    
+    # Get reference dimensions from first element
+    first_col = first(eachcol(X))
+    ref_dims = ndims(first(first_col))
+    
+    # Early dimension check
+    ref_dims > 1 && throw(ArgumentError("Elements more than 1D are not supported."))
+    
+    # Check all columns maintain same dimensionality
+    all(col -> all(x -> ndims(x) == ref_dims, col), eachcol(X)) ||
+        throw(DimensionMismatch("Inconsistent dimensions across elements"))
+    
+    return ref_dims
+end
+
+check_dimensions(df::DataFrame) = check_dimensions(Matrix(df))
+
+"""
+    find_max_length(X::AbstractMatrix) -> Tuple{Vararg{Int}}
+
+Find the maximum dimensions of elements in a matrix containing either scalar values or array-like elements.
+
+# Arguments
+- `X::AbstractMatrix`: A matrix where each element can be either a scalar or an array-like structure
+
+# Returns
+- `Tuple{Vararg{Int}}`: A tuple containing the maximum sizes:
+  - For empty matrices: Returns `0`
+  - For matrices with scalar values: Returns `(1,)`
+  - For matrices with vector elements: Returns `(max_length,)` where `max_length` is the length of the longest vector
+  - For matrices with multi-dimensional arrays: Returns a tuple with maximum size in each dimension
+"""
+function find_max_length(X::AbstractMatrix)
+    isempty(X) && return 0
+    
+    # check the type of the first element to determine DataFrame structure
+    first_element = first(skipmissing(first(eachcol(X))))
+    
+    if first_element isa Number
+        return (1,)
+    else
+        ndims_val = ndims(first_element)
+        # for each dimension, find the maximum size
+        ntuple(ndims_val) do dim
+            mapreduce(col -> maximum(x -> size(x, dim), col), max, eachcol(X); init=0)
+        end
+    end
+end
+
+find_max_length(df::DataFrame) = find_max_length(Matrix(df))
+
+# ---------------------------------------------------------------------------- #
+#                                 treatment                                    #
+# ---------------------------------------------------------------------------- #
+"""
+    _treatment(X::AbstractMatrix{T}, vnames::VarNames, treatment::Symbol,
+              features::FeatNames, winparams::WinParams; 
+              reducefunc::Base.Callable=mean) -> Tuple{Matrix, Vector{String}}
+
+Process a matrix data by applying feature extraction or dimension reduction.
+
+# Arguments
+- `X::AbstractMatrix{T}`: Matrix where each element is a time series (array) or scalar value
+- `vnames::VarNames`: Names of variables/columns in the original data
+- `treatment::Symbol`: Treatment method to apply:
+  - `:aggregate`: Extract features from time series (propositional approach)
+  - `:reducesize`: Reduce time series dimensions while preserving temporal structure
+- `features::FeatNames`: Functions to extract features from time series segments
+- `winparams::WinParams`: Parameters for windowing time series:
+  - `type`: Window function to use (e.g., `adaptivewindow`, `wholewindow`)
+  - `params`: Additional parameters for the window function
+- `reducefunc::Base.Callable=mean`: Function to reduce windows in `:reducesize` mode (default: `mean`)
+
+# Returns
+- `Tuple{Matrix, Vector{String}}`: Processed matrix and column names:
+  - For `:aggregate`: Matrix of extracted features with column names like `"func(var)w1"`
+  - For `:reducesize`: Matrix where each cell contains a reduced vector with original column names
+
+# Details
+## Aggregate Treatment
+When `treatment = :aggregate`:
+1. Divides each time series into windows using the specified windowing function
+2. Applies each feature function to each window of each variable
+3. Creates a feature matrix where each row contains features extracted from original data
+4. Handles variable-length time series by padding with NaN values as needed
+5. Column names include function name, variable name and window index (e.g. "mean(temp)w1")
+
+## Reducesize Treatment
+When `treatment = :reducesize`:
+1. Divides each time series into windows using the specified windowing function
+2. Applies the reduction function to each window (by default `mean`)
+3. Returns a matrix where each element is a reduced-length vector
+4. Maintains original column names
+"""
+function _treatment(
+    X::AbstractMatrix{T},
+    vnames::VarNames,
+    treatment::Symbol,
+    features::FeatNames,
+    winparams::WinParams;
+    reducefunc::Union{Base.Callable, Nothing}=nothing
+) where T
+    # working with audio files, we need to consider audio of different lengths.
+    max_interval = first(find_max_length(X))
+    n_intervals = winparams.type(max_interval; winparams.params...)
+
+    # define column names and prepare data structure based on treatment type
+    if treatment == :aggregate        # propositional
+        if n_intervals == 1
+            col_names = [string(f, "(", v, ")") for f in features for v in vnames]
+            
+            n_rows = size(X, 1)
+            n_cols = length(col_names)
+            result_matrix = Matrix{eltype(T)}(undef, n_rows, n_cols)
+        else
+            # define column names with features names and window indices
+            col_names = [string(f, "(", v, ")w", i) 
+                         for f in features 
+                         for v in vnames 
+                         for i in 1:length(n_intervals)]
+            
+            n_rows = size(X, 1)
+            n_cols = length(col_names)
+            result_matrix = Matrix{eltype(T)}(undef, n_rows, n_cols)
+        end
+            
+        # fill matrix
+        for (row_idx, row) in enumerate(eachrow(X))
+            row_intervals = winparams.type(maximum(length.(collect(row))); winparams.params...)
+            interval_diff = length(n_intervals) - length(row_intervals)
+
+            # calculate feature values for this row
+            feature_values = vcat([
+                vcat([f(col[r]) for r in row_intervals],
+                    fill(NaN, interval_diff)) for col in row, f in features
+            ]...)
+            result_matrix[row_idx, :] = feature_values
+        end
+
+    elseif treatment == :reducesize   # modal
+        col_names = vnames
+        
+        n_rows = size(X, 1)
+        n_cols = length(col_names)
+        result_matrix = Matrix{T}(undef, n_rows, n_cols)
+
+        isnothing(reducefunc) && (reducefunc = mean)
+        
+        for (row_idx, row) in enumerate(eachrow(X))
+            row_intervals = winparams.type(maximum(length.(collect(row))); winparams.params...)
+            interval_diff = length(n_intervals) - length(row_intervals)
+            
+            # calculate reduced values for this row
+            reduced_data = [
+                vcat([reducefunc(col[r]) for r in row_intervals],
+                     fill(NaN, interval_diff)) for col in row
+            ]
+            result_matrix[row_idx, :] = reduced_data
+        end
+    end
+
+    return result_matrix, col_names
+end
+
+_treatment(df::DataFrame, args...) = _treatment(Matrix(df), args...)
+
 # ---------------------------------------------------------------------------- #
 #                                 partitioning                                 #
 # ---------------------------------------------------------------------------- #
@@ -199,8 +382,8 @@ function _prepare_dataset(
     valid_ratio::Float64,
     rng::AbstractRNG,
     resample::Union{Resample, Nothing},
-    winparams::SoleFeatures.WinParams,
-    vnames::Union{SoleFeatures.VarNames,Nothing}=nothing,
+    winparams::WinParams,
+    vnames::Union{VarNames,Nothing}=nothing,
     reducefunc::Union{Base.Callable, Nothing}=nothing
 )::Dataset
     X = Matrix(df)
@@ -232,7 +415,7 @@ function _prepare_dataset(
     column_eltypes = eltype.(eachcol(X))
 
     if all(t -> t <: AbstractVector{<:Number}, column_eltypes) && !isnothing(winparams)
-        X, vnames = SoleFeatures._treatment(X, vnames, treatment, features, winparams; reducefunc)
+        X, vnames = _treatment(X, vnames, treatment, features, winparams; reducefunc)
     end
 
     ds_info = DatasetInfo(

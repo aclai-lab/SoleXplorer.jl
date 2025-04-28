@@ -31,7 +31,7 @@ function ModalDecisionTreeModel()
         feature_importance     = :split,
     )
 
-    winparams = SoleFeatures.WinParams(SoleBase.adaptivewindow, NamedTuple())
+    winparams = WinParams(adaptivewindow, NamedTuple())
 
     rawmodel = (
         mach -> MLJ.report(mach).rawmodel,
@@ -99,7 +99,7 @@ function ModalRandomForestModel()
         feature_importance     = :split
     )
 
-    winparams = SoleFeatures.WinParams(SoleBase.adaptivewindow, NamedTuple())
+    winparams = WinParams(adaptivewindow, NamedTuple())
 
     rawmodel = (
         mach -> MLJ.report(mach).rawmodel,
@@ -142,7 +142,6 @@ function ModalAdaBoostModel()
     config = (algo=:classification, type=DecisionEnsemble, treatment=:reducesize, reducefunc=StatsBase.mean, rawapply=ModalDecisionTrees.apply)
 
     params = (;
-        max_depth              = 1, 
         min_samples_leaf       = 1, 
         min_purity_increase    = 0.0,
         max_purity_at_leaf     = Inf, 
@@ -166,7 +165,7 @@ function ModalAdaBoostModel()
         n_iter                 = 10
     )
 
-    winparams = SoleFeatures.WinParams(SoleBase.adaptivewindow, NamedTuple())
+    winparams = WinParams(adaptivewindow, NamedTuple())
 
     rawmodel = (
         mach -> MLJ.report(mach).rawmodel,

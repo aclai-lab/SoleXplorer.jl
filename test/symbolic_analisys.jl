@@ -1,6 +1,6 @@
 using Test
-using SoleXplorer
-using DataFrames
+using SoleXplorer, SoleData
+using DataFrames, Random
 
 # ---------------------------------------------------------------------------- #
 #                       numeric dataset classification                         #
@@ -573,25 +573,25 @@ using BenchmarkTools
 # )
 # show_results(modelset)
 
-# # ---------------------------------------------------------------------------- #
-# #                           time series classifier                             #
-# # ---------------------------------------------------------------------------- #
-# @info "time series classifier"
-# X, y = load_arff_dataset("NATOPS")
+# ---------------------------------------------------------------------------- #
+#                           time series classifier                             #
+# ---------------------------------------------------------------------------- #
+@info "time series classifier"
+X, y = SoleData.load_arff_dataset("NATOPS")
 
-# # ---------------------------------------------------------------------------- #
-# #                           decision tree classifier                           #
-# # ---------------------------------------------------------------------------- #
-# @info "decision tree classifier"
-# modelset = symbolic_analysis(
-#     X, y;
-#     model=(type=:decisiontree, params=(max_depth=5, min_samples_leaf=2)),
-#     features=(catch9),
-#     win=(type=adaptivewindow, params=(nwindows=3, relative_overlap=0.1)),
-#     preprocess=(;train_ratio=0.8, rng=Xoshiro(11)),
-#     # rules_extraction=true
-# )
-# show_results(modelset)
+# ---------------------------------------------------------------------------- #
+#                           decision tree classifier                           #
+# ---------------------------------------------------------------------------- #
+@info "decision tree classifier"
+modelset = symbolic_analysis(
+    X, y;
+    model=(type=:modaladaboost,),
+    features=(catch9),
+    win=(type=adaptivewindow, params=(nwindows=3, relative_overlap=0.1)),
+    preprocess=(;train_ratio=0.8, rng=Xoshiro(11)),
+    # rules_extraction=true
+)
+show_results(modelset)
 
 # # decision tree with resampling cross validation
 # modelset = symbolic_analysis(

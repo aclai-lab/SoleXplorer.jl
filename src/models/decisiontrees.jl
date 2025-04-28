@@ -20,7 +20,7 @@ function DecisionTreeClassifierModel()::ModelSetup{TypeDTC}
         rng                    = Random.TaskLocalRNG()
     )
 
-    winparams = SoleFeatures.WinParams(SoleBase.wholewindow, NamedTuple())
+    winparams = WinParams(wholewindow, NamedTuple())
 
     rawmodel = (
         mach -> MLJ.fitted_params(mach).tree,
@@ -74,7 +74,7 @@ function RandomForestClassifierModel()::ModelSetup{TypeRFC}
         rng                 = Random.TaskLocalRNG()
     )
 
-    winparams = SoleFeatures.WinParams(SoleBase.wholewindow, NamedTuple())
+    winparams = WinParams(wholewindow, NamedTuple())
 
     rawmodel = (
         mach -> MLJ.fitted_params(mach).forest,
@@ -134,7 +134,7 @@ function AdaBoostClassifierModel()::ModelSetup{TypeABC}
         rng                = Random.TaskLocalRNG()
     )
 
-    winparams = SoleFeatures.WinParams(SoleBase.wholewindow, NamedTuple())
+    winparams = WinParams(wholewindow, NamedTuple())
 
     rawmodel = (
         mach -> MLJ.fitted_params(mach).stumps,
@@ -203,7 +203,7 @@ function DecisionTreeRegressorModel()::ModelSetup{TypeDTR}
         rng                    = Random.TaskLocalRNG()
     )
 
-    winparams = SoleFeatures.WinParams(SoleBase.wholewindow, NamedTuple())
+    winparams = WinParams(wholewindow, NamedTuple())
 
     rawmodel = (
         mach -> MLJ.fitted_params(mach).tree,
@@ -257,7 +257,7 @@ function RandomForestRegressorModel()::ModelSetup{TypeRFR}
         rng                 = Random.TaskLocalRNG()
     )
 
-    winparams = SoleFeatures.WinParams(SoleBase.wholewindow, NamedTuple())
+    winparams = WinParams(wholewindow, NamedTuple())
 
     rawmodel = (
         mach -> MLJ.fitted_params(mach).forest,

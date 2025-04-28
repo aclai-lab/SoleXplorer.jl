@@ -98,20 +98,20 @@ function validate_resample(
 end
 
 function validate_winparams(
-    defaults::SoleFeatures.WinParams,
+    defaults::WinParams,
     users::Union{NamedTuple, Nothing},
     treatment::Symbol
-)::SoleFeatures.WinParams
+)::WinParams
     # get type
-    user_type = get_type(users, SoleFeatures.AVAIL_WINS)
+    user_type = get_type(users, AVAIL_WINS)
 
     # select the final type with proper priority: defaults -> globals -> users
     type = isnothing(user_type) ? defaults.type : user_type
 
-    def_params = SoleFeatures.WIN_PARAMS[type]
+    def_params = WIN_PARAMS[type]
 
     # validate parameters
-    user_params = check_user_params(users, SoleFeatures.WIN_PARAMS)
+    user_params = check_user_params(users, WIN_PARAMS)
     params = merge(def_params, user_params)
 
     # ModalDecisionTrees package needs at least 3 windows to work properly
@@ -119,7 +119,7 @@ function validate_winparams(
         params.nwindows ≥ 3 || throw(ArgumentError("For :reducesize treatment, nwindows must be ≥ 3"))
     end
 
-    return SoleFeatures.WinParams(type, params)
+    return WinParams(type, params)
 end
 
 function validate_tuning_type(

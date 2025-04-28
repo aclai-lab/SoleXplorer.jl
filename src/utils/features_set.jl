@@ -28,12 +28,12 @@ periodicity(x) = Catch22.PD_PeriodicityWang_th0_01((x));                  @doc (
 # ---------------------------------------------------------------------------- #
 #                                     catch9                                   #
 # ---------------------------------------------------------------------------- #
-base_set = [maximum, minimum, mean, std]
-catch9 = [maximum, minimum, mean, median, std, stretch_high, stretch_decreasing, entropy_pairs, transition_variance]
-catch22_set = [mode_5, mode_10, embedding_dist, acf_timescale, acf_first_min, ami2, trev, outlier_timing_pos,
+base_set = (maximum, minimum, mean, std)
+catch9 = (maximum, minimum, mean, median, std, stretch_high, stretch_decreasing, entropy_pairs, transition_variance)
+catch22_set = (mode_5, mode_10, embedding_dist, acf_timescale, acf_first_min, ami2, trev, outlier_timing_pos,
     outlier_timing_neg, whiten_timescale, forecast_error, ami_timescale, high_fluctuation, stretch_decreasing,
-    stretch_high, entropy_pairs, rs_range, dfa, low_freq_power, centroid_freq, transition_variance, periodicity]
-complete_set = [maximum, minimum, mean, median, std, StatsBase.cov,
+    stretch_high, entropy_pairs, rs_range, dfa, low_freq_power, centroid_freq, transition_variance, periodicity)
+complete_set = (maximum, minimum, mean, median, std, StatsBase.cov,
     mode_5, mode_10, embedding_dist, acf_timescale, acf_first_min, ami2, trev, outlier_timing_pos,
     outlier_timing_neg, whiten_timescale, forecast_error, ami_timescale, high_fluctuation, stretch_decreasing,
-    stretch_high, entropy_pairs, rs_range, dfa, low_freq_power, centroid_freq, transition_variance, periodicity]
+    stretch_high, entropy_pairs, rs_range, dfa, low_freq_power, centroid_freq, transition_variance, periodicity)

@@ -70,7 +70,7 @@ mutable struct ModelSetup{T<:AbstractModelType} <: AbstractModelSetup{T}
     params       :: NamedTuple
     features     :: Union{AbstractVector{<:Base.Callable}, Nothing}
     resample     :: Union{Resample, Nothing}
-    winparams    :: SoleFeatures.WinParams
+    winparams    :: WinParams
     rawmodel     :: Union{Base.Callable, Tuple{Base.Callable, Base.Callable}}
     learn_method :: Union{Base.Callable, Tuple{Base.Callable, Base.Callable}}
     tuning       :: Union{TuningParams, Bool}
@@ -99,7 +99,7 @@ get_resampled_learn_method(m::ModelSetup) = m.learn_method[2]
 set_config!(m::ModelSetup,       config::NamedTuple)                               = m.config = config
 set_params!(m::ModelSetup,       params::NamedTuple)                               = m.params = params
 set_features!(m::ModelSetup,     features::Union{AbstractVector{<:Base.Callable}}) = m.features = features
-set_winparams!(m::ModelSetup,    winparams::SoleFeatures.WinParams)                = m.winparams = winparams
+set_winparams!(m::ModelSetup,    winparams::WinParams)                             = m.winparams = winparams
 set_tuning!(m::ModelSetup,       tuning::Union{TuningParams, Bool})                = m.tuning = tuning
 set_resample!(m::ModelSetup,     resample::Union{Resample, Nothing})               = m.resample = resample
 set_rulesparams!(m::ModelSetup,  rulesparams::Union{RulesParams, Bool})            = m.rulesparams = rulesparams

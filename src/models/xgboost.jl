@@ -74,7 +74,7 @@ function XGBoostClassifierModel()
         eval_metric                 = String[]
     )
 
-    winparams = SoleFeatures.WinParams(SoleBase.wholewindow, NamedTuple())
+    winparams = WinParams(wholewindow, NamedTuple())
 
     rawmodel = (
         mach -> XGB.trees(mach.fitresult[1]),
