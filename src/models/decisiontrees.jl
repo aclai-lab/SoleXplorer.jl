@@ -3,9 +3,9 @@
 # ---------------------------------------------------------------------------- #
 
 # CLASSIFIER ----------------------------------------------------------------- #
-function DecisionTreeClassifierModel()
+function DecisionTreeClassifierModel()::ModelSetup{TypeDTC}
     type = MLJDecisionTreeInterface.DecisionTreeClassifier
-    config  = (algo=:classification, type=DecisionTree, treatment=:aggregate)
+    config  = (algo=:classification, type=DecisionTree, treatment=:aggregate, rawapply=DT.apply_tree)
 
     params = (;
         max_depth              = -1,
@@ -20,31 +20,37 @@ function DecisionTreeClassifierModel()
         rng                    = Random.TaskLocalRNG()
     )
 
-    winparams = SoleFeatures.WinParams(SoleBase.wholewindow, NamedTuple())
+    winparams = WinParams(wholewindow, NamedTuple())
+
+    rawmodel = (
+        mach -> MLJ.fitted_params(mach).tree,
+        mach -> MLJ.fitted_params(mach).best_fitted_params.tree    
+    )
 
     learn_method = (
-        (mach, X, y) -> (dt = solemodel(MLJ.fitted_params(mach).tree); apply!(dt, X, y); dt),
-        (mach, X, y) -> (dt = solemodel(MLJ.fitted_params(mach).best_fitted_params.tree); apply!(dt, X, y); dt)
+        (mach, X, y) -> (solem = solemodel(MLJ.fitted_params(mach).tree); apply!(solem, X, y); solem),
+        (mach, X, y) -> (solem = solemodel(MLJ.fitted_params(mach).best_fitted_params.tree); apply!(solem, X, y); solem)
     )
 
-    tuning = (
-        tuning = false,
-        method = (type = latinhypercube, ntour = 20),
-        params = TUNING_PARAMS[:classification],
-        ranges = [
-            model -> MLJ.range(model, :merge_purity_threshold, lower=0, upper=1),
+    tuning = SoleXplorer.TuningParams(
+        SoleXplorer.TuningStrategy(latinhypercube, (ntour = 20,)),
+        TUNING_PARAMS[:classification],
+        (
+            model -> MLJ.range(model, :merge_purity_threshold, lower=0., upper=2.0),
             model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])
-        ]
+        )
     )
 
-    rulesparams = RulesParams(PlainRuleExtractor(), NamedTuple())
+    rulesparams = RulesParams(:intrees, NamedTuple())
 
-    return SymbolicModelSet(
+    return ModelSetup{TypeDTC}(
         type,
         config,
         params,
         DEFAULT_FEATS,
+        nothing,
         winparams,
+        rawmodel,
         learn_method,
         tuning,
         rulesparams,
@@ -52,9 +58,9 @@ function DecisionTreeClassifierModel()
     )
 end
 
-function RandomForestClassifierModel()
+function RandomForestClassifierModel()::ModelSetup{TypeRFC}
     type   = MLJDecisionTreeInterface.RandomForestClassifier
-    config = (algo=:classification, type=DecisionEnsemble, treatment=:aggregate)
+    config = (algo=:classification, type=DecisionEnsemble, treatment=:aggregate, rawapply=DT.apply_forest)
 
     params = (;
         max_depth           = -1,
@@ -62,49 +68,55 @@ function RandomForestClassifierModel()
         min_samples_split   = 2,
         min_purity_increase = 0.0,
         n_subfeatures       = -1,
-        n_trees             = 100,
+        n_trees             = 10,
         sampling_fraction   = 0.7,
         feature_importance  = :impurity,
         rng                 = Random.TaskLocalRNG()
     )
 
-    winparams = SoleFeatures.WinParams(SoleBase.wholewindow, NamedTuple())
+    winparams = WinParams(wholewindow, NamedTuple())
+
+    rawmodel = (
+        mach -> MLJ.fitted_params(mach).forest,
+        mach -> MLJ.fitted_params(mach).best_fitted_params.forest
+    )
 
     learn_method = (
         (mach, X, y) -> begin
             classlabels  = (mach).fitresult[2][sortperm((mach).fitresult[3])]
             featurenames = MLJ.report(mach).features
-            dt           = solemodel(MLJ.fitted_params(mach).forest; classlabels, featurenames)
-            apply!(dt, X, y)
-            return dt
+            solem        = solemodel(MLJ.fitted_params(mach).forest; classlabels, featurenames)
+            apply!(solem, X, y)
+            return solem
         end,
         (mach, X, y) -> begin
             classlabels  = (mach).fitresult.fitresult[2][sortperm((mach).fitresult.fitresult[3])]
             featurenames = MLJ.report(mach).best_report.features
-            dt           = solemodel(MLJ.fitted_params(mach).best_fitted_params.forest; classlabels, featurenames)
-            apply!(dt, X, y)
-            return dt
+            solem        = solemodel(MLJ.fitted_params(mach).best_fitted_params.forest; classlabels, featurenames)
+            apply!(solem, X, y)
+            return solem
         end
     )
 
-    tuning = (
-        tuning = false,
-        method = (type = latinhypercube, ntour = 20),
-        params = TUNING_PARAMS[:classification],
-        ranges = [
+    tuning = SoleXplorer.TuningParams(
+        SoleXplorer.TuningStrategy(latinhypercube, (ntour = 20,)),
+        TUNING_PARAMS[:classification],
+        (
             model -> MLJ.range(model, :sampling_fraction, lower=0.3, upper=0.9),
             model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])
-        ]
+        )
     )
 
-    rulesparams = RulesParams(InTreesRuleExtractor(), NamedTuple())
+    rulesparams = RulesParams(:intrees, NamedTuple())
 
-    return SymbolicModelSet(
+    return ModelSetup{TypeRFC}(
         type,
         config,
         params,
         DEFAULT_FEATS,
+        nothing,
         winparams,
+        rawmodel,
         learn_method,
         tuning,
         rulesparams,
@@ -112,9 +124,9 @@ function RandomForestClassifierModel()
     )
 end
 
-function AdaBoostClassifierModel()
+function AdaBoostClassifierModel()::ModelSetup{TypeABC}
     type   = MLJDecisionTreeInterface.AdaBoostStumpClassifier
-    config = (algo=:classification, type=DecisionEnsemble, treatment=:aggregate)
+    config = (algo=:classification, type=DecisionEnsemble, treatment=:aggregate, rawapply=DT.apply_adaboost_stumps)
 
     params = (;
         n_iter             = 10,
@@ -122,45 +134,51 @@ function AdaBoostClassifierModel()
         rng                = Random.TaskLocalRNG()
     )
 
-    winparams = SoleFeatures.WinParams(SoleBase.wholewindow, NamedTuple())
+    winparams = WinParams(wholewindow, NamedTuple())
+
+    rawmodel = (
+        mach -> MLJ.fitted_params(mach).stumps,
+        mach -> MLJ.fitted_params(mach).best_fitted_params.stumps
+    )
 
     learn_method = (
         (mach, X, y) -> begin
             weights      = mach.fitresult[2]
             classlabels  = sort(mach.fitresult[3])
             featurenames = MLJ.report(mach).features
-            dt           = solemodel(MLJ.fitted_params(mach).stumps; weights, classlabels, featurenames)
-            apply!(dt, X, y)
-            return dt
+            solem        = solemodel(MLJ.fitted_params(mach).stumps; weights, classlabels, featurenames)
+            apply!(solem, X, y)
+            return solem
         end,
         (mach, X, y) -> begin
             weights      = mach.fitresult.fitresult[2]
             classlabels  = sort(mach.fitresult.fitresult[3])
             featurenames = MLJ.report(mach).best_report.features
-            dt           = solemodel(MLJ.fitted_params(mach).best_fitted_params.stumps; weights, classlabels, featurenames)
-            apply!(dt, X, y)
-            return dt
+            solem        = solemodel(MLJ.fitted_params(mach).best_fitted_params.stumps; weights, classlabels, featurenames)
+            apply!(solem, X, y)
+            return solem
         end
     )
 
-    tuning = (
-        tuning = false,
-        method = (type = latinhypercube, ntour = 20),
-        params = TUNING_PARAMS[:classification],
-        ranges = [
+    tuning = SoleXplorer.TuningParams(
+        SoleXplorer.TuningStrategy(latinhypercube, (ntour = 20,)),
+        TUNING_PARAMS[:classification],
+        (
             model -> MLJ.range(model, :n_iter, lower=5, upper=50),
             model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])
-        ]
+        )
     )
 
-    rulesparams = RulesParams(InTreesRuleExtractor(), NamedTuple())
+    rulesparams = RulesParams(:intrees, NamedTuple())
 
-    return SymbolicModelSet(
+    return ModelSetup{TypeABC}(
         type,
         config,
         params,
         DEFAULT_FEATS,
+        nothing,
         winparams,
+        rawmodel,
         learn_method,
         tuning,
         rulesparams,
@@ -169,9 +187,9 @@ function AdaBoostClassifierModel()
 end
 
 # REGRESSOR ------------------------------------------------------------------ #
-function DecisionTreeRegressorModel()
+function DecisionTreeRegressorModel()::ModelSetup{TypeDTR}
     type = MLJDecisionTreeInterface.DecisionTreeRegressor
-    config  = (algo=:regression, type=DecisionTree, treatment=:aggregate)
+    config  = (algo=:regression, type=DecisionTree, treatment=:aggregate, rawapply=DT.apply_tree)
 
     params = (;
         max_depth              = -1,
@@ -185,31 +203,37 @@ function DecisionTreeRegressorModel()
         rng                    = Random.TaskLocalRNG()
     )
 
-    winparams = SoleFeatures.WinParams(SoleBase.wholewindow, NamedTuple())
+    winparams = WinParams(wholewindow, NamedTuple())
+
+    rawmodel = (
+        mach -> MLJ.fitted_params(mach).tree,
+        mach -> MLJ.fitted_params(mach).best_fitted_params.tree
+    )
 
     learn_method = (
-        (mach, X, y) -> (dt = solemodel(MLJ.fitted_params(mach).tree); apply!(dt, X, y); dt),
-        (mach, X, y) -> (dt = solemodel(MLJ.fitted_params(mach).best_fitted_params.tree); apply!(dt, X, y); dt)
+        (mach, X, y) -> (solem = solemodel(MLJ.fitted_params(mach).tree); apply!(solem, X, y); solem),
+        (mach, X, y) -> (solem = solemodel(MLJ.fitted_params(mach).best_fitted_params.tree); apply!(solem, X, y); solem)
     )
 
-    tuning = (
-        tuning = false,
-        method = (; type = latinhypercube, ntour = 20),
-        params = TUNING_PARAMS[:regression],
-        ranges = [
-            model -> MLJ.range(model, :merge_purity_threshold, lower=0, upper=1),
+    tuning = SoleXplorer.TuningParams(
+        SoleXplorer.TuningStrategy(latinhypercube, (ntour = 20,)),
+        TUNING_PARAMS[:regression],
+        (
+            model -> MLJ.range(model, :merge_purity_threshold, lower=0., upper=2.0),
             model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])
-        ]
+        )
     )
 
-    rulesparams = RulesParams(PlainRuleExtractor(), NamedTuple())
+    rulesparams = RulesParams(:intrees, NamedTuple())
 
-    return SymbolicModelSet(
+    return ModelSetup{TypeDTR}(
         type,
         config,
         params,
         DEFAULT_FEATS,
+        nothing,
         winparams,
+        rawmodel,
         learn_method,
         tuning,
         rulesparams,
@@ -217,9 +241,9 @@ function DecisionTreeRegressorModel()
     )
 end
 
-function RandomForestRegressorModel()
+function RandomForestRegressorModel()::ModelSetup{TypeRFR}
     type   = MLJDecisionTreeInterface.RandomForestRegressor
-    config = (algo=:regression, type=DecisionEnsemble, treatment=:aggregate)
+    config = (algo=:regression, type=DecisionEnsemble, treatment=:aggregate, rawapply=DT.apply_forest)
 
     params = (;
         max_depth           = -1,
@@ -233,41 +257,47 @@ function RandomForestRegressorModel()
         rng                 = Random.TaskLocalRNG()
     )
 
-    winparams = SoleFeatures.WinParams(SoleBase.wholewindow, NamedTuple())
+    winparams = WinParams(wholewindow, NamedTuple())
+
+    rawmodel = (
+        mach -> MLJ.fitted_params(mach).forest,
+        mach -> MLJ.fitted_params(mach).best_fitted_params.forest
+    )
 
     learn_method = (
         (mach, X, y) -> begin
             featurenames = MLJ.report(mach).features
-            dt           = solemodel(MLJ.fitted_params(mach).forest; featurenames)
-            apply!(dt, X, y)
-            return dt
+            solem        = solemodel(MLJ.fitted_params(mach).forest; featurenames)
+            apply!(solem, X, y)
+            return solem
         end,
         (mach, X, y) -> begin
             featurenames = MLJ.report(mach).best_report.features
-            dt           = solemodel(MLJ.fitted_params(mach).best_fitted_params.forest; featurenames)
-            apply!(dt, X, y)
-            return dt
+            solem        = solemodel(MLJ.fitted_params(mach).best_fitted_params.forest; featurenames)
+            apply!(solem, X, y)
+            return solem
         end
     )
 
-    tuning = (
-        tuning = false,
-        method = (type = latinhypercube, ntour = 20),
-        params = TUNING_PARAMS[:regression],
-        ranges = [
+    tuning = SoleXplorer.TuningParams(
+        SoleXplorer.TuningStrategy(latinhypercube, (ntour = 20,)),
+        TUNING_PARAMS[:regression],
+        (
             model -> MLJ.range(model, :sampling_fraction, lower=0.3, upper=0.9),
             model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])
-        ]
+        )
     )
 
-    rulesparams = RulesParams(InTreesRuleExtractor(), NamedTuple())
+    rulesparams = RulesParams(:intrees, NamedTuple())
 
-    return SymbolicModelSet(
+    return ModelSetup{TypeRFR}(
         type,
         config,
         params,
         DEFAULT_FEATS,
+        nothing,
         winparams,
+        rawmodel,
         learn_method,
         tuning,
         rulesparams,

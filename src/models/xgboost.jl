@@ -18,19 +18,19 @@ function makewatchlist(ds::Dataset)
             
     y_coded_train = @. CategoricalArrays.levelcode(_ytrain) - 1 # convert to 0-based indexing
     y_coded_valid = @. CategoricalArrays.levelcode(_yvalid) - 1 # convert to 0-based indexing
-    dtrain        = XGB.DMatrix((_Xtrain, y_coded_train); feature_names=names(_Xtrain))
-    dvalid        = XGB.DMatrix((_Xvalid, y_coded_valid); feature_names=names(_Xvalid))
+    dtrain        = XGB.DMatrix((_Xtrain, y_coded_train); feature_names=ds.info.vnames)
+    dvalid        = XGB.DMatrix((_Xvalid, y_coded_valid); feature_names=ds.info.vnames)
 
     OrderedDict(["train" => dtrain, "eval" => dvalid])
 end
 
 function XGBoostClassifierModel()
     type   = MLJXGBoostInterface.XGBoostClassifier
-    config = (; algo=:classification, type=DecisionEnsemble, treatment=:aggregate)
+    config = (; algo=:classification, type=DecisionEnsemble, treatment=:aggregate, rawapply=XGB.predict)
 
     params = (;
         test                        = 1, 
-        num_round                   = 100, 
+        num_round                   = 10, 
         booster                     = "gbtree", 
         disable_default_eval_metric = 0, 
         eta                         = 0.3,      # alias: learning_rate
@@ -74,49 +74,53 @@ function XGBoostClassifierModel()
         eval_metric                 = String[]
     )
 
-    winparams = SoleFeatures.WinParams(SoleBase.wholewindow, NamedTuple())
+    winparams = WinParams(wholewindow, NamedTuple())
+
+    rawmodel = (
+        mach -> XGB.trees(mach.fitresult[1]),
+        mach -> XGB.trees(mach.fitresult.fitresult[1])
+    )
 
     learn_method = (
         (mach, X, y) -> begin
             trees        = XGB.trees(mach.fitresult[1])
             encoding     = get_encoding(mach.fitresult[2])
             classlabels  = get_classlabels(encoding)
-            featurenames = mach.report.vals[1][1]
-            ds_safetest  = vcat(y, "nothing")
-            dt           = solemodel(trees, @views(Matrix(X)), @views(ds_safetest); classlabels, featurenames)
-            apply!(dt, @views(X), @views(y))
-            return dt
+            featurenames = mach.report.vals[1].features
+            solem        = solemodel(trees, @views(Matrix(X)), @views(y); classlabels, featurenames)
+            apply!(solem, mapcols(col -> Float32.(col), X), @views(y))
+            return solem
         end,
         (mach, X, y) -> begin
             trees        = XGB.trees(mach.fitresult.fitresult[1])
             encoding     = get_encoding(mach.fitresult.fitresult[2])
             classlabels  = get_classlabels(encoding)
-            featurenames = mach.fitresult.report.vals[1][1]
-            ds_safetest  = vcat(y, "nothing")
-            dt           = solemodel(trees, @views(Matrix(X)), @views(ds_safetest); classlabels, featurenames)
-            apply!(dt, @views(X), @views(y))
-            return dt
+            featurenames = mach.fitresult.report.vals[1].features
+            solem        = solemodel(trees, @views(Matrix(X)), @views(y); classlabels, featurenames)
+            apply!(solem, mapcols(col -> Float32.(col), X), @views(y))
+            return solem
         end
     )
 
-    tuning = (
-        tuning = false,
-        method = (type = latinhypercube, ntour = 20),
-        params = TUNING_PARAMS[:classification],
-        ranges = [
-            model -> MLJ.range(model, :max_depth, lower=3, upper=6),
-            model -> MLJ.range(model, :sample_type, values=["uniform", "weighted"])
-        ]
+    tuning = SoleXplorer.TuningParams(
+        SoleXplorer.TuningStrategy(latinhypercube, (ntour = 20,)),
+        TUNING_PARAMS[:classification],
+        (
+            model -> MLJ.range(model, :eta, lower=0.1, upper=0.9),
+            model -> MLJ.range(model, :gamma, lower=0.0, upper=1.0),
+        )
     )
 
     rulesparams = RulesParams(InTreesRuleExtractor(), NamedTuple())
 
-    return SymbolicModelSet(
+    return ModelSetup{TypeXGC}(
         type,
         config,
         params,
         DEFAULT_FEATS,
+        nothing,
         winparams,
+        rawmodel,
         learn_method,
         tuning,
         rulesparams,

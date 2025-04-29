@@ -1,15 +1,13 @@
 Sole Framework
 
-SoleBase:           on branch main              (pulled mar, 11 2025)
-SoleData:           on branch devPaso           (pulled mar, 11 2025)
-SoleModels:         on branch devPaso           (pulled mar, 11 2025)
-SoleLogics:         on branch dev               (pulled mar, 16 2025)
-SolePostHoc:        on branch devPaso           (pulled mar, 16 2025)
-Sole:               on branch dev               (pulled mar, 11 2025)
-SoleFeatures        on branch dev               (pulled mar, 15 2025)
-ModalDecisionLists: on branch dev               (pulled mar, 11 2025)
-ModalDecisionTees:  on branch devPaso           (pulled mar, 11 2025)
+SoleBase:           on branch main              version = "0.13.0"
 
-References
-https://github.com/ablaom/MLJTutorial.jl/blob/dev/notebooks/04_tuning/notebook.ipynb
-https://juliaai.github.io/DataScienceTutorials.jl/getting-started/model-tuning/
+SoleData:           on branch main              version = "0.16.1"
+SoleModels:         on branch devPaso           (pulled mar, 11 2025)
+SoleLogics:         on branch main              version = "0.13.0"
+
+SolePostHoc:        on branch devPaso           (pulled mar, 16 2025)
+SoleFeatures        on branch dev               (pulled mar, 15 2025)
+ModalDecisionTees:  on branch devPaso           (pulled mar, 11 2025)
+ModalDecisionLists: on branch dev               (pulled mar, 11 2025)
+

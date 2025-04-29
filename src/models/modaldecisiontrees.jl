@@ -5,7 +5,7 @@
 # CLASSIFIER ----------------------------------------------------------------- #
 function ModalDecisionTreeModel()
     type = ModalDecisionTrees.ModalDecisionTree
-    config  = (algo=:classification, type=DecisionTree, treatment=:reducesize)
+    config  = (algo=:classification, type=DecisionTree, treatment=:reducesize, reducefunc=StatsBase.mean, rawapply=ModalDecisionTrees.apply)
 
     params = (;
         max_depth              = nothing, 
@@ -31,31 +31,37 @@ function ModalDecisionTreeModel()
         feature_importance     = :split,
     )
 
-    winparams = SoleFeatures.WinParams(SoleBase.adaptivewindow, NamedTuple())
+    winparams = WinParams(adaptivewindow, NamedTuple())
+
+    rawmodel = (
+        mach -> MLJ.report(mach).rawmodel,
+        mach -> MLJ.report(mach).best_report.rawmodel
+    )
 
     learn_method = (
-        (mach, X, y) -> ((_, dt) = MLJ.report(mach).sprinkle(X, y); dt),
-        (mach, X, y) -> ((_, dt) = MLJ.report(mach).best_report.sprinkle(X, y); dt)
+        (mach, X, y) -> ((_, solem) = MLJ.report(mach).sprinkle(X, y); solem),
+        (mach, X, y) -> ((_, solem) = MLJ.report(mach).best_report.sprinkle(X, y); solem)
     )
 
-    tuning = (
-        tuning = false,
-        method = (; type = latinhypercube, ntour = 20),
-        params = TUNING_PARAMS[:classification],
-        ranges = [
-            model -> MLJ.range(model, :merge_purity_threshold, lower=0, upper=1),
+    tuning = SoleXplorer.TuningParams(
+        SoleXplorer.TuningStrategy(latinhypercube, (ntour = 20,)),
+        TUNING_PARAMS[:classification],
+        (
+            model -> MLJ.range(model, :min_samples_leaf, lower=2, upper=6),
             model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])
-        ]
+        )
     )
 
-    rulesparams = RulesParams(PlainRuleExtractor(), NamedTuple())
+    rulesparams = RulesParams(:intrees, NamedTuple())
 
-    return SymbolicModelSet(
+    return ModelSetup{TypeMDT}(
         type,
         config,
         params,
         DEFAULT_FEATS,
+        nothing,
         winparams,
+        rawmodel,
         learn_method,
         tuning,
         rulesparams,
@@ -65,7 +71,7 @@ end
 
 function ModalRandomForestModel()
     type   = ModalDecisionTrees.ModalRandomForest
-    config = (algo=:classification, type=DecisionForest, treatment=:reducesize)
+    config = (algo=:classification, type=DecisionForest, treatment=:reducesize, reducefunc=StatsBase.mean, rawapply=ModalDecisionTrees.apply)
 
     params = (;
         sampling_fraction      = 0.7, 
@@ -93,31 +99,37 @@ function ModalRandomForestModel()
         feature_importance     = :split
     )
 
-    winparams = SoleFeatures.WinParams(SoleBase.adaptivewindow, NamedTuple())
+    winparams = WinParams(adaptivewindow, NamedTuple())
+
+    rawmodel = (
+        mach -> MLJ.report(mach).rawmodel,
+        mach -> MLJ.report(mach).best_report.rawmodel
+    )
 
     learn_method = (
-        (mach, X, y) -> ((_, dt) = MLJ.report(mach).sprinkle(X, y); dt),
-        (mach, X, y) -> ((_, dt) = MLJ.report(mach).best_report.sprinkle(X, y); dt)
+        (mach, X, y) -> ((_, solem) = MLJ.report(mach).sprinkle(X, y); solem),
+        (mach, X, y) -> ((_, solem) = MLJ.report(mach).best_report.sprinkle(X, y); solem)
     )
 
-    tuning = (
-        tuning = false,
-        method = (; type = latinhypercube, ntour = 20),
-        params = TUNING_PARAMS[:classification],
-        ranges = [
+    tuning = SoleXplorer.TuningParams(
+        SoleXplorer.TuningStrategy(latinhypercube, (ntour = 20,)),
+        TUNING_PARAMS[:classification],
+        (
             model -> MLJ.range(model, :sampling_fraction, lower=0.3, upper=0.9),
             model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])
-        ]
+        )
     )
 
-    rulesparams = RulesParams(InTreesRuleExtractor(), NamedTuple())
+    rulesparams = RulesParams(:intrees, NamedTuple())
 
-    return SymbolicModelSet(
+    return ModelSetup{TypeMRF}(
         type,
         config,
         params,
         DEFAULT_FEATS,
+        nothing,
         winparams,
+        rawmodel,
         learn_method,
         tuning,
         rulesparams,
@@ -127,10 +139,9 @@ end
 
 function ModalAdaBoostModel()
     type   = ModalDecisionTrees.ModalAdaBoost
-    config = (algo=:classification, type=DecisionEnsemble, treatment=:reducesize)
+    config = (algo=:classification, type=DecisionEnsemble, treatment=:reducesize, reducefunc=StatsBase.mean, rawapply=ModalDecisionTrees.apply)
 
     params = (;
-        max_depth              = 1, 
         min_samples_leaf       = 1, 
         min_purity_increase    = 0.0,
         max_purity_at_leaf     = Inf, 
@@ -154,31 +165,37 @@ function ModalAdaBoostModel()
         n_iter                 = 10
     )
 
-    winparams = SoleFeatures.WinParams(SoleBase.adaptivewindow, NamedTuple())
+    winparams = WinParams(adaptivewindow, NamedTuple())
+
+    rawmodel = (
+        mach -> MLJ.report(mach).rawmodel,
+        mach -> MLJ.report(mach).best_report.rawmodel
+    )
 
     learn_method = (
-        (mach, X, y) -> ((_, dt) = MLJ.report(mach).sprinkle(X, y); dt),
-        (mach, X, y) -> ((_, dt) = MLJ.report(mach).best_report.sprinkle(X, y); dt)
+        (mach, X, y) -> ((_, solem) = MLJ.report(mach).sprinkle(X, y); solem),
+        (mach, X, y) -> ((_, solem) = MLJ.report(mach).best_report.sprinkle(X, y); solem)
     )
 
-    tuning = (
-        tuning = false,
-        method = (; type = latinhypercube, ntour = 20),
-        params = TUNING_PARAMS[:classification],
-        ranges = [
-            model -> MLJ.range(:n_iter; lower=5, upper=15),
+    tuning = SoleXplorer.TuningParams(
+        SoleXplorer.TuningStrategy(latinhypercube, (ntour = 20,)),
+        TUNING_PARAMS[:classification],
+        (
+            model -> MLJ.range(model, :min_samples_leaf, lower=1, upper=3),
             model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])
-        ]
+        )
     )
 
-    rulesparams = RulesParams(InTreesRuleExtractor(), NamedTuple())
+    rulesparams = RulesParams(:intrees, NamedTuple())
 
-    return SymbolicModelSet(
+    return ModelSetup{TypeMAB}(
         type,
         config,
         params,
         DEFAULT_FEATS,
+        nothing,
         winparams,
+        rawmodel,
         learn_method,
         tuning,
         rulesparams,

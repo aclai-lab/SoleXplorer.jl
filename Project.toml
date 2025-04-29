@@ -1,7 +1,7 @@
 name = "SoleXplorer"
 uuid = "5816ab97-8dbe-4a0a-b2fb-0334bd9876ed"
-authors = ["Giovanni Pagliarini", "pglgnn@unife.it", "Riccardo Pasini", "riccardo01.pasini@edu.unife.it"]
-version = "0.0.2"
+authors = ["Giovanni PAGLIARINI", "Riccardo PASINI"]
+version = "0.1.1"
 
 [deps]
 Catch22 = "acdeb78f-3d39-4310-8fdf-6d75c17c6d5a"
@@ -15,18 +15,12 @@ MLJModelInterface = "e80e1ace-859a-464e-9ed9-23947d8ae3ea"
 MLJParticleSwarmOptimization = "17a086e9-ed03-4f30-ab88-8b63f0f6126c"
 MLJTuning = "03970b2e-30c4-11ea-3135-d1576263f10f"
 MLJXGBoostInterface = "54119dfa-1dab-4055-a167-80440f4f7a91"
-ModalDecisionLists = "dbece2fb-9d58-4710-9902-4ec759308ae8"
 ModalDecisionTrees = "e54bda2e-c571-11ec-9d64-0242ac120002"
 MultiData = "8cc5100c-b3d1-4f82-90cb-0ea93d317aba"
 OrderedCollections = "bac558e1-5e72-5ebc-8fee-abe8a469f55d"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
-Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 ScientificTypes = "321657f4-b219-11e9-178b-2701a2544e81"
-Sole = "7b3b3b3f-8b15-4a80-a798-b383498bc2cf"
-SoleBase = "4475fa32-7023-44a0-aa70-4813b230e492"
 SoleData = "123f1ae1-6307-4526-ab5b-aab3a92a2b8c"
-SoleFeatures = "3ceb4e54-d968-4e97-8c18-2deeb0d429fb"
-SoleLogics = "b002da8f-3cb3-4d91-bbe3-2953433912b5"
 SoleModels = "4249d9c7-3290-4ddd-961c-e1d3ec2467f8"
 SolePostHoc = "cf1aa0c3-12c9-4ebe-9bdc-bd6c2ca79b72"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
@@ -34,6 +28,7 @@ TreeParzen = "eb66a70c-a255-11e9-03ea-7ba6b2f22006"
 XGBoost = "009559a3-9522-5dbb-924b-0b6ed2b22bb9"
 
 [compat]
+Catch22 = "0.7.0"
 CategoricalArrays = "0.10"
 DataFrames = "1"
 DecisionTree = "0.12"
@@ -45,16 +40,19 @@ ModalDecisionTrees = "0.5"
 MultiData = "0.1"
 OrderedCollections = "1"
 Random = "1"
-Reexport = "1"
 ScientificTypes = "3"
-SoleFeatures = "0.3"
-StatsBase = "0.30 - 0.34"
+SoleData = "0.16"
+SoleModels = "0.10"
+SolePostHoc = "0.2"
+StatsBase = "0.33 - 0.34"
 TreeParzen = "0.3"
 XGBoost = "2"
 julia = "1"
 
 [extras]
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+MLJBase = "a7f614a8-145f-11e9-1d2a-a57a1082229d"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test"]
+test = ["Test", "DataFrames", "MLJBase"]
