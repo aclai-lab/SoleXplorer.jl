@@ -37,7 +37,6 @@ const Cat_Value = Union{AbstractString, Symbol, MLJ.CategoricalValue}
 const Reg_Value = Number
 const Y_Value   = Union{Cat_Value, Reg_Value}
 
-# TODO remove this
 const Rule      = Union{DecisionList, DecisionEnsemble, DecisionSet}
 
 struct Resample <: AbstractTypeParams

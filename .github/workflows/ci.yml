@@ -36,6 +36,15 @@ jobs:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
       - uses: julia-actions/cache@v2
+      # remember to remove "run" and decomment "uses" when PostHoc will be available in the registry
+      #- uses: julia-actions/cache@v2
+      - run: |
+          julia -e '
+            import Pkg;
+            Pkg.activate(".");
+            Pkg.rm("SolePostHoc");
+            Pkg.add(url="https://github.com/aclai-lab/SolePostHoc.jl/tree/lumen_dirtyTest");
+          '
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
       - uses: julia-actions/julia-processcoverage@v1
