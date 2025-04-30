@@ -60,7 +60,7 @@ that require numeric inputs to process the data.
 function code_dataset(X::AbstractDataFrame)
     for (name, col) in pairs(eachcol(X))
         if !(eltype(col) <: Number)
-            X_coded = CategoricalArrays.levelcode.(categorical(col)) 
+            X_coded = MLJ.levelcode.(categorical(col)) 
             X[!, name] = X_coded
         end
     end
@@ -71,7 +71,7 @@ end
 function code_dataset(y::AbstractVector)
     if !(eltype(y) <: Number)
         eltype(y) <: Symbol && (y = string.(y))
-        y = CategoricalArrays.levelcode.(categorical(y)) 
+        y = MLJ.levelcode.(categorical(y)) 
     end
     
     return y
@@ -398,7 +398,7 @@ function _prepare_dataset(
         y isa AbstractFloat || (y = Float64.(y))
     elseif algo == :classification
         y isa AbstractVector{<:Cat_Value} || throw(ArgumentError("Classification requires a categorical target variable"))
-        y isa CategoricalArray || (y = coerce(y, MLJ.Multiclass))
+        y isa MLJ.CategoricalArray || (y = coerce(y, MLJ.Multiclass))
     else
         throw(ArgumentError("Algorithms supported, :regression and :classification"))
     end

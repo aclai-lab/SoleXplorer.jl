@@ -49,9 +49,9 @@ periodicity(x)         = Catch22.PD_PeriodicityWang_th0_01((x));
 # ---------------------------------------------------------------------------- #
 #                                  featuresets                                 #
 # ---------------------------------------------------------------------------- #
-base_set     = (maximum, minimum, StatsBase.mean, StatsBase.std)
+base_set     = (maximum, minimum, MLJ.mean, MLJ.std)
 
-catch9       = (maximum, minimum, StatsBase.mean, StatsBase.median, StatsBase.std,
+catch9       = (maximum, minimum, MLJ.mean, MLJ.median, MLJ.std,
                 stretch_high, stretch_decreasing, entropy_pairs, transition_variance)
 
 catch22_set  = (mode_5, mode_10, embedding_dist, acf_timescale, acf_first_min, ami2,
@@ -60,8 +60,8 @@ catch22_set  = (mode_5, mode_10, embedding_dist, acf_timescale, acf_first_min, a
                 stretch_high, entropy_pairs, rs_range, dfa, low_freq_power, 
                 centroid_freq, transition_variance, periodicity)
 
-complete_set = (maximum, minimum, StatsBase.mean, StatsBase.median, StatsBase.std,
-                StatsBase.cov, mode_5, mode_10, embedding_dist, acf_timescale,
+complete_set = (maximum, minimum, MLJ.mean, MLJ.median, MLJ.std,
+                MLJ.StatsBase.cov, mode_5, mode_10, embedding_dist, acf_timescale,
                 acf_first_min, ami2, trev, outlier_timing_pos, outlier_timing_neg,
                 whiten_timescale, forecast_error, ami_timescale, high_fluctuation,
                 stretch_decreasing, stretch_high, entropy_pairs, rs_range, dfa,

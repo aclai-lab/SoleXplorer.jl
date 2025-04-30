@@ -33,7 +33,7 @@ abstract type AbstractTypeParams end
 # ---------------------------------------------------------------------------- #
 #                                     types                                    #
 # ---------------------------------------------------------------------------- #
-const Cat_Value = Union{AbstractString, Symbol, CategoricalValue}
+const Cat_Value = Union{AbstractString, Symbol, MLJ.CategoricalValue}
 const Reg_Value = Number
 const Y_Value   = Union{Cat_Value, Reg_Value}
 
@@ -156,7 +156,7 @@ const TypeModalForest = Union{TypeMRF, TypeMAB}
 
 const DEFAULT_MODEL_SETUP = (type=:decisiontree,)
 
-const DEFAULT_FEATS = [maximum, minimum, StatsBase.mean, std]
+const DEFAULT_FEATS = [maximum, minimum, MLJ.mean, std]
 
 const DEFAULT_PREPROC = (
     train_ratio = 0.8,
@@ -297,9 +297,9 @@ const TUNING_METHODS_PARAMS = Dict{Union{DataType, UnionAll},NamedTuple}(
         rng                    = TaskLocalRNG()
     ),
     randomsearch          => (
-        bounded                = Distributions.Uniform,
-        positive_unbounded     = Distributions.Gamma,
-        other                  = Distributions.Normal,
+        bounded                = MLJ.Distributions.Uniform,
+        positive_unbounded     = MLJ.Distributions.Gamma,
+        other                  = MLJ.Distributions.Normal,
         rng                    = TaskLocalRNG()
     ),
     latinhypercube        => (

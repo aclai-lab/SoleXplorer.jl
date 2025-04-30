@@ -5,7 +5,7 @@
 # CLASSIFIER ----------------------------------------------------------------- #
 function ModalDecisionTreeModel()
     type = ModalDecisionTrees.ModalDecisionTree
-    config  = (algo=:classification, type=DecisionTree, treatment=:reducesize, reducefunc=StatsBase.mean, rawapply=ModalDecisionTrees.apply)
+    config  = (algo=:classification, type=DecisionTree, treatment=:reducesize, reducefunc=MLJ.mean, rawapply=ModalDecisionTrees.apply)
 
     params = (;
         max_depth              = nothing, 
@@ -71,7 +71,7 @@ end
 
 function ModalRandomForestModel()
     type   = ModalDecisionTrees.ModalRandomForest
-    config = (algo=:classification, type=DecisionForest, treatment=:reducesize, reducefunc=StatsBase.mean, rawapply=ModalDecisionTrees.apply)
+    config = (algo=:classification, type=DecisionForest, treatment=:reducesize, reducefunc=MLJ.mean, rawapply=ModalDecisionTrees.apply)
 
     params = (;
         sampling_fraction      = 0.7, 
@@ -139,7 +139,7 @@ end
 
 function ModalAdaBoostModel()
     type   = ModalDecisionTrees.ModalAdaBoost
-    config = (algo=:classification, type=DecisionEnsemble, treatment=:reducesize, reducefunc=StatsBase.mean, rawapply=ModalDecisionTrees.apply)
+    config = (algo=:classification, type=DecisionEnsemble, treatment=:reducesize, reducefunc=MLJ.mean, rawapply=ModalDecisionTrees.apply)
 
     params = (;
         min_samples_leaf       = 1, 
