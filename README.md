@@ -2,8 +2,8 @@
 
 # SymbolicAnalysis - Automated rules extraction in ML models
 
-[![Build Status](https://github.com/PasoStudio73/SymbolicAnalysis.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/PasoStudio73/SymbolicAnalysis.jl/actions/workflows/CI.yml?query=branch%3Amain)
-[![codecov](https://codecov.io/gh/PasoStudio73/SymbolicAnalysis.jl/graph/badge.svg?token=EYLQV5D6IS)](https://codecov.io/gh/PasoStudio73/SymbolicAnalysis.jl)
+[![Build Status](https://github.com/aclai-lab/SoleXplorer.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/aclai-lab/SoleXplorer.jl/actions/workflows/CI.yml?query=branch%3Amain)
+[![codecov](https://codecov.io/gh/aclai-lab/SoleXplorer.jl/graph/badge.svg?token=EJQ1MJOTDO)](https://codecov.io/gh/aclai-lab/SoleXplorer.jl)
 
 ## About
 
