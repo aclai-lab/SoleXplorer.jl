@@ -35,13 +35,14 @@ jobs:
         with:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
-      # remember to remove "run" and decomment "uses" when PostHoc will be available in the registry
-      #- uses: julia-actions/cache@v2
-      - run: |
-          julia -e '
-            import Pkg;
-            Pkg.activate(".");
-            Pkg.rm("SolePostHoc");
+      - uses: julia-actions/cache@v2
+      # Add this step to install unregistered packages
+      - name: Install unregistered dependencies
+        run: |
+          julia --project=@. -e '
+            using Pkg;
+            Pkg.add(url="https://github.com/Aclai/SolePostHoc.jl.git");
+            # Add any other unregistered packages here
           '
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
