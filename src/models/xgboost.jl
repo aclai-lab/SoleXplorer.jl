@@ -16,8 +16,8 @@ function makewatchlist(ds::Dataset)
             (ds.Xtrain[1], ds.Xvalid[1], ds.ytrain[1], ds.yvalid[1]) :
             (ds.Xtrain, ds.Xvalid, ds.ytrain, ds.yvalid)
             
-    y_coded_train = @. CategoricalArrays.levelcode(_ytrain) - 1 # convert to 0-based indexing
-    y_coded_valid = @. CategoricalArrays.levelcode(_yvalid) - 1 # convert to 0-based indexing
+    y_coded_train = @. MLJ.levelcode(_ytrain) - 1 # convert to 0-based indexing
+    y_coded_valid = @. MLJ.levelcode(_yvalid) - 1 # convert to 0-based indexing
     dtrain        = XGB.DMatrix((_Xtrain, y_coded_train); feature_names=ds.info.vnames)
     dvalid        = XGB.DMatrix((_Xvalid, y_coded_valid); feature_names=ds.info.vnames)
 

@@ -9,25 +9,22 @@ using ModalDecisionTrees
 # using ModalDecisionLists
 import MultiData.hasnans
 
+using Reexport
 using MLJ
+@reexport using MLJ: Grid as grid, RandomSearch as randomsearch, LatinHypercube as latinhypercube
+using TreeParzen: Config
+@reexport using TreeParzen: MLJTreeParzenTuning as treeparzen
+@reexport using MLJParticleSwarmOptimization: ParticleSwarm as particleswarm, AdaptiveParticleSwarm as adaptiveparticleswarm
+
 using MLJDecisionTreeInterface, MLJXGBoostInterface
 import MLJModelInterface as MMI
-
-using MLJ: Grid as grid, RandomSearch as randomsearch, LatinHypercube as latinhypercube
-using TreeParzen: MLJTreeParzenTuning as treeparzen
-using MLJParticleSwarmOptimization: ParticleSwarm as particleswarm, AdaptiveParticleSwarm as adaptiveparticleswarm
-using TreeParzen
-using Distributions
-
-export grid, randomsearch, latinhypercube, treeparzen, particleswarm, adaptiveparticleswarm
 
 import DecisionTree as DT
 import XGBoost as XGB
 
 using DataFrames
-using CategoricalArrays, OrderedCollections
+using OrderedCollections
 using Random
-using StatsBase, ScientificTypes
 
 using Base.Threads: @threads
 
@@ -44,7 +41,6 @@ export base_set, catch9, catch22_set, complete_set
 
 # @reexport using MLJ: CV, Holdout, StratifiedCV, TimeSeriesCV
 
-using Reexport
 @reexport using SoleBase: movingwindow, wholewindow, splitwindow, adaptivewindow
 include("interfaces/windowing_interface.jl")
 

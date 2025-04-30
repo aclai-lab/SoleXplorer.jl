@@ -1,6 +1,6 @@
 using Test
 using SoleXplorer
-using DataFrames, CategoricalArrays, Random
+using DataFrames, Random
 
 @testset "check_dataset_type tests" begin
     df_valid = DataFrame(a = [1.0, 2.0], b = [3, 4])

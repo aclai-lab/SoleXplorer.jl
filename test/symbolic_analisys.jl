@@ -6,22 +6,16 @@ using DataFrames, Random
 #                       numeric dataset classification                         #
 # ---------------------------------------------------------------------------- #
 # @info "numeric dataset classification"
-using MLJBase
+using MLJ
 
 X, y = @load_iris
 X = DataFrame(X)
 
-m = symbolic_analysis(
-    X, y;
-    model=(;type=:adaboost),
-    preprocess=(;rng=Xoshiro(11)),
-)
-
-# function show_results(modelset)
-#     println("rules extracted:")
-#     println(modelset.rules)
-#     println("accuracy: ", get_accuracy(modelset))
-# end
+function show_results(modelset)
+    println("rules extracted:")
+    println(modelset.rules)
+    println("accuracy: ", get_accuracy(modelset))
+end
 
 # ---------------------------------------------------------------------------- #
 #                           decision tree classifier                           #
@@ -622,7 +616,7 @@ show_results(modelset)
 # modelset = symbolic_analysis(
 #     X, y;
 #     model=(type=:randomforest, params=(;max_depth=5)),
-#     features=(minimum, maximum, StatsBase.mean),
+#     features=(minimum, maximum, MLJ.mean),
 #     win=(type=adaptivewindow, params=(nwindows=3, relative_overlap=0.1)),
 #     preprocess=(;rng=Xoshiro(11))
 # )
@@ -633,7 +627,7 @@ show_results(modelset)
 #     X, y;
 #     model=(type=:randomforest, params=(;max_depth=5)),
 #     resample=(type=StratifiedCV, params=(nfolds=10,)),
-#     features=(minimum, maximum, StatsBase.mean),
+#     features=(minimum, maximum, MLJ.mean),
 #     win=(type=adaptivewindow, params=(nwindows=3, relative_overlap=0.1)),
 #     preprocess=(;rng=Xoshiro(11))
 # )
@@ -644,7 +638,7 @@ show_results(modelset)
 #     X, y;
 #     model=(;type=:randomforest, params=(;max_depth=5)),
 #     resample=(type=StratifiedCV, params=(nfolds=10,)),
-#     features=(minimum, maximum, StatsBase.mean),
+#     features=(minimum, maximum, MLJ.mean),
 #     win=(type=adaptivewindow, params=(nwindows=3, relative_overlap=0.1)),
 #     tuning=true,
 #     preprocess=(;rng=Xoshiro(11))
