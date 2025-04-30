@@ -43,7 +43,7 @@ jobs:
             import Pkg;
             Pkg.activate(".");
             Pkg.rm("Catch22");
-            Pkg.rm("SoleModels");
+            Pkg.rm("SoleBase");
             Pkg.rm("SolePostHoc");
             Pkg.add(url="https://github.com/aclai-lab/SolePostHoc.jl.git", rev="lumen_dirtyTest");
           '
