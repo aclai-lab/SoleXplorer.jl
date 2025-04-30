@@ -12,6 +12,7 @@ end
 println("Julia version: ", VERSION)
 
 test_suites = [
+    ("Interfaces", ["interfaces/windowing_interface.jl", ]),
     ("Utils", ["utils/featureset.jl", ]),
     # ("Prepare Dataset", ["modules/prepare_dataset.jl", ]),
     # ("Train_Test", ["modules/train_test.jl", ]),

@@ -1,9 +1,6 @@
 # ---------------------------------------------------------------------------- #
 #                               abstract types                                 #
 # ---------------------------------------------------------------------------- #
-"""
-Abstract type for feature struct
-"""
 abstract type AbstractFeature end
 
 # ---------------------------------------------------------------------------- #
@@ -39,20 +36,20 @@ const WIN_PARAMS = Dict(
 """
     InfoFeat{T<:VarName} <: AbstractFeature
 
-Holds information about dataset columns, used in feature selection.
+A structure that represents a feature extraction operation on a specific variable and window.
 
 # Type Parameters
-- `T`: VarName type (must be either `Symbol` or `String`)
+- `T`: Type of variable name (either `Symbol` or `String`)
 
 # Fields
-- `id   :: Int`     : Unique identifier for the feature (Int or nothing)
-- `feat :: Symbol`  : The feature extraction function name
-- `var  :: T`       : The variable name/identifier
-- `nwin :: Int`     : The window number (must be positive)
+- `id :: Int`: Unique identifier for the feature
+- `var :: T`: Variable name/identifier (column name in dataset)
+- `feat :: Symbol`: Name of the feature extraction function
+- `nwin :: Int`: Window number this feature applies to
 
-# Constructors
+# Constructor
 ```julia
-InfoFeat(id::Id, feat::Symbol, var::Union{Symbol,String}, nwin::Integer)
+InfoFeat(id::Int, var::VarName, feat::Symbol, nwin::Int)
 """
 struct InfoFeat{T<:VarName} <: AbstractFeature
     id     :: Int
@@ -74,5 +71,3 @@ feature_id(f::InfoFeat)    = f.id
 variable_name(f::InfoFeat) = f.var
 feature_type(f::InfoFeat)  = f.feat
 window_number(f::InfoFeat) = f.nwin
-
-

@@ -44,8 +44,9 @@ export base_set, catch9, catch22_set, complete_set
 
 # @reexport using MLJ: CV, Holdout, StratifiedCV, TimeSeriesCV
 
+using Reexport
+@reexport using SoleBase: movingwindow, wholewindow, splitwindow, adaptivewindow
 include("interfaces/windowing_interface.jl")
-export movingwindow, wholewindow, splitwindow, adaptivewindow
 
 include("interfaces/dataset_interface.jl")
 include("interfaces/interface.jl")
