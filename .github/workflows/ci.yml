@@ -41,7 +41,7 @@ jobs:
         run: |
           julia --project=@. -e '
             using Pkg;
-            Pkg.add(url="https://github.com/Aclai/SolePostHoc.jl.git");
+            Pkg.add(url="https://github.com/aclai-lab/SolePostHoc.jl.git", rev="lumen_dirtyTest");
             # Add any other unregistered packages here
           '
       - uses: julia-actions/julia-buildpkg@v1
