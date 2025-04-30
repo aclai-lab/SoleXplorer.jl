@@ -35,7 +35,6 @@ jobs:
         with:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
-      - uses: julia-actions/cache@v2
       # remember to remove "run" and decomment "uses" when PostHoc will be available in the registry
       #- uses: julia-actions/cache@v2
       - run: |
