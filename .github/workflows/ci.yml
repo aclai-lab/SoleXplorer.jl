@@ -43,7 +43,7 @@ jobs:
             import Pkg;
             Pkg.activate(".");
             Pkg.rm("SolePostHoc");
-            Pkg.add(url="https://github.com/aclai-lab/SolePostHoc.jl/tree/lumen_dirtyTest");
+            Pkg.add(url="https://github.com/aclai-lab/SolePostHoc.jl.git", rev="lumen_dirtyTest");
           '
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
