@@ -42,10 +42,7 @@ jobs:
           julia -e '
             import Pkg;
             Pkg.activate(".");
-            Pkg.rm("Catch22");
-            Pkg.rm("SoleBase");
             Pkg.rm("SolePostHoc");
-            Pkg.add(url="https://github.com/aclai-lab/SolePostHoc.jl.git", rev="lumen_dirtyTest");
           '
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
