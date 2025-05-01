@@ -42,7 +42,7 @@ jobs:
           julia --project=@. -e '
             using Pkg
             # Use develop instead of add for better error handling
-            Pkg.develop(url="https://github.com/aclai-lab/SolePostHoc.jl.git", rev="lumen_dirtyTest")
+            Pkg.develop(PackageSpec(url="https://github.com/aclai-lab/SolePostHoc.jl.git", rev="lumen_dirtyTest"))
             Pkg.resolve()
             # Print status for debugging
             Pkg.status()
