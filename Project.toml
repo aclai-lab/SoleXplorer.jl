@@ -4,7 +4,7 @@ authors = ["Giovanni PAGLIARINI", "Riccardo PASINI"]
 version = "0.1.1"
 
 [sources]
-SolePostHoc = {url = "https://github.com/aclai-lab/SolePostHoc.jl.git"}
+SolePostHoc = {url = "https://github.com/aclai-lab/SolePostHoc.jl", rev = "lumen_dirtyTest"}
 
 [deps]
 Catch22 = "acdeb78f-3d39-4310-8fdf-6d75c17c6d5a"

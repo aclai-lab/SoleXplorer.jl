@@ -36,19 +36,6 @@ jobs:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
       - uses: julia-actions/cache@v2
-      # More robust approach for unregistered dependencies
-      # - name: Install unregistered dependencies
-      #   run: |
-      #     julia --project=@. -e '
-      #       using Pkg
-      #       Pkg.add(url="https://github.com/aclai-lab/SoleData.jl.git", rev="37-clean-unused-packages")
-      #       Pkg.add(url="https://github.com/aclai-lab/SoleModels.jl.git", rev="lumen-refactoring")
-      #       Pkg.add(url="https://github.com/aclai-lab/SoleLogics.jl.git", rev="main")
-      #       Pkg.add(url="https://github.com/aclai-lab/SolePostHoc.jl.git", rev="lumen_dirtyTest")
-      #       Pkg.resolve()
-      #       # Print status for debugging
-      #       Pkg.status()
-      #     '
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
       - uses: julia-actions/julia-processcoverage@v1
