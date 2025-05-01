@@ -41,7 +41,9 @@ jobs:
         run: |
           julia --project=@. -e '
             using Pkg
-            # Use develop instead of add for better error handling
+            Pkg.add(url="https://github.com/aclai-lab/SoleData.jl.git", rev="37-clean-unused-packages")
+            Pkg.add(url="https://github.com/aclai-lab/SoleModels.jl.git", rev="lumen-refactoring")
+            Pkg.add(url="https://github.com/aclai-lab/SoleLogics.jl.git", rev="main")
             Pkg.add(url="https://github.com/aclai-lab/SolePostHoc.jl.git", rev="lumen_dirtyTest")
             Pkg.resolve()
             # Print status for debugging
