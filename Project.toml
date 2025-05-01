@@ -4,7 +4,7 @@ authors = ["Giovanni PAGLIARINI", "Riccardo PASINI"]
 version = "0.1.1"
 
 [sources]
-SoleModels = {url = "https://github.com/aclai-lab/SoleModels.jl", rev = "37-clean-unused-packages"}
+SoleModels = {url = "https://github.com/aclai-lab/SoleModels.jl", rev = "lumen-refactoring"}
 SolePostHoc = {url = "https://github.com/aclai-lab/SolePostHoc.jl", rev = "lumen_dirtyTest"}
 
 [deps]
