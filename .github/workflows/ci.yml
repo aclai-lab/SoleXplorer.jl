@@ -2,7 +2,7 @@ name: CI
 on:
   push:
     branches:
-      - main
+      - 55-failed-loading-dev-packages-on-remote-ci
     tags: ['*']
   pull_request:
   workflow_dispatch:
