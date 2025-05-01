@@ -37,16 +37,16 @@ jobs:
           arch: ${{ matrix.arch }}
       - uses: julia-actions/cache@v2
       # More robust approach for unregistered dependencies
-      # - name: Install unregistered dependencies
-      #   run: |
-      #     julia --project=@. -e '
-      #       using Pkg
-      #       # Use develop instead of add for better error handling
-      #       Pkg.develop(url="https://github.com/aclai-lab/SolePostHoc.jl.git", rev="lumen_dirtyTest")
-      #       Pkg.resolve()
-      #       # Print status for debugging
-      #       Pkg.status()
-      #     '
+      - name: Install unregistered dependencies
+        run: |
+          julia --project=@. -e '
+            using Pkg
+            # Use develop instead of add for better error handling
+            Pkg.develop(url="https://github.com/aclai-lab/SolePostHoc.jl.git", rev="lumen_dirtyTest")
+            Pkg.resolve()
+            # Print status for debugging
+            Pkg.status()
+          '
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
       - uses: julia-actions/julia-processcoverage@v1
