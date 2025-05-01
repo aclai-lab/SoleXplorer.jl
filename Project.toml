@@ -4,10 +4,11 @@ authors = ["Giovanni PAGLIARINI", "Riccardo PASINI"]
 version = "0.1.1"
 
 [sources]
+MLJParticleSwarmOptimization = {url = "https://github.com/PasoStudio73/MLJParticleSwarmOptimization.jl", rev = "64-modaladaboost"}
 ModalDecisionTrees = {url = "https://github.com/aclai-lab/ModalDecisionTrees.jl", rev = "64-modaladaboost"}
 SoleData = {url = "https://github.com/aclai-lab/SoleData.jl", rev = "37-clean-unused-packages"}
 SoleModels = {url = "https://github.com/aclai-lab/SoleModels.jl", rev = "lumen-refactoring"}
-SolePostHoc = {url = "https://github.com/aclai-lab/SolePostHoc.jl", rev = "lumen_dirtyTest"}
+SolePostHoc = {url = "https://github.com/aclai-lab/SolePostHoc.jl", rev = "devPaso"}
 
 [deps]
 Catch22 = "acdeb78f-3d39-4310-8fdf-6d75c17c6d5a"
