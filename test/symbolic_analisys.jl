@@ -35,7 +35,7 @@ using BenchmarkTools
     X, y;
     model=(;type=:decisiontree),
     preprocess=(;rng=Xoshiro(11)),
-    extract_rules=true
+    # extract_rules=true
 )
 
 # original
