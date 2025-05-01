@@ -4,6 +4,7 @@ authors = ["Giovanni PAGLIARINI", "Riccardo PASINI"]
 version = "0.1.1"
 
 [sources]
+ModalDecisionTrees = {url = "https://github.com/aclai-lab/ModalDecisionTrees.jl", rev = "64-modaladaboost"}
 SoleModels = {url = "https://github.com/aclai-lab/SoleModels.jl", rev = "lumen-refactoring"}
 SolePostHoc = {url = "https://github.com/aclai-lab/SolePostHoc.jl", rev = "lumen_dirtyTest"}
 
