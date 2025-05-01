@@ -57,9 +57,8 @@ XGBoost = "2"
 julia = "1"
 
 [extras]
-DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
-MLJBase = "a7f614a8-145f-11e9-1d2a-a57a1082229d"
+StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test", "DataFrames", "MLJBase"]
+test = ["StatsBase", "Test"]
