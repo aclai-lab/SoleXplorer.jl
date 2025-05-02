@@ -3,14 +3,6 @@ uuid = "5816ab97-8dbe-4a0a-b2fb-0334bd9876ed"
 authors = ["Giovanni PAGLIARINI", "Riccardo PASINI"]
 version = "0.1.1"
 
-[sources]
-ScikitLearn = {url = "https://github.com/PasoStudio73/ScikitLearn.jl"}
-MLJParticleSwarmOptimization = {url = "https://github.com/PasoStudio73/MLJParticleSwarmOptimization.jl"}
-ModalDecisionTrees = {url = "https://github.com/aclai-lab/ModalDecisionTrees.jl", rev = "64-modaladaboost"}
-SoleData = {url = "https://github.com/aclai-lab/SoleData.jl", rev = "37-clean-unused-packages"}
-SoleModels = {url = "https://github.com/aclai-lab/SoleModels.jl", rev = "lumen-refactoring"}
-SolePostHoc = {url = "https://github.com/aclai-lab/SolePostHoc.jl", rev = "devPaso"}
-
 [deps]
 Catch22 = "acdeb78f-3d39-4310-8fdf-6d75c17c6d5a"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
@@ -34,6 +26,28 @@ SolePostHoc = "cf1aa0c3-12c9-4ebe-9bdc-bd6c2ca79b72"
 TreeParzen = "eb66a70c-a255-11e9-03ea-7ba6b2f22006"
 XGBoost = "009559a3-9522-5dbb-924b-0b6ed2b22bb9"
 
+[sources.MLJParticleSwarmOptimization]
+url = "https://github.com/PasoStudio73/MLJParticleSwarmOptimization.jl"
+
+[sources.ModalDecisionTrees]
+rev = "64-modaladaboost"
+url = "https://github.com/aclai-lab/ModalDecisionTrees.jl"
+
+[sources.ScikitLearn]
+url = "https://github.com/PasoStudio73/ScikitLearn.jl"
+
+[sources.SoleData]
+rev = "37-clean-unused-packages"
+url = "https://github.com/aclai-lab/SoleData.jl"
+
+[sources.SoleModels]
+rev = "lumen-refactoring"
+url = "https://github.com/aclai-lab/SoleModels.jl"
+
+[sources.SolePostHoc]
+rev = "devPaso"
+url = "https://github.com/aclai-lab/SolePostHoc.jl"
+
 [compat]
 Catch22 = "0.4 - 0.7"
 DataFrames = "1"
@@ -48,6 +62,7 @@ MultiData = "0.1"
 OrderedCollections = "1"
 Random = "1"
 Reexport = "1.2.2"
+ScikitLearn = "0.8"
 SoleBase = "0.13.0"
 SoleData = "0.16"
 SoleLogics = "0.13"
