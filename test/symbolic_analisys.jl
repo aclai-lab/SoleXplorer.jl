@@ -17,6 +17,15 @@ function show_results(modelset)
     println("accuracy: ", get_accuracy(modelset))
 end
 
+@info "random forest classifier, rulecosi rule extractor"
+modelset = symbolic_analysis(
+    X, y;
+    model=(type=:randomforest, params=(;max_depth=2)),
+    preprocess=(;rng=Xoshiro(1)),
+    extract_rules=(;type=:rulecosi)
+)
+show_results(modelset)
+
 # ---------------------------------------------------------------------------- #
 #                           decision tree classifier                           #
 # ---------------------------------------------------------------------------- #
