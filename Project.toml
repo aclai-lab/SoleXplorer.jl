@@ -36,6 +36,10 @@ url = "https://github.com/aclai-lab/ModalDecisionTrees.jl"
 [sources.ScikitLearn]
 url = "https://github.com/PasoStudio73/ScikitLearn.jl"
 
+[sources.SoleData]
+rev = "main"
+url = "https://github.com/aclai-lab/SoleData.jl"
+
 [sources.SoleModels]
 rev = "lumen-refactoring"
 url = "https://github.com/aclai-lab/SoleModels.jl"
