@@ -21,12 +21,11 @@ end
 #                           decision tree classifier                           #
 # ---------------------------------------------------------------------------- #
 # @info "decision tree classifier, intrees rule extractor"
-# modelset = symbolic_analysis(
-#     X, y;
-#     model=(;type=:decisiontree),
-#     preprocess=(;rng=Xoshiro(11)),
-#     extract_rules=true
-# )
+modelset = symbolic_analysis(
+    X, y;
+    model=(;type=:decisiontree),
+    preprocess=(;rng=Xoshiro(11)),
+)
 # show_results(modelset)
 
 using BenchmarkTools
@@ -240,14 +239,14 @@ show_results(modelset)
 # )
 # show_results(modelset)
 
-# @info "random forest classifier, lumen rule extractor"
-# modelset = symbolic_analysis(
-#     X, y;
-#     model=(type=:randomforest, params=(;max_depth=2)),
-#     preprocess=(;rng=Xoshiro(1)),
-#     extract_rules=(;type=:lumen)
-# )
-# show_results(modelset)
+@info "random forest classifier, lumen rule extractor"
+modelset = symbolic_analysis(
+    X, y;
+    model=(type=:randomforest, params=(;max_depth=2)),
+    preprocess=(;rng=Xoshiro(1)),
+    extract_rules=(;type=:lumen)
+)
+show_results(modelset)
 
 # # random forest with resampling cross validation
 # modelset = symbolic_analysis(
