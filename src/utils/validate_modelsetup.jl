@@ -189,7 +189,7 @@ function validate_rulesparams(
 
     # case 2: users is a NamedTuple
     type = isnothing(users.type) ? defaults.type : begin
-            haskey(AVAIL_RULES, users.type) || throw(ArgumentError("Type $(users.type) not found in available extract rules methods."))
+            haskey(EXTRACT_RULES, users.type) || throw(ArgumentError("Type $(users.type) not found in available extract rules methods."))
             users.type
         end
 

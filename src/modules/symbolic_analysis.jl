@@ -10,7 +10,7 @@ get_predictions(model::AbstractModel) = model.info.supporting_predictions
 #                              rules extraction                                #
 # ---------------------------------------------------------------------------- #
 function rules_extraction!(model::Modelset)
-    model.rules = AVAIL_RULES[model.setup.rulesparams.type](model)
+    model.rules = EXTRACT_RULES[model.setup.rulesparams.type](model)
 end
 
 # ---------------------------------------------------------------------------- #

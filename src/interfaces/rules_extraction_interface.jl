@@ -70,7 +70,7 @@ const RULES_PARAMS = Dict{Symbol,NamedTuple}(
     )
 )
 
-const AVAIL_RULES = Dict{Symbol, Function}(
+const EXTRACT_RULES = Dict{Symbol, Function}(
     :intrees => m -> begin
         method = SolePostHoc.RuleExtraction.InTreesRuleExtractor()
         if isnothing(m.setup.resample)
