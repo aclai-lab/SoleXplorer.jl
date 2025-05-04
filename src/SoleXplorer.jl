@@ -28,6 +28,9 @@ using Random
 
 using Base.Threads: @threads
 
+# ---------------------------------------------------------------------------- #
+#                                    utils                                     #
+# ---------------------------------------------------------------------------- #
 using Catch22
 include("utils/featureset.jl")
 export mode_5, mode_10, embedding_dist, acf_timescale, acf_first_min, ami2, trev, outlier_timing_pos
@@ -39,17 +42,35 @@ export base_set, catch9, catch22_set, complete_set
 # @reexport using SoleData: load_arff_dataset
 # @reexport using Random: seed!, Xoshiro, MersenneTwister
 
-# @reexport using MLJ: CV, Holdout, StratifiedCV, TimeSeriesCV
+# ---------------------------------------------------------------------------- #
+#                                 interfaces                                   #
+# ---------------------------------------------------------------------------- #
+include("interfaces/base_interface.jl")
 
 @reexport using SoleBase: movingwindow, wholewindow, splitwindow, adaptivewindow
 include("interfaces/windowing_interface.jl")
 
 include("interfaces/dataset_interface.jl")
-include("interfaces/interface.jl")
-include("interfaces/rules_extraction_interface.jl")
-export Modelset, range
-export plainrule, lumenrule, intreesrule
+export Dataset, get_X, get_y, get_tt, get_info, get_Xtrain, get_Xvalid, get_Xtest, get_ytrain, get_yvalid, get_ytest
 
+@reexport using MLJ: CV, Holdout, StratifiedCV, TimeSeriesCV
+include("interfaces/resample_interface.jl")
+
+@reexport using MLJ: Grid as grid, RandomSearch as randomsearch, LatinHypercube as latinhypercube
+using TreeParzen: Config
+@reexport using TreeParzen: MLJTreeParzenTuning as treeparzen
+@reexport using MLJParticleSwarmOptimization: ParticleSwarm as particleswarm, AdaptiveParticleSwarm as adaptiveparticleswarm
+include("interfaces/tuning_interface.jl")
+export range
+
+include("interfaces/extractrules_interface.jl")
+
+include("interfaces/model_interface.jl")
+export Modelset
+
+# ---------------------------------------------------------------------------- #
+#                                   models                                     #
+# ---------------------------------------------------------------------------- #
 include("models/decisiontrees.jl")
 include("models/modaldecisiontrees.jl")
 include("models/xgboost.jl")
@@ -60,6 +81,9 @@ export get_algo, get_labels, get_predictions
 export get_accuracy
 include("utils/validate_modelsetup.jl")
 
+# ---------------------------------------------------------------------------- #
+#                                   modules                                    #
+# ---------------------------------------------------------------------------- #
 include("modules/prepare_dataset.jl")
 export code_dataset
 export prepare_dataset

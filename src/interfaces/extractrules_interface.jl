@@ -1,8 +1,28 @@
 # ---------------------------------------------------------------------------- #
+#                                     types                                    #
+# ---------------------------------------------------------------------------- #
+"""
+    RulesParams <: AbstractTypeParams
+
+A structure that configures rule extraction methods for interpretable models.
+
+`RulesParams` specifies which rule extraction algorithm to use and its associated parameters
+when extracting symbolic rules from black-box machine learning models.
+
+# Fields
+- `type::Symbol`: The rule extraction method to use. Should be one of the available methods
+  defined in `EXTRACT_RULES` such as `:intrees`, `:refne`, `:trepan`, `:batrees`, `:rulecosi`, or `:lumen`.
+- `params::NamedTuple`: Configuration parameters for the specified rule extraction method.
+  Default parameters for each method are available in `RULES_PARAMS`.
+"""
+struct RulesParams <: AbstractTypeParams
+    type        :: Symbol
+    params      :: NamedTuple
+end
+
+# ---------------------------------------------------------------------------- #
 #                              Rules extraction                                #
 # ---------------------------------------------------------------------------- #
-const tree_warn = Union{Modelset{SoleXplorer.TypeDTC}, Modelset{SoleXplorer.TypeDTR}, Modelset{SoleXplorer.TypeMDT}}
-
 const RULES_PARAMS = Dict{Symbol,NamedTuple}(
     :intrees      => (
         prune_rules             = true,

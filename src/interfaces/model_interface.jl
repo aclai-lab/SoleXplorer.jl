@@ -1,68 +1,35 @@
 # ---------------------------------------------------------------------------- #
-#                               abstract types                                 #
-# ---------------------------------------------------------------------------- #
-"""
-Abstract type for model type
-"""
-abstract type AbstractModelType end
-
-"""
-Abstract type for model configuration and parameters
-"""
-abstract type AbstractModelSetup{T<:AbstractModelType} end
-
-modeltype(::AbstractModelSetup{T}) where {T} = T
-
-"""
-Abstract type for fitted model configurations
-"""
-abstract type AbstractModelset{T<:AbstractModelType} end
-
-modeltype(::AbstractModelset{T}) where {T} = T
-
-"""
-Abstract type for results output
-"""
-abstract type AbstractResults end
-
-"""
-Abstract type for type/params structs
-"""
-abstract type AbstractTypeParams end
-
-# ---------------------------------------------------------------------------- #
 #                                     types                                    #
 # ---------------------------------------------------------------------------- #
 const Cat_Value = Union{AbstractString, Symbol, MLJ.CategoricalValue}
 const Reg_Value = Number
 const Y_Value   = Union{Cat_Value, Reg_Value}
 
-const Rule      = Union{DecisionList, DecisionEnsemble, DecisionSet}
-
-struct Resample <: AbstractTypeParams
-    type        :: Base.Callable
-    params      :: NamedTuple
-end
-
-struct TuningStrategy <: AbstractTypeParams
-    type        :: Base.Callable
-    params      :: NamedTuple
-end
-
-struct TuningParams <: AbstractTypeParams
-    method      :: TuningStrategy
-    params      :: NamedTuple
-    ranges      :: Tuple{Vararg{Base.Callable}}
-end
-
-struct RulesParams <: AbstractTypeParams
-    type        :: Symbol
-    params      :: NamedTuple
-end
-
 # ---------------------------------------------------------------------------- #
 #                                   Modelset                                   #
 # ---------------------------------------------------------------------------- #
+"""
+    ModelSetup{T<:AbstractModelType} <: AbstractModelSetup{T}
+
+A mutable structure that defines the configuration for machine learning models in the SoleXplorer framework.
+
+`ModelSetup` encapsulates all parameters and configuration needed to initialize, train, and
+evaluate a machine learning model, including hyperparameter tuning, rule extraction, and
+data preprocessing options.
+
+# Fields
+- `type::Base.Callable`: Model type function, defining what kind of model will be created (e.g., decision tree, random forest).
+- `config::NamedTuple`: General configuration parameters for the model and framework.
+- `params::NamedTuple`: Model-specific hyperparameters.
+- `features::Union{AbstractVector{<:Base.Callable}, Nothing}`: Feature extraction functions to apply, or `nothing` if no feature transformation is needed.
+- `resample::Union{Resample, Nothing}`: Resampling strategy for cross-validation or train/test splitting, or `nothing` for default behavior.
+- `winparams::WinParams`: Window parameters for time series or sequential data processing.
+- `rawmodel::Union{Base.Callable, Tuple{Base.Callable, Base.Callable}}`: Function(s) to create the base model instance(s).
+- `learn_method::Union{Base.Callable, Tuple{Base.Callable, Base.Callable}}`: Function(s) that define how model learning/training is performed.
+- `tuning::Union{TuningParams, Bool}`: Hyperparameter tuning configuration, or a boolean to enable/disable tuning with default parameters.
+- `rulesparams::Union{RulesParams, Bool}`: Rule extraction configuration, or a boolean to enable/disable rule extraction with default parameters.
+- `preprocess::NamedTuple`: Data preprocessing configuration with options like train/validation split ratios and random seed.
+"""
 mutable struct ModelSetup{T<:AbstractModelType} <: AbstractModelSetup{T}
     type         :: Base.Callable
     config       :: NamedTuple
@@ -222,6 +189,42 @@ const RESULTS = Dict{Symbol,DataType}(
 # ---------------------------------------------------------------------------- #
 #                              Modelset struct                                 #
 # ---------------------------------------------------------------------------- #
+"""
+    Modelset{T<:AbstractModelType} <: AbstractModelset{T}
+
+A mutable structure that serves as the primary container for machine learning models in the SoleXplorer framework.
+
+`Modelset` encapsulates all components of a machine learning workflow, including model configuration,
+dataset, trained model, extracted rules, and performance results. It provides a unified interface
+for model training, evaluation, rule extraction, and interpretation.
+
+# Fields
+- `setup::AbstractModelSetup{T}`: Model setup and configuration parameters.
+- `ds::AbstractDataset`: Dataset containing features and target variables for training/testing.
+- `classifier::Union{MLJ.Model, Nothing}`: The underlying MLJ model specification/definition.
+- `mach::Union{MLJ.Machine, AbstractVector{<:MLJ.Machine}, Nothing}`: The fitted MLJ machine(s) 
+  that contain the trained model state. May be a vector for ensemble or cross-validation models.
+- `model::Union{AbstractModel, AbstractVector{<:AbstractModel}, Nothing}`: The trained model 
+  instance(s). May be a vector for ensemble or cross-validation models.
+- `rules::Union{Rule, AbstractVector{<:Rule}, Nothing}`: Extracted symbolic rules that represent 
+  the model's decision logic in an interpretable format. May be multiple rules for ensemble models.
+- `results::Union{AbstractResults, Nothing}`: Performance metrics and evaluation results.
+
+# Constructors
+```julia
+Modelset(
+    setup::AbstractModelSetup{T},
+    ds::AbstractDataset,
+    classifier::MLJ.Model,
+    mach::MLJ.Machine,
+    model::AbstractModel
+) where {T<:AbstractModelType}
+
+Modelset(
+    setup::AbstractModelSetup{T},
+    ds::Dataset
+) where {T<:AbstractModelType}
+"""
 mutable struct Modelset{T<:AbstractModelType} <: AbstractModelset{T}
     setup      :: AbstractModelSetup{T}
     ds         :: AbstractDataset
@@ -257,133 +260,4 @@ function Base.show(io::IO, mc::Modelset)
     # println(io, "    accuracy   =", isnothing(mc.accuracy) ? "nothing" : string(mc.accuracy))
 end
 
-# ---------------------------------------------------------------------------- #
-#                                   resample                                   #
-# ---------------------------------------------------------------------------- #
-const AVAIL_RESAMPLES = (CV, Holdout, StratifiedCV, TimeSeriesCV)
-
-const RESAMPLE_PARAMS = Dict{DataType,NamedTuple}(
-    CV           => (
-        nfolds         = 6,
-        shuffle        = true,
-        rng            = TaskLocalRNG()
-    ),
-    Holdout      => (
-        fraction_train = 0.7,
-        shuffle        = true,
-        rng            = TaskLocalRNG()
-    ),
-    StratifiedCV => (
-        nfolds         = 6,
-        shuffle        = true,
-        rng            = TaskLocalRNG()
-    ),
-    TimeSeriesCV => (
-        nfolds         = 4,
-    )
-)
-
-# ---------------------------------------------------------------------------- #
-#                                   tuning                                     #
-# ---------------------------------------------------------------------------- #
-const AVAIL_TUNING_METHODS = (grid, randomsearch, latinhypercube, treeparzen, particleswarm, adaptiveparticleswarm)
-
-const TUNING_METHODS_PARAMS = Dict{Union{DataType, UnionAll},NamedTuple}(
-    grid                  => (
-        goal                   = nothing,
-        resolution             = 10,
-        shuffle                = true,
-        rng                    = TaskLocalRNG()
-    ),
-    randomsearch          => (
-        bounded                = MLJ.Distributions.Uniform,
-        positive_unbounded     = MLJ.Distributions.Gamma,
-        other                  = MLJ.Distributions.Normal,
-        rng                    = TaskLocalRNG()
-    ),
-    latinhypercube        => (
-        gens                   = 1,
-        popsize                = 100,
-        ntour                  = 2,
-        ptour                  = 0.8,
-        interSampleWeight      = 1.0,
-        ae_power               = 2,
-        periodic_ae            = false,
-        rng                    = TaskLocalRNG()
-    ),
-    treeparzen            => (
-        config                 = Config(0.25, 25, 24, 20, 1.0),
-        max_simultaneous_draws = 1
-    ),
-    particleswarm         => (
-        n_particles            = 3,
-        w                      = 1.0,
-        c1                     = 2.0,
-        c2                     = 2.0,
-        prob_shift             = 0.25,
-        rng                    = TaskLocalRNG()
-    ),
-    adaptiveparticleswarm => (
-        n_particles            = 3,
-        c1                     = 2.0,
-        c2                     = 2.0,
-        prob_shift             = 0.25,
-        rng                    = TaskLocalRNG()
-    )
-)
-
-const TUNING_PARAMS = Dict{Symbol,NamedTuple}(
-    :classification => (;
-        resampling              = Holdout(),
-        measure                 = LogLoss(tol = 2.22045e-16),
-        weights                 = nothing,
-        class_weights           = nothing,
-        repeats                 = 1,
-        operation               = nothing,
-        selection_heuristic     = MLJ.MLJTuning.NaiveSelection(nothing),
-        n                       = 25,
-        train_best              = true,
-        acceleration            = default_resource(),
-        acceleration_resampling = CPU1(),
-        check_measure           = true,
-        cache                   = true,
-    ),
-    :regression => (;
-        resampling              = Holdout(),
-        measure                 = MLJ.RootMeanSquaredError(),
-        weights                 = nothing,
-        class_weights           = nothing,
-        repeats                 = 1,
-        operation               = nothing,
-        selection_heuristic     = MLJ.MLJTuning.NaiveSelection(nothing),
-        n                       = 25,
-        train_best              = true,
-        acceleration            = default_resource(),
-        acceleration_resampling = CPU1(),
-        check_measure           = true,
-        cache                   = true,
-    ),
-)
-
-function range(
-    field  :: Union{Expr, Symbol};
-    lower  :: Union{AbstractFloat, Int, Nothing} = nothing,
-    upper  :: Union{AbstractFloat, Int, Nothing} = nothing,
-    origin :: Union{AbstractFloat, Int, Nothing} = nothing,
-    unit   :: Union{AbstractFloat, Int, Nothing} = nothing,
-    scale  :: Union{Symbol, Nothing}             = nothing,
-    values :: Union{AbstractVector, Nothing}     = nothing,
-)
-    return function(model)
-        MLJ.range(
-            model,
-            field;
-            lower  = lower,
-            upper  = upper,
-            origin = origin,
-            unit   = unit,
-            scale  = scale,
-            values = values,
-        )
-    end
-end
+const tree_warn = Union{Modelset{SoleXplorer.TypeDTC}, Modelset{SoleXplorer.TypeDTR}, Modelset{SoleXplorer.TypeMDT}}
