@@ -19,34 +19,18 @@ Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 SoleBase = "4475fa32-7023-44a0-aa70-4813b230e492"
 SoleData = "123f1ae1-6307-4526-ab5b-aab3a92a2b8c"
-SoleLogics = "b002da8f-3cb3-4d91-bbe3-2953433912b5"
 SoleModels = "4249d9c7-3290-4ddd-961c-e1d3ec2467f8"
 SolePostHoc = "cf1aa0c3-12c9-4ebe-9bdc-bd6c2ca79b72"
 TreeParzen = "eb66a70c-a255-11e9-03ea-7ba6b2f22006"
 XGBoost = "009559a3-9522-5dbb-924b-0b6ed2b22bb9"
 
-[sources.MLJParticleSwarmOptimization]
-url = "https://github.com/PasoStudio73/MLJParticleSwarmOptimization.jl"
-
-[sources.ModalDecisionTrees]
-rev = "64-modaladaboost"
-url = "https://github.com/aclai-lab/ModalDecisionTrees.jl"
-
-[sources.SoleBase]
-rev = "4-add-structs-for-solexplorer"
-url = "https://github.com/aclai-lab/SoleBase.jl"
-
-[sources.SoleData]
-rev = "main"
-url = "https://github.com/aclai-lab/SoleData.jl"
-
-[sources.SoleModels]
-rev = "lumen-refactoring"
-url = "https://github.com/aclai-lab/SoleModels.jl"
-
-[sources.SolePostHoc]
-rev = "devPaso"
-url = "https://github.com/aclai-lab/SolePostHoc.jl"
+[sources]
+MLJParticleSwarmOptimization = {url = "https://github.com/PasoStudio73/MLJParticleSwarmOptimization.jl"}
+ModalDecisionTrees = {rev = "64-modaladaboost", url = "https://github.com/aclai-lab/ModalDecisionTrees.jl"}
+SoleBase = {rev = "4-add-structs-for-solexplorer", url = "https://github.com/aclai-lab/SoleBase.jl"}
+SoleData = {rev = "main", url = "https://github.com/aclai-lab/SoleData.jl"}
+SoleModels = {rev = "lumen-refactoring", url = "https://github.com/aclai-lab/SoleModels.jl"}
+SolePostHoc = {rev = "devPaso", url = "https://github.com/aclai-lab/SolePostHoc.jl"}
 
 [compat]
 Catch22 = "0.4 - 0.7"
@@ -64,7 +48,6 @@ Random = "1"
 Reexport = "1.2"
 SoleBase = "0.13"
 SoleData = "0.16.1"
-SoleLogics = "0.13"
 SoleModels = "0.10"
 TreeParzen = "0.3"
 XGBoost = "2"
