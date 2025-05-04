@@ -157,6 +157,78 @@ using DataFrames, Random
             )
             verify_rules(modelset, "LUMEN")
         end
+
+        # Test InTrees rule extraction with tuning
+        @testset "InTrees rule extraction with tuning" begin
+            modelset = symbolic_analysis(
+                X, y;
+                model=(type=:decisiontree, params=(;max_depth=3)),
+                preprocess=(;rng=Xoshiro(1)),
+                tuning=true,
+                extract_rules=(;type=:intrees, params=(prune_rules=true, max_rules=10))
+            )
+            verify_rules(modelset, "InTrees")
+        end
+        
+        # Test REFNE rule extraction with tuning
+        @testset "REFNE rule extraction with tuning" begin
+            modelset = symbolic_analysis(
+                X, y;
+                model=(type=:randomforest, params=(;n_trees=10, max_depth=3)),
+                preprocess=(;rng=Xoshiro(1)),
+                tuning=true,
+                extract_rules=(;type=:refne, params=(L=5, partial_sampling=0.7))
+            )
+            verify_rules(modelset, "REFNE")
+        end
+        
+        # Test TREPAN rule extraction with tuning
+        @testset "TREPAN rule extraction with tuning" begin
+            modelset = symbolic_analysis(
+                X, y;
+                model=(type=:randomforest, params=(;n_trees=10, max_depth=3)),
+                preprocess=(;rng=Xoshiro(1)),
+                tuning=true,
+                extract_rules=(;type=:trepan, params=(;max_depth=3))
+            )
+            verify_rules(modelset, "TREPAN")
+        end
+        
+        # Test BATREES rule extraction with tuning
+        @testset "BATREES rule extraction with tuning" begin
+            modelset = symbolic_analysis(
+                X, y;
+                model=(type=:randomforest, params=(;n_trees=10, max_depth=3)),
+                preprocess=(;rng=Xoshiro(1)),
+                tuning=true,
+                extract_rules=(;type=:batrees, params=(num_trees=20, max_depth=5))
+            )
+            verify_rules(modelset, "BATREES")
+        end
+        
+        # Test RuleCOSI rule extraction with tuning
+        @testset "RuleCOSI rule extraction with tuning" begin
+            modelset = symbolic_analysis(
+                X, y;
+                model=(type=:randomforest, params=(;n_trees=10, max_depth=3)),
+                preprocess=(;rng=Xoshiro(1)),
+                tuning=true,
+                extract_rules=(;type=:rulecosi)
+            )
+            verify_rules(modelset, "RuleCOSI")
+        end
+        
+        # Test LUMEN rule extraction with tuning
+        @testset "LUMEN rule extraction with tuning" begin
+            modelset = symbolic_analysis(
+                X, y;
+                model=(type=:randomforest, params=(;n_trees=10, max_depth=3)),
+                preprocess=(;rng=Xoshiro(1)),
+                tuning=true,
+                extract_rules=(;type=:lumen, params=(ott_mode=false, return_info=false))
+            )
+            verify_rules(modelset, "LUMEN")
+        end
         
         # Test different model types with same extractor
         @testset "Different model types" begin
