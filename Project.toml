@@ -36,6 +36,10 @@ url = "https://github.com/aclai-lab/ModalDecisionTrees.jl"
 [sources.ScikitLearn]
 url = "https://github.com/PasoStudio73/ScikitLearn.jl"
 
+[sources.SoleBase]
+rev = "4-add-structs-for-solexplorer"
+url = "https://github.com/aclai-lab/SoleBase.jl"
+
 [sources.SoleData]
 rev = "main"
 url = "https://github.com/aclai-lab/SoleData.jl"

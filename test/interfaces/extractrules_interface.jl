@@ -164,15 +164,6 @@ using DataFrames, Random
             
             for model_type in model_types
                 println("\nTesting model type: $model_type")
-                # Skip XGBoost if tests are running in environments without it
-                if model_type == :xgboost
-                    try
-                        using XGBoost  # This will error if XGBoost is not installed
-                    catch e
-                        println("Skipping XGBoost tests as package is not available")
-                        continue
-                    end
-                end
                 
                 params = if model_type == :decisiontree
                     (;max_depth=3)

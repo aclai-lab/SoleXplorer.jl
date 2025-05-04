@@ -111,7 +111,7 @@ function XGBoostClassifierModel()
         )
     )
 
-    rulesparams = RulesParams(InTreesRuleExtractor(), NamedTuple())
+    rulesparams = RulesParams(:intrees, NamedTuple())
 
     return ModelSetup{TypeXGC}(
         type,
