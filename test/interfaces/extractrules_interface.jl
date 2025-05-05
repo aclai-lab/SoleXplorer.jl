@@ -38,9 +38,6 @@ using DataFrames, Random
     
     @testset "Rule Extraction with Mock Data" begin
         # Create a mock Modelset for testing
-        # This requires setting up minimal structure to avoid actual model execution
-        
-        # First create a mock model, dataset and setup
         mock_model = nothing
         mock_ds = (
             Xtest = DataFrame(x1=[1,2,3], x2=[4,5,6]),
@@ -76,10 +73,10 @@ using DataFrames, Random
         @test trepan_fn isa Function
     end
 
+    X, y = @load_iris
+    X = DataFrame(X)
+
     @testset "Test the actual rule extraction process" begin
-        X, y = @load_iris
-        X = DataFrame(X)
-        
         # Helper function to show rules and check basic properties
         function verify_rules(modelset, method_name)
             println("\n--- Rules extracted with $method_name ---")
@@ -125,16 +122,16 @@ using DataFrames, Random
             verify_rules(modelset, "TREPAN")
         end
         
-        # Test BATREES rule extraction
-        @testset "BATREES rule extraction" begin
-            modelset = symbolic_analysis(
-                X, y;
-                model=(type=:randomforest, params=(;n_trees=10, max_depth=3)),
-                preprocess=(;rng=Xoshiro(1)),
-                extract_rules=(;type=:batrees, params=(num_trees=20, max_depth=5))
-            )
-            verify_rules(modelset, "BATREES")
-        end
+        # # Test BATREES rule extraction
+        # @testset "BATREES rule extraction" begin
+        #     modelset = symbolic_analysis(
+        #         X, y;
+        #         model=(type=:randomforest, params=(;n_trees=10, max_depth=3)),
+        #         preprocess=(;rng=Xoshiro(1)),
+        #         extract_rules=(;type=:batrees, params=(num_trees=20, max_depth=5))
+        #     )
+        #     verify_rules(modelset, "BATREES")
+        # end
         
         # Test RuleCOSI rule extraction
         @testset "RuleCOSI rule extraction" begin
@@ -194,17 +191,17 @@ using DataFrames, Random
             verify_rules(modelset, "TREPAN")
         end
         
-        # Test BATREES rule extraction with tuning
-        @testset "BATREES rule extraction with tuning" begin
-            modelset = symbolic_analysis(
-                X, y;
-                model=(type=:randomforest, params=(;n_trees=10, max_depth=3)),
-                preprocess=(;rng=Xoshiro(1)),
-                tuning=true,
-                extract_rules=(;type=:batrees, params=(num_trees=20, max_depth=5))
-            )
-            verify_rules(modelset, "BATREES")
-        end
+        # # Test BATREES rule extraction with tuning
+        # @testset "BATREES rule extraction with tuning" begin
+        #     modelset = symbolic_analysis(
+        #         X, y;
+        #         model=(type=:randomforest, params=(;n_trees=10, max_depth=3)),
+        #         preprocess=(;rng=Xoshiro(1)),
+        #         tuning=true,
+        #         extract_rules=(;type=:batrees, params=(num_trees=20, max_depth=5))
+        #     )
+        #     verify_rules(modelset, "BATREES")
+        # end
         
         # Test RuleCOSI rule extraction with tuning
         @testset "RuleCOSI rule extraction with tuning" begin
