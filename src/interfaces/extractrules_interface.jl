@@ -59,12 +59,12 @@ const RULES_PARAMS = Dict{Symbol,NamedTuple}(
         seed                    = 42
     ),
 
-    # :batrees      => (
-    #     dataset_name            = "iris",
-    #     num_trees               = 10,
-    #     max_depth               = 10,
-    #     dsOutput                = true
-    # ),
+    :batrees      => (
+        dataset_name            = "iris",
+        num_trees               = 10,
+        max_depth               = 10,
+        dsOutput                = true
+    ),
 
     :rulecosi => NamedTuple(
         # min_coverage            = 0.0,
@@ -130,17 +130,17 @@ const EXTRACT_RULES = Dict{Symbol, Function}(
         end
     end,
     
-    # :batrees => m -> begin
-    #     m isa tree_warn && throw(ArgumentError("batrees not supported for decision tree model type"))
-    #     method = SolePostHoc.RuleExtraction.BATreesRuleExtractor()
-    #     if isnothing(m.setup.resample)
-    #         RuleExtraction.modalextractrules(method, m.model; m.setup.rulesparams.params...)
-    #     else
-    #         reduce(vcat, map(enumerate(m.model)) do (i, model)
-    #             RuleExtraction.modalextractrules(method, model; m.setup.rulesparams.params...)
-    #         end)
-    #     end
-    # end,
+    :batrees => m -> begin
+        m isa tree_warn && throw(ArgumentError("batrees not supported for decision tree model type"))
+        method = SolePostHoc.RuleExtraction.BATreesRuleExtractor()
+        if isnothing(m.setup.resample)
+            RuleExtraction.modalextractrules(method, m.model; m.setup.rulesparams.params...)
+        else
+            reduce(vcat, map(enumerate(m.model)) do (i, model)
+                RuleExtraction.modalextractrules(method, model; m.setup.rulesparams.params...)
+            end)
+        end
+    end,
 
     :rulecosi => m -> begin
         m isa tree_warn && throw(ArgumentError("rulecosi not supported for decision tree model type"))
