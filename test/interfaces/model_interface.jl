@@ -1,7 +1,7 @@
 using Test
 using SoleXplorer
 using MLJ, MLJDecisionTreeInterface, Random
-using SoleLogics, SoleModels
+using SoleModels
 using DataFrames
 
 @testset "Model Interface" begin
