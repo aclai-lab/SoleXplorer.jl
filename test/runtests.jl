@@ -1,5 +1,17 @@
-using SoleXplorer
-using Test
+using Distributed
+addprocs(2)
+
+@everywhere begin
+    using SoleXplorer
+    using Test
+    using Random
+    using MLJ
+    using DataFrames
+    using MLJDecisionTreeInterface
+    using SoleModels
+    using StatsBase
+    using Catch22
+end
 
 function run_tests(list)
     println("\n" * ("#"^50))

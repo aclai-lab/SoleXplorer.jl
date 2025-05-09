@@ -22,7 +22,7 @@ modelset = symbolic_analysis(
     X, y;
     model=(type=:randomforest, params=(;max_depth=2)),
     preprocess=(;rng=Xoshiro(1)),
-    extract_rules=(;type=:rulecosi)
+    extract_rules=(;type=:intrees)
 )
 show_results(modelset)
 

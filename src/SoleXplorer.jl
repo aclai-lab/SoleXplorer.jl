@@ -76,9 +76,6 @@ include("models/modaldecisiontrees.jl")
 include("models/xgboost.jl")
 export makewatchlist
 
-include("utils/getter.jl")
-export get_algo, get_labels, get_predictions
-export get_accuracy
 include("utils/validate_modelsetup.jl")
 
 # ---------------------------------------------------------------------------- #
@@ -93,6 +90,8 @@ export train_test
 
 include("modules/symbolic_analysis.jl")
 export compute_results!, symbolic_analysis
+export get_algo, get_labels, get_predictions
+export get_accuracy
 
 include("user_interfaces/predict.jl")
 export get_predict
