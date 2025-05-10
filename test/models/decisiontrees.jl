@@ -16,7 +16,7 @@ using DataFrames
         @test dt_model.config.algo == :classification
         @test dt_model.config.type == SoleXplorer.DecisionTree
         @test dt_model.config.treatment == :aggregate
-        @test dt_model.config.rawapply == SoleXplorer.apply_tree
+        @test dt_model.config.rawapply == SoleXplorer.DT.apply_tree
         
         # Test hyperparameters
         @test dt_model.params.max_depth == -1
@@ -45,7 +45,7 @@ using DataFrames
         @test rf_model.type == SoleXplorer.MLJDecisionTreeInterface.RandomForestClassifier
         @test rf_model.config.algo == :classification
         @test rf_model.config.type == SoleXplorer.DecisionEnsemble
-        @test rf_model.config.rawapply == SoleXplorer.apply_forest
+        @test rf_model.config.rawapply == SoleXplorer.DT.apply_forest
         
         # Test hyperparameters
         @test rf_model.params.n_trees == 10
@@ -68,7 +68,7 @@ using DataFrames
         @test ab_model.type == SoleXplorer.MLJDecisionTreeInterface.AdaBoostStumpClassifier
         @test ab_model.config.algo == :classification
         @test ab_model.config.type == SoleXplorer.DecisionEnsemble
-        @test ab_model.config.rawapply == SoleXplorer.apply_adaboost_stumps
+        @test ab_model.config.rawapply == SoleXplorer.DT.apply_adaboost_stumps
         
         # Test hyperparameters
         @test ab_model.params.n_iter == 10
