@@ -80,8 +80,7 @@ export Modelset
 # ---------------------------------------------------------------------------- #
 #                                   models                                     #
 # ---------------------------------------------------------------------------- #
-using DecisionTree
-const DT = DecisionTree
+import DecisionTree as DT
 using MLJDecisionTreeInterface
 include("models/decisiontrees.jl")
 
