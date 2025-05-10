@@ -33,10 +33,12 @@ test_suites = [
         "interfaces/tuning_interface.jl",
         "interfaces/extractrules_interface.jl",
         "interfaces/model_interface.jl"
-    ])
-    # ("Prepare Dataset", ["modules/prepare_dataset.jl", ]),
-    # ("Train_Test", ["modules/train_test.jl", ]),
-    # ("Train_Test", ["modules/symbolic_analisys.jl", ]),
+    ]),
+    ("models", [
+        "models/decisiontrees.jl",
+        "models/modaldecisiontrees.jl",
+        "models/xgboost.jl"
+    ]),
 ]
 
 @testset "SoleXplorer.jl" begin

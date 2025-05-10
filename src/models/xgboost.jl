@@ -6,7 +6,7 @@
 # ---------------------------------------------------------------------------- #
 #                   models from ModalDecisionTrees package                     #
 # ---------------------------------------------------------------------------- #
-get_encoding(classes_seen) = Dict(MMI.int(c) => c for c in MMI.classes(classes_seen))
+get_encoding(classes_seen) = Dict(MLJ.int(c) => c for c in MLJ.classes(classes_seen))
 get_classlabels(encoding)  = [string(encoding[i]) for i in sort(keys(encoding) |> collect)]
 
 function makewatchlist(ds::Dataset)
@@ -21,7 +21,7 @@ function makewatchlist(ds::Dataset)
     dtrain        = XGB.DMatrix((_Xtrain, y_coded_train); feature_names=ds.info.vnames)
     dvalid        = XGB.DMatrix((_Xvalid, y_coded_valid); feature_names=ds.info.vnames)
 
-    OrderedDict(["train" => dtrain, "eval" => dvalid])
+    XGB.OrderedDict(["train" => dtrain, "eval" => dvalid])
 end
 
 function XGBoostClassifierModel()

@@ -2,31 +2,40 @@ module SoleXplorer
 
 using SoleData
 using SoleData: PatchedFunction, nanpatchedfunction
-using SoleModels
-using SoleModels: movingwindow, wholewindow, splitwindow, adaptivewindow
+# using SoleModels
+# using SoleModels: movingwindow, wholewindow, splitwindow, adaptivewindow
 using SolePostHoc
-using ModalDecisionTrees
+# using ModalDecisionTrees
 # using ModalDecisionLists
 import MultiData.hasnans
 
-using Reexport
-using MLJ
-@reexport using MLJ: Grid as grid, RandomSearch as randomsearch, LatinHypercube as latinhypercube
-using TreeParzen: Config
-@reexport using TreeParzen: MLJTreeParzenTuning as treeparzen
-@reexport using MLJParticleSwarmOptimization: ParticleSwarm as particleswarm, AdaptiveParticleSwarm as adaptiveparticleswarm
+# using Reexport
+# using MLJ
+# @reexport using MLJ: Grid as grid, RandomSearch as randomsearch, LatinHypercube as latinhypercube
+# using TreeParzen: Config
+# @reexport using TreeParzen: MLJTreeParzenTuning as treeparzen
+# @reexport using MLJParticleSwarmOptimization: ParticleSwarm as particleswarm, AdaptiveParticleSwarm as adaptiveparticleswarm
 
-using MLJDecisionTreeInterface, MLJXGBoostInterface
-import MLJModelInterface as MMI
+# using MLJDecisionTreeInterface, MLJXGBoostInterface
+# import MLJModelInterface as MMI
 
-import DecisionTree as DT
-import XGBoost as XGB
+# import DecisionTree as DT
+# import XGBoost as XGB
 
 using DataFrames
-using OrderedCollections
-using Random
+# using OrderedCollections
+# using Random
 
 using Base.Threads: @threads
+
+# module SymbolicAnalysis
+
+using MLJ
+using SoleModels
+using SoleModels: AbstractModel, DecisionList, DecisionForest, DecisionEnsemble, DecisionSet
+
+using Random
+using Reexport
 
 # ---------------------------------------------------------------------------- #
 #                                    utils                                     #
@@ -71,8 +80,18 @@ export Modelset
 # ---------------------------------------------------------------------------- #
 #                                   models                                     #
 # ---------------------------------------------------------------------------- #
+using DecisionTree
+const DT = DecisionTree
+using MLJDecisionTreeInterface
 include("models/decisiontrees.jl")
+
+using ModalDecisionTrees
+const MDT = ModalDecisionTrees
 include("models/modaldecisiontrees.jl")
+
+using XGBoost
+const XGB = XGBoost
+using MLJXGBoostInterface
 include("models/xgboost.jl")
 export makewatchlist
 

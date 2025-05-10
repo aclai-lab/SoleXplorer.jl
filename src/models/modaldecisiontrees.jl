@@ -1,11 +1,11 @@
 # ---------------------------------------------------------------------------- #
-#                   models from ModalDecisionTrees package                     #
+#                   models from MDT package                     #
 # ---------------------------------------------------------------------------- #
 
 # CLASSIFIER ----------------------------------------------------------------- #
 function ModalDecisionTreeModel()
-    type = ModalDecisionTrees.ModalDecisionTree
-    config  = (algo=:classification, type=DecisionTree, treatment=:reducesize, reducefunc=MLJ.mean, rawapply=ModalDecisionTrees.apply)
+    type = MDT.ModalDecisionTree
+    config  = (algo=:classification, type=DecisionTree, treatment=:reducesize, reducefunc=MLJ.mean, rawapply=MDT.apply)
 
     params = (;
         max_depth              = nothing, 
@@ -70,8 +70,8 @@ function ModalDecisionTreeModel()
 end
 
 function ModalRandomForestModel()
-    type   = ModalDecisionTrees.ModalRandomForest
-    config = (algo=:classification, type=DecisionForest, treatment=:reducesize, reducefunc=MLJ.mean, rawapply=ModalDecisionTrees.apply)
+    type   = MDT.ModalRandomForest
+    config = (algo=:classification, type=MDT.DecisionForest, treatment=:reducesize, reducefunc=MLJ.mean, rawapply=MDT.apply)
 
     params = (;
         sampling_fraction      = 0.7, 
@@ -93,7 +93,7 @@ function ModalRandomForestModel()
         rng                    = Random.TaskLocalRNG(), 
         display_depth          = nothing, 
         min_samples_split      = nothing, 
-        n_subfeatures          = ModalDecisionTrees.MLJInterface.sqrt_f, 
+        n_subfeatures          = MDT.MLJInterface.sqrt_f, 
         post_prune             = false, 
         merge_purity_threshold = nothing, 
         feature_importance     = :split
@@ -138,8 +138,8 @@ function ModalRandomForestModel()
 end
 
 function ModalAdaBoostModel()
-    type   = ModalDecisionTrees.ModalAdaBoost
-    config = (algo=:classification, type=DecisionEnsemble, treatment=:reducesize, reducefunc=MLJ.mean, rawapply=ModalDecisionTrees.apply)
+    type   = MDT.ModalAdaBoost
+    config = (algo=:classification, type=DecisionEnsemble, treatment=:reducesize, reducefunc=MLJ.mean, rawapply=MDT.apply)
 
     params = (;
         min_samples_leaf       = 1, 
@@ -158,7 +158,7 @@ function ModalAdaBoostModel()
         rng                    = Random.TaskLocalRNG(), 
         display_depth          = nothing, 
         min_samples_split      = 2, 
-        n_subfeatures          = ModalDecisionTrees.MLJInterface.sqrt_f,
+        n_subfeatures          = MDT.MLJInterface.sqrt_f,
         post_prune             = false, 
         merge_purity_threshold = nothing, 
         feature_importance     = :split, 

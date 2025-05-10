@@ -52,7 +52,7 @@ function _traintest!(model::AbstractModelset)::Modelset
         model.mach = Vector{MLJ.Machine}(undef, length(Xtrain))
         model.model = Vector{SoleXplorer.AbstractModel}(undef, length(Xtrain))
         for i in 1:length(Xtrain)
-            model.mach[i] = MLJ.machine(model.classifier, Xtrain[i], model.ds.ytrain[i]) |> m -> fit!(m, verbosity=0)
+            model.mach[i] = MLJ.machine(model.classifier, Xtrain[i], model.ds.ytrain[i]) |> m -> MLJ.fit!(m, verbosity=0)
             model.model[i] = model.setup.learn_method(model.mach[i], Xtest[i], model.ds.ytest[i])
         end
     else
@@ -60,7 +60,7 @@ function _traintest!(model::AbstractModelset)::Modelset
         Xtrain = DataFrame(model.ds.Xtrain, model.ds.info.vnames)
         Xtest = DataFrame(model.ds.Xtest, model.ds.info.vnames)
 
-        model.mach = MLJ.machine(model.classifier, Xtrain, model.ds.ytrain) |> m -> fit!(m, verbosity=0)
+        model.mach = MLJ.machine(model.classifier, Xtrain, model.ds.ytrain) |> m -> MLJ.fit!(m, verbosity=0)
         model.model = model.setup.learn_method(model.mach, Xtest, model.ds.ytest)
     end
 
