@@ -25,11 +25,20 @@ SolePostHoc = "cf1aa0c3-12c9-4ebe-9bdc-bd6c2ca79b72"
 TreeParzen = "eb66a70c-a255-11e9-03ea-7ba6b2f22006"
 XGBoost = "009559a3-9522-5dbb-924b-0b6ed2b22bb9"
 
-[sources]
-ModalDecisionTrees = {rev = "64-modaladaboost", url = "https://github.com/aclai-lab/ModalDecisionTrees.jl"}
-ScikitLearn = {url = "https://github.com/PasoStudio73/ScikitLearn.jl"}
-SoleModels = {rev = "lumen-refactoring", url = "https://github.com/aclai-lab/SoleModels.jl"}
-SolePostHoc = {rev = "devPaso", url = "https://github.com/aclai-lab/SolePostHoc.jl"}
+[sources.ModalDecisionTrees]
+rev = "64-modaladaboost"
+url = "https://github.com/aclai-lab/ModalDecisionTrees.jl"
+
+[sources.ScikitLearn]
+url = "https://github.com/PasoStudio73/ScikitLearn.jl"
+
+[sources.SoleModels]
+rev = "lumen-refactoring"
+url = "https://github.com/aclai-lab/SoleModels.jl"
+
+[sources.SolePostHoc]
+rev = "devPaso"
+url = "https://github.com/aclai-lab/SolePostHoc.jl"
 
 [compat]
 Catch22 = "0.4 - 0.7"
@@ -47,7 +56,7 @@ Random = "1"
 Reexport = "1.2"
 ScikitLearn = "0.7.1, 0.7"
 SoleBase = "0.13"
-SoleData = "0.16.2"
+SoleData = "0.16.2, 0.16"
 SoleModels = "0.10"
 TreeParzen = "0.3"
 XGBoost = "2"
