@@ -2,7 +2,7 @@
 
 # SoleXplorer - Automated rules extraction in ML models
 
-[![Build Status](https://github.com/aclai-lab/SoleXplorer.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/aclai-lab/SoleXplorer.jl/actions/workflows/CI.yml?query=branch%3Amain)
+[![CI](https://github.com/aclai-lab/SoleXplorer.jl/actions/workflows/ci.yml/badge.svg)](https://github.com/aclai-lab/SoleXplorer.jl/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/aclai-lab/SoleXplorer.jl/graph/badge.svg?token=EJQ1MJOTDO)](https://codecov.io/gh/aclai-lab/SoleXplorer.jl)
 
 ## About
