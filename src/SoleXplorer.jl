@@ -77,6 +77,8 @@ include("interfaces/extractrules_interface.jl")
 include("interfaces/model_interface.jl")
 export Modelset
 
+include("interfaces/results_interface.jl")
+
 # ---------------------------------------------------------------------------- #
 #                                   models                                     #
 # ---------------------------------------------------------------------------- #
