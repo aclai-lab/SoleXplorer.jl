@@ -16,7 +16,7 @@ function DecisionTreeClassifierModel()::ModelSetup{TypeDTC}
         post_prune             = false,
         merge_purity_threshold = 1.0,
         display_depth          = 5,
-        feature_importance     = :impurity,
+        feature_importance     = :impurity, # :impurity or :split
         rng                    = Random.TaskLocalRNG()
     )
 
@@ -199,7 +199,7 @@ function DecisionTreeRegressorModel()::ModelSetup{TypeDTR}
         n_subfeatures          = 0,
         post_prune             = false,
         merge_purity_threshold = 1.0,
-        feature_importance     = :impurity,
+        feature_importance     = :impurity, # :impurity or :split
         rng                    = Random.TaskLocalRNG()
     )
 

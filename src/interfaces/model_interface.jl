@@ -201,7 +201,7 @@ for model training, evaluation, rule extraction, and interpretation.
 # Fields
 - `setup::AbstractModelSetup{T}`: Model setup and configuration parameters.
 - `ds::AbstractDataset`: Dataset containing features and target variables for training/testing.
-- `classifier::Union{MLJ.Model, Nothing}`: The underlying MLJ model specification/definition.
+- `predictor::Union{MLJ.Model, Nothing}`: The underlying MLJ model specification/definition.
 - `mach::Union{MLJ.Machine, AbstractVector{<:MLJ.Machine}, Nothing}`: The fitted MLJ machine(s) 
   that contain the trained model state. May be a vector for ensemble or cross-validation models.
 - `model::Union{AbstractModel, AbstractVector{<:AbstractModel}, Nothing}`: The trained model 
@@ -215,7 +215,7 @@ for model training, evaluation, rule extraction, and interpretation.
 Modelset(
     setup::AbstractModelSetup{T},
     ds::AbstractDataset,
-    classifier::MLJ.Model,
+    predictor::MLJ.Model,
     mach::MLJ.Machine,
     model::AbstractModel
 ) where {T<:AbstractModelType}
@@ -228,7 +228,7 @@ Modelset(
 mutable struct Modelset{T<:AbstractModelType} <: AbstractModelset{T}
     setup      :: AbstractModelSetup{T}
     ds         :: AbstractDataset
-    classifier :: Union{MLJ.Model,       Nothing}
+    predictor  :: Union{MLJ.Model,     Nothing}
     mach       :: Union{MLJ.Machine,   AbstractVector{<:MLJ.Machine},   Nothing}
     model      :: Union{AbstractModel, AbstractVector{<:AbstractModel}, Nothing}
     rules      :: Union{Rule,          AbstractVector{<:Rule},          Nothing}
@@ -237,11 +237,11 @@ mutable struct Modelset{T<:AbstractModelType} <: AbstractModelset{T}
     function Modelset(
         setup      :: AbstractModelSetup{T},
         ds         :: AbstractDataset,
-        classifier :: MLJ.Model,
+        predictor  :: MLJ.Model,
         mach       :: MLJ.Machine,
         model      :: AbstractModel
     ) where {T<:AbstractModelType}
-        new{T}(setup, ds, classifier, mach, model, nothing, nothing)
+        new{T}(setup, ds, predictor, mach, model, nothing, nothing)
     end
 
     function Modelset(
@@ -255,7 +255,7 @@ end
 function Base.show(io::IO, mc::Modelset)
     println(io, "Modelset:")
     println(io, "    setup      =", mc.setup)
-    println(io, "    classifier =", mc.classifier)
+    println(io, "    predictor  =", mc.predictor)
     println(io, "    rules      =", isnothing(mc.rules) ? "nothing" : string(mc.rules))
     # println(io, "    accuracy   =", isnothing(mc.accuracy) ? "nothing" : string(mc.accuracy))
 end

@@ -1,21 +1,39 @@
 using Test
 using SoleXplorer, SoleData
 using DataFrames, Random
-
-# ---------------------------------------------------------------------------- #
-#                       numeric dataset classification                         #
-# ---------------------------------------------------------------------------- #
-# @info "numeric dataset classification"
 using MLJ
-
-X, y = @load_iris
-X = DataFrame(X)
 
 function show_results(modelset)
     println("rules extracted:")
     println(modelset.rules)
     println("accuracy: ", get_accuracy(modelset))
 end
+
+# ---------------------------------------------------------------------------- #
+#                            standard regression                               #
+# ---------------------------------------------------------------------------- #
+X, y = @load_boston
+X = DataFrame(X)
+
+@info "decision tree regression, rulecosi rule extractor"
+modelset = symbolic_analysis(
+    X, y;
+    model=(type=:decisiontree, params=(;feature_importance=:split)),
+    preprocess=(;rng=Xoshiro(1)),
+    # extract_rules=(;type=:intrees)
+)
+show_results(modelset)
+
+# ---------------------------------------------------------------------------- #
+#                       numeric dataset classification                         #
+# ---------------------------------------------------------------------------- #
+# @info "numeric dataset classification"
+
+
+X, y = @load_iris
+X = DataFrame(X)
+
+
 
 @info "random forest classifier, rulecosi rule extractor"
 modelset = symbolic_analysis(
