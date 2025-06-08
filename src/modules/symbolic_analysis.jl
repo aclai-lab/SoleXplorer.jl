@@ -1,8 +1,6 @@
 # ---------------------------------------------------------------------------- #
 #                                    utils                                     #
 # ---------------------------------------------------------------------------- #
-get_algo(setup::AbstractModelSetup) = setup.config.algo
-
 get_labels(model::AbstractModel) = model.info.supporting_labels
 get_predictions(model::AbstractModel) = model.info.supporting_predictions
 
