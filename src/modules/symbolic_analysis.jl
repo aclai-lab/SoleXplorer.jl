@@ -31,7 +31,7 @@ function symbolic_analysis(
     end
 
     # save results into model
-    model.results = compute_results(model.setup, model.model)
+    model.results = RESULTS[get_algo(model.setup)](model.setup, model.model)
 
     return model
 end
