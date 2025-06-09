@@ -23,7 +23,7 @@ Create a configuration for dataset preparation and splitting in machine learning
 - `resample::Bool`: Whether to perform resampling for cross-validation
 - `vnames::Union{Vector{<:AbstractString}, Nothing}`: Optional feature/variable names
 """
-struct DatasetInfo <: DatasetInfo
+struct DatasetInfo <: AbstractDatasetSetup
     treatment   :: Symbol
     reducefunc  :: OptCallable
     train_ratio :: Real

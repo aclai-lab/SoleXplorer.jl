@@ -393,14 +393,12 @@ function _prepare_dataset(
     check_row_consistency(X) || throw(ArgumentError("Elements within each row must have consistent dimensions"))
     # treatment in AVAIL_TREATMENTS || throw(ArgumentError("Treatment must be one of: $AVAIL_TREATMENTS"))
 
-    if algo == :regression
+    if algo == AbstractRegression
         y isa AbstractVector{<:Reg_Value} || throw(ArgumentError("Regression requires a numeric target variable"))
         y isa AbstractFloat || (y = Float64.(y))
-    elseif algo == :classification
+    elseif algo == AbstractClassification
         y isa AbstractVector{<:Cat_Value} || throw(ArgumentError("Classification requires a categorical target variable"))
         y isa MLJ.CategoricalArray || (y = coerce(y, MLJ.Multiclass))
-    else
-        throw(ArgumentError("Algorithms supported, :regression and :classification"))
     end
 
     if isnothing(vnames)
@@ -419,7 +417,6 @@ function _prepare_dataset(
     end
 
     ds_info = DatasetInfo(
-        algo,
         treatment,
         reducefunc,
         train_ratio,
