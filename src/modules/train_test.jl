@@ -91,7 +91,7 @@ end
 # y is not a vector, but a symbol or a string that identifies the column in X
 function train_test(
     X::AbstractDataFrame,
-    y::Union{Symbol,AbstractString};
+    y::SymbolString;
     kwargs...
 )::Modelset
     train_test(X[!, Not(y)], X[!, y]; kwargs...)

@@ -9,7 +9,7 @@
         valid_ratio::Real,
         rng::AbstractRNG,
         resample::Bool,
-        vnames::Union{Vector{<:AbstractString}, Nothing}
+        vnames::OptStringVec
     ) -> DatasetInfo
 
 Create a configuration for dataset preparation and splitting in machine learning workflows.
@@ -21,7 +21,7 @@ Create a configuration for dataset preparation and splitting in machine learning
 - `valid_ratio::Real`: Proportion of data to use for validation (must be between 0 and 1)
 - `rng::AbstractRNG`: Random number generator for reproducible splits
 - `resample::Bool`: Whether to perform resampling for cross-validation
-- `vnames::Union{Vector{<:AbstractString}, Nothing}`: Optional feature/variable names
+- `vnames::OptStringVec`: Optional feature/variable names
 """
 struct DatasetInfo <: AbstractDatasetSetup
     treatment   :: Symbol
@@ -30,7 +30,7 @@ struct DatasetInfo <: AbstractDatasetSetup
     valid_ratio :: Real
     rng         :: AbstractRNG
     resample    :: Bool
-    vnames      :: Union{Vector{<:AbstractString}, Nothing}
+    vnames      :: OptStringVec
 
     function DatasetInfo(
         treatment   :: Symbol,
@@ -39,7 +39,7 @@ struct DatasetInfo <: AbstractDatasetSetup
         valid_ratio :: Real,
         rng         :: AbstractRNG,
         resample    :: Bool,
-        vnames      :: Union{Vector{<:AbstractString}, Nothing}
+        vnames      :: OptStringVec
     )::DatasetInfo
         # Validate ratios
         0 ≤ train_ratio ≤ 1 || throw(ArgumentError("train_ratio must be between 0 and 1"))
@@ -55,7 +55,7 @@ get_train_ratio(dsinfo::DatasetInfo) :: Real = dsinfo.train_ratio
 get_valid_ratio(dsinfo::DatasetInfo) :: Real = dsinfo.valid_ratio
 get_rng(dsinfo::DatasetInfo)         :: AbstractRNG = dsinfo.rng
 get_resample(dsinfo::DatasetInfo)    :: Bool = dsinfo.resample
-get_vnames(dsinfo::DatasetInfo)      :: Union{Vector{<:AbstractString}, Nothing} = dsinfo.vnames
+get_vnames(dsinfo::DatasetInfo)      :: OptStringVec = dsinfo.vnames
 
 function Base.show(io::IO, info::DatasetInfo)
     println(io, "DatasetInfo:")
@@ -114,12 +114,12 @@ including train-validation-test splits with views into the original data.
 - `y::S`: Original target vector/matrix
 - `tt::Union{TT_indexes, AbstractVector{<:TT_indexes}}`: Train-validation-test split indices
 - `info::DatasetInfo`: Dataset configuration and metadata
-- `Xtrain::Union{AbstractMatrix, Vector{<:AbstractMatrix}}`: Features for training
-- `Xvalid::Union{AbstractMatrix, Vector{<:AbstractMatrix}}`: Features for validation
-- `Xtest::Union{AbstractMatrix, Vector{<:AbstractMatrix}}`: Features for testing
-- `ytrain::Union{SubArray{<:eltype(S)}, Vector{<:SubArray{<:eltype(S)}}}`: Targets for training
-- `yvalid::Union{SubArray{<:eltype(S)}, Vector{<:SubArray{<:eltype(S)}}}`: Targets for validation
-- `ytest::Union{SubArray{<:eltype(S)}, Vector{<:SubArray{<:eltype(S)}}}`: Targets for testing
+- `Xtrain::VecOrMatrix`: Features for training
+- `Xvalid::VecOrMatrix`: Features for validation
+- `Xtest::VecOrMatrix`: Features for testing
+- `ytrain::VecOrSubArray`: Targets for training
+- `yvalid::VecOrSubArray`: Targets for validation
+- `ytest::VecOrSubArray`: Targets for testing
 
 # Constructor
     Dataset(X::T, y::S, tt, info) where {T<:AbstractMatrix,S}
@@ -145,12 +145,12 @@ struct Dataset{T<:AbstractMatrix,S} <: AbstractDataset
     y           :: S
     tt          :: Union{TT_indexes, AbstractVector{<:TT_indexes}}
     info        :: DatasetInfo
-    Xtrain      :: Union{AbstractMatrix, Vector{<:AbstractMatrix}}
-    Xvalid      :: Union{AbstractMatrix, Vector{<:AbstractMatrix}}
-    Xtest       :: Union{AbstractMatrix, Vector{<:AbstractMatrix}}
-    ytrain      :: Union{SubArray{<:eltype(S)}, Vector{<:SubArray{<:eltype(S)}}}
-    yvalid      :: Union{SubArray{<:eltype(S)}, Vector{<:SubArray{<:eltype(S)}}}
-    ytest       :: Union{SubArray{<:eltype(S)}, Vector{<:SubArray{<:eltype(S)}}}
+    Xtrain      :: VecOrMatrix
+    Xvalid      :: VecOrMatrix
+    Xtest       :: VecOrMatrix
+    ytrain      :: VecOrSubArray
+    yvalid      :: VecOrSubArray
+    ytest       :: VecOrSubArray
 
     function Dataset(X::T, y::S, tt, info) where {T<:AbstractMatrix,S}
         if get_resample(info)
@@ -202,21 +202,21 @@ Get the dataset configuration and metadata from a Dataset structure.
 get_info(ds::Dataset)   = ds.info
 
 """
-    get_Xtrain(ds::Dataset) -> Union{AbstractMatrix, Vector{<:AbstractMatrix}}
+    get_Xtrain(ds::Dataset) -> VecOrMatrix
 
 Get the training feature views from a Dataset structure.
 """
 get_Xtrain(ds::Dataset) = ds.Xtrain
 
 """
-    get_Xvalid(ds::Dataset) -> Union{AbstractMatrix, Vector{<:AbstractMatrix}}
+    get_Xvalid(ds::Dataset) -> VecOrMatrix
 
 Get the validation feature views from a Dataset structure.
 """
 get_Xvalid(ds::Dataset) = ds.Xvalid
 
 """
-    get_Xtest(ds::Dataset) -> Union{AbstractMatrix, Vector{<:AbstractMatrix}}
+    get_Xtest(ds::Dataset) -> VecOrMatrix
 
 Get the test feature views from a Dataset structure.
 """

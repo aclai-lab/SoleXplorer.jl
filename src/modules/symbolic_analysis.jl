@@ -39,7 +39,7 @@ end
 # y is not a vector, but a symbol or a string that identifies a column in X
 function symbolic_analysis(
     X::AbstractDataFrame,
-    y::Union{Symbol,AbstractString};
+    y::SymbolString;
     kwargs...
 )::Modelset
     symbolic_analysis(X[!, Not(y)], X[!, y]; kwargs...)

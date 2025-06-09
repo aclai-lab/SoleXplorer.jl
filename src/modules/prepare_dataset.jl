@@ -332,14 +332,14 @@ end
 # ---------------------------------------------------------------------------- #
 """
     prepare_dataset(X::AbstractDataFrame, y::AbstractVector; kwargs...)::Modelset
-    prepare_dataset(X::AbstractDataFrame, y::Union{Symbol,AbstractString}; kwargs...)::Modelset
+    prepare_dataset(X::AbstractDataFrame, y::SymbolString; kwargs...)::Modelset
 
 Prepares a dataset for machine learning by processing the input data and configuring a model setup.
 Supports both classification and regression tasks, with extensive customization options.
 
 # Arguments
 - `X::AbstractDataFrame`: The input data containing features
-- `y::AbstractVector` or `y::Union{Symbol,AbstractString}`: The target variable, either as a vector or 
+- `y::AbstractVector` or `y::SymbolString`: The target variable, either as a vector or 
   as a column name/symbol from `X`
 
 # Optional Keyword Arguments
@@ -476,7 +476,7 @@ end
 # y is not a vector, but a symbol or a string that identifies a column in X
 function prepare_dataset(
     X::AbstractDataFrame,
-    y::Union{Symbol,AbstractString};
+    y::SymbolString;
     kwargs...
 )::Modelset
     prepare_dataset(X[!, Not(y)], X[!, y]; kwargs...)

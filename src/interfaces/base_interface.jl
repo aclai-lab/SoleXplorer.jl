@@ -4,13 +4,22 @@
 const Optional{T}       = Union{T, Nothing}
 
 const NamedTupleBool    = Union{NamedTuple, Bool}
+const VecOrSubArray{T}  = Union{SubArray{T}, Vector{<:SubArray{T}}} where T
+const VecOrMatrix       = Union{AbstractMatrix, Vector{<:AbstractMatrix}}
+
+const SymbolString      = Union{Symbol,AbstractString}
 
 const OptSymbol         = Optional{Symbol}
 const OptTuple          = Optional{Tuple}
 const OptNamedTuple     = Optional{NamedTuple}
-# const OptNamedTupleBool = Optional{NamedTupleBool}
 const OptCallable       = Optional{<:Base.Callable}
 const OptDataType       = Optional{DataType}
+
+const OptStringVec      = Optional{Vector{<:AbstractString}}
+
+const Cat_Value = Union{AbstractString, Symbol, MLJ.CategoricalValue}
+const Reg_Value = Number
+const Y_Value   = Union{Cat_Value, Reg_Value}
 
 # ---------------------------------------------------------------------------- #
 #                         abstract types definition                            #
