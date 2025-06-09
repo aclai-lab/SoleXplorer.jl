@@ -465,7 +465,7 @@ function prepare_dataset(
     resample   :: OptNamedTuple     = nothing,
     win        :: OptNamedTuple     = nothing,
     features   :: OptTuple          = nothing,
-    tuning     :: OptNamedTupleBool = nothing,
+    tuning     :: NamedTupleBool    = false,
     rules      :: OptNamedTuple     = nothing,
     preprocess :: OptNamedTuple     = nothing,
     reducefunc :: OptCallable       = nothing,

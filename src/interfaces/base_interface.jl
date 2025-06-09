@@ -8,7 +8,7 @@ const NamedTupleBool    = Union{NamedTuple, Bool}
 const OptSymbol         = Optional{Symbol}
 const OptTuple          = Optional{Tuple}
 const OptNamedTuple     = Optional{NamedTuple}
-const OptNamedTupleBool = Optional{NamedTupleBool}
+# const OptNamedTupleBool = Optional{NamedTupleBool}
 const OptCallable       = Optional{<:Base.Callable}
 
 # ---------------------------------------------------------------------------- #
