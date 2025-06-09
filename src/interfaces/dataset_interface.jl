@@ -3,7 +3,6 @@
 # ---------------------------------------------------------------------------- #
 """
     DatasetInfo(
-        algo::Symbol,
         treatment::Symbol,
         reducefunc::Union{<:Base.Callable, Nothing},
         train_ratio::Real,
@@ -16,7 +15,6 @@
 Create a configuration for dataset preparation and splitting in machine learning workflows.
 
 # Fields
-- `algo::Symbol`: Algorithm to use for dataset processing
 - `treatment::Symbol`: Data treatment method (e.g., `:standardize`, `:normalize`)
 - `reducefunc::Union{<:Base.Callable, Nothing}`: Optional function for dimensionality reduction
 - `train_ratio::Real`: Proportion of data to use for training (must be between 0 and 1)
@@ -25,8 +23,7 @@ Create a configuration for dataset preparation and splitting in machine learning
 - `resample::Bool`: Whether to perform resampling for cross-validation
 - `vnames::Union{Vector{<:AbstractString}, Nothing}`: Optional feature/variable names
 """
-struct DatasetInfo <: AbstractDatasetSetup
-    algo        :: Symbol
+struct DatasetInfo{T<:AbstractModelType} <: AbstractDatasetSetup{T}
     treatment   :: Symbol
     reducefunc  :: Union{<:Base.Callable, Nothing}
     train_ratio :: Real
@@ -36,7 +33,6 @@ struct DatasetInfo <: AbstractDatasetSetup
     vnames      :: Union{Vector{<:AbstractString}, Nothing}
 
     function DatasetInfo(
-        algo        :: Symbol,
         treatment   :: Symbol,
         reducefunc  :: Union{<:Base.Callable, Nothing},
         train_ratio :: Real,
@@ -44,16 +40,15 @@ struct DatasetInfo <: AbstractDatasetSetup
         rng         :: AbstractRNG,
         resample    :: Bool,
         vnames      :: Union{Vector{<:AbstractString}, Nothing}
-    )::DatasetInfo
+    )::DatasetInfo where {T<:AbstractModelType}
         # Validate ratios
         0 ≤ train_ratio ≤ 1 || throw(ArgumentError("train_ratio must be between 0 and 1"))
         0 ≤ valid_ratio ≤ 1 || throw(ArgumentError("valid_ratio must be between 0 and 1"))
 
-        new(algo, treatment, reducefunc, train_ratio, valid_ratio, rng, resample, vnames)
+        new{T}(treatment, reducefunc, train_ratio, valid_ratio, rng, resample, vnames)
     end
 end
 
-get_algo(dsinfo::DatasetInfo)        :: Symbol = dsinfo.algo
 get_treatment(dsinfo::DatasetInfo)   :: Symbol = dsinfo.treatment
 get_reducefunc(dsinfo::DatasetInfo)  :: Union{<:Base.Callable, Nothing} = dsinfo.reducefunc
 get_train_ratio(dsinfo::DatasetInfo) :: Real = dsinfo.train_ratio

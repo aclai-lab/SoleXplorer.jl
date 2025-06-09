@@ -196,7 +196,7 @@ function _treatment(
     treatment::Symbol,
     features::FeatNames,
     winparams::WinParams;
-    reducefunc::Union{Base.Callable, Nothing}=nothing
+    reducefunc::OptCallable=nothing
 ) where T
     # working with audio files, we need to consider audio of different lengths.
     max_interval = first(find_max_length(X))
@@ -343,24 +343,24 @@ Supports both classification and regression tasks, with extensive customization 
   as a column name/symbol from `X`
 
 # Optional Keyword Arguments
-- `model::Union{NamedTuple, Nothing}=nothing`: Model configuration with fields:
+- `model::OptNamedTuple=nothing`: Model configuration with fields:
   - `type`: Model type (e.g., `:xgboost`, `:randomforest`)
   - `params`: Model-specific parameters
-- `resample::Union{NamedTuple, Nothing}=nothing`: Resampling strategy
+- `resample::OptNamedTuple=nothing`: Resampling strategy
   - `type`: Resampling method (e.g., `:cv`, `:stratifiedcv`)
   - `params`: Resampling parameters like `nfolds`
-- `win::Union{NamedTuple, Nothing}=nothing`: Windowing parameters for time series data
+- `win::OptNamedTuple=nothing`: Windowing parameters for time series data
   - `type`: Window function (e.g., `adaptivewindow`, `wholewindow`)
   - `params`: Window parameters like `nwindows`
-- `features::Union{Tuple, Nothing}=nothing`: Statistical functions to extract from time series
+- `features::OptTuple=nothing`: Statistical functions to extract from time series
   (e.g., `(mean, std, maximum)`)
-- `tuning::Union{NamedTuple, Bool, Nothing}=nothing`: Hyperparameter tuning configuration
-- `rules::Union{NamedTuple, Nothing}=nothing`: Rules for post-hoc explanation
-- `preprocess::Union{NamedTuple, Nothing}=nothing`: Data preprocessing parameters:
+- `tuning::OptNamedTupleBool=nothing`: Hyperparameter tuning configuration
+- `rules::OptNamedTuple=nothing`: Rules for post-hoc explanation
+- `preprocess::OptNamedTuple=nothing`: Data preprocessing parameters:
   - `train_ratio`: Ratio of data for training vs testing
   - `valid_ratio`: Ratio of training data for validation
   - `rng`: Random number generator
-- `reducefunc::Union{Base.Callable, Nothing}=nothing`: Function for reducing time series data
+- `reducefunc::OptCallable=nothing`: Function for reducing time series data
   in `:reducesize` treatment mode (default: `mean`)
 
 # Returns
@@ -384,7 +384,7 @@ function _prepare_dataset(
     resample::Union{Resample, Nothing},
     winparams::WinParams,
     vnames::Union{VarNames,Nothing}=nothing,
-    reducefunc::Union{Base.Callable, Nothing}=nothing
+    reducefunc::OptCallable=nothing
 )::Dataset
     X = Matrix(df)
     # check parameters
@@ -459,16 +459,16 @@ function _prepare_dataset(
 end
 
 function prepare_dataset(
-    X::AbstractDataFrame,
-    y::AbstractVector;
-    model::Union{NamedTuple, Nothing}=nothing,
-    resample::Union{NamedTuple, Nothing}=nothing,
-    win::Union{NamedTuple, Nothing}=nothing,
-    features::Union{Tuple, Nothing}=nothing,
-    tuning::Union{NamedTuple, Bool, Nothing}=nothing,
-    rules::Union{NamedTuple, Nothing}=nothing,
-    preprocess::Union{NamedTuple, Nothing}=nothing,
-    reducefunc::Union{Base.Callable, Nothing}=nothing,
+    X          :: AbstractDataFrame,
+    y          :: AbstractVector;
+    model      :: OptNamedTuple     = nothing,
+    resample   :: OptNamedTuple     = nothing,
+    win        :: OptNamedTuple     = nothing,
+    features   :: OptTuple          = nothing,
+    tuning     :: OptNamedTupleBool = nothing,
+    rules      :: OptNamedTuple     = nothing,
+    preprocess :: OptNamedTuple     = nothing,
+    reducefunc :: OptCallable       = nothing,
 )::Modelset
     # if model is unspecified, use default model setup
     isnothing(model) && (model = DEFAULT_MODEL_SETUP)

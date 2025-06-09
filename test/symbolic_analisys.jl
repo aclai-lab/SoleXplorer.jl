@@ -9,6 +9,8 @@ using MLJ
 X, y = @load_iris
 X = DataFrame(X)
 
+ds = prepare_dataset(X, y)
+
 mset_01 = symbolic_analysis(
     X, y;
     model=(;type=:decisiontree),

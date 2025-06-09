@@ -139,7 +139,7 @@ end
 
 function validate_tuning(
     defaults::TuningParams,
-    users::Union{NamedTuple, Bool},
+    users::NamedTupleBool,
     rng::Union{Nothing, AbstractRNG},
     algo::Symbol
 )::Union{TuningParams, Bool}
@@ -179,7 +179,7 @@ end
 
 function validate_rulesparams(
     defaults::RulesParams,
-    users::Union{NamedTuple, Bool},
+    users::NamedTupleBool,
     rng::Union{Nothing, AbstractRNG},
 )::Union{RulesParams, Bool}
     # case 1: users is a Bool
@@ -210,8 +210,8 @@ function validate_modelset(
     resample::Union{NamedTuple, Nothing}=nothing,
     win::Union{NamedTuple, Nothing}=nothing,
     features::Union{Tuple, Nothing}=nothing,
-    tuning::Union{NamedTuple, Bool}=false,
-    extract_rules::Union{NamedTuple, Bool}=false,
+    tuning::NamedTupleBool=false,
+    extract_rules::NamedTupleBool=false,
     preprocess::Union{NamedTuple, Nothing}=nothing,
     reducefunc::Union{Base.Callable, Nothing}=nothing,
 )::ModelSetup

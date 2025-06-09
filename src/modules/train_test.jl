@@ -68,16 +68,16 @@ function _traintest!(model::AbstractModelset)::Modelset
 end
 
 function train_test(
-    X::AbstractDataFrame,
-    y::AbstractVector;
-    model::Union{NamedTuple, Nothing}=nothing,
-    resample::Union{NamedTuple, Nothing}=nothing,
-    win::Union{NamedTuple, Nothing}=nothing,
-    features::Union{Tuple, Nothing}=nothing,
-    tuning::Union{NamedTuple, Bool}=false,
-    extract_rules::Union{NamedTuple, Bool}=false,
-    preprocess::Union{NamedTuple, Nothing}=nothing,
-    reducefunc::Union{Base.Callable, Nothing}=nothing,
+    X             :: AbstractDataFrame,
+    y             :: AbstractVector;
+    model         :: OptNamedTuple  = nothing,
+    resample      :: OptNamedTuple  = nothing,
+    win           :: OptNamedTuple  = nothing,
+    features      :: OptTuple       = nothing,
+    tuning        :: NamedTupleBool = false,
+    extract_rules :: NamedTupleBool = false,
+    preprocess    :: OptNamedTuple  = nothing,
+    reducefunc    :: OptCallable    = nothing,
 )::Modelset
     # if model is unspecified, use default model setup
     isnothing(model) && (model = DEFAULT_MODEL_SETUP)

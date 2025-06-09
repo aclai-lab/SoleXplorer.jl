@@ -55,7 +55,6 @@ get_rulesparams(m::ModelSetup)            = m.rulesparams
 
 get_pfeatures(m::ModelSetup)              = m.params.features
 get_treatment(m::ModelSetup)              = m.config.treatment
-get_algo(m::ModelSetup)                   = m.config.algo
 
 get_rawmodel(m::ModelSetup)               = m.rawmodel[1]
 get_resampled_rawmodel(m::ModelSetup)     = m.rawmodel[2]
@@ -120,7 +119,7 @@ XGBoostRegressorModel(dtmodel       :: ModelSetup) = dtmodel
 # const TypeTreeForestR = Union{TypeDTR, TypeRFR}
 # const TypeModalForest = Union{TypeMRF, TypeMAB}
 
-const DEFAULT_MODEL_SETUP = (type=:decisiontree,)
+const DEFAULT_MODEL_SETUP = (;type=:decisiontree)
 
 const DEFAULT_FEATS = [maximum, minimum, MLJ.mean, std]
 
@@ -206,14 +205,14 @@ mutable struct Modelset{T<:AbstractModelType} <: AbstractModelset{T}
         predictor  :: MLJ.Model,
         mach       :: MLJ.Machine,
         model      :: AbstractModel
-    ) where {T<:AbstractModelType}
+    )::Modelset where {T<:AbstractModelType}
         new{T}(setup, ds, predictor, mach, model, nothing, nothing)
     end
 
     function Modelset(
         setup      :: AbstractModelSetup{T},
         ds         :: Dataset
-    ) where {T<:AbstractModelType}
+    )::Modelset where {T<:AbstractModelType}
         new{T}(setup, ds, nothing, nothing, nothing, nothing, nothing)
     end
 end

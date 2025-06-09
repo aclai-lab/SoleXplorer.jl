@@ -143,7 +143,7 @@ having the actual model instance.
 - `upper::Union{AbstractFloat, Int, Nothing}=nothing`: Upper bound for numerical parameters.
 - `origin::Union{AbstractFloat, Int, Nothing}=nothing`: Reference point for the range.
 - `unit::Union{AbstractFloat, Int, Nothing}=nothing`: Unit of measurement for parameters with scale.
-- `scale::Union{Symbol, Nothing}=nothing`: Scale type (e.g., `:linear`, `:log`, `:logit`).
+- `scale::OptSymbol=nothing`: Scale type (e.g., `:linear`, `:log`, `:logit`).
 - `values::Union{AbstractVector, Nothing}=nothing`: Explicit set of values for the parameter.
 
 # Returns
@@ -170,7 +170,7 @@ function range(
     upper  :: Union{AbstractFloat, Int, Nothing} = nothing,
     origin :: Union{AbstractFloat, Int, Nothing} = nothing,
     unit   :: Union{AbstractFloat, Int, Nothing} = nothing,
-    scale  :: Union{Symbol, Nothing}             = nothing,
+    scale  :: OptSymbol             = nothing,
     values :: Union{AbstractVector, Nothing}     = nothing,
 )
     return function(model)

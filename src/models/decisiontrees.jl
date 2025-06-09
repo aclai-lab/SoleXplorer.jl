@@ -5,7 +5,7 @@
 # CLASSIFIER ----------------------------------------------------------------- #
 function DecisionTreeClassifierModel()::ModelSetup{AbstractClassification}
     type = MLJDecisionTreeInterface.DecisionTreeClassifier
-    config  = (algo=:classification, type=DecisionTree, treatment=:aggregate, rawapply=DT.apply_tree)
+    config  = (type=DecisionTree, treatment=:aggregate, rawapply=DT.apply_tree)
 
     params = (;
         max_depth              = -1,
@@ -60,7 +60,7 @@ end
 
 function RandomForestClassifierModel()::ModelSetup{AbstractClassification}
     type   = MLJDecisionTreeInterface.RandomForestClassifier
-    config = (algo=:classification, type=DecisionEnsemble, treatment=:aggregate, rawapply=DT.apply_forest)
+    config = (type=DecisionEnsemble, treatment=:aggregate, rawapply=DT.apply_forest)
 
     params = (;
         max_depth           = -1,
@@ -126,7 +126,7 @@ end
 
 function AdaBoostClassifierModel()::ModelSetup{AbstractClassification}
     type   = MLJDecisionTreeInterface.AdaBoostStumpClassifier
-    config = (algo=:classification, type=DecisionEnsemble, treatment=:aggregate, rawapply=DT.apply_adaboost_stumps)
+    config = (type=DecisionEnsemble, treatment=:aggregate, rawapply=DT.apply_adaboost_stumps)
 
     params = (;
         n_iter             = 10,
@@ -189,7 +189,7 @@ end
 # REGRESSOR ------------------------------------------------------------------ #
 function DecisionTreeRegressorModel()::ModelSetup{AbstractRegression}
     type = MLJDecisionTreeInterface.DecisionTreeRegressor
-    config  = (algo=:regression, type=DecisionTree, treatment=:aggregate, rawapply=DT.apply_tree)
+    config  = (type=DecisionTree, treatment=:aggregate, rawapply=DT.apply_tree)
 
     params = (;
         max_depth              = -1,
@@ -243,7 +243,7 @@ end
 
 function RandomForestRegressorModel()::ModelSetup{AbstractRegression}
     type   = MLJDecisionTreeInterface.RandomForestRegressor
-    config = (algo=:regression, type=DecisionEnsemble, treatment=:aggregate, rawapply=DT.apply_forest)
+    config = (type=DecisionEnsemble, treatment=:aggregate, rawapply=DT.apply_forest)
 
     params = (;
         max_depth           = -1,

@@ -1,13 +1,19 @@
 # ---------------------------------------------------------------------------- #
-#                               abstract types                                 #
+#                           const types definition                             #
 # ---------------------------------------------------------------------------- #
-"""
-Abstract type for dataset struct
-"""
-abstract type AbstractDatasetSetup end
-abstract type AbstractIndexCollection end
-abstract type AbstractDataset end
+const Optional{T}       = Union{T, Nothing}
 
+const NamedTupleBool    = Union{NamedTuple, Bool}
+
+const OptSymbol         = Optional{Symbol}
+const OptTuple          = Optional{Tuple}
+const OptNamedTuple     = Optional{NamedTuple}
+const OptNamedTupleBool = Optional{NamedTupleBool}
+const OptCallable       = Optional{<:Base.Callable}
+
+# ---------------------------------------------------------------------------- #
+#                         abstract types definition                            #
+# ---------------------------------------------------------------------------- #
 """
 Abstract type for model type
 """
@@ -22,6 +28,16 @@ abstract type AbstractClassification <: AbstractModelType end
 Abstract type for all regression models.
 """
 abstract type AbstractRegression <: AbstractModelType end
+
+"""
+Abstract type for dataset struct
+"""
+abstract type AbstractDatasetSetup{T<:AbstractModelType} end
+
+modeltype(::AbstractDatasetSetup{T}) where {T} = T
+
+abstract type AbstractIndexCollection end
+abstract type AbstractDataset end
 
 """
 Abstract type for model configuration and parameters
