@@ -375,7 +375,7 @@ Supports both classification and regression tasks, with extensive customization 
 function _prepare_dataset(
     df::AbstractDataFrame,
     y::AbstractVector;
-    algo::Symbol,
+    algo::DataType,
     treatment::Symbol,
     features::AbstractVector{<:Base.Callable},
     train_ratio::Float64,
@@ -446,7 +446,7 @@ function _prepare_dataset(
 
     _prepare_dataset(
         X, y;
-        algo=model.config.algo,
+        algo=modeltype(model),
         treatment=model.config.treatment,
         reducefunc,
         features=model.features,
@@ -459,20 +459,20 @@ function _prepare_dataset(
 end
 
 function prepare_dataset(
-    X          :: AbstractDataFrame,
-    y          :: AbstractVector;
-    model      :: OptNamedTuple     = nothing,
-    resample   :: OptNamedTuple     = nothing,
-    win        :: OptNamedTuple     = nothing,
-    features   :: OptTuple          = nothing,
-    tuning     :: NamedTupleBool    = false,
-    rules      :: OptNamedTuple     = nothing,
-    preprocess :: OptNamedTuple     = nothing,
-    reducefunc :: OptCallable       = nothing,
+    X             :: AbstractDataFrame,
+    y             :: AbstractVector;
+    model         :: OptNamedTuple  = nothing,
+    resample      :: OptNamedTuple  = nothing,
+    win           :: OptNamedTuple  = nothing,
+    features      :: OptTuple       = nothing,
+    tuning        :: NamedTupleBool = false,
+    extract_rules :: NamedTupleBool = false,
+    preprocess    :: OptNamedTuple  = nothing,
+    reducefunc    :: OptCallable    = nothing,
 )::Modelset
     # if model is unspecified, use default model setup
     isnothing(model) && (model = DEFAULT_MODEL_SETUP)
-    modelset = validate_modelset(model, eltype(y); resample, win, features, tuning, rules, preprocess, reducefunc)
+    modelset = validate_modelset(model, eltype(y); resample, win, features, tuning, extract_rules, preprocess, reducefunc)
     Modelset(modelset, _prepare_dataset(X, y, modelset))
 end
 

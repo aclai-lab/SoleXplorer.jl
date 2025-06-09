@@ -2,7 +2,7 @@
 #                                  utilities                                   #
 # ---------------------------------------------------------------------------- #
 function check_params(
-    params::Union{NamedTuple, Nothing},
+    params::OptNamedTuple,
     allowed_keys::Tuple
 )
     isnothing(params) && return
@@ -13,7 +13,7 @@ end
 filter_params(p) = isnothing(p) ? NamedTuple() : p
 
 function get_type(
-    params::Union{NamedTuple, Nothing},
+    params::OptNamedTuple,
     avail_types::Tuple
 )
     isnothing(params) && return nothing
@@ -25,7 +25,7 @@ function get_type(
 end
 
 function check_user_params(
-    users::Union{NamedTuple, Nothing},
+    users::OptNamedTuple,
     default_params::Dict
 )
     isnothing(users) ? NamedTuple() : (haskey(users, :params) ? begin
@@ -36,7 +36,7 @@ end
 
 function merge_params(
     defaults::NamedTuple,
-    users::Union{NamedTuple, Nothing},
+    users::OptNamedTuple,
     rng::Union{AbstractRNG, Nothing}=nothing
 )
     !isnothing(rng) && haskey(defaults, :rng) ?
@@ -63,7 +63,7 @@ end
 
 function validate_params(
     defaults::NamedTuple,
-    users::Union{NamedTuple, Nothing},
+    users::OptNamedTuple,
     rng::Union{AbstractRNG, Nothing}
 )::NamedTuple     
     check_params(users, keys(defaults))
@@ -72,7 +72,7 @@ end
 
 function validate_features(
     defaults::AbstractVector,
-    users::Union{Tuple, Nothing}
+    users::OptTuple
 )
     features = isnothing(users) ? defaults : [users...]
 
@@ -83,7 +83,7 @@ function validate_features(
 end
 
 function validate_resample(
-    users::Union{NamedTuple, Nothing},
+    users::OptNamedTuple,
     rng::Union{AbstractRNG, Nothing}=nothing
 )::Union{Resample, Nothing}    
     check_params(users, (:type, :params))
@@ -99,7 +99,7 @@ end
 
 function validate_winparams(
     defaults::WinParams,
-    users::Union{NamedTuple, Nothing},
+    users::OptNamedTuple,
     treatment::Symbol
 )::WinParams
     # get type
@@ -123,7 +123,7 @@ function validate_winparams(
 end
 
 function validate_tuning_type(
-    users::Union{NamedTuple, Nothing},
+    users::OptNamedTuple,
     rng::Union{Nothing, AbstractRNG}
 )::TuningStrategy
     check_params(users, (:type, :params))
@@ -141,7 +141,7 @@ function validate_tuning(
     defaults::TuningParams,
     users::NamedTupleBool,
     rng::Union{Nothing, AbstractRNG},
-    algo::Symbol
+    algo::DataType
 )::Union{TuningParams, Bool}
     if isa(users, Bool) 
         if users
@@ -205,15 +205,15 @@ end
 #                              validate modelset                               #
 # ---------------------------------------------------------------------------- #
 function validate_modelset(
-    model::NamedTuple,
-    y::Union{DataType, Nothing};
-    resample::Union{NamedTuple, Nothing}=nothing,
-    win::Union{NamedTuple, Nothing}=nothing,
-    features::Union{Tuple, Nothing}=nothing,
-    tuning::NamedTupleBool=false,
-    extract_rules::NamedTupleBool=false,
-    preprocess::Union{NamedTuple, Nothing}=nothing,
-    reducefunc::Union{Base.Callable, Nothing}=nothing,
+    model         :: NamedTuple,
+    y             :: OptDataType;
+    resample      :: OptNamedTuple  = nothing,
+    win           :: OptNamedTuple  = nothing,
+    features      :: OptTuple       = nothing,
+    tuning        :: NamedTupleBool = false,
+    extract_rules :: NamedTupleBool = false,
+    preprocess    :: OptNamedTuple  = nothing,
+    reducefunc    :: OptCallable    = nothing,
 )::ModelSetup
     check_params(model, (:type, :params))
     check_params(resample, (:type, :params))
@@ -253,7 +253,7 @@ function validate_modelset(
     isnothing(resample) || set_resample!(modelset, validate_resample(resample, rng))
 
     set_winparams!(modelset, validate_winparams(get_winparams(modelset), win, get_treatment(modelset)))
-    set_tuning!(modelset, validate_tuning(get_tuning(modelset), tuning, rng, get_algo(modelset)))
+    set_tuning!(modelset, validate_tuning(get_tuning(modelset), tuning, rng, modeltype(modelset)))
     set_rulesparams!(modelset, validate_rulesparams(get_rulesparams(modelset), extract_rules, rng))
 
     set_rawmodel!(modelset, get_tuning(modelset) == false ? get_rawmodel(modelset) : get_resampled_rawmodel(modelset))

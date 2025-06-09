@@ -34,7 +34,7 @@ function DecisionTreeClassifierModel()::ModelSetup{AbstractClassification}
 
     tuning = SoleXplorer.TuningParams(
         SoleXplorer.TuningStrategy(latinhypercube, (ntour = 20,)),
-        TUNING_PARAMS[:classification],
+        TUNING_PARAMS[AbstractClassification],
         (
             model -> MLJ.range(model, :merge_purity_threshold, lower=0., upper=2.0),
             model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])
@@ -100,7 +100,7 @@ function RandomForestClassifierModel()::ModelSetup{AbstractClassification}
 
     tuning = SoleXplorer.TuningParams(
         SoleXplorer.TuningStrategy(latinhypercube, (ntour = 20,)),
-        TUNING_PARAMS[:classification],
+        TUNING_PARAMS[AbstractClassification],
         (
             model -> MLJ.range(model, :sampling_fraction, lower=0.3, upper=0.9),
             model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])
@@ -162,7 +162,7 @@ function AdaBoostClassifierModel()::ModelSetup{AbstractClassification}
 
     tuning = SoleXplorer.TuningParams(
         SoleXplorer.TuningStrategy(latinhypercube, (ntour = 20,)),
-        TUNING_PARAMS[:classification],
+        TUNING_PARAMS[AbstractClassification],
         (
             model -> MLJ.range(model, :n_iter, lower=5, upper=50),
             model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])
@@ -217,7 +217,7 @@ function DecisionTreeRegressorModel()::ModelSetup{AbstractRegression}
 
     tuning = SoleXplorer.TuningParams(
         SoleXplorer.TuningStrategy(latinhypercube, (ntour = 20,)),
-        TUNING_PARAMS[:regression],
+        TUNING_PARAMS[AbstractRegression],
         (
             model -> MLJ.range(model, :merge_purity_threshold, lower=0., upper=2.0),
             model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])
@@ -281,7 +281,7 @@ function RandomForestRegressorModel()::ModelSetup{AbstractRegression}
 
     tuning = SoleXplorer.TuningParams(
         SoleXplorer.TuningStrategy(latinhypercube, (ntour = 20,)),
-        TUNING_PARAMS[:regression],
+        TUNING_PARAMS[AbstractRegression],
         (
             model -> MLJ.range(model, :sampling_fraction, lower=0.3, upper=0.9),
             model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])

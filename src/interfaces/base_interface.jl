@@ -10,6 +10,7 @@ const OptTuple          = Optional{Tuple}
 const OptNamedTuple     = Optional{NamedTuple}
 # const OptNamedTupleBool = Optional{NamedTupleBool}
 const OptCallable       = Optional{<:Base.Callable}
+const OptDataType       = Optional{DataType}
 
 # ---------------------------------------------------------------------------- #
 #                         abstract types definition                            #

@@ -92,8 +92,8 @@ const TUNING_METHODS_PARAMS = Dict{Union{DataType, UnionAll},NamedTuple}(
     )
 )
 
-const TUNING_PARAMS = Dict{Symbol,NamedTuple}(
-    :classification => (;
+const TUNING_PARAMS = Dict{DataType,NamedTuple}(
+    AbstractClassification => (;
         resampling              = Holdout(),
         measure                 = LogLoss(tol = 2.22045e-16),
         weights                 = nothing,
@@ -108,7 +108,7 @@ const TUNING_PARAMS = Dict{Symbol,NamedTuple}(
         check_measure           = true,
         cache                   = true,
     ),
-    :regression => (;
+    AbstractRegression => (;
         resampling              = Holdout(),
         measure                 = MLJ.RootMeanSquaredError(),
         weights                 = nothing,

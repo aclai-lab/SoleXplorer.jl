@@ -4,7 +4,7 @@
 """
     DatasetInfo(
         treatment::Symbol,
-        reducefunc::Union{<:Base.Callable, Nothing},
+        reducefunc::OptCallable,
         train_ratio::Real,
         valid_ratio::Real,
         rng::AbstractRNG,
@@ -16,16 +16,16 @@ Create a configuration for dataset preparation and splitting in machine learning
 
 # Fields
 - `treatment::Symbol`: Data treatment method (e.g., `:standardize`, `:normalize`)
-- `reducefunc::Union{<:Base.Callable, Nothing}`: Optional function for dimensionality reduction
+- `reducefunc::OptCallable`: Optional function for dimensionality reduction
 - `train_ratio::Real`: Proportion of data to use for training (must be between 0 and 1)
 - `valid_ratio::Real`: Proportion of data to use for validation (must be between 0 and 1)
 - `rng::AbstractRNG`: Random number generator for reproducible splits
 - `resample::Bool`: Whether to perform resampling for cross-validation
 - `vnames::Union{Vector{<:AbstractString}, Nothing}`: Optional feature/variable names
 """
-struct DatasetInfo{T<:AbstractModelType} <: AbstractDatasetSetup{T}
+struct DatasetInfo <: DatasetInfo
     treatment   :: Symbol
-    reducefunc  :: Union{<:Base.Callable, Nothing}
+    reducefunc  :: OptCallable
     train_ratio :: Real
     valid_ratio :: Real
     rng         :: AbstractRNG
@@ -34,23 +34,23 @@ struct DatasetInfo{T<:AbstractModelType} <: AbstractDatasetSetup{T}
 
     function DatasetInfo(
         treatment   :: Symbol,
-        reducefunc  :: Union{<:Base.Callable, Nothing},
+        reducefunc  :: OptCallable,
         train_ratio :: Real,
         valid_ratio :: Real,
         rng         :: AbstractRNG,
         resample    :: Bool,
         vnames      :: Union{Vector{<:AbstractString}, Nothing}
-    )::DatasetInfo where {T<:AbstractModelType}
+    )::DatasetInfo
         # Validate ratios
         0 ≤ train_ratio ≤ 1 || throw(ArgumentError("train_ratio must be between 0 and 1"))
         0 ≤ valid_ratio ≤ 1 || throw(ArgumentError("valid_ratio must be between 0 and 1"))
 
-        new{T}(treatment, reducefunc, train_ratio, valid_ratio, rng, resample, vnames)
+        new(treatment, reducefunc, train_ratio, valid_ratio, rng, resample, vnames)
     end
 end
 
 get_treatment(dsinfo::DatasetInfo)   :: Symbol = dsinfo.treatment
-get_reducefunc(dsinfo::DatasetInfo)  :: Union{<:Base.Callable, Nothing} = dsinfo.reducefunc
+get_reducefunc(dsinfo::DatasetInfo)  :: OptCallable = dsinfo.reducefunc
 get_train_ratio(dsinfo::DatasetInfo) :: Real = dsinfo.train_ratio
 get_valid_ratio(dsinfo::DatasetInfo) :: Real = dsinfo.valid_ratio
 get_rng(dsinfo::DatasetInfo)         :: AbstractRNG = dsinfo.rng

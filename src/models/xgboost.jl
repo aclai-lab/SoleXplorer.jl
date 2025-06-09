@@ -104,7 +104,7 @@ function XGBoostClassifierModel()::ModelSetup{AbstractClassification}
 
     tuning = SoleXplorer.TuningParams(
         SoleXplorer.TuningStrategy(latinhypercube, (ntour = 20,)),
-        TUNING_PARAMS[:classification],
+        TUNING_PARAMS[AbstractClassification],
         (
             model -> MLJ.range(model, :eta, lower=0.1, upper=0.9),
             model -> MLJ.range(model, :gamma, lower=0.0, upper=1.0),
