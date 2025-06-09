@@ -14,6 +14,16 @@ Abstract type for model type
 abstract type AbstractModelType end
 
 """
+Abstract type for all classification models
+"""
+abstract type AbstractClassification <: AbstractModelType end
+
+"""
+Abstract type for all regression models.
+"""
+abstract type AbstractRegression <: AbstractModelType end
+
+"""
 Abstract type for model configuration and parameters
 """
 abstract type AbstractModelSetup{T<:AbstractModelType} end

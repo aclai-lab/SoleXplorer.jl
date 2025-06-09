@@ -3,7 +3,7 @@
 # ---------------------------------------------------------------------------- #
 
 # CLASSIFIER ----------------------------------------------------------------- #
-function ModalDecisionTreeModel()
+function ModalDecisionTreeModel()::ModelSetup{AbstractClassification}
     type = MDT.ModalDecisionTree
     config  = (algo=:classification, type=DecisionTree, treatment=:reducesize, reducefunc=MLJ.mean, rawapply=MDT.apply)
 
@@ -54,7 +54,7 @@ function ModalDecisionTreeModel()
 
     rulesparams = RulesParams(:intrees, NamedTuple())
 
-    return ModelSetup{TypeMDT}(
+    return ModelSetup{AbstractClassification}(
         type,
         config,
         params,
@@ -69,7 +69,7 @@ function ModalDecisionTreeModel()
     )
 end
 
-function ModalRandomForestModel()
+function ModalRandomForestModel()::ModelSetup{AbstractClassification}
     type   = MDT.ModalRandomForest
     config = (algo=:classification, type=MDT.DecisionForest, treatment=:reducesize, reducefunc=MLJ.mean, rawapply=MDT.apply)
 
@@ -122,7 +122,7 @@ function ModalRandomForestModel()
 
     rulesparams = RulesParams(:intrees, NamedTuple())
 
-    return ModelSetup{TypeMRF}(
+    return ModelSetup{AbstractClassification}(
         type,
         config,
         params,
@@ -137,7 +137,7 @@ function ModalRandomForestModel()
     )
 end
 
-function ModalAdaBoostModel()
+function ModalAdaBoostModel()::ModelSetup{AbstractClassification}
     type   = MDT.ModalAdaBoost
     config = (algo=:classification, type=DecisionEnsemble, treatment=:reducesize, reducefunc=MLJ.mean, rawapply=MDT.apply)
 
@@ -188,7 +188,7 @@ function ModalAdaBoostModel()
 
     rulesparams = RulesParams(:intrees, NamedTuple())
 
-    return ModelSetup{TypeMAB}(
+    return ModelSetup{AbstractClassification}(
         type,
         config,
         params,

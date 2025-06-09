@@ -3,7 +3,7 @@
 # ---------------------------------------------------------------------------- #
 
 # CLASSIFIER ----------------------------------------------------------------- #
-function DecisionTreeClassifierModel()::ModelSetup{TypeDTC}
+function DecisionTreeClassifierModel()::ModelSetup{AbstractClassification}
     type = MLJDecisionTreeInterface.DecisionTreeClassifier
     config  = (algo=:classification, type=DecisionTree, treatment=:aggregate, rawapply=DT.apply_tree)
 
@@ -43,7 +43,7 @@ function DecisionTreeClassifierModel()::ModelSetup{TypeDTC}
 
     rulesparams = RulesParams(:intrees, NamedTuple())
 
-    return ModelSetup{TypeDTC}(
+    return ModelSetup{AbstractClassification}(
         type,
         config,
         params,
@@ -58,7 +58,7 @@ function DecisionTreeClassifierModel()::ModelSetup{TypeDTC}
     )
 end
 
-function RandomForestClassifierModel()::ModelSetup{TypeRFC}
+function RandomForestClassifierModel()::ModelSetup{AbstractClassification}
     type   = MLJDecisionTreeInterface.RandomForestClassifier
     config = (algo=:classification, type=DecisionEnsemble, treatment=:aggregate, rawapply=DT.apply_forest)
 
@@ -109,7 +109,7 @@ function RandomForestClassifierModel()::ModelSetup{TypeRFC}
 
     rulesparams = RulesParams(:intrees, NamedTuple())
 
-    return ModelSetup{TypeRFC}(
+    return ModelSetup{AbstractClassification}(
         type,
         config,
         params,
@@ -124,7 +124,7 @@ function RandomForestClassifierModel()::ModelSetup{TypeRFC}
     )
 end
 
-function AdaBoostClassifierModel()::ModelSetup{TypeABC}
+function AdaBoostClassifierModel()::ModelSetup{AbstractClassification}
     type   = MLJDecisionTreeInterface.AdaBoostStumpClassifier
     config = (algo=:classification, type=DecisionEnsemble, treatment=:aggregate, rawapply=DT.apply_adaboost_stumps)
 
@@ -171,7 +171,7 @@ function AdaBoostClassifierModel()::ModelSetup{TypeABC}
 
     rulesparams = RulesParams(:intrees, NamedTuple())
 
-    return ModelSetup{TypeABC}(
+    return ModelSetup{AbstractClassification}(
         type,
         config,
         params,
@@ -187,7 +187,7 @@ function AdaBoostClassifierModel()::ModelSetup{TypeABC}
 end
 
 # REGRESSOR ------------------------------------------------------------------ #
-function DecisionTreeRegressorModel()::ModelSetup{TypeDTR}
+function DecisionTreeRegressorModel()::ModelSetup{AbstractRegression}
     type = MLJDecisionTreeInterface.DecisionTreeRegressor
     config  = (algo=:regression, type=DecisionTree, treatment=:aggregate, rawapply=DT.apply_tree)
 
@@ -226,7 +226,7 @@ function DecisionTreeRegressorModel()::ModelSetup{TypeDTR}
 
     rulesparams = RulesParams(:intrees, NamedTuple())
 
-    return ModelSetup{TypeDTR}(
+    return ModelSetup{AbstractRegression}(
         type,
         config,
         params,
@@ -241,7 +241,7 @@ function DecisionTreeRegressorModel()::ModelSetup{TypeDTR}
     )
 end
 
-function RandomForestRegressorModel()::ModelSetup{TypeRFR}
+function RandomForestRegressorModel()::ModelSetup{AbstractRegression}
     type   = MLJDecisionTreeInterface.RandomForestRegressor
     config = (algo=:regression, type=DecisionEnsemble, treatment=:aggregate, rawapply=DT.apply_forest)
 
@@ -290,7 +290,7 @@ function RandomForestRegressorModel()::ModelSetup{TypeRFR}
 
     rulesparams = RulesParams(:intrees, NamedTuple())
 
-    return ModelSetup{TypeRFR}(
+    return ModelSetup{AbstractRegression}(
         type,
         config,
         params,

@@ -24,7 +24,7 @@ function makewatchlist(ds::Dataset)
     XGB.OrderedDict(["train" => dtrain, "eval" => dvalid])
 end
 
-function XGBoostClassifierModel()
+function XGBoostClassifierModel()::ModelSetup{AbstractClassification}
     type   = MLJXGBoostInterface.XGBoostClassifier
     config = (; algo=:classification, type=DecisionEnsemble, treatment=:aggregate, rawapply=XGB.predict)
 
@@ -113,7 +113,7 @@ function XGBoostClassifierModel()
 
     rulesparams = RulesParams(:intrees, NamedTuple())
 
-    return ModelSetup{TypeXGC}(
+    return ModelSetup{AbstractClassification}(
         type,
         config,
         params,

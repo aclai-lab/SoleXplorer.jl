@@ -87,38 +87,38 @@ end
 # ---------------------------------------------------------------------------- #
 #                              default parameters                              #
 # ---------------------------------------------------------------------------- #
-struct TypeDTC <: AbstractModelType end
-struct TypeRFC <: AbstractModelType end
-struct TypeABC <: AbstractModelType end
+# struct TypeDTC <: AbstractModelType end
+# struct TypeRFC <: AbstractModelType end
+# struct TypeABC <: AbstractModelType end
 
 DecisionTreeClassifierModel(dtmodel :: ModelSetup) = dtmodel
 RandomForestClassifierModel(dtmodel :: ModelSetup) = dtmodel
 AdaBoostClassifierModel(dtmodel     :: ModelSetup) = dtmodel
 
-struct TypeDTR <: AbstractModelType end
-struct TypeRFR <: AbstractModelType end
+# struct TypeDTR <: AbstractModelType end
+# struct TypeRFR <: AbstractModelType end
 
 DecisionTreeRegressorModel(dtmodel  :: ModelSetup) = dtmodel
 RandomForestRegressorModel(dtmodel  :: ModelSetup) = dtmodel
 
-struct TypeMDT <: AbstractModelType end
-struct TypeMRF <: AbstractModelType end
-struct TypeMAB <: AbstractModelType end
+# struct TypeMDT <: AbstractModelType end
+# struct TypeMRF <: AbstractModelType end
+# struct TypeMAB <: AbstractModelType end
 
 ModalDecisionTreeModel(dtmodel      :: ModelSetup) = dtmodel
 ModalRandomForestModel(dtmodel      :: ModelSetup) = dtmodel
 ModalAdaBoostModel(dtmodel          :: ModelSetup) = dtmodel
 
-struct TypeXGC <: AbstractModelType end
-struct TypeXGR <: AbstractModelType end
+# struct TypeXGC <: AbstractModelType end
+# struct TypeXGR <: AbstractModelType end
 
 XGBoostClassifierModel(dtmodel      :: ModelSetup) = dtmodel
 XGBoostRegressorModel(dtmodel       :: ModelSetup) = dtmodel
 
 # grouping for calc results
-const TypeTreeForestC = Union{TypeDTC, TypeRFC, TypeABC, TypeMDT, TypeXGC}
-const TypeTreeForestR = Union{TypeDTR, TypeRFR}
-const TypeModalForest = Union{TypeMRF, TypeMAB}
+# const TypeTreeForestC = Union{TypeDTC, TypeRFC, TypeABC, TypeMDT, TypeXGC}
+# const TypeTreeForestR = Union{TypeDTR, TypeRFR}
+# const TypeModalForest = Union{TypeMRF, TypeMAB}
 
 const DEFAULT_MODEL_SETUP = (type=:decisiontree,)
 
@@ -226,4 +226,4 @@ function Base.show(io::IO, mc::Modelset)
     # println(io, "    accuracy   =", isnothing(mc.accuracy) ? "nothing" : string(mc.accuracy))
 end
 
-const tree_warn = Union{Modelset{SoleXplorer.TypeDTC}, Modelset{SoleXplorer.TypeDTR}, Modelset{SoleXplorer.TypeMDT}}
+# const tree_warn = Union{Modelset{SoleXplorer.TypeDTC}, Modelset{SoleXplorer.TypeDTR}, Modelset{SoleXplorer.TypeMDT}}

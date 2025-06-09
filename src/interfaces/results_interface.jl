@@ -1,73 +1,32 @@
 # ---------------------------------------------------------------------------- #
 #                                    utils                                     #
 # ---------------------------------------------------------------------------- #
-get_labels(model::AbstractModel) = model.info.supporting_labels
-get_predictions(model::AbstractModel) = model.info.supporting_predictions
+get_labels(m::AbstractModel) = m.info.supporting_labels
+get_predictions(m::AbstractModel) = m.info.supporting_predictions
 
+get_labels(m::AbstractModelset) = string.(m.ds.ytest)
 
 # ---------------------------------------------------------------------------- #
 #                                   accuracy                                   #
 # ---------------------------------------------------------------------------- #
-get_accuracy(model::Modelset) = model.results.accuracy
+get_accuracy(m::Modelset) = m.results.accuracy
 
-function get_accuracy(::TypeTreeForestC, model::AbstractModel)
-    labels = get_labels(model)
-    predictions = get_predictions(model)
-    sum(predictions .== labels)/length(labels)
+function get_accuracy(::TypeTreeForestC, m::AbstractModel)
+    MLJ.accuracy(get_labels(m), get_predictions(m))
+end
+
+function get_accuracy(::TypeModalForest, m::AbstractModel)
+    MLJ.accuracy(get_labels(m.models[1]), get_predictions(m))
 end
 
 function get_accuracy(::TypeTreeForestC, model::Vector{AbstractModel})
-    MLJ.mean([
-        begin 
-            labels = get_labels(m)
-            predictions = get_predictions(m)
-            sum(predictions .== labels)/length(labels) 
-        end 
+    MLJ.mean([MLJ.accuracy(get_labels(m), get_predictions(m))
         for m in model]
     )
-end
-
-function get_accuracy(::TypeTreeForestR, model::AbstractModel)
-    labels = get_labels(model)
-    predictions = get_predictions(model)
-    
-    # Calculate R-squared: 1 - (sum of squared residuals / total sum of squares)
-    mean_label = MLJ.mean(labels)
-    total_sum_squares = sum((labels .- mean_label).^2)
-    residual_sum_squares = sum((predictions .- labels).^2)
-    
-    return total_sum_squares < 1e-10 ? 0.0 : max(-1.0, 1.0 - (residual_sum_squares / total_sum_squares))
-end
-
-function get_accuracy(::TypeTreeForestR, model::Vector{AbstractModel})
-    MLJ.mean([
-        begin
-            labels = get_labels(m)
-            predictions = get_predictions(m)
-            
-            mean_label = MLJ.mean(labels)
-            total_sum_squares = sum((labels .- mean_label).^2)
-            residual_sum_squares = sum((predictions .- labels).^2)
-            
-            total_sum_squares < 1e-10 ? 0.0 : max(-1.0, 1.0 - (residual_sum_squares / total_sum_squares))
-        end
-        for m in model]
-    )
-end
-
-function get_accuracy(::TypeModalForest, model::AbstractModel)
-    labels = get_labels(model.models[1])
-    predictions = get_predictions(model)
-    sum(predictions .== labels)/length(labels)
 end
 
 function get_accuracy(::TypeModalForest, model::Vector{AbstractModel})
-    MLJ.mean([
-        begin
-            labels = get_labels(m.models[1])
-            predictions = get_predictions(m)
-            sum(predictions .== labels)/length(labels) 
-        end 
+    MLJ.mean([MLJ.accuracy(get_labels(m.models[1]), get_predictions(m))
         for m in model]
     )
 end

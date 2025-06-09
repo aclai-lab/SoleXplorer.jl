@@ -9,13 +9,30 @@ using MLJ
 X, y = @load_iris
 X = DataFrame(X)
 
-@info "decision tree classifier"
-modelset = symbolic_analysis(
+mset_01 = symbolic_analysis(
     X, y;
     model=(;type=:decisiontree),
     preprocess=(;rng=Xoshiro(1))
 )
-@show modelset.results
+
+mset_02 = symbolic_analysis(
+    X, y;
+    model=(;type=:modaldecisiontree),
+    preprocess=(;rng=Xoshiro(1))
+)
+
+mset_03 = symbolic_analysis(
+    X, y;
+    model=(;type=:randomforest),
+    preprocess=(;rng=Xoshiro(1))
+)
+
+mset_04 = symbolic_analysis(
+    X, y;
+    model=(;type=:modalrandomforest),
+    preprocess=(;rng=Xoshiro(1))
+)
+
 
 # ---------------------------------------------------------------------------- #
 #                            standard regression                               #
