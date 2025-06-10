@@ -145,7 +145,7 @@ function validate_tuning(
 )::Union{TuningParams, Bool}
     if isa(users, Bool) 
         if users
-            method = !rng === nothing && haskey(TUNING_METHODS_PARAMS[defaults.method.type], :rng) ?
+            method = !(rng === nothing) && haskey(TUNING_METHODS_PARAMS[defaults.method.type], :rng) ?
                 SoleXplorer.TuningStrategy(defaults.method.type, merge(defaults.method.params, (rng=rng,))) :
                 SoleXplorer.TuningStrategy(defaults.method.type, defaults.method.params)
             return SoleXplorer.TuningParams(method, defaults.params, defaults.ranges)

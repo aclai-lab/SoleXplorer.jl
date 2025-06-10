@@ -412,7 +412,7 @@ function _prepare_dataset(
 
     column_eltypes = eltype.(eachcol(X))
 
-    if all(t -> t <: AbstractVector{<:Number}, column_eltypes) && winparams === nothing
+    if all(t -> t <: AbstractVector{<:Number}, column_eltypes) && !(winparams === nothing)
         X, vnames = _treatment(X, vnames, treatment, features, winparams; reducefunc)
     end
 
