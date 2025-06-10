@@ -52,6 +52,8 @@ function ModalDecisionTreeModel()::ModelSetup{AbstractClassification}
         )
     )
 
+    resultsparams = (m) -> (m.models[1].info.supporting_labels, m.info.supporting_predictions)
+
     rulesparams = RulesParams(:intrees, NamedTuple())
 
     return ModelSetup{AbstractClassification}(
@@ -64,6 +66,7 @@ function ModalDecisionTreeModel()::ModelSetup{AbstractClassification}
         rawmodel,
         learn_method,
         tuning,
+        resultsparams,
         rulesparams,
         DEFAULT_PREPROC
     )
@@ -120,6 +123,8 @@ function ModalRandomForestModel()::ModelSetup{AbstractClassification}
         )
     )
 
+    resultsparams = (m) -> (m.models[1].info.supporting_labels, m.info.supporting_predictions)
+
     rulesparams = RulesParams(:intrees, NamedTuple())
 
     return ModelSetup{AbstractClassification}(
@@ -132,6 +137,7 @@ function ModalRandomForestModel()::ModelSetup{AbstractClassification}
         rawmodel,
         learn_method,
         tuning,
+        resultsparams,
         rulesparams,
         DEFAULT_PREPROC
     )
@@ -186,6 +192,8 @@ function ModalAdaBoostModel()::ModelSetup{AbstractClassification}
         )
     )
 
+    resultsparams = (m) -> (m.models[1].info.supporting_labels, m.info.supporting_predictions)
+
     rulesparams = RulesParams(:intrees, NamedTuple())
 
     return ModelSetup{AbstractClassification}(
@@ -198,6 +206,7 @@ function ModalAdaBoostModel()::ModelSetup{AbstractClassification}
         rawmodel,
         learn_method,
         tuning,
+        resultsparams,
         rulesparams,
         DEFAULT_PREPROC
     )

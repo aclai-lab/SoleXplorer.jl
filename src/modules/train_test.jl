@@ -46,7 +46,7 @@ function _traintest!(model::AbstractModelset)::Modelset
     # convert data to DataFrame based on its structure
     if model.ds.Xtrain isa AbstractVector
         # case 1: Xtrain is a vector of datasets (for cross-validation or multiple folds)
-        Xtrain = [DataFrame(x, model.ds.info.vnames) for x in model.ds.Xtrain]
+        Xtrain = [MLJ.table(x) for x in model.ds.Xtrain]
         Xtest = [DataFrame(x, model.ds.info.vnames) for x in model.ds.Xtest]
 
         model.mach = Vector{MLJ.Machine}(undef, length(Xtrain))
@@ -57,7 +57,7 @@ function _traintest!(model::AbstractModelset)::Modelset
         end
     else
         # case 2: Xtrain is a single dataset
-        Xtrain = DataFrame(model.ds.Xtrain, model.ds.info.vnames)
+        Xtrain = MLJ.table(model.ds.Xtrain)
         Xtest = DataFrame(model.ds.Xtest, model.ds.info.vnames)
 
         model.mach = MLJ.machine(model.predictor, Xtrain, model.ds.ytrain) |> m -> MLJ.fit!(m, verbosity=0)
@@ -80,13 +80,15 @@ function train_test(
     reducefunc    :: OptCallable    = nothing,
 )::Modelset
     # if model is unspecified, use default model setup
-    isnothing(model) && (model = DEFAULT_MODEL_SETUP)
+    model === nothing && (model = DEFAULT_MODEL_SETUP)
     modelset = validate_modelset(model, eltype(y); resample, win, features, tuning, extract_rules, preprocess, reducefunc)
     model = Modelset(modelset, _prepare_dataset(X, y, modelset))
     _traintest!(model)
 
     return model
 end
+
+train_test(m::AbstractModelset) = _traintest!(m)
 
 # y is not a vector, but a symbol or a string that identifies the column in X
 function train_test(

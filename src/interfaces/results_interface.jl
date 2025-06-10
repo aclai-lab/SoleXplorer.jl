@@ -46,7 +46,13 @@ function ClassResults(
     setup::AbstractModelSetup{T},
     model::Union{AbstractModel, Vector{AbstractModel}};
 ) where {T<:AbstractModelType}
-    accuracy = get_accuracy(T(), model)
+    if model isa Vector{AbstractModel}
+        model = model[1]  # Use the first model in the vector
+    else
+        labels, predictions = get_resultsparams(setup)(model)
+    end
+    labels, predictions = get_resultsparams(setup)(model)
+    accuracy = get_accuracy(model, get_resultsparams(setup))
     return ClassResults(accuracy)
 end
 

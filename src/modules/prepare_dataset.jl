@@ -20,7 +20,7 @@ function check_row_consistency(X::AbstractMatrix)
         
         # find first array element to use as reference
         ref_idx = findfirst(el -> el isa AbstractArray, row)
-        isnothing(ref_idx) && continue
+        ref_idx === nothing && continue
         
         ref_size = size(row[ref_idx])
         
@@ -242,7 +242,7 @@ function _treatment(
         n_cols = length(col_names)
         result_matrix = Matrix{T}(undef, n_rows, n_cols)
 
-        isnothing(reducefunc) && (reducefunc = mean)
+        reducefunc === nothing && (reducefunc = mean)
         
         for (row_idx, row) in enumerate(eachrow(X))
             row_intervals = winparams.type(maximum(length.(collect(row))); winparams.params...)
@@ -307,7 +307,7 @@ function _partition(
     resample::Union{Resample, Nothing},
     rng::AbstractRNG
 )::Union{TT_indexes{Int}, Vector{TT_indexes{Int}}}
-    if isnothing(resample)
+    if resample === nothing
         tt = MLJ.partition(eachindex(y), train_ratio; shuffle=true, rng)
         if valid_ratio == 1.0
             return TT_indexes(tt[1], eltype(tt[1])[], tt[2])
@@ -401,7 +401,7 @@ function _prepare_dataset(
         y isa MLJ.CategoricalArray || (y = coerce(y, MLJ.Multiclass))
     end
 
-    if isnothing(vnames)
+    if vnames === nothing
         vnames = names(df)
     else
         size(X, 2) == length(vnames) || throw(ArgumentError("Number of columns in DataFrame must match length of variable names"))
@@ -412,7 +412,7 @@ function _prepare_dataset(
 
     column_eltypes = eltype.(eachcol(X))
 
-    if all(t -> t <: AbstractVector{<:Number}, column_eltypes) && !isnothing(winparams)
+    if all(t -> t <: AbstractVector{<:Number}, column_eltypes) && winparams === nothing
         X, vnames = _treatment(X, vnames, treatment, features, winparams; reducefunc)
     end
 
@@ -422,7 +422,7 @@ function _prepare_dataset(
         train_ratio,
         valid_ratio,
         rng,
-        isnothing(resample) ? false : true,
+        resample === nothing ? false : true,
         vnames
     )
 
@@ -468,7 +468,7 @@ function prepare_dataset(
     reducefunc    :: OptCallable    = nothing,
 )::Modelset
     # if model is unspecified, use default model setup
-    isnothing(model) && (model = DEFAULT_MODEL_SETUP)
+    model === nothing && (model = DEFAULT_MODEL_SETUP)
     modelset = validate_modelset(model, eltype(y); resample, win, features, tuning, extract_rules, preprocess, reducefunc)
     Modelset(modelset, _prepare_dataset(X, y, modelset))
 end

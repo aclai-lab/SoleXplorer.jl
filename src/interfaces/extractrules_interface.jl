@@ -93,7 +93,7 @@ const RULES_PARAMS = Dict{Symbol,NamedTuple}(
 const EXTRACT_RULES = Dict{Symbol, Function}(
     :intrees => m -> begin
         method = SolePostHoc.RuleExtraction.InTreesRuleExtractor()
-        if isnothing(m.setup.resample)
+        if m.setup.resample === nothing
             df = DataFrame(m.ds.Xtest, m.ds.info.vnames)
             RuleExtraction.modalextractrules(method, m.model, df, m.ds.ytest; m.setup.rulesparams.params...)
         else
@@ -106,7 +106,7 @@ const EXTRACT_RULES = Dict{Symbol, Function}(
     
     :refne => m -> begin
         method = SolePostHoc.RuleExtraction.REFNERuleExtractor()
-        if isnothing(m.setup.resample)
+        if m.setup.resample === nothing
             Xmin  = map(minimum, eachcol(m.ds.Xtest))
             Xmax  = map(maximum, eachcol(m.ds.Xtest))
             RuleExtraction.modalextractrules(method, m.model, Xmin, Xmax; m.setup.rulesparams.params...)
@@ -121,7 +121,7 @@ const EXTRACT_RULES = Dict{Symbol, Function}(
     
     :trepan => m -> begin
         method = SolePostHoc.RuleExtraction.TREPANRuleExtractor()
-        if isnothing(m.setup.resample)
+        if m.setup.resample === nothing
             RuleExtraction.modalextractrules(method, m.model, m.ds.Xtest; m.setup.rulesparams.params...)
         else
             reduce(vcat, map(enumerate(m.model)) do (i, model)
@@ -133,7 +133,7 @@ const EXTRACT_RULES = Dict{Symbol, Function}(
     :batrees => m -> begin
         m isa tree_warn && throw(ArgumentError("batrees not supported for decision tree model type"))
         method = SolePostHoc.RuleExtraction.BATreesRuleExtractor()
-        if isnothing(m.setup.resample)
+        if m.setup.resample === nothing
             RuleExtraction.modalextractrules(method, m.model; m.setup.rulesparams.params...)
         else
             reduce(vcat, map(enumerate(m.model)) do (i, model)
@@ -145,7 +145,7 @@ const EXTRACT_RULES = Dict{Symbol, Function}(
     :rulecosi => m -> begin
         m isa tree_warn && throw(ArgumentError("rulecosi not supported for decision tree model type"))
         method = SolePostHoc.RuleExtraction.RULECOSIPLUSRuleExtractor()
-        if isnothing(m.setup.resample)
+        if m.setup.resample === nothing
             df = DataFrame(m.ds.Xtest, m.ds.info.vnames)
             RuleExtraction.modalextractrules(method, m.model, df, String.(m.ds.ytest); m.setup.rulesparams.params...)
         else
@@ -159,7 +159,7 @@ const EXTRACT_RULES = Dict{Symbol, Function}(
     :lumen => m -> begin
         m isa tree_warn && throw(ArgumentError("lumen not supported for decision tree model type"))
         method = SolePostHoc.RuleExtraction.LumenRuleExtractor()
-        if isnothing(m.setup.resample)
+        if m.setup.resample === nothing
             rawmodel = m.setup.rawmodel(m.mach)
             RuleExtraction.modalextractrules(method, rawmodel; solemodel=m.model, apply_function=m.setup.config.rawapply, m.setup.rulesparams.params...)
         else

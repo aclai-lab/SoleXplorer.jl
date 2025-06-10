@@ -1,0 +1,345 @@
+using MLJ, SoleXplorer
+using MLJDecisionTreeInterface
+using DataFrames, Random
+using Plots
+
+using NearestNeighborModels         # For KNN models
+using MLJMultivariateStatsInterface # For PCA models
+
+Xc, yc = @load_iris
+Xc = DataFrame(Xc)
+
+Xr, yr = @load_boston
+Xr = DataFrame(Xr)
+
+# ---------------------------------------------------------------------------- #
+#                              solexplorer setup                               #
+# ---------------------------------------------------------------------------- #
+dsc = prepare_dataset(
+    Xc, yc;
+    model=(;type=:decisiontree),
+    preprocess=(;rng=Xoshiro(1))
+)
+
+dsr = prepare_dataset(
+    Xr, yr;
+    model=(;type=:decisiontree),
+    preprocess=(;rng=Xoshiro(1))
+)
+
+# ---------------------------------------------------------------------------- #
+#                                search models                                 #
+# ---------------------------------------------------------------------------- #
+# Listing the models compatible with the present data
+amc = models(matching(Xc, yc))
+amr = models(matching(Xr, yr))
+
+# A more refined search
+models() do model
+    matching(model, Xc, yc) &&
+    model.prediction_type == :deterministic &&
+    model.is_pure_julia
+end
+
+# Searching for an unsupervised model
+uamc = models(matching(Xc))
+
+# ---------------------------------------------------------------------------- #
+#                               evaluate method                                #
+# ---------------------------------------------------------------------------- #
+# Decision Tree Classifier
+Tree = @load DecisionTreeClassifier pkg=DecisionTree
+tree = Tree()
+
+e1 = evaluate(
+    tree, Xc, yc;
+    resampling=CV(shuffle=true),
+    measures=[log_loss, accuracy],
+    verbosity=0
+)
+
+mset1 = train_test(dsc)
+
+# ---------------------------------------------------------------------------- #
+#                           fit and predict method                             #
+# ---------------------------------------------------------------------------- #
+Tree = @load DecisionTreeClassifier pkg=DecisionTree
+tree = Tree()
+
+mach = machine(tree, Xc, yc)
+fit!(mach, rows=collect(dsc.ds.Xtrain.indices)[1])
+yhat = predict(mach, MLJ.table(dsc.ds.Xtest))
+l1 = log_loss(yhat, dsc.ds.ytest)
+
+# SoleXplorer like
+mach = machine(tree, MLJ.table(dsc.ds.Xtrain), dsc.ds.ytrain)
+fit!(mach)
+yhat = predict(mach, MLJ.table(dsc.ds.Xtest))
+l2 = log_loss(yhat, dsc.ds.ytest)
+
+l1 == l2 # true
+
+fitted_params(mach)
+report(mach)
+
+# Notice that yhat is a vector of Distribution objects, 
+# because DecisionTreeClassifier makes probabilistic predictions.
+# The methods of the Distributions.jl package can be applied to such distributions:
+broadcast(pdf, yhat, "virginica") # predicted probabilities of virginica
+broadcast(pdf, yhat, dsc.ds.ytest) # predicted probability of observed class
+
+# predict
+pry = mode.(yhat)
+prx = predict_mode(mach, DataFrame(dsc.ds.Xtest, :auto))
+
+pry == prx # true
+
+L = levels(yc)
+pdf(yhat, L)
+
+# machine(model::Unsupervised, X)
+# machine(model::Supervised, X, y)
+
+# ---------------------------------------------------------------------------- #
+#                           DataFrame vs MLJ.table                             #
+# ---------------------------------------------------------------------------- #
+Tree = @load DecisionTreeClassifier pkg=DecisionTree
+tree = Tree()
+
+@btime machine(tree, DataFrame(dsc.ds.Xtrain, :auto), dsc.ds.ytrain)
+# 13.934 μs (93 allocations: 7.92 KiB)
+
+@btime machine(tree, MLJ.table(dsc.ds.Xtrain), dsc.ds.ytrain)
+# 11.312 μs (81 allocations: 7.52 KiB)
+
+# ---------------------------------------------------------------------------- #
+#                                  MLJ workflow                                #
+# ---------------------------------------------------------------------------- #
+# Instantiating a model
+Tree = @load DecisionTreeClassifier pkg=DecisionTree
+tree = Tree(min_samples_split=5, max_depth=4)
+
+# ---------------------------------------------------------------------------- #
+# Evaluating a model
+KNN = @load KNNRegressor
+knn = KNN()
+evaluate(
+    knn, Xr, yr;
+    resampling=CV(nfolds=5),
+    measure=[RootMeanSquaredError(), LPLoss(1)]
+)
+
+# let see what's inside the model
+Tree = @load DecisionTreeClassifier pkg=DecisionTree
+tree = Tree()
+m = evaluate(
+    tree, Xc, yc;
+    measures=[log_loss, accuracy],
+    verbosity=0
+)
+
+# julia> m.
+# fitted_params_per_fold  measure                 measurement
+# model                   operation               per_fold
+# per_observation         repeats                 report_per_fold
+# resampling              train_test_rows
+
+# ---------------------------------------------------------------------------- #
+# More performance evaluation example
+@btime evaluate(
+    tree, Xc, yc;
+    measures=[log_loss, accuracy],
+    verbosity=0
+)
+# 1.421 ms (10366 allocations: 626.98 KiB)
+
+@btime evaluate(
+    tree, Xc, yc;
+    measure=[LogLoss(), Accuracy()],
+    verbosity=0
+)
+# 1.402 ms (10366 allocations: 626.98 KiB)
+
+@btime evaluate(
+    tree, Xc, yc,
+    resampling=Holdout(fraction_train=0.7, shuffle=true, rng=1234),
+    measure=[LogLoss(), Accuracy()]
+)
+# 338.442 μs (2516 allocations: 171.18 KiB)
+
+@btime evaluate(
+    tree, Xc, yc,
+    resampling=Holdout(fraction_train=0.7, shuffle=true, rng=1234),
+    measure=[LogLoss(), Accuracy()],
+    verbosity=0
+)
+# 323.373 μs (2498 allocations: 170.44 KiB)
+
+# ---------------------------------------------------------------------------- #
+# Basic fit/transform for unsupervised models
+PCA = @load PCA
+pca = PCA(maxoutdim=2)
+mach = machine(pca, Xc)
+fit!(mach, rows=collect(dsc.ds.Xtrain.indices)[1])
+
+MLJ.transform(mach, rows=collect(dsc.ds.Xtest.indices)[1])
+
+# ---------------------------------------------------------------------------- #
+# Nested hyperparameter tuning
+Tree = @load DecisionTreeClassifier pkg=DecisionTree
+tree = Tree()
+forest = EnsembleModel(model=tree, n=300)
+
+# ProbabilisticEnsembleModel(
+#   model = DecisionTreeClassifier(
+#         max_depth = -1, 
+#         min_samples_leaf = 1, 
+#         min_samples_split = 2, 
+#         min_purity_increase = 0.0, 
+#         n_subfeatures = 0, 
+#         post_prune = false, 
+#         merge_purity_threshold = 1.0, 
+#         display_depth = 5, 
+#         feature_importance = :impurity, 
+#         rng = Random.TaskLocalRNG()), 
+#   atomic_weights = Float64[], 
+#   bagging_fraction = 0.8, 
+#   rng = Random.TaskLocalRNG(), 
+#   n = 300, 
+#   acceleration = CPU1{Nothing}(nothing), 
+#   out_of_bag_measure = Any[])
+
+r1 = MLJ.range(forest, :bagging_fraction, lower=0.5, upper=1.0, scale=:log10)
+r2 = MLJ.range(forest, :(model.n_subfeatures), lower=1, upper=4) # nested
+
+tuned_forest = TunedModel(
+    model=forest,
+    tuning=Grid(resolution=12),
+    resampling=CV(nfolds=6),
+    ranges=[r1, r2],
+    measure=BrierLoss()
+)
+
+tuned_forest = TunedModel(
+    model=forest,
+    tuning=Grid(resolution=12),
+    resampling=CV(nfolds=6),
+    ranges=[r1, r2],
+    measure=[LogLoss(), Accuracy()]
+)
+
+mach = machine(tuned_forest, Xc, yc)
+fit!(mach)
+F = fitted_params(mach)
+F.best_model
+
+r = report(mach)
+keys(r)
+r.history[[1,end]]
+
+plot(mach)
+
+yhat = predict(mach, MLJ.table(dsc.ds.Xtest))
+
+# ---------------------------------------------------------------------------- #
+# Constructing linear pipelines
+
+KNN = @load KNNRegressor
+knn_with_target = TransformedTargetModel(model=KNN(K=3), transformer=Standardizer())
+
+pipe = (Xr -> coerce(Xr, :age=>Continuous)) |> OneHotEncoder() |> knn_with_target
+
+mach = machine(pipe, Xr, yr) |> fit!
+F = fitted_params(mach)
+F.transformed_target_model_deterministic.model
+
+Tree = @load DecisionTreeClassifier pkg=DecisionTree
+tree = Tree()
+forest = EnsembleModel(model=tree, bagging_fraction=0.8, n=300)
+mach = machine(forest, Xc, yc)
+evaluate!(mach, measure=Accuracy())
+
+# ---------------------------------------------------------------------------- #
+#                                   Machines                                   #
+# ---------------------------------------------------------------------------- #
+Tree = @load DecisionTreeClassifier pkg=DecisionTree
+tree = Tree()
+
+mach = machine(tree, Xc, yc)
+fit!(mach, rows=collect(dsc.ds.Xtrain.indices)[1])
+training_losses(mach)
+feature_importances(mach)
+
+@btime begin
+    mach = machine(tree, MLJ.table(dsc.ds.Xtrain), dsc.ds.ytrain)
+    fit!(mach)
+end
+# 128.869 μs (578 allocations: 41.36 KiB)
+
+# Specify cache=false to prioritize memory management over speed
+@btime begin
+    mach = machine(tree, MLJ.table(dsc.ds.Xtrain), dsc.ds.ytrain; cache=false)
+    fit!(mach)
+end
+# 114.104 μs (579 allocations: 41.39 KiB)
+
+# ---------------------------------------------------------------------------- #
+#                                Partitioning                                  #
+# ---------------------------------------------------------------------------- #
+(Xtrain, Xvalid, Xtest), (ytrain, yvalid, ytest) = partition((Xc, yc), 0.7, 0.2, rng=Xoshiro(1), multi=true) # for 70:20:10 ratio
+
+(Xtrain, Xtest), (ytrain, ytest) = partition((Xc, yc), 0.8, rng=Xoshiro(1), multi=true) # for 70:20:10 ratio
+
+Matrix(Xtrain) == dsc.ds.Xtrain # true
+Matrix(Xtest) == dsc.ds.Xtest   # true
+ytrain == dsc.ds.ytrain         # true
+ytest == dsc.ds.ytest           # true
+
+# ---------------------------------------------------------------------------- #
+#                                Experimental                                  #
+# ---------------------------------------------------------------------------- #
+# Using resamplig in a fit and predict method
+Tree = @load DecisionTreeClassifier pkg=DecisionTree
+tree = Tree()
+
+mach = machine(tree, MLJ.table(dsc.ds.Xtrain), dsc.ds.ytrain)
+fit!(mach)
+yhat = predict(mach, MLJ.table(dsc.ds.Xtest))
+l2 = log_loss(yhat, dsc.ds.ytest)
+
+test = 1
+@btime test == nothing
+# 16.087 ns (0 allocations: 0 bytes)
+@btime test === nothing
+# 2.813 ns (0 allocations: 0 bytes)
+@btime isnothing(test)
+# 3.209 ns (0 allocations: 0 bytes)
+
+test = nothing
+@btime test == nothing
+# 19.441 ns (0 allocations: 0 bytes)
+@btime test === nothing
+# 2.813 ns (0 allocations: 0 bytes)
+@btime isnothing(test)
+# 3.209 ns (0 allocations: 0 bytes)
+
+test = Xc
+@btime test == nothing
+# 19.901 ns (0 allocations: 0 bytes)
+@btime test === nothing
+# 2.813 ns (0 allocations: 0 bytes)
+@btime isnothing(test)
+# 3.209 ns (0 allocations: 0 bytes)
+
+@btime !(test === nothing)
+# 2.814 ns (0 allocations: 0 bytes)
+@btime !isnothing(test)
+# 3.209 ns (0 allocations: 0 bytes)
+
+@btime symbolic_analysis(
+    Xc, yc;
+    model=(;type=:decisiontree),
+    preprocess=(;rng=Xoshiro(1))
+)
+
+# === nothing -> 318.183 μs (1974 allocations: 145.19 KiB)

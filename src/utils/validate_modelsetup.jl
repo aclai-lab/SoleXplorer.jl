@@ -5,20 +5,20 @@ function check_params(
     params::OptNamedTuple,
     allowed_keys::Tuple
 )
-    isnothing(params) && return
+    params === nothing && return
     unknown_keys = setdiff(keys(params), allowed_keys)
     isempty(unknown_keys) || throw(ArgumentError("Unknown fields: $unknown_keys"))
 end
 
-filter_params(p) = isnothing(p) ? NamedTuple() : p
+filter_params(p) = p === nothing ? NamedTuple() : p
 
 function get_type(
     params::OptNamedTuple,
     avail_types::Tuple
 )
-    isnothing(params) && return nothing
+    params === nothing && return nothing
     p_type = get(params, :type, nothing)
-    isnothing(p_type) && return nothing
+    p_type === nothing && return nothing
 
     p_type ∈ avail_types || throw(ArgumentError("Type :$p_type not found in available types"))
     return p_type
@@ -28,7 +28,7 @@ function check_user_params(
     users::OptNamedTuple,
     default_params::Dict
 )
-    isnothing(users) ? NamedTuple() : (haskey(users, :params) ? begin
+    users === nothing ? NamedTuple() : (haskey(users, :params) ? begin
         check_params(users.params, keys(default_params[users.type]))
         NamedTuple(k => v for (k, v) in pairs(users.params))
     end : NamedTuple())
@@ -39,7 +39,7 @@ function merge_params(
     users::OptNamedTuple,
     rng::Union{AbstractRNG, Nothing}=nothing
 )
-    !isnothing(rng) && haskey(defaults, :rng) ?
+    !(rng === nothing) && haskey(defaults, :rng) ?
         merge(defaults, filter_params(users), (rng=rng,)) :
         merge(defaults, filter_params(users))
 end
@@ -74,7 +74,7 @@ function validate_features(
     defaults::AbstractVector,
     users::OptTuple
 )
-    features = isnothing(users) ? defaults : [users...]
+    features = users === nothing ? defaults : [users...]
 
     # check if all features are functions
     all(f -> f isa Base.Callable, features) || throw(ArgumentError("All features must be functions"))
@@ -106,7 +106,7 @@ function validate_winparams(
     user_type = get_type(users, AVAIL_WINS)
 
     # select the final type with proper priority: defaults -> globals -> users
-    type = isnothing(user_type) ? defaults.type : user_type
+    type = user_type === nothing ? defaults.type : user_type
 
     def_params = WIN_PARAMS[type]
 
@@ -145,7 +145,7 @@ function validate_tuning(
 )::Union{TuningParams, Bool}
     if isa(users, Bool) 
         if users
-            method = !isnothing(rng) && haskey(TUNING_METHODS_PARAMS[defaults.method.type], :rng) ?
+            method = !rng === nothing && haskey(TUNING_METHODS_PARAMS[defaults.method.type], :rng) ?
                 SoleXplorer.TuningStrategy(defaults.method.type, merge(defaults.method.params, (rng=rng,))) :
                 SoleXplorer.TuningStrategy(defaults.method.type, defaults.method.params)
             return SoleXplorer.TuningParams(method, defaults.params, defaults.ranges)
@@ -188,7 +188,7 @@ function validate_rulesparams(
     end
 
     # case 2: users is a NamedTuple
-    type = isnothing(users.type) ? defaults.type : begin
+    type = users.type === nothing ? defaults.type : begin
             haskey(EXTRACT_RULES, users.type) || throw(ArgumentError("Type $(users.type) not found in available extract rules methods."))
             users.type
         end
@@ -221,7 +221,7 @@ function validate_modelset(
     check_params(preprocess, PREPROC_KEYS)
 
     # grab rng form preprocess and feed it to every process
-    rng = if isnothing(preprocess) 
+    rng = if preprocess === nothing 
         nothing
     else
         haskey(preprocess, :rng) ? preprocess.rng : nothing
@@ -232,14 +232,14 @@ function validate_modelset(
 
     # grab additional extra params
     user_params = get(model, :params, nothing)
-    if !isnothing(user_params) && haskey(user_params, :reducefunc)
+    if !(user_params === nothing) && haskey(user_params, :reducefunc)
         set_congig!(modelset, merge(get_config(modelset), (reducefunc = user_params.reducefunc,)))
         user_params = NamedTuple(k => v for (k, v) in pairs(user_params) if k != :reducefunc)
     end
     set_params!(modelset, validate_params(get_params(modelset), user_params, rng))
 
     # ModalDecisionTrees package needs features to be passed also in model params
-    if isnothing(get_features(modelset))
+    if get_features(modelset) === nothing
         features = validate_features(
             get_pfeatures(modelset),
             features
@@ -250,7 +250,7 @@ function validate_modelset(
         set_features!(modelset, validate_features(get_features(modelset), features))
     end
 
-    isnothing(resample) || set_resample!(modelset, validate_resample(resample, rng))
+    resample === nothing || set_resample!(modelset, validate_resample(resample, rng))
 
     set_winparams!(modelset, validate_winparams(get_winparams(modelset), win, get_treatment(modelset)))
     set_tuning!(modelset, validate_tuning(get_tuning(modelset), tuning, rng, modeltype(modelset)))
@@ -258,8 +258,8 @@ function validate_modelset(
 
     set_rawmodel!(modelset, get_tuning(modelset) == false ? get_rawmodel(modelset) : get_resampled_rawmodel(modelset))
     set_learn_method!(modelset, get_tuning(modelset) == false ? get_learn_method(modelset) : get_resampled_learn_method(modelset))
-    isnothing(preprocess) || (modelset.preprocess = merge(get_preprocess(modelset), preprocess))
-    isnothing(reducefunc) || (modelset.config = merge(get_config(modelset), (reducefunc=reducefunc,)))
+    preprocess === nothing || (modelset.preprocess = merge(get_preprocess(modelset), preprocess))
+    reducefunc === nothing || (modelset.config = merge(get_config(modelset), (reducefunc=reducefunc,)))
 
     return modelset
 end

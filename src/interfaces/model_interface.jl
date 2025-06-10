@@ -24,17 +24,18 @@ data preprocessing options.
 - `preprocess::NamedTuple`: Data preprocessing configuration with options like train/validation split ratios and random seed.
 """
 mutable struct ModelSetup{T<:AbstractModelType} <: AbstractModelSetup{T}
-    type         :: Base.Callable
-    config       :: NamedTuple
-    params       :: NamedTuple
-    features     :: Union{AbstractVector{<:Base.Callable}, Nothing}
-    resample     :: Union{Resample, Nothing}
-    winparams    :: WinParams
-    rawmodel     :: Union{Base.Callable, Tuple{Base.Callable, Base.Callable}}
-    learn_method :: Union{Base.Callable, Tuple{Base.Callable, Base.Callable}}
-    tuning       :: Union{TuningParams, Bool}
-    rulesparams  :: Union{RulesParams, Bool}
-    preprocess   :: NamedTuple
+    type          :: Base.Callable
+    config        :: NamedTuple
+    params        :: NamedTuple
+    features      :: Union{AbstractVector{<:Base.Callable}, Nothing}
+    resample      :: Union{Resample, Nothing}
+    winparams     :: WinParams
+    rawmodel      :: Union{Base.Callable, Tuple{Base.Callable, Base.Callable}}
+    learn_method  :: Union{Base.Callable, Tuple{Base.Callable, Base.Callable}}
+    tuning        :: Union{TuningParams, Bool}
+    resultsparams :: Function
+    rulesparams   :: Union{RulesParams, Bool}
+    preprocess    :: NamedTuple
 end
 
 get_config(m::ModelSetup)                 = m.config
@@ -44,6 +45,7 @@ get_winparams(m::ModelSetup)              = m.winparams
 get_tuning(m::ModelSetup)                 = m.tuning
 get_resample(m::ModelSetup)               = m.resample
 get_preprocess(m::ModelSetup)             = m.preprocess
+get_resultsparams(m::ModelSetup)          = m.resultsparams
 get_rulesparams(m::ModelSetup)            = m.rulesparams
 
 get_pfeatures(m::ModelSetup)              = m.params.features
@@ -67,13 +69,13 @@ set_learn_method!(m::ModelSetup, learn_method::Base.Callable)                   
 function Base.show(io::IO, ::MIME"text/plain", m::ModelSetup)
     println(io, "ModelSetup")
     println(io, "  Model type: ", m.type)
-    println(io, "  Features: ", isnothing(m.features) ? "None" : "$(length(m.features)) features")
+    println(io, "  Features: ", m.features === nothing ? "None" : "$(length(m.features)) features")
     println(io, "  Learning method: ", m.learn_method)
     isa(m.rulesparams, RulesParams) && println(io, "  Rules extraction: ", m.rulesparams.type)
 end
 
 function Base.show(io::IO, m::ModelSetup)
-    print(io, "ModelSetup(type=$(m.type), features=$(isnothing(m.features) ? "None" : length(m.features)))")
+    print(io, "ModelSetup(type=$(m.type), features=$(m.features === nothing ? "None" : length(m.features)))")
 end
 
 # ---------------------------------------------------------------------------- #
@@ -214,8 +216,8 @@ function Base.show(io::IO, mc::Modelset)
     println(io, "Modelset:")
     println(io, "    setup      =", mc.setup)
     println(io, "    predictor  =", mc.predictor)
-    println(io, "    rules      =", isnothing(mc.rules) ? "nothing" : string(mc.rules))
-    # println(io, "    accuracy   =", isnothing(mc.accuracy) ? "nothing" : string(mc.accuracy))
+    println(io, "    rules      =", mc.rules === nothing ? "nothing" : string(mc.rules))
+    # println(io, "    accuracy   =", mc.accuracy === nothing ? "nothing" : string(mc.accuracy))
 end
 
 # const tree_warn = Union{Modelset{SoleXplorer.TypeDTC}, Modelset{SoleXplorer.TypeDTR}, Modelset{SoleXplorer.TypeMDT}}

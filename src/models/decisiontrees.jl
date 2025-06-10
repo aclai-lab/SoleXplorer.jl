@@ -41,6 +41,8 @@ function DecisionTreeClassifierModel()::ModelSetup{AbstractClassification}
         )
     )
 
+    resultsparams = (m) -> (m.info.supporting_labels, m.info.supporting_predictions)
+
     rulesparams = RulesParams(:intrees, NamedTuple())
 
     return ModelSetup{AbstractClassification}(
@@ -53,6 +55,7 @@ function DecisionTreeClassifierModel()::ModelSetup{AbstractClassification}
         rawmodel,
         learn_method,
         tuning,
+        resultsparams,
         rulesparams,
         DEFAULT_PREPROC
     )
@@ -107,6 +110,8 @@ function RandomForestClassifierModel()::ModelSetup{AbstractClassification}
         )
     )
 
+    resultsparams = (m) -> (m.info.supporting_labels, m.info.supporting_predictions)
+
     rulesparams = RulesParams(:intrees, NamedTuple())
 
     return ModelSetup{AbstractClassification}(
@@ -119,6 +124,7 @@ function RandomForestClassifierModel()::ModelSetup{AbstractClassification}
         rawmodel,
         learn_method,
         tuning,
+        resultsparams,
         rulesparams,
         DEFAULT_PREPROC
     )
@@ -169,6 +175,8 @@ function AdaBoostClassifierModel()::ModelSetup{AbstractClassification}
         )
     )
 
+    resultsparams = (m) -> (m.info.supporting_labels, m.info.supporting_predictions)
+
     rulesparams = RulesParams(:intrees, NamedTuple())
 
     return ModelSetup{AbstractClassification}(
@@ -181,6 +189,7 @@ function AdaBoostClassifierModel()::ModelSetup{AbstractClassification}
         rawmodel,
         learn_method,
         tuning,
+        resultsparams,
         rulesparams,
         DEFAULT_PREPROC
     )
@@ -224,6 +233,8 @@ function DecisionTreeRegressorModel()::ModelSetup{AbstractRegression}
         )
     )
 
+    resultsparams = (m) -> (m.info.supporting_labels, m.info.supporting_predictions)
+
     rulesparams = RulesParams(:intrees, NamedTuple())
 
     return ModelSetup{AbstractRegression}(
@@ -236,6 +247,7 @@ function DecisionTreeRegressorModel()::ModelSetup{AbstractRegression}
         rawmodel,
         learn_method,
         tuning,
+        resultsparams,
         rulesparams,
         DEFAULT_PREPROC
     )
@@ -288,6 +300,8 @@ function RandomForestRegressorModel()::ModelSetup{AbstractRegression}
         )
     )
 
+    resultsparams = (m) -> (m.info.supporting_labels, m.info.supporting_predictions)
+
     rulesparams = RulesParams(:intrees, NamedTuple())
 
     return ModelSetup{AbstractRegression}(
@@ -300,6 +314,7 @@ function RandomForestRegressorModel()::ModelSetup{AbstractRegression}
         rawmodel,
         learn_method,
         tuning,
+        resultsparams,
         rulesparams,
         DEFAULT_PREPROC
     )

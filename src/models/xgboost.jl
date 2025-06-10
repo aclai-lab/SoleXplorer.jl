@@ -111,6 +111,8 @@ function XGBoostClassifierModel()::ModelSetup{AbstractClassification}
         )
     )
 
+    resultsparams = (m) -> (m.info.supporting_labels, m.info.supporting_predictions)
+
     rulesparams = RulesParams(:intrees, NamedTuple())
 
     return ModelSetup{AbstractClassification}(
@@ -123,6 +125,7 @@ function XGBoostClassifierModel()::ModelSetup{AbstractClassification}
         rawmodel,
         learn_method,
         tuning,
+        resultsparams,
         rulesparams,
         DEFAULT_PREPROC
     )
