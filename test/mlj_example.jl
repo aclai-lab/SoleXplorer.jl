@@ -397,9 +397,22 @@ end
         preprocess=(;rng=Xoshiro(1))
     )
 end
+# 428.640 μs (2284 allocations: 162.16 KiB)
 # 376.444 μs (1974 allocations: 145.19 KiB)
 # julia> typeof(dsc.model)
 # SoleModels.DecisionTree{String}
+
+@btime xt = dsc.ds.X[dsc.ds.tt[1].train, :]
+# 1.305 μs (13 allocations: 4.65 KiB)
+
+@btime xt = view(dsc.ds.X, dsc.ds.tt[1].train, :)
+# 1.111 μs (19 allocations: 528 bytes)
+
+@btime xt = view.(Ref(dsc.ds.X), getfield(dsc.ds.tt[1], :train), Ref(:))
+# 1.360 μs (9 allocations: 5.62 KiB)
+
+@btime xt = @views dsc.ds.X[dsc.ds.tt[1].train, :]
+# 926.065 ns (19 allocations: 528 bytes)
 
 
 

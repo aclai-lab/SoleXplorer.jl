@@ -30,38 +30,17 @@ function _traintest!(model::AbstractModelset)::Modelset
 
     model.predictor = get_predictor!(model.setup)
 
-    # if model.ds.Xtrain isa AbstractVector
-    #     Xtrain = DataFrame.(model.ds.Xtrain, model.ds.info.vnames)
-    #     Xtest = DataFrame.(model.ds.Xtest, model.ds.info.vnames)
-    # else
-    #     Xtrain = DataFrame(model.ds.Xtrain, model.ds.info.vnames)
-    #     Xtest = DataFrame(model.ds.Xtest, model.ds.info.vnames)
-    # end
+    # Xtrain = [MLJ.table(view.(Ref(model.ds.X), getfield.(t, :train), Ref(:))) for t in model.ds.tt]
+    # Xtest = [DataFrame(view.(Ref(model.ds.X), getfield.(t, :test), Ref(:)), model.ds.info.vnames) for t in model.ds.tt]
 
-    # model.mach = MLJ.machine(model.predictor, Xtrain, model.ds.ytrain) |> m -> fit!(m, verbosity=0)
-    # model.model = model.setup.learn_method(model.mach, Xtest, model.ds.ytest)
+    Xtrain = [MLJ.table(@views model.ds.X[t.train, :]) for t in model.ds.tt]
+    Xtest = [DataFrame((@views model.ds.X[t.test, :]), model.ds.info.vnames) for t in model.ds.tt]
 
-    # return model
-
-    # convert data to DataFrame based on its structure
-    if model.ds.Xtrain isa AbstractVector
-        # case 1: Xtrain is a vector of datasets (for cross-validation or multiple folds)
-        Xtrain = [MLJ.table(x) for x in model.ds.Xtrain]
-        Xtest = [DataFrame(x, model.ds.info.vnames) for x in model.ds.Xtest]
-
-        model.mach = Vector{MLJ.Machine}(undef, length(Xtrain))
-        model.model = Vector{SoleXplorer.AbstractModel}(undef, length(Xtrain))
-        for i in 1:length(Xtrain)
-            model.mach[i] = MLJ.machine(model.predictor, Xtrain[i], model.ds.ytrain[i]) |> m -> MLJ.fit!(m, verbosity=0)
-            model.model[i] = model.setup.learn_method(model.mach[i], Xtest[i], model.ds.ytest[i])
-        end
-    else
-        # case 2: Xtrain is a single dataset
-        Xtrain = MLJ.table(model.ds.Xtrain)
-        Xtest = DataFrame(model.ds.Xtest, model.ds.info.vnames)
-
-        model.mach = MLJ.machine(model.predictor, Xtrain, model.ds.ytrain) |> m -> MLJ.fit!(m, verbosity=0)
-        model.model = model.setup.learn_method(model.mach, Xtest, model.ds.ytest)
+    model.mach  = Vector{MLJ.Machine}(undef, length(Xtrain))
+    model.model = Vector{SoleXplorer.AbstractModel}(undef, length(Xtrain))
+    for i in 1:length(Xtrain)
+        model.mach[i] = MLJ.machine(model.predictor, Xtrain[i], @views model.ds.y[model.ds.tt[i].train]) |> m -> MLJ.fit!(m, verbosity=0)
+        model.model[i] = model.setup.learn_method(model.mach[i], Xtest[i], @views model.ds.y[model.ds.tt[i].test])
     end
 
     return model

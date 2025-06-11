@@ -141,23 +141,23 @@ struct Dataset{T<:AbstractMatrix,S} <: AbstractDataset
     y           :: S
     tt          :: Union{TT_indexes, AbstractVector{<:TT_indexes}}
     info        :: DatasetInfo
-    Xtrain      :: Vector{<:AbstractMatrix}
-    Xvalid      :: Vector{<:AbstractMatrix}
-    Xtest       :: Vector{<:AbstractMatrix}
-    ytrain      :: Vector{<:SubArray}
-    yvalid      :: Vector{<:SubArray}
-    ytest       :: Vector{<:SubArray}
+    # Xtrain      :: Vector{<:AbstractMatrix}
+    # Xvalid      :: Vector{<:AbstractMatrix}
+    # Xtest       :: Vector{<:AbstractMatrix}
+    # ytrain      :: Vector{<:SubArray}
+    # yvalid      :: Vector{<:SubArray}
+    # ytest       :: Vector{<:SubArray}
 
-    function Dataset(X::T, y::S, tt, info) where {T<:AbstractMatrix,S}
-        Xtrain = view.(Ref(X), getfield.(tt, :train), Ref(:))
-        Xvalid = view.(Ref(X), getfield.(tt, :valid), Ref(:))
-        Xtest  = view.(Ref(X), getfield.(tt, :test), Ref(:))
-        ytrain = view.(Ref(y), getfield.(tt, :train))
-        yvalid = view.(Ref(y), getfield.(tt, :valid))
-        ytest  = view.(Ref(y), getfield.(tt, :test))
+    # function Dataset(X::T, y::S, tt, info) where {T<:AbstractMatrix,S}
+    #     Xtrain = view.(Ref(X), getfield.(tt, :train), Ref(:))
+    #     Xvalid = view.(Ref(X), getfield.(tt, :valid), Ref(:))
+    #     Xtest  = view.(Ref(X), getfield.(tt, :test), Ref(:))
+    #     ytrain = view.(Ref(y), getfield.(tt, :train))
+    #     yvalid = view.(Ref(y), getfield.(tt, :valid))
+    #     ytest  = view.(Ref(y), getfield.(tt, :test))
 
-        new{T,S}(X, y, tt, info, Xtrain, Xvalid, Xtest, ytrain, yvalid, ytest)
-    end
+    #     new{T,S}(X, y, tt, info, Xtrain, Xvalid, Xtest, ytrain, yvalid, ytest)
+    # end
 end
 
 """
