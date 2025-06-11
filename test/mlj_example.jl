@@ -397,7 +397,7 @@ end
         preprocess=(;rng=Xoshiro(1))
     )
 end
-# 428.640 μs (2284 allocations: 162.16 KiB)
+# 413.223 μs (2264 allocations: 161.48 KiB)
 # 376.444 μs (1974 allocations: 145.19 KiB)
 # julia> typeof(dsc.model)
 # SoleModels.DecisionTree{String}

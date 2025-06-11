@@ -30,17 +30,19 @@ function _traintest!(model::AbstractModelset)::Modelset
 
     model.predictor = get_predictor!(model.setup)
 
-    # Xtrain = [MLJ.table(view.(Ref(model.ds.X), getfield.(t, :train), Ref(:))) for t in model.ds.tt]
-    # Xtest = [DataFrame(view.(Ref(model.ds.X), getfield.(t, :test), Ref(:)), model.ds.info.vnames) for t in model.ds.tt]
-
-    Xtrain = [MLJ.table(@views model.ds.X[t.train, :]) for t in model.ds.tt]
-    Xtest = [DataFrame((@views model.ds.X[t.test, :]), model.ds.info.vnames) for t in model.ds.tt]
-
-    model.mach  = Vector{MLJ.Machine}(undef, length(Xtrain))
-    model.model = Vector{SoleXplorer.AbstractModel}(undef, length(Xtrain))
-    for i in 1:length(Xtrain)
-        model.mach[i] = MLJ.machine(model.predictor, Xtrain[i], @views model.ds.y[model.ds.tt[i].train]) |> m -> MLJ.fit!(m, verbosity=0)
-        model.model[i] = model.setup.learn_method(model.mach[i], Xtest[i], @views model.ds.y[model.ds.tt[i].test])
+    n_folds = length(model.ds.tt)
+    model.mach = Vector{MLJ.Machine}(undef, n_folds)
+    model.model = Vector{SoleXplorer.AbstractModel}(undef, n_folds)
+    
+    # Efficient training loop with views
+    @inbounds for (i, fold) in enumerate(model.ds.tt)
+        X_train = MLJ.table(@views model.ds.X[fold.train, :])
+        X_test  = DataFrame((@views model.ds.X[fold.test, :]), model.ds.info.vnames)
+        y_train = @views model.ds.y[fold.train]
+        y_test  = @views model.ds.y[fold.test]
+        
+        model.mach[i] = MLJ.machine(model.predictor, X_train, y_train) |> m -> MLJ.fit!(m, verbosity=0)
+        model.model[i] = model.setup.learn_method(model.mach[i], X_test, y_test)
     end
 
     return model
