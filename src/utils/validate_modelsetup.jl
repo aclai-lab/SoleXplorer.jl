@@ -84,8 +84,9 @@ end
 
 function validate_resample(
     users::OptNamedTuple,
-    rng::Union{AbstractRNG, Nothing}=nothing
-)::Union{Resample, Nothing}    
+    rng::Union{AbstractRNG, Nothing}=nothing,
+    train_ratio::Float64=0.7
+)::Resample
     check_params(users, (:type, :params))
     type = get_type(users, SoleXplorer.AVAIL_RESAMPLES)
     def_params = SoleXplorer.RESAMPLE_PARAMS[type]
@@ -93,6 +94,8 @@ function validate_resample(
     # validate parameters
     user_params = check_user_params(users, SoleXplorer.RESAMPLE_PARAMS)
     params = merge_params(def_params, user_params, rng)
+    # if resample type is Holdout, we need to set the fraction_ratio as preprocess train_ratio
+    haskey(params, :fraction_train) && (params = merge(params, (;fraction_train=train_ratio)))
         
     return Resample(type, params)
 end
@@ -207,7 +210,7 @@ end
 function validate_modelset(
     model         :: NamedTuple,
     y             :: OptDataType;
-    resample      :: OptNamedTuple  = nothing,
+    resample      :: NamedTuple,
     win           :: OptNamedTuple  = nothing,
     features      :: OptTuple       = nothing,
     tuning        :: NamedTupleBool = false,
@@ -233,7 +236,7 @@ function validate_modelset(
     # grab additional extra params
     user_params = get(model, :params, nothing)
     if !(user_params === nothing) && haskey(user_params, :reducefunc)
-        set_congig!(modelset, merge(get_config(modelset), (reducefunc = user_params.reducefunc,)))
+        set_config!(modelset, merge(get_config(modelset), (reducefunc = user_params.reducefunc,)))
         user_params = NamedTuple(k => v for (k, v) in pairs(user_params) if k != :reducefunc)
     end
     set_params!(modelset, validate_params(get_params(modelset), user_params, rng))
@@ -250,8 +253,6 @@ function validate_modelset(
         set_features!(modelset, validate_features(get_features(modelset), features))
     end
 
-    resample === nothing || set_resample!(modelset, validate_resample(resample, rng))
-
     set_winparams!(modelset, validate_winparams(get_winparams(modelset), win, get_treatment(modelset)))
     set_tuning!(modelset, validate_tuning(get_tuning(modelset), tuning, rng, modeltype(modelset)))
     set_rulesparams!(modelset, validate_rulesparams(get_rulesparams(modelset), extract_rules, rng))
@@ -259,6 +260,7 @@ function validate_modelset(
     set_rawmodel!(modelset, get_tuning(modelset) == false ? get_rawmodel(modelset) : get_resampled_rawmodel(modelset))
     set_learn_method!(modelset, get_tuning(modelset) == false ? get_learn_method(modelset) : get_resampled_learn_method(modelset))
     preprocess === nothing || (modelset.preprocess = merge(get_preprocess(modelset), preprocess))
+    set_resample!(modelset, validate_resample(resample, rng, modelset.preprocess.train_ratio))
     reducefunc === nothing || (modelset.config = merge(get_config(modelset), (reducefunc=reducefunc,)))
 
     return modelset

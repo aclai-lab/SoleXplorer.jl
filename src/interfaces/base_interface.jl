@@ -4,8 +4,6 @@
 const Optional{T}       = Union{T, Nothing}
 
 const NamedTupleBool    = Union{NamedTuple, Bool}
-const VecOrSubArray{T}  = Union{SubArray{T}, Vector{<:SubArray{T}}} where T
-const VecOrMatrix       = Union{AbstractMatrix, Vector{<:AbstractMatrix}}
 
 const SymbolString      = Union{Symbol,AbstractString}
 

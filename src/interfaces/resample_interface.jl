@@ -1,8 +1,6 @@
 # ---------------------------------------------------------------------------- #
 #                                     types                                    #
 # ---------------------------------------------------------------------------- #
-const Rule      = Union{DecisionList, DecisionEnsemble, DecisionSet}
-
 struct Resample <: AbstractTypeParams
     type        :: Base.Callable
     params      :: NamedTuple
@@ -16,17 +14,17 @@ const AVAIL_RESAMPLES = (CV, Holdout, StratifiedCV, TimeSeriesCV)
 const RESAMPLE_PARAMS = Dict{DataType,NamedTuple}(
     CV           => (
         nfolds         = 6,
-        shuffle        = true,
+        shuffle        = false,
         rng            = TaskLocalRNG()
     ),
     Holdout      => (
         fraction_train = 0.7,
-        shuffle        = true,
+        shuffle        = false,
         rng            = TaskLocalRNG()
     ),
     StratifiedCV => (
         nfolds         = 6,
-        shuffle        = true,
+        shuffle        = false,
         rng            = TaskLocalRNG()
     ),
     TimeSeriesCV => (

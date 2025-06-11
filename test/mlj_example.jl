@@ -1,4 +1,4 @@
-using MLJ, SoleXplorer
+using MLJ, SoleXplorer, MLJBase
 using MLJDecisionTreeInterface
 using DataFrames, Random
 using Plots
@@ -15,9 +15,23 @@ Xr = DataFrame(Xr)
 # ---------------------------------------------------------------------------- #
 #                              solexplorer setup                               #
 # ---------------------------------------------------------------------------- #
+dsc = symbolic_analysis(
+    Xc, yc;
+    model=(;type=:decisiontree),
+    preprocess=(;train_ratio=0.9, rng=Xoshiro(1))
+)
+
 dsc = prepare_dataset(
     Xc, yc;
     model=(;type=:decisiontree),
+    resample=(;type=CV),
+    preprocess=(;rng=Xoshiro(1))
+)
+
+dsc = prepare_dataset(
+    Xc, yc;
+    model=(;type=:decisiontree),
+    resample=(;type=Holdout),
     preprocess=(;rng=Xoshiro(1))
 )
 
@@ -298,15 +312,7 @@ ytest == dsc.ds.ytest           # true
 # ---------------------------------------------------------------------------- #
 #                                Experimental                                  #
 # ---------------------------------------------------------------------------- #
-# Using resamplig in a fit and predict method
-Tree = @load DecisionTreeClassifier pkg=DecisionTree
-tree = Tree()
-
-mach = machine(tree, MLJ.table(dsc.ds.Xtrain), dsc.ds.ytrain)
-fit!(mach)
-yhat = predict(mach, MLJ.table(dsc.ds.Xtest))
-l2 = log_loss(yhat, dsc.ds.ytest)
-
+# isnothing vs == nothing vs === nothing
 test = 1
 @btime test == nothing
 # 16.087 ns (0 allocations: 0 bytes)
@@ -343,3 +349,154 @@ test = Xc
 )
 
 # === nothing -> 318.183 μs (1974 allocations: 145.19 KiB)
+
+# ---------------------------------------------------------------------------- #
+# mlj evaluate vs solexplorer
+Tree = @load DecisionTreeClassifier pkg=DecisionTree
+tree = Tree()
+
+@btime begin
+    mk1 = machine(tree, MLJ.table(dsc.ds.Xtrain), dsc.ds.ytrain)
+    exp1 = evaluate!(
+        mach;
+        resampling=CV(shuffle=false),
+        measures=[log_loss, accuracy],
+        verbosity=0
+    )
+end
+# 1.347 ms (9771 allocations: 581.53 KiB)
+
+@btime begin
+    mk2 = machine(tree, MLJ.table(dsc.ds.Xtrain), dsc.ds.ytrain)
+    fit!(mk2)
+    exp2 = evaluate!(
+        mk2;
+        resampling=CV(shuffle=false),
+        measures=[log_loss, accuracy],
+        verbosity=0
+    )
+end
+# 1.594 ms (10268 allocations: 615.39 KiB)
+
+@btime begin
+    Tree = @load DecisionTreeClassifier pkg=DecisionTree
+    tree = Tree()
+
+    e1 = evaluate(
+        tree, Xc, yc;
+        resampling=Holdout(fraction_train=0.8, shuffle=false, rng=Xoshiro(1)),
+        verbosity=0
+    )
+end
+# 467.807 μs (1664 allocations: 110.12 KiB)
+
+@btime begin
+    dsc = symbolic_analysis(
+        Xc, yc;
+        model=(;type=:decisiontree),
+        preprocess=(;rng=Xoshiro(1))
+    )
+end
+# 376.444 μs (1974 allocations: 145.19 KiB)
+# julia> typeof(dsc.model)
+# SoleModels.DecisionTree{String}
+
+
+
+# ---------------------------------------------------------------------------- #
+# try to understand how resamplig is treated
+Tree = @load DecisionTreeClassifier pkg=DecisionTree
+tree = Tree()
+
+# in evaluate vengono passati: il modello, il dataset e cache=true
+mach = machine(tree, MLJ.table(dsc.ds.Xtrain), dsc.ds.ytrain; cache=true)
+
+e1 = evaluate!(
+    mach;
+    resampling=CV(shuffle=true),
+    verbosity=0
+)
+
+# decostruzione di evaluate!
+# in resampling.jl riga: 1161
+
+# default in funzione evaluate!
+# mach::Machine;
+# resampling=CV(),
+resampling=CV(shuffle=true)
+# measures=nothing
+measures=[log_loss, accuracy]
+measure=measures
+weights=nothing
+class_weights=nothing
+operations=nothing
+operation=operations
+acceleration=default_resource()
+rows=nothing
+repeats=1
+force=false
+check_measure=true
+per_observation=true
+# verbosity=1,
+verbosity=0
+logger=default_logger()
+compact=false
+
+# evaluate!
+_measures = MLJBase._actual_measures(measure, mach.model)
+# 2-element Vector{StatisticalMeasuresBase.RobustMeasure}:
+#  LogLoss(tol = 2.22045e-16)
+#  Accuracy()
+
+_operations = MLJBase._actual_operations(operation, _measures, mach.model, verbosity)
+# 2-element Vector{Function}:
+#  predict (generic function with 43 methods)
+#  predict_mode (generic function with 11 methods)
+
+# si passa all'evaluate! a riga 1590
+train_args = Tuple(a() for a in mach.args)
+y = train_args[2]
+# julia> mach.args[1]()
+# Tables.MatrixTable{SubArray{Float64, 2, Matrix{Float64}, Tuple{Vector{Int64}, Base.Slice{Base.OneTo{Int64}}}, false}} with 120 rows, 4 columns, and schema:
+#  :x1  Float64
+#  :x2  Float64
+#  :x3  Float64
+#  :x4  Float64
+
+# julia> mach.args[2]()
+# 120-element view(::CategoricalArrays.CategoricalVector{String, UInt32, String, CategoricalArrays.CategoricalValue{String, UInt32}, Union{}}, [133, 3, 43, 51, 147, 40, 112, 129, 132, 124  …  22, 95, 120, 11, 88, 128, 8, 12, 99, 79]) with eltype CategoricalArrays.CategoricalValue{String, UInt32}:
+#  "virginica"
+#  "setosa"
+#  "setosa"
+#  ⋮
+#  "setosa"
+#  "versicolor"
+
+_rows = MLJBase.actual_rows(rows, nrows(y), verbosity)
+
+repeated_train_test_pairs =
+    vcat(
+        [MLJBase.train_test_pairs(resampling, _rows, train_args...) for i in 1:repeats]...
+    )
+
+# 6-element Vector{Tuple{Vector{Int64}, Vector{Int64}}}:
+#  ([94, 102, 73, 10, 32, 21, 26, 76, 8, 110  …  84, 47, 78, 75, 59, 103, 56, 49, 81, 97], [107, 30, 106, 50, 3, 92, 96, 64, 98, 72, 52, 66, 6, 5, 99, 34, 36, 115, 69, 111])
+#  ([107, 30, 106, 50, 3, 92, 96, 64, 98, 72  …  84, 47, 78, 75, 59, 103, 56, 49, 81, 97], [94, 102, 73, 10, 32, 21, 26, 76, 8, 110, 101, 71, 109, 95, 62, 7, 93, 118, 58, 20])
+#  ([107, 30, 106, 50, 3, 92, 96, 64, 98, 72  …  84, 47, 78, 75, 59, 103, 56, 49, 81, 97], [17, 83, 15, 42, 70, 44, 68, 119, 46, 116, 85, 11, 86, 4, 67, 38, 51, 79, 1, 113])
+#  ([107, 30, 106, 50, 3, 92, 96, 64, 98, 72  …  84, 47, 78, 75, 59, 103, 56, 49, 81, 97], [60, 39, 88, 28, 29, 24, 117, 77, 9, 41, 45, 65, 12, 40, 91, 48, 80, 104, 22, 37])
+#  ([107, 30, 106, 50, 3, 92, 96, 64, 98, 72  …  84, 47, 78, 75, 59, 103, 56, 49, 81, 97], [35, 61, 14, 53, 2, 90, 43, 89, 112, 25, 108, 16, 13, 54, 100, 23, 33, 82, 57, 105])
+#  ([107, 30, 106, 50, 3, 92, 96, 64, 98, 72  …  108, 16, 13, 54, 100, 23, 33, 82, 57, 105], [114, 120, 74, 31, 27, 63, 87, 55, 18, 19, 84, 47, 78, 75, 59, 103, 56, 49, 81, 97])
+
+# si passa all'evaluate! a riga 1413
+X = mach.args[1]()
+y = mach.args[2]()
+_nrows = MLJBase.nrows(y)
+
+
+nfolds = length(resampling)
+test_fold_sizes = map(resampling) do train_test_pair
+    test = last(train_test_pair)
+    test isa Colon && (return _nrows)
+    length(test)
+end
+

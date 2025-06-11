@@ -1,6 +1,8 @@
 # ---------------------------------------------------------------------------- #
 #                                     types                                    #
 # ---------------------------------------------------------------------------- #
+const Rule      = Union{DecisionList, DecisionEnsemble, DecisionSet}
+
 """
     RulesParams <: AbstractTypeParams
 

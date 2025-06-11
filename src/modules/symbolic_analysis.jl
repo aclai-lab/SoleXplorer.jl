@@ -11,8 +11,8 @@ end
 function symbolic_analysis(
     X             :: AbstractDataFrame,
     y             :: AbstractVector;
-    model         :: OptNamedTuple  = nothing,
-    resample      :: OptNamedTuple  = nothing,
+    model         :: NamedTuple     = (;type=:decisiontree),
+    resample      :: NamedTuple     = (;type=Holdout),
     win           :: OptNamedTuple  = nothing,
     features      :: OptTuple       = nothing,
     tuning        :: NamedTupleBool = false,
@@ -20,8 +20,6 @@ function symbolic_analysis(
     preprocess    :: OptNamedTuple  = nothing,
     reducefunc    :: OptCallable    = nothing
 )::Modelset
-    # if model is unspecified, use default model setup
-    model === nothing && (model = DEFAULT_MODEL_SETUP)
     modelset = validate_modelset(model, eltype(y); resample, win, features, tuning, extract_rules, preprocess, reducefunc)
     model = Modelset(modelset, _prepare_dataset(X, y, modelset))
     _traintest!(model)

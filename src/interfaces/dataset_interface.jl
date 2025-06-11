@@ -8,7 +8,6 @@
         train_ratio::Real,
         valid_ratio::Real,
         rng::AbstractRNG,
-        resample::Bool,
         vnames::OptStringVec
     ) -> DatasetInfo
 
@@ -20,7 +19,6 @@ Create a configuration for dataset preparation and splitting in machine learning
 - `train_ratio::Real`: Proportion of data to use for training (must be between 0 and 1)
 - `valid_ratio::Real`: Proportion of data to use for validation (must be between 0 and 1)
 - `rng::AbstractRNG`: Random number generator for reproducible splits
-- `resample::Bool`: Whether to perform resampling for cross-validation
 - `vnames::OptStringVec`: Optional feature/variable names
 """
 struct DatasetInfo <: AbstractDatasetSetup
@@ -29,7 +27,7 @@ struct DatasetInfo <: AbstractDatasetSetup
     train_ratio :: Real
     valid_ratio :: Real
     rng         :: AbstractRNG
-    resample    :: Bool
+    # resample    :: Bool
     vnames      :: OptStringVec
 
     function DatasetInfo(
@@ -38,14 +36,13 @@ struct DatasetInfo <: AbstractDatasetSetup
         train_ratio :: Real,
         valid_ratio :: Real,
         rng         :: AbstractRNG,
-        resample    :: Bool,
         vnames      :: OptStringVec
     )::DatasetInfo
         # Validate ratios
         0 ≤ train_ratio ≤ 1 || throw(ArgumentError("train_ratio must be between 0 and 1"))
         0 ≤ valid_ratio ≤ 1 || throw(ArgumentError("valid_ratio must be between 0 and 1"))
 
-        new(treatment, reducefunc, train_ratio, valid_ratio, rng, resample, vnames)
+        new(treatment, reducefunc, train_ratio, valid_ratio, rng, vnames)
     end
 end
 
@@ -54,7 +51,6 @@ get_reducefunc(dsinfo::DatasetInfo)  :: OptCallable = dsinfo.reducefunc
 get_train_ratio(dsinfo::DatasetInfo) :: Real = dsinfo.train_ratio
 get_valid_ratio(dsinfo::DatasetInfo) :: Real = dsinfo.valid_ratio
 get_rng(dsinfo::DatasetInfo)         :: AbstractRNG = dsinfo.rng
-get_resample(dsinfo::DatasetInfo)    :: Bool = dsinfo.resample
 get_vnames(dsinfo::DatasetInfo)      :: OptStringVec = dsinfo.vnames
 
 function Base.show(io::IO, info::DatasetInfo)
@@ -145,29 +141,20 @@ struct Dataset{T<:AbstractMatrix,S} <: AbstractDataset
     y           :: S
     tt          :: Union{TT_indexes, AbstractVector{<:TT_indexes}}
     info        :: DatasetInfo
-    Xtrain      :: VecOrMatrix
-    Xvalid      :: VecOrMatrix
-    Xtest       :: VecOrMatrix
-    ytrain      :: VecOrSubArray
-    yvalid      :: VecOrSubArray
-    ytest       :: VecOrSubArray
+    Xtrain      :: Vector{<:AbstractMatrix}
+    Xvalid      :: Vector{<:AbstractMatrix}
+    Xtest       :: Vector{<:AbstractMatrix}
+    ytrain      :: Vector{<:SubArray}
+    yvalid      :: Vector{<:SubArray}
+    ytest       :: Vector{<:SubArray}
 
     function Dataset(X::T, y::S, tt, info) where {T<:AbstractMatrix,S}
-        if get_resample(info)
-            Xtrain = view.(Ref(X), getfield.(tt, :train), Ref(:))
-            Xvalid = view.(Ref(X), getfield.(tt, :valid), Ref(:))
-            Xtest  = view.(Ref(X), getfield.(tt, :test), Ref(:))
-            ytrain = view.(Ref(y), getfield.(tt, :train))
-            yvalid = view.(Ref(y), getfield.(tt, :valid))
-            ytest  = view.(Ref(y), getfield.(tt, :test))
-        else
-            Xtrain = @views X[tt.train, :]
-            Xvalid = @views X[tt.valid, :]
-            Xtest  = @views X[tt.test,  :]
-            ytrain = @views y[tt.train]
-            yvalid = @views y[tt.valid]
-            ytest  = @views y[tt.test]
-        end
+        Xtrain = view.(Ref(X), getfield.(tt, :train), Ref(:))
+        Xvalid = view.(Ref(X), getfield.(tt, :valid), Ref(:))
+        Xtest  = view.(Ref(X), getfield.(tt, :test), Ref(:))
+        ytrain = view.(Ref(y), getfield.(tt, :train))
+        yvalid = view.(Ref(y), getfield.(tt, :valid))
+        ytest  = view.(Ref(y), getfield.(tt, :test))
 
         new{T,S}(X, y, tt, info, Xtrain, Xvalid, Xtest, ytrain, yvalid, ytest)
     end

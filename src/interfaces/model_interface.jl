@@ -114,8 +114,6 @@ XGBoostRegressorModel(dtmodel       :: ModelSetup) = dtmodel
 # const TypeTreeForestR = Union{TypeDTR, TypeRFR}
 # const TypeModalForest = Union{TypeMRF, TypeMAB}
 
-const DEFAULT_MODEL_SETUP = (;type=:decisiontree)
-
 const DEFAULT_FEATS = [maximum, minimum, MLJ.mean, std]
 
 const DEFAULT_PREPROC = (
