@@ -187,7 +187,7 @@ mutable struct Modelset{T<:AbstractModelType} <: AbstractModelset{T}
     setup      :: AbstractModelSetup{T}
     ds         :: AbstractDataset
     predictor  :: Union{MLJ.Model,       Nothing}
-    mach       :: Union{MLJ.Machine,     AbstractVector{<:MLJ.Machine},   Nothing}
+    mach       :: Union{MLJ.Machine,     Nothing}
     model      :: Union{AbstractModel,   AbstractVector{<:AbstractModel}, Nothing}
     rules      :: Union{Rule,            AbstractVector{<:Rule},          Nothing}
     results    :: Union{AbstractResults, Nothing}

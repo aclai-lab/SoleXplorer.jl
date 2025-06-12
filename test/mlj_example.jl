@@ -1,5 +1,6 @@
 using MLJ, SoleXplorer, MLJBase
 using MLJDecisionTreeInterface
+using MLJModelInterface
 using DataFrames, Random
 using Plots
 
@@ -21,12 +22,13 @@ dsc = symbolic_analysis(
     preprocess=(;train_ratio=0.9, rng=Xoshiro(1))
 )
 
-dsc = prepare_dataset(
-    Xc, yc;
-    model=(;type=:decisiontree),
-    resample=(;type=CV),
-    preprocess=(;rng=Xoshiro(1))
-)
+@btime begin
+    dsc = prepare_dataset(
+        Xc, yc;
+        model=(;type=:decisiontree),
+        preprocess=(;rng=Xoshiro(1))
+    )
+end
 
 dsc = prepare_dataset(
     Xc, yc;
@@ -397,8 +399,7 @@ end
         preprocess=(;rng=Xoshiro(1))
     )
 end
-# 413.223 μs (2264 allocations: 161.48 KiB)
-# 376.444 μs (1974 allocations: 145.19 KiB)
+# 389.543 μs (2205 allocations: 156.19 KiB)
 # julia> typeof(dsc.model)
 # SoleModels.DecisionTree{String}
 
@@ -422,7 +423,7 @@ Tree = @load DecisionTreeClassifier pkg=DecisionTree
 tree = Tree()
 
 # in evaluate vengono passati: il modello, il dataset e cache=true
-mach = machine(tree, MLJ.table(dsc.ds.Xtrain), dsc.ds.ytrain; cache=true)
+mach = machine(tree, MLJ.table(dsc.ds.X), dsc.ds.y; cache=true)
 
 e1 = evaluate!(
     mach;
@@ -449,7 +450,7 @@ rows=nothing
 repeats=1
 force=false
 check_measure=true
-per_observation=true
+per_observation_flag=true
 # verbosity=1,
 verbosity=0
 logger=default_logger()
@@ -487,7 +488,7 @@ y = train_args[2]
 
 _rows = MLJBase.actual_rows(rows, nrows(y), verbosity)
 
-repeated_train_test_pairs =
+_resampling =
     vcat(
         [MLJBase.train_test_pairs(resampling, _rows, train_args...) for i in 1:repeats]...
     )
@@ -506,10 +507,67 @@ y = mach.args[2]()
 _nrows = MLJBase.nrows(y)
 
 
-nfolds = length(resampling)
-test_fold_sizes = map(resampling) do train_test_pair
+nfolds = MLJ.length(_resampling)
+test_fold_sizes = map(_resampling) do train_test_pair
     test = last(train_test_pair)
     test isa Colon && (return _nrows)
     length(test)
 end
+
+nmeasures = length(measures) # [log_loss, accuracy]
+
+function fit_and_extract_on_fold(mach, k)
+    train, test = _resampling[k]
+    fit!(mach; rows=train, verbosity=verbosity - 1, force=force)
+    # build a dictionary of predictions keyed on the operations
+    # that appear (`predict`, `predict_mode`, etc):
+    yhat_given_operation =
+        Dict(op=>op(mach, rows=test) for op in unique(_operations))
+
+    ytest = selectrows(y, test)
+    if per_observation_flag
+        measurements =  map(measures, _operations) do m, op
+            MLJBase.StatisticalMeasuresBase.measurements(
+                m,
+                yhat_given_operation[op],
+                ytest,
+                MLJBase._view(weights, test),
+                class_weights,
+            )
+        end
+    else
+        measurements =  map(measures, _operations) do m, op
+            m(
+                yhat_given_operation[op],
+                ytest,
+                _view(weights, test),
+                class_weights,
+            )
+        end
+    end
+
+    fp = fitted_params(mach)
+    r = report(mach)
+    return (measurements, fp, r)
+end
+
+function _evaluate!(func, mach, nfolds)
+    ret = mapreduce(vcat, 1:nfolds) do k
+        @show k
+        r = func(mach, k)
+        return [r, ]
+    end
+
+    return zip(ret...) |> collect
+
+end
+
+measurements_vector_of_vectors, fitted_params_per_fold, report_per_fold  =
+    _evaluate!(
+        fit_and_extract_on_fold,
+        mach,
+        nfolds
+    )
+
+
 

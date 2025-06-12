@@ -27,7 +27,6 @@ struct DatasetInfo <: AbstractDatasetSetup
     train_ratio :: Real
     valid_ratio :: Real
     rng         :: AbstractRNG
-    # resample    :: Bool
     vnames      :: OptStringVec
 
     function DatasetInfo(
@@ -99,65 +98,11 @@ Base.length(t::TT_indexes) = length(t.train) + length(t.valid) + length(t.test)
 # ---------------------------------------------------------------------------- #
 #                                   dataset                                    #
 # ---------------------------------------------------------------------------- #
-"""
-    Dataset{T<:AbstractMatrix,S} <: AbstractDataset
-
-An immutable struct that efficiently stores and manages data for machine learning, 
-including train-validation-test splits with views into the original data.
-
-# Fields
-- `X::T`: Original feature matrix
-- `y::S`: Original target vector/matrix
-- `tt::Union{TT_indexes, AbstractVector{<:TT_indexes}}`: Train-validation-test split indices
-- `info::DatasetInfo`: Dataset configuration and metadata
-- `Xtrain::VecOrMatrix`: Features for training
-- `Xvalid::VecOrMatrix`: Features for validation
-- `Xtest::VecOrMatrix`: Features for testing
-- `ytrain::VecOrSubArray`: Targets for training
-- `yvalid::VecOrSubArray`: Targets for validation
-- `ytest::VecOrSubArray`: Targets for testing
-
-# Constructor
-    Dataset(X::T, y::S, tt, info) where {T<:AbstractMatrix,S}
-
-Creates a new `Dataset` with views into the data according to the provided indices.
-- If `get_resample(info)` is `true`, handles multiple train-validation-test splits (e.g., for cross-validation)
-- Otherwise, creates simple views for a single train-validation-test split
-
-# Access the splits
-X_train = dataset.Xtrain          # Training features
-y_train = dataset.ytrain          # Training targets
-```
-
-# Note
-All data views are created using Julia's view mechanism, not copies of the data,
-providing memory-efficient access to data partitions.
-
-See also: [`DatasetInfo`](@ref), [`TT_indexes`](@ref)
-"""
-
 struct Dataset{T<:AbstractMatrix,S} <: AbstractDataset
     X           :: T
     y           :: S
     tt          :: Union{TT_indexes, AbstractVector{<:TT_indexes}}
     info        :: DatasetInfo
-    # Xtrain      :: Vector{<:AbstractMatrix}
-    # Xvalid      :: Vector{<:AbstractMatrix}
-    # Xtest       :: Vector{<:AbstractMatrix}
-    # ytrain      :: Vector{<:SubArray}
-    # yvalid      :: Vector{<:SubArray}
-    # ytest       :: Vector{<:SubArray}
-
-    # function Dataset(X::T, y::S, tt, info) where {T<:AbstractMatrix,S}
-    #     Xtrain = view.(Ref(X), getfield.(tt, :train), Ref(:))
-    #     Xvalid = view.(Ref(X), getfield.(tt, :valid), Ref(:))
-    #     Xtest  = view.(Ref(X), getfield.(tt, :test), Ref(:))
-    #     ytrain = view.(Ref(y), getfield.(tt, :train))
-    #     yvalid = view.(Ref(y), getfield.(tt, :valid))
-    #     ytest  = view.(Ref(y), getfield.(tt, :test))
-
-    #     new{T,S}(X, y, tt, info, Xtrain, Xvalid, Xtest, ytrain, yvalid, ytest)
-    # end
 end
 
 """
@@ -187,48 +132,6 @@ get_tt(ds::Dataset)     = ds.tt
 Get the dataset configuration and metadata from a Dataset structure.
 """
 get_info(ds::Dataset)   = ds.info
-
-"""
-    get_Xtrain(ds::Dataset) -> VecOrMatrix
-
-Get the training feature views from a Dataset structure.
-"""
-get_Xtrain(ds::Dataset) = ds.Xtrain
-
-"""
-    get_Xvalid(ds::Dataset) -> VecOrMatrix
-
-Get the validation feature views from a Dataset structure.
-"""
-get_Xvalid(ds::Dataset) = ds.Xvalid
-
-"""
-    get_Xtest(ds::Dataset) -> VecOrMatrix
-
-Get the test feature views from a Dataset structure.
-"""
-get_Xtest(ds::Dataset)  = ds.Xtest
-
-"""
-    get_ytrain(ds::Dataset) -> Union{SubArray, Vector{<:SubArray}}
-
-Get the training target views from a Dataset structure.
-"""
-get_ytrain(ds::Dataset) = ds.ytrain
-
-"""
-    get_yvalid(ds::Dataset) -> Union{SubArray, Vector{<:SubArray}}
-
-Get the validation target views from a Dataset structure.
-"""
-get_yvalid(ds::Dataset) = ds.yvalid
-
-"""
-    get_ytest(ds::Dataset) -> Union{SubArray, Vector{<:SubArray}}
-
-Get the test target views from a Dataset structure.
-"""
-get_ytest(ds::Dataset)  = ds.ytest
 
 function Base.show(io::IO, ds::Dataset)
     println(io, "Dataset:")
