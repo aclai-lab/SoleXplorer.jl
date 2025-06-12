@@ -68,7 +68,8 @@ function ModalDecisionTreeModel()::ModelSetup{AbstractClassification}
         tuning,
         resultsparams,
         rulesparams,
-        DEFAULT_PREPROC
+        DEFAULT_PREPROC,
+        DEFAULT_MEAS
     )
 end
 
@@ -139,7 +140,8 @@ function ModalRandomForestModel()::ModelSetup{AbstractClassification}
         tuning,
         resultsparams,
         rulesparams,
-        DEFAULT_PREPROC
+        DEFAULT_PREPROC,
+        DEFAULT_MEAS
     )
 end
 
@@ -208,6 +210,7 @@ function ModalAdaBoostModel()::ModelSetup{AbstractClassification}
         tuning,
         resultsparams,
         rulesparams,
-        DEFAULT_PREPROC
+        DEFAULT_PREPROC,
+        DEFAULT_MEAS
     )
 end

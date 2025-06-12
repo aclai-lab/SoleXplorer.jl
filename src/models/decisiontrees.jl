@@ -57,7 +57,8 @@ function DecisionTreeClassifierModel()::ModelSetup{AbstractClassification}
         tuning,
         resultsparams,
         rulesparams,
-        DEFAULT_PREPROC
+        DEFAULT_PREPROC,
+        DEFAULT_MEAS
     )
 end
 
@@ -126,7 +127,8 @@ function RandomForestClassifierModel()::ModelSetup{AbstractClassification}
         tuning,
         resultsparams,
         rulesparams,
-        DEFAULT_PREPROC
+        DEFAULT_PREPROC,
+        DEFAULT_MEAS
     )
 end
 
@@ -191,7 +193,8 @@ function AdaBoostClassifierModel()::ModelSetup{AbstractClassification}
         tuning,
         resultsparams,
         rulesparams,
-        DEFAULT_PREPROC
+        DEFAULT_PREPROC,
+        DEFAULT_MEAS
     )
 end
 
@@ -249,7 +252,8 @@ function DecisionTreeRegressorModel()::ModelSetup{AbstractRegression}
         tuning,
         resultsparams,
         rulesparams,
-        DEFAULT_PREPROC
+        DEFAULT_PREPROC,
+        DEFAULT_MEAS
     )
 end
 
@@ -316,7 +320,8 @@ function RandomForestRegressorModel()::ModelSetup{AbstractRegression}
         tuning,
         resultsparams,
         rulesparams,
-        DEFAULT_PREPROC
+        DEFAULT_PREPROC,
+        DEFAULT_MEAS
     )
 end
 

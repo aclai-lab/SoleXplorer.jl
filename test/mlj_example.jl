@@ -16,24 +16,25 @@ Xr = DataFrame(Xr)
 # ---------------------------------------------------------------------------- #
 #                              solexplorer setup                               #
 # ---------------------------------------------------------------------------- #
-dsc = symbolic_analysis(
+dsc = prepare_dataset(
     Xc, yc;
     model=(;type=:decisiontree),
-    preprocess=(;train_ratio=0.9, rng=Xoshiro(1))
+    preprocess=(;train_ratio=0.9, rng=Xoshiro(1)),
+    measures=(log_loss, accuracy),
 )
 
 @btime begin
     dsc = prepare_dataset(
         Xc, yc;
         model=(;type=:decisiontree),
-        preprocess=(;rng=Xoshiro(1))
+        preprocess=(;rng=Xoshiro(1)),
     )
 end
 
 dsc = prepare_dataset(
     Xc, yc;
     model=(;type=:decisiontree),
-    resample=(;type=Holdout),
+    resample=(;type=CV),
     preprocess=(;rng=Xoshiro(1))
 )
 
@@ -415,6 +416,19 @@ end
 @btime xt = @views dsc.ds.X[dsc.ds.tt[1].train, :]
 # 926.065 ns (19 allocations: 528 bytes)
 
+@btime begin
+    measures = [LogLoss, Accuracy]
+    a = measures[1]
+    b = measures[2]
+end
+# 15.265 ns (1 allocation: 48 bytes)
+
+@btime begin
+    measures = (LogLoss, Accuracy)
+    a = measures[1]
+    b = measures[2]
+end
+# 1.609 ns (0 allocations: 0 bytes)
 
 
 # ---------------------------------------------------------------------------- #
@@ -553,7 +567,6 @@ end
 
 function _evaluate!(func, mach, nfolds)
     ret = mapreduce(vcat, 1:nfolds) do k
-        @show k
         r = func(mach, k)
         return [r, ]
     end
@@ -569,5 +582,72 @@ measurements_vector_of_vectors, fitted_params_per_fold, report_per_fold  =
         nfolds
     )
 
+# prova con k=1
+k=1
 
+train, test = _resampling[k]
+fit!(mach; rows=train, verbosity=verbosity - 1, force=force)
+yhat_given_operation = Dict(op=>op(mach, rows=test) for op in unique(_operations))
 
+ytest = selectrows(y, test)
+
+# per_observation_flag = true
+@btime begin
+    measurements =  map((LogLoss(), Accuracy()), _operations) do m, op
+        MLJBase.StatisticalMeasuresBase.measurements(
+            m,
+            yhat_given_operation[op],
+            ytest,
+            MLJBase._view(weights, test),
+            class_weights,
+        )
+    end
+end
+# 20.539 μs (193 allocations: 9.61 KiB)
+
+# per_observation_flag = false
+@btime begin
+    measurements =  map((LogLoss(), Accuracy()), _operations) do m, op
+        m(
+            yhat_given_operation[op],
+            ytest,
+            MLJBase._view(weights, test),
+            class_weights,
+        )
+    end
+end
+# 20.567 μs (187 allocations: 8.75 KiB)
+
+@btime begin
+    measurements =  map((log_loss, accuracy), _operations) do m, op
+        m(
+            yhat_given_operation[op],
+            ytest,
+            MLJBase._view(weights, test),
+            class_weights,
+        )
+    end
+end
+# 20.678 μs (187 allocations: 8.75 KiB)
+
+measurements =  map((LogLoss(), Accuracy()), _operations) do m, op
+    MLJBase.StatisticalMeasuresBase.measurements(
+        m,
+        yhat_given_operation[op],
+        ytest,
+        MLJBase._view(weights, test),
+        class_weights,
+    )
+end
+
+fp = fitted_params(mach)
+r = report(mach)
+
+####
+
+ret = mapreduce(vcat, 1:nfolds) do k
+    r = fit_and_extract_on_fold(mach, k)
+    return [r, ]
+end
+
+zreat = zip(ret...) |> collect

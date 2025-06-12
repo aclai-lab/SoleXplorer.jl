@@ -372,12 +372,12 @@ Supports both classification and regression tasks, with extensive customization 
 - If `y` is provided as a column name, it will be extracted from `X`
 - When `model=nothing`, a default model setup is used
 """
-function _prepare_dataset(
+function __prepare_dataset(
     df::AbstractDataFrame,
     y::AbstractVector;
     algo::DataType,
     treatment::Symbol,
-    features::AbstractVector{<:Base.Callable},
+    features::Tuple,
     train_ratio::Float64,
     valid_ratio::Float64,
     rng::AbstractRNG,
@@ -432,7 +432,7 @@ function _prepare_dataset(
     )
 end
 
-function _prepare_dataset(
+function __prepare_dataset(
     X::AbstractDataFrame,
     y::AbstractVector,
     model::AbstractModelSetup
@@ -440,7 +440,7 @@ function _prepare_dataset(
     # modal reduce function, optional for propositional
     reducefunc = haskey(model.config, :reducefunc) ? model.config.reducefunc : nothing
 
-    _prepare_dataset(
+    __prepare_dataset(
         X, y;
         algo=modeltype(model),
         treatment=model.config.treatment,
@@ -454,7 +454,7 @@ function _prepare_dataset(
     )
 end
 
-function prepare_dataset(
+function _prepare_dataset(
     X             :: AbstractDataFrame,
     y             :: AbstractVector;
     model         :: NamedTuple     = (;type=:decisiontree),
@@ -465,10 +465,23 @@ function prepare_dataset(
     extract_rules :: NamedTupleBool = false,
     preprocess    :: OptNamedTuple  = nothing,
     reducefunc    :: OptCallable    = nothing,
+    measures      :: OptTuple       = nothing,
 )::Modelset
-    modelset = validate_modelset(model, eltype(y); resample, win, features, tuning, extract_rules, preprocess, reducefunc)
-    Modelset(modelset, _prepare_dataset(X, y, modelset))
+    modelset = validate_modelset(
+        model, eltype(y);
+        resample,
+        win,
+        features,
+        tuning,
+        extract_rules,
+        preprocess,
+        reducefunc,
+        measures
+    )
+    Modelset(modelset, __prepare_dataset(X, y, modelset))
 end
+
+prepare_dataset(args...; kwargs...) = _prepare_dataset(args...; kwargs...)
 
 # y is not a vector, but a symbol or a string that identifies a column in X
 function prepare_dataset(

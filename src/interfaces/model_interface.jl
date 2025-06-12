@@ -27,7 +27,8 @@ mutable struct ModelSetup{T<:AbstractModelType} <: AbstractModelSetup{T}
     type          :: Base.Callable
     config        :: NamedTuple
     params        :: NamedTuple
-    features      :: Union{AbstractVector{<:Base.Callable}, Nothing}
+    # features      :: Union{AbstractVector{<:Base.Callable}, Nothing}
+    features      :: Union{Tuple,    Nothing}
     resample      :: Union{Resample, Nothing}
     winparams     :: WinParams
     rawmodel      :: Union{Base.Callable, Tuple{Base.Callable, Base.Callable}}
@@ -36,6 +37,7 @@ mutable struct ModelSetup{T<:AbstractModelType} <: AbstractModelSetup{T}
     resultsparams :: Function
     rulesparams   :: Union{RulesParams, Bool}
     preprocess    :: NamedTuple
+    measures      :: Union{Tuple, Nothing}
 end
 
 get_config(m::ModelSetup)                 = m.config
@@ -47,6 +49,7 @@ get_resample(m::ModelSetup)               = m.resample
 get_preprocess(m::ModelSetup)             = m.preprocess
 get_resultsparams(m::ModelSetup)          = m.resultsparams
 get_rulesparams(m::ModelSetup)            = m.rulesparams
+get_measures(m::ModelSetup)               = m.measures
 
 get_pfeatures(m::ModelSetup)              = m.params.features
 get_treatment(m::ModelSetup)              = m.config.treatment
@@ -56,15 +59,16 @@ get_resampled_rawmodel(m::ModelSetup)     = m.rawmodel[2]
 get_learn_method(m::ModelSetup)           = m.learn_method[1]
 get_resampled_learn_method(m::ModelSetup) = m.learn_method[2]
 
-set_config!(m::ModelSetup,       config::NamedTuple)                               = m.config = config
-set_params!(m::ModelSetup,       params::NamedTuple)                               = m.params = params
-set_features!(m::ModelSetup,     features::Union{AbstractVector{<:Base.Callable}}) = m.features = features
-set_winparams!(m::ModelSetup,    winparams::WinParams)                             = m.winparams = winparams
-set_tuning!(m::ModelSetup,       tuning::Union{TuningParams, Bool})                = m.tuning = tuning
-set_resample!(m::ModelSetup,     resample::Union{Resample, Nothing})               = m.resample = resample
-set_rulesparams!(m::ModelSetup,  rulesparams::Union{RulesParams, Bool})            = m.rulesparams = rulesparams
-set_rawmodel!(m::ModelSetup,     rawmodel::Base.Callable)                          = m.rawmodel = rawmodel
-set_learn_method!(m::ModelSetup, learn_method::Base.Callable)                      = m.learn_method = learn_method
+set_config!(m::ModelSetup,       config::NamedTuple)                    = m.config = config
+set_params!(m::ModelSetup,       params::NamedTuple)                    = m.params = params
+set_features!(m::ModelSetup,     features::Union{Tuple, Nothing})       = m.features = features
+set_winparams!(m::ModelSetup,    winparams::WinParams)                  = m.winparams = winparams
+set_tuning!(m::ModelSetup,       tuning::Union{TuningParams, Bool})     = m.tuning = tuning
+set_resample!(m::ModelSetup,     resample::Union{Resample, Nothing})    = m.resample = resample
+set_rulesparams!(m::ModelSetup,  rulesparams::Union{RulesParams, Bool}) = m.rulesparams = rulesparams
+set_rawmodel!(m::ModelSetup,     rawmodel::Base.Callable)               = m.rawmodel = rawmodel
+set_learn_method!(m::ModelSetup, learn_method::Base.Callable)           = m.learn_method = learn_method
+set_measures!(m::ModelSetup,     measures::Union{Tuple, Nothing})       = m.measures = measures
 
 function Base.show(io::IO, ::MIME"text/plain", m::ModelSetup)
     println(io, "ModelSetup")
@@ -114,7 +118,8 @@ XGBoostRegressorModel(dtmodel       :: ModelSetup) = dtmodel
 # const TypeTreeForestR = Union{TypeDTR, TypeRFR}
 # const TypeModalForest = Union{TypeMRF, TypeMAB}
 
-const DEFAULT_FEATS = [maximum, minimum, MLJ.mean, std]
+const DEFAULT_FEATS = (maximum, minimum, MLJ.mean, std)
+const DEFAULT_MEAS  = (log_loss,)
 
 const DEFAULT_PREPROC = (
     train_ratio = 0.8,

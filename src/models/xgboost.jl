@@ -127,7 +127,8 @@ function XGBoostClassifierModel()::ModelSetup{AbstractClassification}
         tuning,
         resultsparams,
         rulesparams,
-        DEFAULT_PREPROC
+        DEFAULT_PREPROC,
+        DEFAULT_MEAS
     )
 end
     

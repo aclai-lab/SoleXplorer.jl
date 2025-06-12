@@ -71,15 +71,27 @@ function validate_params(
 end
 
 function validate_features(
-    defaults::AbstractVector,
+    defaults::Tuple,
     users::OptTuple
 )
-    features = users === nothing ? defaults : [users...]
+    features = users === nothing ? defaults : users
 
     # check if all features are functions
     all(f -> f isa Base.Callable, features) || throw(ArgumentError("All features must be functions"))
 
     return features
+end
+
+function validate_measures(
+    defaults::Tuple,
+    users::OptTuple
+)
+    measures = users === nothing ? defaults : users
+
+    # check if all measures are functions
+    # all(f -> f isa Base.Callable, measures) || throw(ArgumentError("All measures must be functions"))
+
+    return measures
 end
 
 function validate_resample(
@@ -217,6 +229,7 @@ function validate_modelset(
     extract_rules :: NamedTupleBool = false,
     preprocess    :: OptNamedTuple  = nothing,
     reducefunc    :: OptCallable    = nothing,
+    measures      :: OptTuple       = nothing,
 )::ModelSetup
     check_params(model, (:type, :params))
     check_params(resample, (:type, :params))
@@ -261,6 +274,8 @@ function validate_modelset(
     set_learn_method!(modelset, get_tuning(modelset) == false ? get_learn_method(modelset) : get_resampled_learn_method(modelset))
     preprocess === nothing || (modelset.preprocess = merge(get_preprocess(modelset), preprocess))
     set_resample!(modelset, validate_resample(resample, rng, modelset.preprocess.train_ratio))
+    set_measures!(modelset, validate_measures(get_measures(modelset), measures))
+    
     reducefunc === nothing || (modelset.config = merge(get_config(modelset), (reducefunc=reducefunc,)))
 
     return modelset

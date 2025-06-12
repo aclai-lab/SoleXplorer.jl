@@ -48,32 +48,39 @@ function _traintest!(model::AbstractModelset)::Modelset
     return model
 end
 
-function train_test(
-    X             :: AbstractDataFrame,
-    y             :: AbstractVector;
-    model         :: NamedTuple     = (;type=:decisiontree),
-    resample      :: NamedTuple     = (;type=Holdout),
-    win           :: OptNamedTuple  = nothing,
-    features      :: OptTuple       = nothing,
-    tuning        :: NamedTupleBool = false,
-    extract_rules :: NamedTupleBool = false,
-    preprocess    :: OptNamedTuple  = nothing,
-    reducefunc    :: OptCallable    = nothing,
-)::Modelset
-    modelset = validate_modelset(model, eltype(y); resample, win, features, tuning, extract_rules, preprocess, reducefunc)
-    model = Modelset(modelset, _prepare_dataset(X, y, modelset))
+function train_test(args...; kwargs...)
+    model = _prepare_dataset(args...; kwargs...)
     _traintest!(model)
 
     return model
 end
 
-train_test(m::AbstractModelset) = _traintest!(m)
+# function train_test(
+#     X             :: AbstractDataFrame,
+#     y             :: AbstractVector;
+#     model         :: NamedTuple     = (;type=:decisiontree),
+#     resample      :: NamedTuple     = (;type=Holdout),
+#     win           :: OptNamedTuple  = nothing,
+#     features      :: OptTuple       = nothing,
+#     tuning        :: NamedTupleBool = false,
+#     extract_rules :: NamedTupleBool = false,
+#     preprocess    :: OptNamedTuple  = nothing,
+#     reducefunc    :: OptCallable    = nothing,
+# )::Modelset
+#     modelset = validate_modelset(model, eltype(y); resample, win, features, tuning, extract_rules, preprocess, reducefunc)
+#     model = Modelset(modelset, _prepare_dataset(X, y, modelset))
+#     _traintest!(model)
 
-# y is not a vector, but a symbol or a string that identifies the column in X
-function train_test(
-    X::AbstractDataFrame,
-    y::SymbolString;
-    kwargs...
-)::Modelset
-    train_test(X[!, Not(y)], X[!, y]; kwargs...)
-end
+#     return model
+# end
+
+# train_test(m::AbstractModelset) = _traintest!(m)
+
+# # y is not a vector, but a symbol or a string that identifies the column in X
+# function train_test(
+#     X::AbstractDataFrame,
+#     y::SymbolString;
+#     kwargs...
+# )::Modelset
+#     train_test(X[!, Not(y)], X[!, y]; kwargs...)
+# end
