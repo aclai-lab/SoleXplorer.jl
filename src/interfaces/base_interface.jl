@@ -61,7 +61,7 @@ modeltype(::AbstractModelset{T}) where {T} = T
 """
 Abstract type for results output
 """
-abstract type AbstractResults end
+abstract type AbstractMeasures end
 
 """
 Abstract type for type/params structs

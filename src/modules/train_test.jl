@@ -21,25 +21,25 @@ end
 # ---------------------------------------------------------------------------- #
 #                                  train_test                                  #
 # ---------------------------------------------------------------------------- #
-function _traintest!(model::AbstractModelset)::Modelset
+function _traintest!(model::AbstractModelset, ds::AbstractDataset)::Modelset
     # Early stopping is a regularization technique in XGBoost that prevents overfitting by monitoring model performance 
     # on a validation dataset and stopping training when performance no longer improves.
     if haskey(model.setup.params, :watchlist) && model.setup.params.watchlist == makewatchlist
-        model.setup.params = merge(model.setup.params, (watchlist = makewatchlist(model.ds),))
+        model.setup.params = merge(model.setup.params, (watchlist = makewatchlist(ds),))
     end
 
     model.predictor = get_predictor!(model.setup)
-    model.mach = MLJ.machine(model.predictor, MLJ.table(@views model.ds.X), @views model.ds.y)
+    model.mach = MLJ.machine(model.predictor, MLJ.table(@views ds.X), @views ds.y)
 
-    n_folds = length(model.ds.tt)
+    n_folds = length(ds.tt)
     model.model = Vector{SoleXplorer.AbstractModel}(undef, n_folds)
 
     # TODO this can be parallelizable
     @inbounds for i in 1:n_folds
-        train = model.ds.tt[i].train
-        test  = model.ds.tt[i].test
-        X_test  = DataFrame((@views model.ds.X[test, :]), model.ds.info.vnames)
-        y_test  = @views model.ds.y[test]
+        train = ds.tt[i].train
+        test  = ds.tt[i].test
+        X_test  = DataFrame((@views ds.X[test, :]), ds.info.vnames)
+        y_test  = @views ds.y[test]
         
         MLJ.fit!(model.mach, rows=train, verbosity=0)
         model.model[i] = model.setup.learn_method(model.mach, X_test, y_test)
@@ -48,9 +48,11 @@ function _traintest!(model::AbstractModelset)::Modelset
     return model
 end
 
+# TODO train_test da strutture Modelset e Dataset
+
 function train_test(args...; kwargs...)
-    model = _prepare_dataset(args...; kwargs...)
-    _traintest!(model)
+    model, ds = _prepare_dataset(args...; kwargs...)
+    _traintest!(model, ds)
 
     return model
 end

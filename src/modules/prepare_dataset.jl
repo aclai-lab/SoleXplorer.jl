@@ -466,7 +466,7 @@ function _prepare_dataset(
     preprocess    :: OptNamedTuple  = nothing,
     reducefunc    :: OptCallable    = nothing,
     measures      :: OptTuple       = nothing,
-)::Modelset
+)::Tuple{Modelset, Dataset}
     modelset = validate_modelset(
         model, eltype(y);
         resample,
@@ -478,16 +478,16 @@ function _prepare_dataset(
         reducefunc,
         measures
     )
-    Modelset(modelset, __prepare_dataset(X, y, modelset))
+    Modelset(modelset,), __prepare_dataset(X, y, modelset)
 end
 
-prepare_dataset(args...; kwargs...) = _prepare_dataset(args...; kwargs...)
+prepare_dataset(args...; kwargs...)::Tuple{Modelset, Dataset} = _prepare_dataset(args...; kwargs...)
 
 # y is not a vector, but a symbol or a string that identifies a column in X
 function prepare_dataset(
     X::AbstractDataFrame,
     y::SymbolString;
     kwargs...
-)::Modelset
+)::Tuple{Modelset, Dataset}
     prepare_dataset(X[!, Not(y)], X[!, y]; kwargs...)
 end

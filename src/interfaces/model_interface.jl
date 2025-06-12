@@ -190,28 +190,28 @@ Modelset(
 """
 mutable struct Modelset{T<:AbstractModelType} <: AbstractModelset{T}
     setup      :: AbstractModelSetup{T}
-    ds         :: AbstractDataset
-    predictor  :: Union{MLJ.Model,       Nothing}
-    mach       :: Union{MLJ.Machine,     Nothing}
-    model      :: Union{AbstractModel,   AbstractVector{<:AbstractModel}, Nothing}
-    rules      :: Union{Rule,            AbstractVector{<:Rule},          Nothing}
-    results    :: Union{AbstractResults, Nothing}
+    # ds         :: AbstractDataset
+    predictor  :: Union{MLJ.Model,        Nothing}
+    mach       :: Union{MLJ.Machine,      Nothing}
+    model      :: Union{AbstractModel,    AbstractVector{<:AbstractModel}, Nothing}
+    rules      :: Union{Rule,             AbstractVector{<:Rule},          Nothing}
+    measures   :: Union{AbstractMeasures, Nothing}
 
     function Modelset(
         setup      :: AbstractModelSetup{T},
-        ds         :: AbstractDataset,
+        # ds         :: AbstractDataset,
         predictor  :: MLJ.Model,
         mach       :: MLJ.Machine,
         model      :: AbstractModel
     )::Modelset where {T<:AbstractModelType}
-        new{T}(setup, ds, predictor, mach, model, nothing, nothing)
+        new{T}(setup, predictor, mach, model, nothing, nothing)
     end
 
     function Modelset(
         setup      :: AbstractModelSetup{T},
-        ds         :: Dataset
+        # ds         :: Dataset
     )::Modelset where {T<:AbstractModelType}
-        new{T}(setup, ds, nothing, nothing, nothing, nothing, nothing)
+        new{T}(setup, nothing, nothing, nothing, nothing, nothing)
     end
 end
 
