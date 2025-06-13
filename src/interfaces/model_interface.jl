@@ -38,6 +38,7 @@ mutable struct ModelSetup{T<:AbstractModelType} <: AbstractModelSetup{T}
     rulesparams   :: Union{RulesParams, Bool}
     preprocess    :: NamedTuple
     measures      :: Union{Tuple, Nothing}
+    tt            :: Union{Vector{Tuple}, Nothing}
 end
 
 get_config(m::ModelSetup)                 = m.config
@@ -58,6 +59,9 @@ get_rawmodel(m::ModelSetup)               = m.rawmodel[1]
 get_resampled_rawmodel(m::ModelSetup)     = m.rawmodel[2]
 get_learn_method(m::ModelSetup)           = m.learn_method[1]
 get_resampled_learn_method(m::ModelSetup) = m.learn_method[2]
+
+get_test(m::ModelSetup)                   = m.tt.test
+get_valid(m::ModelSetup)                  = m.tt.valid
 
 set_config!(m::ModelSetup,       config::NamedTuple)                    = m.config = config
 set_params!(m::ModelSetup,       params::NamedTuple)                    = m.params = params
@@ -214,6 +218,13 @@ mutable struct Modelset{T<:AbstractModelType} <: AbstractModelset{T}
         new{T}(setup, nothing, nothing, nothing, nothing, nothing)
     end
 end
+
+get_mach(m::Modelset)       = m.mach
+get_mach_model(m::Modelset) = m.mach.model
+get_solemodel(m::Modelset)  = m.model
+get_mach_y(m::Modelset)     = m.mach.args[2]()
+get_setup_meas(m::Modelset) = m.setup.measures
+get_setup_tt(m::Modelset)   = m.setup.tt
 
 function Base.show(io::IO, mc::Modelset)
     println(io, "Modelset:")

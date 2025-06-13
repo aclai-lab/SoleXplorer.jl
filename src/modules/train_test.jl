@@ -32,7 +32,8 @@ function _traintest!(model::AbstractModelset, ds::AbstractDataset)::Modelset
     model.mach = MLJ.machine(model.predictor, MLJ.table(@views ds.X), @views ds.y)
 
     n_folds = length(ds.tt)
-    model.model = Vector{SoleXplorer.AbstractModel}(undef, n_folds)
+    model.model = Vector{AbstractModel}(undef, n_folds)
+    model.setup.tt = Vector{Tuple}(undef, n_folds)
 
     # TODO this can be parallelizable
     @inbounds for i in 1:n_folds
@@ -43,6 +44,7 @@ function _traintest!(model::AbstractModelset, ds::AbstractDataset)::Modelset
         
         MLJ.fit!(model.mach, rows=train, verbosity=0)
         model.model[i] = model.setup.learn_method(model.mach, X_test, y_test)
+        model.setup.tt[i] = (ds.tt[i].test, ds.tt[i].valid)
     end
 
     return model

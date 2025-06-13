@@ -362,6 +362,11 @@ test = Xc
 
 # === nothing -> 318.183 μs (1974 allocations: 145.19 KiB)
 
+@btime a=[t.test for t in dsc[2].tt]
+# 599.452 ns (5 allocations: 288 bytes)
+@btime a=collect(t.test for t in dsc[2].tt)
+# 554.075 ns (5 allocations: 288 bytes)
+
 # ---------------------------------------------------------------------------- #
 # mlj evaluate vs solexplorer
 Tree = @load DecisionTreeClassifier pkg=DecisionTree
@@ -449,7 +454,7 @@ Tree = @load DecisionTreeClassifier pkg=DecisionTree
 tree = Tree()
 
 # in evaluate vengono passati: il modello, il dataset e cache=true
-mach = machine(tree, MLJ.table(dsc.ds.X), dsc.ds.y; cache=true)
+mach = machine(tree, Xc, yc; cache=true)
 
 e1 = evaluate!(
     mach;
@@ -687,6 +692,7 @@ dsc = train_test(
     Xc, yc;
     model=(;type=:decisiontree),
     resample=(;type=CV),
+    measures=(log_loss, accuracy),
     preprocess=(;rng=Xoshiro(1))
 )
 
@@ -694,10 +700,25 @@ dsr = train_test(
     Xr, yr;
     model=(;type=:decisiontree),
     resample=(;type=CV),
+    measures=(log_loss, accuracy),
     preprocess=(;rng=Xoshiro(1))
 )
 
 model = dsc
+weights = nothing
+class_weights = nothing
+per_observation = true
+
+# bench
+Tree = @load DecisionTreeClassifier pkg=DecisionTree
+tree = Tree()
+e1t = evaluate(
+    tree, Xc, yc;
+    resampling=CV(nfolds=6, shuffle=false, rng=Xoshiro(1)),
+    measures=[log_loss, accuracy, confusion_matrix, kappa],
+    per_observation=true,
+    verbosity=0
+)
 
 function eval_measures!(model::Modelset)::Measures
     # mach::Machine,
@@ -717,188 +738,194 @@ function eval_measures!(model::Modelset)::Measures
     # compact,
     # )
 
-    # Note: `user_resampling` keyword argument is the user-defined resampling strategy,
-    # while `resampling` is always a `TrainTestPairs`.
-
-    # Note: `rows` and `repeats` are only passed to the final `PeformanceEvaluation`
-    # object to be returned and are not otherwise used here.
-
-    # if !(resampling isa TrainTestPairs)
-    #     error("`resampling` must be an "*
-    #           "`MLJ.ResamplingStrategy` or tuple of rows "*
-    #           "of the form `(train_rows, test_rows)`")
+    # @btime begin
+    #     _measures = MLJBase._actual_measures([model.setup.measures...], model.mach.model)
+    #     _operations = MLJBase._actual_operations(nothing, _measures, model.mach.model, 0)
     # end
+    # 4.842 μs (42 allocations: 1.33 KiB)
 
-    # X = mach.args[1]()
-    # y = mach.args[2]()
-    # nrows = MLJBase.nrows(y)
-
-    # nfolds = length(resampling)
-    # test_fold_sizes = map(resampling) do train_test_pair
-    #     test = last(train_test_pair)
-    #     test isa Colon && (return nrows)
-    #     length(test)
+    # @btime begin
+    #     _measures = MLJBase._actual_measures([SoleXplorer.get_setup_meas(model)...], SoleXplorer.get_mach_model(model))
+    #     _operations = MLJBase._actual_operations(nothing, _measures, SoleXplorer.get_mach_model(model), 0)
     # end
+    # 4.714 μs (42 allocations: 1.33 KiB)
+
+    # cava i vari SoleXplorer.
+    _measures = MLJBase._actual_measures([SoleXplorer.get_setup_meas(model)...], SoleXplorer.get_mach_model(model))
+    _operations = MLJBase._actual_operations(nothing, _measures, SoleXplorer.get_mach_model(model), 0)
+
+    y = SoleXplorer.get_mach_y(model)
+    tt = SoleXplorer.get_setup_tt(model)
+    nfolds = length(tt)
+    test_fold_sizes = [length(tt[k][1]) for k in 1:nfolds]
+
+    nmeasures = length(SoleXplorer.get_setup_meas(model))
 
     # weights used to aggregate per-fold measurements, which depends on a measures
     # external mode of aggregation:
-    # fold_weights(mode) = nfolds .* test_fold_sizes ./ sum(test_fold_sizes)
-    # fold_weights(::StatisticalMeasuresBase.Sum) = nothing
+    fold_weights(mode) = nfolds .* test_fold_sizes ./ sum(test_fold_sizes)
+    fold_weights(::MLJBase.StatisticalMeasuresBase.Sum) = nothing
 
-    # nmeasures = length(measures)
+    # @btime begin
+        measurements_vector = mapreduce(vcat, 1:nfolds) do k
+            yhat_given_operation = Dict(op=>op(SoleXplorer.get_mach(model), rows=tt[k][1]) for op in unique(_operations))
+            test = tt[k][1]
 
-    # function fit_and_extract_on_fold(mach, k)
-    #     train, test = resampling[k]
-    #     fit!(mach; rows=train, verbosity=verbosity - 1, force=force)
-    #     # build a dictionary of predictions keyed on the operations
-    #     # that appear (`predict`, `predict_mode`, etc):
-    #     yhat_given_operation =
-    #         Dict(op=>op(mach, rows=test) for op in unique(operations))
+            # [per_observation ? begin
+            #     map(_measures, _operations) do m, op
+            #         MLJBase.StatisticalMeasuresBase.measurements(
+            #             m,
+            #             yhat_given_operation[op],
+            #             y[test],
+            #             MLJBase._view(weights, test),
+            #             class_weights,
+            #         )
+            #     end
+            # end : begin
+            #     map(_measures, _operations) do m, op
+            #         m(
+            #             yhat_given_operation[op],
+            #             y[test],
+            #             MLJBase._view(weights, test),
+            #             class_weights,
+            #         )
+            #     end
+            # end]
 
-    #     ytest = selectrows(y, test)
-    #     if per_observation_flag
-    #         measurements =  map(measures, operations) do m, op
-    #             StatisticalMeasuresBase.measurements(
-    #                 m,
-    #                 yhat_given_operation[op],
-    #                 ytest,
-    #                 _view(weights, test),
-    #                 class_weights,
-    #             )
-    #         end
-    #     else
-    #         measurements =  map(measures, operations) do m, op
-    #             m(
-    #                 yhat_given_operation[op],
-    #                 ytest,
-    #                 _view(weights, test),
-    #                 class_weights,
-    #             )
-    #         end
-    #     end
-
-    #     fp = fitted_params(mach)
-    #     r = report(mach)
-    #     return (measurements, fp, r)
-    # end
-
-    # if acceleration isa CPUProcesses
-    #     if verbosity > 0
-    #         @info "Distributing evaluations " *
-    #               "among $(nworkers()) workers."
-    #     end
-    # end
-    #  if acceleration isa CPUThreads
-    #     if verbosity > 0
-    #         nthreads = Threads.nthreads()
-    #         @info "Performing evaluations " *
-    #           "using $(nthreads) thread" * ifelse(nthreads == 1, ".", "s.")
-    #     end
-    # end
-
-    # measurements_vector_of_vectors, fitted_params_per_fold, report_per_fold  =
-    #     _evaluate!(
-    #         fit_and_extract_on_fold,
-    #         mach,
-    #         acceleration,
-    #         nfolds,
-    #         verbosity
-    #     )
-
-    measurements_vector_of_vectors = mapreduce(vcat, 1:nfolds) do k
-        yhat_given_operation =
-            Dict(op=>op(mach, rows=test) for op in unique(operations))
-
-        ytest = selectrows(y, test)
-        if per_observation_flag
-            measurements =  map(measures, operations) do m, op
-                StatisticalMeasuresBase.measurements(
-                    m,
-                    yhat_given_operation[op],
-                    ytest,
-                    _view(weights, test),
-                    class_weights,
-                )
-            end
-        else
-            measurements =  map(measures, operations) do m, op
+            [map(_measures, _operations) do m, op
                 m(
                     yhat_given_operation[op],
-                    ytest,
-                    _view(weights, test),
+                    y[test],
+                    MLJBase._view(weights, test),
                     class_weights,
                 )
-            end
+            end]
         end
-        return measurements
-    end
 
-    # return zip(ret...) |> collect
+        # @btime begin
+        #     measurements_flat = vcat(measurements_vector...)
+        #     measurements_matrix = permutedims(
+        #         reshape(collect(measurements_flat), (nmeasures, nfolds))
+        #     )
+        # end
+        # # 331.274 ns (8 allocations: 576 bytes)
 
-    measurements_flat = vcat(measurements_vector_of_vectors...)
+        # @btime measurements_matrix = permutedims(reshape(vcat(measurements_vector...), (nmeasures, nfolds)))
+        # # 291.755 ns (6 allocations: 416 bytes)
 
-    # In the `measurements_matrix` below, rows=folds, columns=measures; each element of
-    # the matrix is:
-    #
-    # - a vector of meausurements, one per observation within a fold, if
-    # - `per_observation_flag = true`; or
-    #
-    # - a single measurment for the whole fold, if `per_observation_flag = false`.
-    #
-    measurements_matrix = permutedims(
-        reshape(collect(measurements_flat), (nmeasures, nfolds))
-    )
+        # @btime measurements_matrix = permutedims(reduce(hcat, measurements_vector))
+        # # 149.251 ns (4 allocations: 352 bytes)
+
+        # measurements_flat = vcat(measurements_vector...)
+        # m_original = permutedims(
+        #     reshape(collect(measurements_flat), (nmeasures, nfolds))
+        # )
+
+        # m_proposed = permutedims(reduce(hcat, measurements_vector))
+
+        # @assert m_original == m_proposed # true
+
+        measurements_matrix = permutedims(reduce(hcat, measurements_vector))
+    # end
+    # 605.570 μs (7858 allocations: 434.73 KiB)
+
+    #####
+
+    # @btime begin
+    #     measurements_matrix2 = permutedims(mapreduce(hcat, 1:nfolds) do k
+    #         yhat_given_operation = Dict(op=>op(SoleXplorer.get_mach(model), rows=tt[k][1]) for op in unique(_operations))
+    #         test = tt[k][1]
+            
+    #         map(_measures, _operations) do m, op
+    #             m(yhat_given_operation[op], y[test], MLJBase._view(weights, test), class_weights)
+    #         end
+    #     end)
+    # end
+    # 605.570 μs (7858 allocations: 434.73 KiB)
+
+    # @btime begin
+    #     measurements_matrix3 = permutedims(hcat([
+    #         let 
+    #             yhat_given_operation = Dict(op=>op(SoleXplorer.get_mach(model), rows=tt[k][1]) for op in unique(_operations))
+    #             test = tt[k][1]
+    #             map(_measures, _operations) do m, op
+    #                 m(yhat_given_operation[op], y[test], MLJBase._view(weights, test), class_weights)
+    #             end
+    #         end
+    #         for k in 1:nfolds
+    #     ]...))
+    # end
+    # 611.978 μs (7848 allocations: 434.48 KiB)
+
+    # @btime begin
+    # measurements_matrix4 = Matrix{Float64}(undef, nfolds, nmeasures)
+    #     for k in 1:nfolds
+    #         yhat_given_operation = Dict(op=>op(SoleXplorer.get_mach(model), rows=tt[k][1]) for op in unique(_operations))
+    #         test = tt[k][1]
+            
+    #         measurements_matrix4[k, :] = map(_measures, _operations) do m, op
+    #             m(yhat_given_operation[op], y[test], MLJBase._view(weights, test), class_weights)
+    #         end
+    #     end
+    # end
+    # 623.638 μs (7869 allocations: 434.64 KiB)
+
+    # @btime begin
+    #     measurements_matrix = mapreduce(hcat, 1:nfolds) do k
+    #         yhat_given_operation = Dict(op=>op(SoleXplorer.get_mach(model), rows=tt[k][1]) for op in unique(_operations))
+    #         test = tt[k][1]
+            
+    #         map(_measures, _operations) do m, op
+    #             m(yhat_given_operation[op], y[test], MLJBase._view(weights, test), class_weights)
+    #         end
+    #     end |> permutedims
+    # end
+    # 610.553 μs (7844 allocations: 434.44 KiB)
 
     # measurements for each observation:
-    per_observation = if per_observation_flag
-       map(1:nmeasures) do k
-           measurements_matrix[:,k]
-       end
-    else
-        fill(missing, nmeasures)
-    end
+    # _observation = if per_observation
+    #    map(1:nmeasures) do k
+    #        measurements_matrix[:,k]
+    #    end
+    # else
+    #     fill(missing, nmeasures)
+    # end
 
     # measurements for each fold:
-    per_fold = if per_observation_flag
-        map(1:nmeasures) do k
-            m = measures[k]
-            mode = StatisticalMeasuresBase.external_aggregation_mode(m)
-            map(per_observation[k]) do v
-                StatisticalMeasuresBase.aggregate(v; mode)
-            end
-        end
-    else
-        map(1:nmeasures) do k
-            measurements_matrix[:,k]
-        end
+    # _fold = if per_observation
+    #     map(1:nmeasures) do k
+    #         m = SoleXplorer.get_setup_meas(model)[k]
+    #         mode = MLJBase.StatisticalMeasuresBase.external_aggregation_mode(m)
+    #         map(_observation[k]) do v
+    #             MLJBase.StatisticalMeasuresBase.aggregate(v; mode)
+    #         end
+    #     end
+    # else
+    #     map(1:nmeasures) do k
+    #         measurements_matrix[:,k]
+    #     end
+    # end
+
+    # measurements for each fold:
+    _fold = map(1:nmeasures) do k
+        measurements_matrix[:,k]
     end
 
     # overall aggregates:
-    per_measure = map(1:nmeasures) do k
-        m = measures[k]
-        mode = StatisticalMeasuresBase.external_aggregation_mode(m)
-        StatisticalMeasuresBase.aggregate(
-            per_fold[k];
+    _measures_values = map(1:nmeasures) do k
+        m = SoleXplorer.get_setup_meas(model)[k]
+        mode = MLJBase.StatisticalMeasuresBase.external_aggregation_mode(m)
+        MLJBase.StatisticalMeasuresBase.aggregate(
+            _fold[k];
             mode,
             weights=fold_weights(mode),
         )
     end
 
-    evaluation = PerformanceEvaluation(
-        mach.model,
-        measures,
-        per_measure,
-        operations,
-        per_fold,
-        per_observation,
-        fitted_params_per_fold |> collect,
-        report_per_fold |> collect,
-        resampling,
-        user_resampling,
-        repeats
+    Measures(
+        _fold,
+        _measures,
+        _measures_values,
+        _operations,
     )
-    log_evaluation(logger, evaluation)
-
-    compact && return compactify(evaluation)
-    return evaluation
 end
