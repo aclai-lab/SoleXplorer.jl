@@ -50,8 +50,6 @@ function _traintest!(model::AbstractModelset, ds::AbstractDataset)::Modelset
     return model
 end
 
-# TODO train_test da strutture Modelset e Dataset
-
 function train_test(args...; kwargs...)
     model, ds = _prepare_dataset(args...; kwargs...)
     _traintest!(model, ds)

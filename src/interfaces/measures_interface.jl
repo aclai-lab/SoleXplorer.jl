@@ -80,15 +80,8 @@
 # )
 
 struct Measures <: AbstractMeasures
-    # model::M
-    # measure::Measure
-    # measurement::Measurement
-    # operation::Operation
-    # per_fold::PerFold
-    # per_observation::PerObservation
-    # fitted_params_per_fold::FittedParamsPerFold
-    # report_per_fold::ReportPerFold
-    # train_test_rows::TrainTestPairs
-    # resampling::R
-    repeats::Int
+    per_fold        :: AbstractVector
+    measures        :: AbstractVector{<:MLJBase.StatisticalMeasuresBase.Wrapper}
+    measures_values :: AbstractVector
+    operations      :: AbstractVector{<:Base.Callable}
 end

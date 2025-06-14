@@ -9,7 +9,7 @@ end
 #                                  measures                                    #
 # ---------------------------------------------------------------------------- #
 function eval_measures!(model::Modelset)::Measures
-    _measures = MLJBase._actual_measures([get_setup_meas(model)...], get_mach_model(model))
+    _measures = MLJBase._actual_measures([get_setup_meas(model)...], get_solemodel(model))
     _operations = MLJBase._actual_operations(nothing, _measures, get_mach_model(model), 0)
 
     y = get_mach_y(model)
@@ -33,8 +33,10 @@ function eval_measures!(model::Modelset)::Measures
             m(
                 yhat_given_operation[op],
                 y[test],
-                MLJBase._view(weights, test),
-                class_weights
+                # MLJBase._view(weights, test),
+                # class_weights
+                MLJBase._view(nothing, test),
+                nothing
             )
         end]
     end
@@ -71,8 +73,7 @@ function symbolic_analysis(args...; extract_rules::NamedTupleBool=false, kwargs.
         rules_extraction!(model)
     end
 
-    # save results into model
-    # model.results = RESULTS[get_algo(model.setup)](model.setup, model.model)
+    eval_measures!(model)
 
     return model
 end

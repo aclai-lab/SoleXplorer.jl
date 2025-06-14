@@ -929,3 +929,109 @@ function eval_measures!(model::Modelset)::Measures
         _operations,
     )
 end
+
+# ---------------------------------------------------------------------------- #
+#                                   Weigths                                    #
+# ---------------------------------------------------------------------------- #
+using MLJ, SoleXplorer, MLJBase
+using MLJDecisionTreeInterface
+using MLJModelInterface
+using DataFrames, Random
+using Plots
+
+using NearestNeighborModels         # For KNN models
+using MLJMultivariateStatsInterface # For PCA models
+using MultivariateStats
+
+Xc, yc = @load_iris
+Xc = DataFrame(Xc)
+
+Xr, yr = @load_boston
+Xr = DataFrame(Xr)
+
+amc = models(matching(Xc, yc))
+
+Tree = @load EvoTreeClassifier pkg=EvoTrees
+tree = Tree()
+
+e1t = MLJ.evaluate(
+    tree, Xc, yc;
+    resampling=CV(shuffle=false),
+    measures=[accuracy],
+    per_observation=false,
+    verbosity=0
+)
+
+### all nothing
+
+# ---------------------------------------------------------------------------- #
+#                        Measures results comparision                          #
+# ---------------------------------------------------------------------------- #
+# to be included in SoleXplorer tests
+using Test
+using BenchmarkTools
+using MLJ, SoleXplorer
+using MLJDecisionTreeInterface
+using MLJModelInterface
+using DataFrames, Random
+
+Xc, yc = @load_iris
+Xc = DataFrame(Xc)
+
+Xr, yr = @load_boston
+Xr = DataFrame(Xr)
+
+dsc = symbolic_analysis(
+    Xc, yc;
+    model=(;type=:decisiontree),
+    resample = (type=Holdout, params=(shuffle=true, rng=Xoshiro(1))),
+    preprocess=(;train_ratio=0.7, rng=Xoshiro(1)),
+    measures=(log_loss, accuracy, kappa, confusion_matrix),
+)
+
+Tree = @load DecisionTreeClassifier pkg=DecisionTree
+tree = Tree()
+Random.seed!(1)
+e1t = evaluate(
+    tree, Xc, yc;
+    resampling=Holdout(rng=Xoshiro(1)),
+    measures=[log_loss, accuracy, kappa, confusion_matrix],
+    per_observation=false,
+    verbosity=0,
+)
+
+@test dsc.measures.measures[1] == e1t.measure[1]
+@test dsc.measures.measures[2] == e1t.measure[2]
+@test dsc.measures.measures[3] == e1t.measure[3]
+@test dsc.measures.measures[4] == e1t.measure[4]
+
+@test dsc.measures.measures_values[1] == e1t.measurement[1]
+@test dsc.measures.measures_values[2] == e1t.measurement[2]
+@test dsc.measures.measures_values[3] == e1t.measurement[3]
+@test dsc.measures.measures_values[4] == e1t.measurement[4]
+
+@btime begin
+    dsc = symbolic_analysis(
+        Xc, yc;
+        model=(;type=:decisiontree),
+        resample = (type=Holdout, params=(shuffle=true, rng=Xoshiro(1))),
+        preprocess=(;train_ratio=0.7, rng=Xoshiro(1)),
+        measures=(log_loss, accuracy, kappa, confusion_matrix),
+    )
+end
+# 753.927 μs (4772 allocations: 334.00 KiB)
+# but if we take out of the equation the process of converting the decisiontree in a sole model
+# 395.653 μs (2773 allocations: 165.50 KiB)
+
+@btime begin
+    Tree = @load DecisionTreeClassifier pkg=DecisionTree
+    tree = Tree()
+    Random.seed!(1)
+    e1t = evaluate(
+        tree, Xc, yc;
+        resampling=Holdout(rng=Xoshiro(1)),
+        measures=[log_loss, accuracy, kappa, confusion_matrix],
+        verbosity=0,
+    )
+end
+# 644.247 μs (3234 allocations: 199.06 KiB)

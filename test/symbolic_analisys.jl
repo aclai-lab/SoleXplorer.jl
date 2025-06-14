@@ -9,12 +9,13 @@ using MLJ
 X, y = @load_iris
 X = DataFrame(X)
 
-ds = prepare_dataset(X, y)
+# ds = prepare_dataset(X, y)
 
 mset_01 = symbolic_analysis(
     X, y;
     model=(;type=:decisiontree),
-    preprocess=(;rng=Xoshiro(1))
+    preprocess=(;rng=Xoshiro(11)),
+    measures=(accuracy, confusion_matrix)
 )
 
 mset_02 = symbolic_analysis(

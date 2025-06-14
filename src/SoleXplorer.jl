@@ -34,9 +34,9 @@ using Reexport
 # ---------------------------------------------------------------------------- #
 #                                     MLJ                                      #
 # ---------------------------------------------------------------------------- #
-using MLJ
+using MLJ, MLJBase
 
-@reexport using MLJ: accuracy, log_loss
+@reexport using MLJ: accuracy, confusion_matrix, kappa, log_loss
 
 # ---------------------------------------------------------------------------- #
 #                                    utils                                     #
@@ -78,7 +78,7 @@ include("interfaces/extractrules_interface.jl")
 include("interfaces/model_interface.jl")
 export Modelset
 
-# include("interfaces/results_interface.jl")
+include("interfaces/measures_interface.jl")
 
 # ---------------------------------------------------------------------------- #
 #                                   models                                     #
