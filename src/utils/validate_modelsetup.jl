@@ -2,33 +2,33 @@
 #                                  utilities                                   #
 # ---------------------------------------------------------------------------- #
 function check_params(
-    params::Union{NamedTuple, Nothing},
+    params::OptNamedTuple,
     allowed_keys::Tuple
 )
-    isnothing(params) && return
+    params === nothing && return
     unknown_keys = setdiff(keys(params), allowed_keys)
     isempty(unknown_keys) || throw(ArgumentError("Unknown fields: $unknown_keys"))
 end
 
-filter_params(p) = isnothing(p) ? NamedTuple() : p
+filter_params(p) = p === nothing ? NamedTuple() : p
 
 function get_type(
-    params::Union{NamedTuple, Nothing},
+    params::OptNamedTuple,
     avail_types::Tuple
 )
-    isnothing(params) && return nothing
+    params === nothing && return nothing
     p_type = get(params, :type, nothing)
-    isnothing(p_type) && return nothing
+    p_type === nothing && return nothing
 
     p_type ∈ avail_types || throw(ArgumentError("Type :$p_type not found in available types"))
     return p_type
 end
 
 function check_user_params(
-    users::Union{NamedTuple, Nothing},
+    users::OptNamedTuple,
     default_params::Dict
 )
-    isnothing(users) ? NamedTuple() : (haskey(users, :params) ? begin
+    users === nothing ? NamedTuple() : (haskey(users, :params) ? begin
         check_params(users.params, keys(default_params[users.type]))
         NamedTuple(k => v for (k, v) in pairs(users.params))
     end : NamedTuple())
@@ -36,10 +36,10 @@ end
 
 function merge_params(
     defaults::NamedTuple,
-    users::Union{NamedTuple, Nothing},
+    users::OptNamedTuple,
     rng::Union{AbstractRNG, Nothing}=nothing
 )
-    !isnothing(rng) && haskey(defaults, :rng) ?
+    !(rng === nothing) && haskey(defaults, :rng) ?
         merge(defaults, filter_params(users), (rng=rng,)) :
         merge(defaults, filter_params(users))
 end
@@ -63,7 +63,7 @@ end
 
 function validate_params(
     defaults::NamedTuple,
-    users::Union{NamedTuple, Nothing},
+    users::OptNamedTuple,
     rng::Union{AbstractRNG, Nothing}
 )::NamedTuple     
     check_params(users, keys(defaults))
@@ -71,10 +71,10 @@ function validate_params(
 end
 
 function validate_features(
-    defaults::AbstractVector,
-    users::Union{Tuple, Nothing}
+    defaults::Tuple,
+    users::OptTuple
 )
-    features = isnothing(users) ? defaults : [users...]
+    features = users === nothing ? defaults : users
 
     # check if all features are functions
     all(f -> f isa Base.Callable, features) || throw(ArgumentError("All features must be functions"))
@@ -82,10 +82,23 @@ function validate_features(
     return features
 end
 
+function validate_measures(
+    defaults::Tuple,
+    users::OptTuple
+)
+    measures = users === nothing ? defaults : users
+
+    # check if all measures are functions
+    # all(f -> f isa Base.Callable, measures) || throw(ArgumentError("All measures must be functions"))
+
+    return measures
+end
+
 function validate_resample(
-    users::Union{NamedTuple, Nothing},
-    rng::Union{AbstractRNG, Nothing}=nothing
-)::Union{Resample, Nothing}    
+    users::OptNamedTuple,
+    rng::Union{AbstractRNG, Nothing}=nothing,
+    train_ratio::Float64=0.7
+)::Resample
     check_params(users, (:type, :params))
     type = get_type(users, SoleXplorer.AVAIL_RESAMPLES)
     def_params = SoleXplorer.RESAMPLE_PARAMS[type]
@@ -93,20 +106,22 @@ function validate_resample(
     # validate parameters
     user_params = check_user_params(users, SoleXplorer.RESAMPLE_PARAMS)
     params = merge_params(def_params, user_params, rng)
+    # if resample type is Holdout, we need to set the fraction_ratio as preprocess train_ratio
+    haskey(params, :fraction_train) && (params = merge(params, (;fraction_train=train_ratio)))
         
     return Resample(type, params)
 end
 
 function validate_winparams(
     defaults::WinParams,
-    users::Union{NamedTuple, Nothing},
+    users::OptNamedTuple,
     treatment::Symbol
 )::WinParams
     # get type
     user_type = get_type(users, AVAIL_WINS)
 
     # select the final type with proper priority: defaults -> globals -> users
-    type = isnothing(user_type) ? defaults.type : user_type
+    type = user_type === nothing ? defaults.type : user_type
 
     def_params = WIN_PARAMS[type]
 
@@ -123,7 +138,7 @@ function validate_winparams(
 end
 
 function validate_tuning_type(
-    users::Union{NamedTuple, Nothing},
+    users::OptNamedTuple,
     rng::Union{Nothing, AbstractRNG}
 )::TuningStrategy
     check_params(users, (:type, :params))
@@ -139,13 +154,13 @@ end
 
 function validate_tuning(
     defaults::TuningParams,
-    users::Union{NamedTuple, Bool},
+    users::NamedTupleBool,
     rng::Union{Nothing, AbstractRNG},
-    algo::Symbol
+    algo::DataType
 )::Union{TuningParams, Bool}
     if isa(users, Bool) 
         if users
-            method = !isnothing(rng) && haskey(TUNING_METHODS_PARAMS[defaults.method.type], :rng) ?
+            method = !(rng === nothing) && haskey(TUNING_METHODS_PARAMS[defaults.method.type], :rng) ?
                 SoleXplorer.TuningStrategy(defaults.method.type, merge(defaults.method.params, (rng=rng,))) :
                 SoleXplorer.TuningStrategy(defaults.method.type, defaults.method.params)
             return SoleXplorer.TuningParams(method, defaults.params, defaults.ranges)
@@ -179,7 +194,7 @@ end
 
 function validate_rulesparams(
     defaults::RulesParams,
-    users::Union{NamedTuple, Bool},
+    users::NamedTupleBool,
     rng::Union{Nothing, AbstractRNG},
 )::Union{RulesParams, Bool}
     # case 1: users is a Bool
@@ -188,7 +203,7 @@ function validate_rulesparams(
     end
 
     # case 2: users is a NamedTuple
-    type = isnothing(users.type) ? defaults.type : begin
+    type = users.type === nothing ? defaults.type : begin
             haskey(EXTRACT_RULES, users.type) || throw(ArgumentError("Type $(users.type) not found in available extract rules methods."))
             users.type
         end
@@ -205,15 +220,16 @@ end
 #                              validate modelset                               #
 # ---------------------------------------------------------------------------- #
 function validate_modelset(
-    model::NamedTuple,
-    y::Union{DataType, Nothing};
-    resample::Union{NamedTuple, Nothing}=nothing,
-    win::Union{NamedTuple, Nothing}=nothing,
-    features::Union{Tuple, Nothing}=nothing,
-    tuning::Union{NamedTuple, Bool}=false,
-    extract_rules::Union{NamedTuple, Bool}=false,
-    preprocess::Union{NamedTuple, Nothing}=nothing,
-    reducefunc::Union{Base.Callable, Nothing}=nothing,
+    model         :: NamedTuple,
+    y             :: OptDataType;
+    resample      :: NamedTuple,
+    win           :: OptNamedTuple  = nothing,
+    features      :: OptTuple       = nothing,
+    tuning        :: NamedTupleBool = false,
+    extract_rules :: NamedTupleBool = false,
+    preprocess    :: OptNamedTuple  = nothing,
+    reducefunc    :: OptCallable    = nothing,
+    measures      :: OptTuple       = nothing,
 )::ModelSetup
     check_params(model, (:type, :params))
     check_params(resample, (:type, :params))
@@ -221,7 +237,7 @@ function validate_modelset(
     check_params(preprocess, PREPROC_KEYS)
 
     # grab rng form preprocess and feed it to every process
-    rng = if isnothing(preprocess) 
+    rng = if preprocess === nothing 
         nothing
     else
         haskey(preprocess, :rng) ? preprocess.rng : nothing
@@ -232,14 +248,14 @@ function validate_modelset(
 
     # grab additional extra params
     user_params = get(model, :params, nothing)
-    if !isnothing(user_params) && haskey(user_params, :reducefunc)
-        set_congig!(modelset, merge(get_config(modelset), (reducefunc = user_params.reducefunc,)))
+    if !(user_params === nothing) && haskey(user_params, :reducefunc)
+        set_config!(modelset, merge(get_config(modelset), (reducefunc = user_params.reducefunc,)))
         user_params = NamedTuple(k => v for (k, v) in pairs(user_params) if k != :reducefunc)
     end
     set_params!(modelset, validate_params(get_params(modelset), user_params, rng))
 
     # ModalDecisionTrees package needs features to be passed also in model params
-    if isnothing(get_features(modelset))
+    if get_features(modelset) === nothing
         features = validate_features(
             get_pfeatures(modelset),
             features
@@ -250,16 +266,17 @@ function validate_modelset(
         set_features!(modelset, validate_features(get_features(modelset), features))
     end
 
-    isnothing(resample) || set_resample!(modelset, validate_resample(resample, rng))
-
     set_winparams!(modelset, validate_winparams(get_winparams(modelset), win, get_treatment(modelset)))
-    set_tuning!(modelset, validate_tuning(get_tuning(modelset), tuning, rng, get_algo(modelset)))
+    set_tuning!(modelset, validate_tuning(get_tuning(modelset), tuning, rng, modeltype(modelset)))
     set_rulesparams!(modelset, validate_rulesparams(get_rulesparams(modelset), extract_rules, rng))
 
     set_rawmodel!(modelset, get_tuning(modelset) == false ? get_rawmodel(modelset) : get_resampled_rawmodel(modelset))
     set_learn_method!(modelset, get_tuning(modelset) == false ? get_learn_method(modelset) : get_resampled_learn_method(modelset))
-    isnothing(preprocess) || (modelset.preprocess = merge(get_preprocess(modelset), preprocess))
-    isnothing(reducefunc) || (modelset.config = merge(get_config(modelset), (reducefunc=reducefunc,)))
+    preprocess === nothing || (modelset.preprocess = merge(get_preprocess(modelset), preprocess))
+    set_resample!(modelset, validate_resample(resample, rng, modelset.preprocess.train_ratio))
+    set_measures!(modelset, validate_measures(get_measures(modelset), measures))
+    
+    reducefunc === nothing || (modelset.config = merge(get_config(modelset), (reducefunc=reducefunc,)))
 
     return modelset
 end

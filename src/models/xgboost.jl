@@ -24,7 +24,7 @@ function makewatchlist(ds::Dataset)
     XGB.OrderedDict(["train" => dtrain, "eval" => dvalid])
 end
 
-function XGBoostClassifierModel()
+function XGBoostClassifierModel()::ModelSetup{AbstractClassification}
     type   = MLJXGBoostInterface.XGBoostClassifier
     config = (; algo=:classification, type=DecisionEnsemble, treatment=:aggregate, rawapply=XGB.predict)
 
@@ -104,16 +104,18 @@ function XGBoostClassifierModel()
 
     tuning = SoleXplorer.TuningParams(
         SoleXplorer.TuningStrategy(latinhypercube, (ntour = 20,)),
-        TUNING_PARAMS[:classification],
+        TUNING_PARAMS[AbstractClassification],
         (
             model -> MLJ.range(model, :eta, lower=0.1, upper=0.9),
             model -> MLJ.range(model, :gamma, lower=0.0, upper=1.0),
         )
     )
 
+    resultsparams = (m) -> (m.info.supporting_labels, m.info.supporting_predictions)
+
     rulesparams = RulesParams(:intrees, NamedTuple())
 
-    return ModelSetup{TypeXGC}(
+    return ModelSetup{AbstractClassification}(
         type,
         config,
         params,
@@ -123,8 +125,11 @@ function XGBoostClassifierModel()
         rawmodel,
         learn_method,
         tuning,
+        resultsparams,
         rulesparams,
-        DEFAULT_PREPROC
+        DEFAULT_PREPROC,
+        DEFAULT_MEAS,
+        nothing
     )
 end
     

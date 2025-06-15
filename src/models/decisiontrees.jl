@@ -3,9 +3,9 @@
 # ---------------------------------------------------------------------------- #
 
 # CLASSIFIER ----------------------------------------------------------------- #
-function DecisionTreeClassifierModel()::ModelSetup{TypeDTC}
+function DecisionTreeClassifierModel()::ModelSetup{AbstractClassification}
     type = MLJDecisionTreeInterface.DecisionTreeClassifier
-    config  = (algo=:classification, type=DecisionTree, treatment=:aggregate, rawapply=DT.apply_tree)
+    config  = (type=DecisionTree, treatment=:aggregate, rawapply=DT.apply_tree)
 
     params = (;
         max_depth              = -1,
@@ -34,16 +34,18 @@ function DecisionTreeClassifierModel()::ModelSetup{TypeDTC}
 
     tuning = SoleXplorer.TuningParams(
         SoleXplorer.TuningStrategy(latinhypercube, (ntour = 20,)),
-        TUNING_PARAMS[:classification],
+        TUNING_PARAMS[AbstractClassification],
         (
             model -> MLJ.range(model, :merge_purity_threshold, lower=0., upper=2.0),
             model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])
         )
     )
 
+    resultsparams = (m) -> (m.info.supporting_labels, m.info.supporting_predictions)
+
     rulesparams = RulesParams(:intrees, NamedTuple())
 
-    return ModelSetup{TypeDTC}(
+    return ModelSetup{AbstractClassification}(
         type,
         config,
         params,
@@ -53,14 +55,17 @@ function DecisionTreeClassifierModel()::ModelSetup{TypeDTC}
         rawmodel,
         learn_method,
         tuning,
+        resultsparams,
         rulesparams,
-        DEFAULT_PREPROC
+        DEFAULT_PREPROC,
+        DEFAULT_MEAS,
+        nothing
     )
 end
 
-function RandomForestClassifierModel()::ModelSetup{TypeRFC}
+function RandomForestClassifierModel()::ModelSetup{AbstractClassification}
     type   = MLJDecisionTreeInterface.RandomForestClassifier
-    config = (algo=:classification, type=DecisionEnsemble, treatment=:aggregate, rawapply=DT.apply_forest)
+    config = (type=DecisionEnsemble, treatment=:aggregate, rawapply=DT.apply_forest)
 
     params = (;
         max_depth           = -1,
@@ -100,16 +105,18 @@ function RandomForestClassifierModel()::ModelSetup{TypeRFC}
 
     tuning = SoleXplorer.TuningParams(
         SoleXplorer.TuningStrategy(latinhypercube, (ntour = 20,)),
-        TUNING_PARAMS[:classification],
+        TUNING_PARAMS[AbstractClassification],
         (
             model -> MLJ.range(model, :sampling_fraction, lower=0.3, upper=0.9),
             model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])
         )
     )
 
+    resultsparams = (m) -> (m.info.supporting_labels, m.info.supporting_predictions)
+
     rulesparams = RulesParams(:intrees, NamedTuple())
 
-    return ModelSetup{TypeRFC}(
+    return ModelSetup{AbstractClassification}(
         type,
         config,
         params,
@@ -119,14 +126,17 @@ function RandomForestClassifierModel()::ModelSetup{TypeRFC}
         rawmodel,
         learn_method,
         tuning,
+        resultsparams,
         rulesparams,
-        DEFAULT_PREPROC
+        DEFAULT_PREPROC,
+        DEFAULT_MEAS,
+        nothing
     )
 end
 
-function AdaBoostClassifierModel()::ModelSetup{TypeABC}
+function AdaBoostClassifierModel()::ModelSetup{AbstractClassification}
     type   = MLJDecisionTreeInterface.AdaBoostStumpClassifier
-    config = (algo=:classification, type=DecisionEnsemble, treatment=:aggregate, rawapply=DT.apply_adaboost_stumps)
+    config = (type=DecisionEnsemble, treatment=:aggregate, rawapply=DT.apply_adaboost_stumps)
 
     params = (;
         n_iter             = 10,
@@ -162,16 +172,18 @@ function AdaBoostClassifierModel()::ModelSetup{TypeABC}
 
     tuning = SoleXplorer.TuningParams(
         SoleXplorer.TuningStrategy(latinhypercube, (ntour = 20,)),
-        TUNING_PARAMS[:classification],
+        TUNING_PARAMS[AbstractClassification],
         (
             model -> MLJ.range(model, :n_iter, lower=5, upper=50),
             model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])
         )
     )
 
+    resultsparams = (m) -> (m.info.supporting_labels, m.info.supporting_predictions)
+
     rulesparams = RulesParams(:intrees, NamedTuple())
 
-    return ModelSetup{TypeABC}(
+    return ModelSetup{AbstractClassification}(
         type,
         config,
         params,
@@ -181,15 +193,18 @@ function AdaBoostClassifierModel()::ModelSetup{TypeABC}
         rawmodel,
         learn_method,
         tuning,
+        resultsparams,
         rulesparams,
-        DEFAULT_PREPROC
+        DEFAULT_PREPROC,
+        DEFAULT_MEAS,
+        nothing
     )
 end
 
 # REGRESSOR ------------------------------------------------------------------ #
-function DecisionTreeRegressorModel()::ModelSetup{TypeDTR}
+function DecisionTreeRegressorModel()::ModelSetup{AbstractRegression}
     type = MLJDecisionTreeInterface.DecisionTreeRegressor
-    config  = (algo=:regression, type=DecisionTree, treatment=:aggregate, rawapply=DT.apply_tree)
+    config  = (type=DecisionTree, treatment=:aggregate, rawapply=DT.apply_tree)
 
     params = (;
         max_depth              = -1,
@@ -217,16 +232,18 @@ function DecisionTreeRegressorModel()::ModelSetup{TypeDTR}
 
     tuning = SoleXplorer.TuningParams(
         SoleXplorer.TuningStrategy(latinhypercube, (ntour = 20,)),
-        TUNING_PARAMS[:regression],
+        TUNING_PARAMS[AbstractRegression],
         (
             model -> MLJ.range(model, :merge_purity_threshold, lower=0., upper=2.0),
             model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])
         )
     )
 
+    resultsparams = (m) -> (m.info.supporting_labels, m.info.supporting_predictions)
+
     rulesparams = RulesParams(:intrees, NamedTuple())
 
-    return ModelSetup{TypeDTR}(
+    return ModelSetup{AbstractRegression}(
         type,
         config,
         params,
@@ -236,14 +253,17 @@ function DecisionTreeRegressorModel()::ModelSetup{TypeDTR}
         rawmodel,
         learn_method,
         tuning,
+        resultsparams,
         rulesparams,
-        DEFAULT_PREPROC
+        DEFAULT_PREPROC,
+        DEFAULT_MEAS,
+        nothing
     )
 end
 
-function RandomForestRegressorModel()::ModelSetup{TypeRFR}
+function RandomForestRegressorModel()::ModelSetup{AbstractRegression}
     type   = MLJDecisionTreeInterface.RandomForestRegressor
-    config = (algo=:regression, type=DecisionEnsemble, treatment=:aggregate, rawapply=DT.apply_forest)
+    config = (type=DecisionEnsemble, treatment=:aggregate, rawapply=DT.apply_forest)
 
     params = (;
         max_depth           = -1,
@@ -281,16 +301,18 @@ function RandomForestRegressorModel()::ModelSetup{TypeRFR}
 
     tuning = SoleXplorer.TuningParams(
         SoleXplorer.TuningStrategy(latinhypercube, (ntour = 20,)),
-        TUNING_PARAMS[:regression],
+        TUNING_PARAMS[AbstractRegression],
         (
             model -> MLJ.range(model, :sampling_fraction, lower=0.3, upper=0.9),
             model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])
         )
     )
 
+    resultsparams = (m) -> (m.info.supporting_labels, m.info.supporting_predictions)
+
     rulesparams = RulesParams(:intrees, NamedTuple())
 
-    return ModelSetup{TypeRFR}(
+    return ModelSetup{AbstractRegression}(
         type,
         config,
         params,
@@ -300,8 +322,11 @@ function RandomForestRegressorModel()::ModelSetup{TypeRFR}
         rawmodel,
         learn_method,
         tuning,
+        resultsparams,
         rulesparams,
-        DEFAULT_PREPROC
+        DEFAULT_PREPROC,
+        DEFAULT_MEAS,
+        nothing
     )
 end
 

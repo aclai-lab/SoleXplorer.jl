@@ -2,8 +2,8 @@ module SoleXplorer
 
 using SoleData
 using SoleData: PatchedFunction, nanpatchedfunction
-# using SoleModels
-# using SoleModels: movingwindow, wholewindow, splitwindow, adaptivewindow
+using SoleModels
+using SoleModels: AbstractModel, DecisionList, DecisionForest, DecisionEnsemble, DecisionSet
 using SolePostHoc
 # using ModalDecisionTrees
 # using ModalDecisionLists
@@ -26,16 +26,17 @@ using DataFrames
 # using OrderedCollections
 # using Random
 
-using Base.Threads: @threads
-
-# module SymbolicAnalysis
-
-using MLJ
-using SoleModels
-using SoleModels: AbstractModel, DecisionList, DecisionForest, DecisionEnsemble, DecisionSet
+# using Base.Threads: @threads
 
 using Random
 using Reexport
+
+# ---------------------------------------------------------------------------- #
+#                                     MLJ                                      #
+# ---------------------------------------------------------------------------- #
+using MLJ, MLJBase
+
+@reexport using MLJ: accuracy, confusion_matrix, kappa, log_loss
 
 # ---------------------------------------------------------------------------- #
 #                                    utils                                     #
@@ -77,6 +78,8 @@ include("interfaces/extractrules_interface.jl")
 include("interfaces/model_interface.jl")
 export Modelset
 
+include("interfaces/measures_interface.jl")
+
 # ---------------------------------------------------------------------------- #
 #                                   models                                     #
 # ---------------------------------------------------------------------------- #
@@ -111,7 +114,7 @@ export compute_results!, symbolic_analysis
 export get_algo, get_labels, get_predictions
 export get_accuracy
 
-include("user_interfaces/predict.jl")
-export get_predict
+# include("user_interfaces/predict.jl")
+# export get_predict
 
 end

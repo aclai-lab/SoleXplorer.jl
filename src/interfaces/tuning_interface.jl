@@ -92,8 +92,8 @@ const TUNING_METHODS_PARAMS = Dict{Union{DataType, UnionAll},NamedTuple}(
     )
 )
 
-const TUNING_PARAMS = Dict{Symbol,NamedTuple}(
-    :classification => (;
+const TUNING_PARAMS = Dict{DataType,NamedTuple}(
+    AbstractClassification => (;
         resampling              = Holdout(),
         measure                 = LogLoss(tol = 2.22045e-16),
         weights                 = nothing,
@@ -108,7 +108,7 @@ const TUNING_PARAMS = Dict{Symbol,NamedTuple}(
         check_measure           = true,
         cache                   = true,
     ),
-    :regression => (;
+    AbstractRegression => (;
         resampling              = Holdout(),
         measure                 = MLJ.RootMeanSquaredError(),
         weights                 = nothing,
@@ -143,7 +143,7 @@ having the actual model instance.
 - `upper::Union{AbstractFloat, Int, Nothing}=nothing`: Upper bound for numerical parameters.
 - `origin::Union{AbstractFloat, Int, Nothing}=nothing`: Reference point for the range.
 - `unit::Union{AbstractFloat, Int, Nothing}=nothing`: Unit of measurement for parameters with scale.
-- `scale::Union{Symbol, Nothing}=nothing`: Scale type (e.g., `:linear`, `:log`, `:logit`).
+- `scale::OptSymbol=nothing`: Scale type (e.g., `:linear`, `:log`, `:logit`).
 - `values::Union{AbstractVector, Nothing}=nothing`: Explicit set of values for the parameter.
 
 # Returns
@@ -170,7 +170,7 @@ function range(
     upper  :: Union{AbstractFloat, Int, Nothing} = nothing,
     origin :: Union{AbstractFloat, Int, Nothing} = nothing,
     unit   :: Union{AbstractFloat, Int, Nothing} = nothing,
-    scale  :: Union{Symbol, Nothing}             = nothing,
+    scale  :: OptSymbol             = nothing,
     values :: Union{AbstractVector, Nothing}     = nothing,
 )
     return function(model)

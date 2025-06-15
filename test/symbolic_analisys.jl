@@ -1,13 +1,41 @@
 using Test
-using SoleXplorer, SoleData
+using SoleXplorer
 using DataFrames, Random
 using MLJ
 
-function show_results(modelset)
-    println("rules extracted:")
-    println(modelset.rules)
-    println("accuracy: ", get_accuracy(modelset))
-end
+# ---------------------------------------------------------------------------- #
+#                               classification                                 #
+# ---------------------------------------------------------------------------- #
+X, y = @load_iris
+X = DataFrame(X)
+
+# ds = prepare_dataset(X, y)
+
+mset_01 = symbolic_analysis(
+    X, y;
+    model=(;type=:decisiontree),
+    preprocess=(;rng=Xoshiro(11)),
+    measures=(accuracy, confusion_matrix)
+)
+
+mset_02 = symbolic_analysis(
+    X, y;
+    model=(;type=:modaldecisiontree),
+    preprocess=(;rng=Xoshiro(1))
+)
+
+mset_03 = symbolic_analysis(
+    X, y;
+    model=(;type=:randomforest),
+    preprocess=(;rng=Xoshiro(1))
+)
+
+mset_04 = symbolic_analysis(
+    X, y;
+    model=(;type=:modalrandomforest),
+    preprocess=(;rng=Xoshiro(1))
+)
+
 
 # ---------------------------------------------------------------------------- #
 #                            standard regression                               #
@@ -21,26 +49,6 @@ modelset = symbolic_analysis(
     model=(type=:decisiontree, params=(;feature_importance=:split)),
     preprocess=(;rng=Xoshiro(1)),
     # extract_rules=(;type=:intrees)
-)
-show_results(modelset)
-
-# ---------------------------------------------------------------------------- #
-#                       numeric dataset classification                         #
-# ---------------------------------------------------------------------------- #
-# @info "numeric dataset classification"
-
-
-X, y = @load_iris
-X = DataFrame(X)
-
-
-
-@info "random forest classifier, rulecosi rule extractor"
-modelset = symbolic_analysis(
-    X, y;
-    model=(type=:randomforest, params=(;max_depth=2)),
-    preprocess=(;rng=Xoshiro(1)),
-    extract_rules=(;type=:intrees)
 )
 show_results(modelset)
 

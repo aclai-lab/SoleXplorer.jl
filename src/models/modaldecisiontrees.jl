@@ -3,9 +3,9 @@
 # ---------------------------------------------------------------------------- #
 
 # CLASSIFIER ----------------------------------------------------------------- #
-function ModalDecisionTreeModel()
+function ModalDecisionTreeModel()::ModelSetup{AbstractClassification}
     type = MDT.ModalDecisionTree
-    config  = (algo=:classification, type=DecisionTree, treatment=:reducesize, reducefunc=MLJ.mean, rawapply=MDT.apply)
+    config  = (type=DecisionTree, treatment=:reducesize, reducefunc=MLJ.mean, rawapply=MDT.apply)
 
     params = (;
         max_depth              = nothing, 
@@ -45,16 +45,18 @@ function ModalDecisionTreeModel()
 
     tuning = SoleXplorer.TuningParams(
         SoleXplorer.TuningStrategy(latinhypercube, (ntour = 20,)),
-        TUNING_PARAMS[:classification],
+        TUNING_PARAMS[AbstractClassification],
         (
             model -> MLJ.range(model, :min_samples_leaf, lower=2, upper=6),
             model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])
         )
     )
 
+    resultsparams = (m) -> (m.models[1].info.supporting_labels, m.info.supporting_predictions)
+
     rulesparams = RulesParams(:intrees, NamedTuple())
 
-    return ModelSetup{TypeMDT}(
+    return ModelSetup{AbstractClassification}(
         type,
         config,
         params,
@@ -64,14 +66,17 @@ function ModalDecisionTreeModel()
         rawmodel,
         learn_method,
         tuning,
+        resultsparams,
         rulesparams,
-        DEFAULT_PREPROC
+        DEFAULT_PREPROC,
+        DEFAULT_MEAS,
+        nothing
     )
 end
 
-function ModalRandomForestModel()
+function ModalRandomForestModel()::ModelSetup{AbstractClassification}
     type   = MDT.ModalRandomForest
-    config = (algo=:classification, type=MDT.DecisionForest, treatment=:reducesize, reducefunc=MLJ.mean, rawapply=MDT.apply)
+    config = (type=MDT.DecisionForest, treatment=:reducesize, reducefunc=MLJ.mean, rawapply=MDT.apply)
 
     params = (;
         sampling_fraction      = 0.7, 
@@ -113,16 +118,18 @@ function ModalRandomForestModel()
 
     tuning = SoleXplorer.TuningParams(
         SoleXplorer.TuningStrategy(latinhypercube, (ntour = 20,)),
-        TUNING_PARAMS[:classification],
+        TUNING_PARAMS[AbstractClassification],
         (
             model -> MLJ.range(model, :sampling_fraction, lower=0.3, upper=0.9),
             model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])
         )
     )
 
+    resultsparams = (m) -> (m.models[1].info.supporting_labels, m.info.supporting_predictions)
+
     rulesparams = RulesParams(:intrees, NamedTuple())
 
-    return ModelSetup{TypeMRF}(
+    return ModelSetup{AbstractClassification}(
         type,
         config,
         params,
@@ -132,14 +139,17 @@ function ModalRandomForestModel()
         rawmodel,
         learn_method,
         tuning,
+        resultsparams,
         rulesparams,
-        DEFAULT_PREPROC
+        DEFAULT_PREPROC,
+        DEFAULT_MEAS,
+        nothing
     )
 end
 
-function ModalAdaBoostModel()
+function ModalAdaBoostModel()::ModelSetup{AbstractClassification}
     type   = MDT.ModalAdaBoost
-    config = (algo=:classification, type=DecisionEnsemble, treatment=:reducesize, reducefunc=MLJ.mean, rawapply=MDT.apply)
+    config = (type=DecisionEnsemble, treatment=:reducesize, reducefunc=MLJ.mean, rawapply=MDT.apply)
 
     params = (;
         min_samples_leaf       = 1, 
@@ -179,16 +189,18 @@ function ModalAdaBoostModel()
 
     tuning = SoleXplorer.TuningParams(
         SoleXplorer.TuningStrategy(latinhypercube, (ntour = 20,)),
-        TUNING_PARAMS[:classification],
+        TUNING_PARAMS[AbstractClassification],
         (
             model -> MLJ.range(model, :min_samples_leaf, lower=1, upper=3),
             model -> MLJ.range(model, :feature_importance, values=[:impurity, :split])
         )
     )
 
+    resultsparams = (m) -> (m.models[1].info.supporting_labels, m.info.supporting_predictions)
+
     rulesparams = RulesParams(:intrees, NamedTuple())
 
-    return ModelSetup{TypeMAB}(
+    return ModelSetup{AbstractClassification}(
         type,
         config,
         params,
@@ -198,7 +210,10 @@ function ModalAdaBoostModel()
         rawmodel,
         learn_method,
         tuning,
+        resultsparams,
         rulesparams,
-        DEFAULT_PREPROC
+        DEFAULT_PREPROC,
+        DEFAULT_MEAS,
+        nothing
     )
 end

@@ -1,8 +1,6 @@
 # ---------------------------------------------------------------------------- #
 #                                     types                                    #
 # ---------------------------------------------------------------------------- #
-const Rule      = Union{DecisionList, DecisionEnsemble, DecisionSet}
-
 struct Resample <: AbstractTypeParams
     type        :: Base.Callable
     params      :: NamedTuple

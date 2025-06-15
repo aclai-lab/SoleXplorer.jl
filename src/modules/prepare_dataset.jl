@@ -20,7 +20,7 @@ function check_row_consistency(X::AbstractMatrix)
         
         # find first array element to use as reference
         ref_idx = findfirst(el -> el isa AbstractArray, row)
-        isnothing(ref_idx) && continue
+        ref_idx === nothing && continue
         
         ref_size = size(row[ref_idx])
         
@@ -196,7 +196,7 @@ function _treatment(
     treatment::Symbol,
     features::FeatNames,
     winparams::WinParams;
-    reducefunc::Union{Base.Callable, Nothing}=nothing
+    reducefunc::OptCallable=nothing
 ) where T
     # working with audio files, we need to consider audio of different lengths.
     max_interval = first(find_max_length(X))
@@ -242,7 +242,7 @@ function _treatment(
         n_cols = length(col_names)
         result_matrix = Matrix{T}(undef, n_rows, n_cols)
 
-        isnothing(reducefunc) && (reducefunc = mean)
+        reducefunc === nothing && (reducefunc = mean)
         
         for (row_idx, row) in enumerate(eachrow(X))
             row_intervals = winparams.type(maximum(length.(collect(row))); winparams.params...)
@@ -307,7 +307,7 @@ function _partition(
     resample::Union{Resample, Nothing},
     rng::AbstractRNG
 )::Union{TT_indexes{Int}, Vector{TT_indexes{Int}}}
-    if isnothing(resample)
+    if resample === nothing
         tt = MLJ.partition(eachindex(y), train_ratio; shuffle=true, rng)
         if valid_ratio == 1.0
             return TT_indexes(tt[1], eltype(tt[1])[], tt[2])
@@ -332,35 +332,35 @@ end
 # ---------------------------------------------------------------------------- #
 """
     prepare_dataset(X::AbstractDataFrame, y::AbstractVector; kwargs...)::Modelset
-    prepare_dataset(X::AbstractDataFrame, y::Union{Symbol,AbstractString}; kwargs...)::Modelset
+    prepare_dataset(X::AbstractDataFrame, y::SymbolString; kwargs...)::Modelset
 
 Prepares a dataset for machine learning by processing the input data and configuring a model setup.
 Supports both classification and regression tasks, with extensive customization options.
 
 # Arguments
 - `X::AbstractDataFrame`: The input data containing features
-- `y::AbstractVector` or `y::Union{Symbol,AbstractString}`: The target variable, either as a vector or 
+- `y::AbstractVector` or `y::SymbolString`: The target variable, either as a vector or 
   as a column name/symbol from `X`
 
 # Optional Keyword Arguments
-- `model::Union{NamedTuple, Nothing}=nothing`: Model configuration with fields:
+- `model::OptNamedTuple=nothing`: Model configuration with fields:
   - `type`: Model type (e.g., `:xgboost`, `:randomforest`)
   - `params`: Model-specific parameters
-- `resample::Union{NamedTuple, Nothing}=nothing`: Resampling strategy
+- `resample::OptNamedTuple=nothing`: Resampling strategy
   - `type`: Resampling method (e.g., `:cv`, `:stratifiedcv`)
   - `params`: Resampling parameters like `nfolds`
-- `win::Union{NamedTuple, Nothing}=nothing`: Windowing parameters for time series data
+- `win::OptNamedTuple=nothing`: Windowing parameters for time series data
   - `type`: Window function (e.g., `adaptivewindow`, `wholewindow`)
   - `params`: Window parameters like `nwindows`
-- `features::Union{Tuple, Nothing}=nothing`: Statistical functions to extract from time series
+- `features::OptTuple=nothing`: Statistical functions to extract from time series
   (e.g., `(mean, std, maximum)`)
-- `tuning::Union{NamedTuple, Bool, Nothing}=nothing`: Hyperparameter tuning configuration
-- `rules::Union{NamedTuple, Nothing}=nothing`: Rules for post-hoc explanation
-- `preprocess::Union{NamedTuple, Nothing}=nothing`: Data preprocessing parameters:
+- `tuning::OptNamedTupleBool=nothing`: Hyperparameter tuning configuration
+- `rules::OptNamedTuple=nothing`: Rules for post-hoc explanation
+- `preprocess::OptNamedTuple=nothing`: Data preprocessing parameters:
   - `train_ratio`: Ratio of data for training vs testing
   - `valid_ratio`: Ratio of training data for validation
   - `rng`: Random number generator
-- `reducefunc::Union{Base.Callable, Nothing}=nothing`: Function for reducing time series data
+- `reducefunc::OptCallable=nothing`: Function for reducing time series data
   in `:reducesize` treatment mode (default: `mean`)
 
 # Returns
@@ -372,19 +372,19 @@ Supports both classification and regression tasks, with extensive customization 
 - If `y` is provided as a column name, it will be extracted from `X`
 - When `model=nothing`, a default model setup is used
 """
-function _prepare_dataset(
+function __prepare_dataset(
     df::AbstractDataFrame,
     y::AbstractVector;
-    algo::Symbol,
+    algo::DataType,
     treatment::Symbol,
-    features::AbstractVector{<:Base.Callable},
+    features::Tuple,
     train_ratio::Float64,
     valid_ratio::Float64,
     rng::AbstractRNG,
     resample::Union{Resample, Nothing},
     winparams::WinParams,
     vnames::Union{VarNames,Nothing}=nothing,
-    reducefunc::Union{Base.Callable, Nothing}=nothing
+    reducefunc::OptCallable=nothing
 )::Dataset
     X = Matrix(df)
     # check parameters
@@ -393,17 +393,15 @@ function _prepare_dataset(
     check_row_consistency(X) || throw(ArgumentError("Elements within each row must have consistent dimensions"))
     # treatment in AVAIL_TREATMENTS || throw(ArgumentError("Treatment must be one of: $AVAIL_TREATMENTS"))
 
-    if algo == :regression
+    if algo == AbstractRegression
         y isa AbstractVector{<:Reg_Value} || throw(ArgumentError("Regression requires a numeric target variable"))
         y isa AbstractFloat || (y = Float64.(y))
-    elseif algo == :classification
+    elseif algo == AbstractClassification
         y isa AbstractVector{<:Cat_Value} || throw(ArgumentError("Classification requires a categorical target variable"))
         y isa MLJ.CategoricalArray || (y = coerce(y, MLJ.Multiclass))
-    else
-        throw(ArgumentError("Algorithms supported, :regression and :classification"))
     end
 
-    if isnothing(vnames)
+    if vnames === nothing
         vnames = names(df)
     else
         size(X, 2) == length(vnames) || throw(ArgumentError("Number of columns in DataFrame must match length of variable names"))
@@ -414,18 +412,16 @@ function _prepare_dataset(
 
     column_eltypes = eltype.(eachcol(X))
 
-    if all(t -> t <: AbstractVector{<:Number}, column_eltypes) && !isnothing(winparams)
+    if all(t -> t <: AbstractVector{<:Number}, column_eltypes) && !(winparams === nothing)
         X, vnames = _treatment(X, vnames, treatment, features, winparams; reducefunc)
     end
 
     ds_info = DatasetInfo(
-        algo,
         treatment,
         reducefunc,
         train_ratio,
         valid_ratio,
         rng,
-        isnothing(resample) ? false : true,
         vnames
     )
 
@@ -436,7 +432,7 @@ function _prepare_dataset(
     )
 end
 
-function _prepare_dataset(
+function __prepare_dataset(
     X::AbstractDataFrame,
     y::AbstractVector,
     model::AbstractModelSetup
@@ -444,9 +440,9 @@ function _prepare_dataset(
     # modal reduce function, optional for propositional
     reducefunc = haskey(model.config, :reducefunc) ? model.config.reducefunc : nothing
 
-    _prepare_dataset(
+    __prepare_dataset(
         X, y;
-        algo=model.config.algo,
+        algo=modeltype(model),
         treatment=model.config.treatment,
         reducefunc,
         features=model.features,
@@ -458,29 +454,40 @@ function _prepare_dataset(
     )
 end
 
-function prepare_dataset(
-    X::AbstractDataFrame,
-    y::AbstractVector;
-    model::Union{NamedTuple, Nothing}=nothing,
-    resample::Union{NamedTuple, Nothing}=nothing,
-    win::Union{NamedTuple, Nothing}=nothing,
-    features::Union{Tuple, Nothing}=nothing,
-    tuning::Union{NamedTuple, Bool, Nothing}=false,
-    extract_rules::Union{NamedTuple, Bool}=false,
-    preprocess::Union{NamedTuple, Nothing}=nothing,
-    reducefunc::Union{Base.Callable, Nothing}=nothing,
-)::Modelset
-    # if model is unspecified, use default model setup
-    isnothing(model) && (model = DEFAULT_MODEL_SETUP)
-    modelset = validate_modelset(model, eltype(y); resample, win, features, tuning, extract_rules, preprocess, reducefunc)
-    Modelset(modelset, _prepare_dataset(X, y, modelset))
+function _prepare_dataset(
+    X             :: AbstractDataFrame,
+    y             :: AbstractVector;
+    model         :: NamedTuple     = (;type=:decisiontree),
+    resample      :: NamedTuple     = (;type=Holdout),
+    win           :: OptNamedTuple  = nothing,
+    features      :: OptTuple       = nothing,
+    tuning        :: NamedTupleBool = false,
+    extract_rules :: NamedTupleBool = false,
+    preprocess    :: OptNamedTuple  = nothing,
+    reducefunc    :: OptCallable    = nothing,
+    measures      :: OptTuple       = nothing,
+)::Tuple{Modelset, Dataset}
+    modelset = validate_modelset(
+        model, eltype(y);
+        resample,
+        win,
+        features,
+        tuning,
+        extract_rules,
+        preprocess,
+        reducefunc,
+        measures
+    )
+    Modelset(modelset,), __prepare_dataset(X, y, modelset)
 end
+
+prepare_dataset(args...; kwargs...)::Tuple{Modelset, Dataset} = _prepare_dataset(args...; kwargs...)
 
 # y is not a vector, but a symbol or a string that identifies a column in X
 function prepare_dataset(
     X::AbstractDataFrame,
-    y::Union{Symbol,AbstractString};
+    y::SymbolString;
     kwargs...
-)::Modelset
+)::Tuple{Modelset, Dataset}
     prepare_dataset(X[!, Not(y)], X[!, y]; kwargs...)
 end
