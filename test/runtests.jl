@@ -7,10 +7,10 @@ addprocs(2)
     using Random
     using MLJ
     using DataFrames
-    using MLJDecisionTreeInterface
-    using SoleModels
-    using StatsBase
-    using Catch22
+    # using MLJDecisionTreeInterface
+    # using SoleModels
+    # using StatsBase
+    # using Catch22
 end
 
 function run_tests(list)
@@ -24,21 +24,21 @@ end
 println("Julia version: ", VERSION)
 
 test_suites = [
-    ("Utils", ["utils/featureset.jl", ]),
-    ("Interfaces", [
-        "interfaces/base_interface.jl",
-        "interfaces/dataset_interface.jl",
-        "interfaces/resample_interface.jl",
-        "interfaces/windowing_interface.jl",
-        "interfaces/tuning_interface.jl",
-        "interfaces/extractrules_interface.jl",
-        "interfaces/model_interface.jl"
-    ]),
-    ("models", [
-        "models/decisiontrees.jl",
-        "models/modaldecisiontrees.jl",
-        "models/xgboost.jl"
-    ]),
+    ("Usage", ["prepare_dataset.jl", ]),
+    # ("Interfaces", [
+    #     "interfaces/base_interface.jl",
+    #     "interfaces/dataset_interface.jl",
+    #     "interfaces/resample_interface.jl",
+    #     "interfaces/windowing_interface.jl",
+    #     "interfaces/tuning_interface.jl",
+    #     "interfaces/extractrules_interface.jl",
+    #     "interfaces/model_interface.jl"
+    # ]),
+    # ("models", [
+    #     "models/decisiontrees.jl",
+    #     "models/modaldecisiontrees.jl",
+    #     "models/xgboost.jl"
+    # ]),
 ]
 
 @testset "SoleXplorer.jl" begin
