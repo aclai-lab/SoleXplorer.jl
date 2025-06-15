@@ -83,9 +83,33 @@ modelc, dsc = prepare_dataset(
 @test modelc isa SoleXplorer.Modelset
 @test dsc    isa SoleXplorer.Dataset
 
-# dsc = prepare_dataset(
-#     Xc, yc;
-#     model=(;type=:decisiontree),
-#     preprocess=(;train_ratio=0.9, rng=Xoshiro(1)),
-#     measures=(log_loss, accuracy),
-# )
+# ---------------------------------------------------------------------------- #
+#                covering various examples to complete codecov                 #
+# ---------------------------------------------------------------------------- #
+y_symbol = :petal_width
+modelc, dsc = prepare_dataset(Xc, y_symbol)
+@test modelc isa SoleXplorer.Modelset
+@test dsc    isa SoleXplorer.Dataset
+
+# ---------------------------------------------------------------------------- #
+#                            validate modelsetup                               #
+# ---------------------------------------------------------------------------- #
+modelc, dsc = prepare_dataset(
+    Xc, yc;
+    model=(type=:decisiontree, params=(;max_depth=5))
+)
+@test modelc isa SoleXplorer.Modelset
+@test dsc    isa SoleXplorer.Dataset
+
+@test_throws ArgumentError prepare_dataset(
+    Xc, yc;
+    model=(;type=:invalid, params=(;max_depth=5))
+)
+@test_throws ArgumentError prepare_dataset(
+    Xc, yc;
+    model=(;params=(;max_depth=5))
+)
+@test_throws ArgumentError prepare_dataset(
+    Xc, yc;
+    model=(type=:decisiontree, params=(;invalid=5))
+)
