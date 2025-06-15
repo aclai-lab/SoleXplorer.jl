@@ -92,6 +92,44 @@ modelc, dsc = prepare_dataset(Xc, y_symbol)
 @test dsc    isa SoleXplorer.Dataset
 
 # ---------------------------------------------------------------------------- #
+#                                 resamplig                                    #
+# ---------------------------------------------------------------------------- #
+modelc, dsc = prepare_dataset(
+    Xc, yc;
+    resample=(;type=CV)
+)
+@test modelc isa SoleXplorer.Modelset
+@test dsc    isa SoleXplorer.Dataset
+
+modelc, dsc = prepare_dataset(
+    Xc, yc;
+    resample=(;type=Holdout)
+)
+@test modelc isa SoleXplorer.Modelset
+@test dsc    isa SoleXplorer.Dataset
+
+modelc, dsc = prepare_dataset(
+    Xc, yc;
+    resample=(;type=StratifiedCV)
+)
+@test modelc isa SoleXplorer.Modelset
+@test dsc    isa SoleXplorer.Dataset
+
+modelc, dsc = prepare_dataset(
+    Xc, yc;
+    resample=(;type=TimeSeriesCV)
+)
+@test modelc isa SoleXplorer.Modelset
+@test dsc    isa SoleXplorer.Dataset
+
+modelc, dsc = prepare_dataset(
+    Xc, yc;
+    resample=(type=CV, params=(nfolds=10, shuffle=true, rng=rng=Xoshiro(1)))
+)
+@test modelc isa SoleXplorer.Modelset
+@test dsc    isa SoleXplorer.Dataset
+
+# ---------------------------------------------------------------------------- #
 #                            validate modelsetup                               #
 # ---------------------------------------------------------------------------- #
 modelc, dsc = prepare_dataset(
