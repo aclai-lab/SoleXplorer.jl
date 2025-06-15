@@ -24,7 +24,8 @@ end
 println("Julia version: ", VERSION)
 
 test_suites = [
-    ("Usage", ["prepare_dataset.jl", ]),
+    ("Prepare Dataset", ["prepare_dataset.jl", ]),
+    ("Train and test", ["train_test.jl", ]),
     # ("Interfaces", [
     #     "interfaces/base_interface.jl",
     #     "interfaces/dataset_interface.jl",
