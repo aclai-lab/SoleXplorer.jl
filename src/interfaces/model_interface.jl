@@ -73,13 +73,13 @@ set_rawmodel!(m::ModelSetup,     rawmodel::Base.Callable)                   = m.
 set_learn_method!(m::ModelSetup, learn_method::Base.Callable)               = m.learn_method = learn_method
 set_measures!(m::ModelSetup,     measures::Union{Tuple, Nothing})           = m.measures = measures
 
-function Base.show(io::IO, ::MIME"text/plain", m::ModelSetup)
-    println(io, "ModelSetup")
-    println(io, "  Model type: ", m.type)
-    println(io, "  Features: ", m.features === nothing ? "None" : "$(length(m.features)) features")
-    println(io, "  Learning method: ", m.learn_method)
-    isa(m.rulesparams, RulesParams) && println(io, "  Rules extraction: ", m.rulesparams.type)
-end
+# function Base.show(io::IO, ::MIME"text/plain", m::ModelSetup)
+#     println(io, "ModelSetup")
+#     println(io, "  Model type: ", m.type)
+#     println(io, "  Features: ", m.features === nothing ? "None" : "$(length(m.features)) features")
+#     println(io, "  Learning method: ", m.learn_method)
+#     isa(m.rulesparams, RulesParams) && println(io, "  Rules extraction: ", m.rulesparams.type)
+# end
 
 function Base.show(io::IO, m::ModelSetup)
     print(io, "ModelSetup(type=$(m.type), features=$(m.features === nothing ? "None" : length(m.features)))")

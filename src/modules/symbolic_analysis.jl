@@ -1,8 +1,8 @@
 # ---------------------------------------------------------------------------- #
 #                              rules extraction                                #
 # ---------------------------------------------------------------------------- #
-function rules_extraction!(model::Modelset)
-    model.rules = EXTRACT_RULES[model.setup.rulesparams.type](model)
+function rules_extraction!(model::Modelset, ds::Dataset)
+    model.rules = EXTRACT_RULES[model.setup.rulesparams.type](model, ds)
 end
 
 # ---------------------------------------------------------------------------- #
@@ -66,11 +66,11 @@ end
 #                              symbolic_analysis                               #
 # ---------------------------------------------------------------------------- #
 function symbolic_analysis(args...; extract_rules::NamedTupleBool=false, kwargs...)
-    model, ds = _prepare_dataset(args...; kwargs...)
+    model, ds = _prepare_dataset(args...; extract_rules, kwargs...)
     _traintest!(model, ds)
 
     if !isa(extract_rules, Bool) || extract_rules
-        rules_extraction!(model)
+        rules_extraction!(model, ds)
     end
 
     eval_measures!(model)

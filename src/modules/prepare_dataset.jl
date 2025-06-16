@@ -304,18 +304,18 @@ function _partition(
     y::AbstractVector{<:Y_Value},
     train_ratio::Float64,
     valid_ratio::Float64,
-    resample::Union{Resample, Nothing},
+    resample::Resample,
     rng::AbstractRNG
 )::Union{TT_indexes{Int}, Vector{TT_indexes{Int}}}
-    if resample === nothing
-        tt = MLJ.partition(eachindex(y), train_ratio; shuffle=true, rng)
-        if valid_ratio == 1.0
-            return TT_indexes(tt[1], eltype(tt[1])[], tt[2])
-        else
-            tv = MLJ.partition(tt[1], valid_ratio; shuffle=true, rng)
-            return TT_indexes(tv[1], tv[2], tt[2])
-        end
-    else
+    # if resample === nothing
+    #     tt = MLJ.partition(eachindex(y), train_ratio; shuffle=true, rng)
+    #     if valid_ratio == 1.0
+    #         return TT_indexes(tt[1], eltype(tt[1])[], tt[2])
+    #     else
+    #         tv = MLJ.partition(tt[1], valid_ratio; shuffle=true, rng)
+    #         return TT_indexes(tv[1], tv[2], tt[2])
+    #     end
+    # else
         resample_cv = resample.type(; resample.params...)
         tt = MLJ.MLJBase.train_test_pairs(resample_cv, 1:length(y), y)
         if valid_ratio == 1.0
@@ -324,7 +324,7 @@ function _partition(
             tv = collect((MLJ.partition(t[1], train_ratio)..., t[2]) for t in tt)
             return [TT_indexes(train, valid, test) for (train, valid, test) in tv]
         end
-    end
+    # end
 end
 
 # ---------------------------------------------------------------------------- #

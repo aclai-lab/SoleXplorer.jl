@@ -211,3 +211,69 @@ modelc = symbolic_analysis(
     )
 )
 @test modelts isa SoleXplorer.Modelset
+
+# ---------------------------------------------------------------------------- #
+#                              rules extraction                                #
+# ---------------------------------------------------------------------------- #
+using Test
+using MLJ, SoleXplorer
+using DataFrames, Random
+using SoleData
+
+Xc, yc = @load_iris
+Xc = DataFrame(Xc)
+
+Xr, yr = @load_boston
+Xr = DataFrame(Xr)
+
+Xts, yts = SoleData.load_arff_dataset("NATOPS")
+
+modelc = symbolic_analysis(
+    Xc, yc;
+    model=(;type=:randomforest),
+    preprocess=(;rng=Xoshiro(1)),
+    extract_rules=(;type=:intrees)
+)
+@test modelc isa SoleXplorer.Modelset
+
+modelc = symbolic_analysis(
+    Xc, yc;
+    model=(;type=:randomforest),
+    preprocess=(;rng=Xoshiro(1)),
+    extract_rules=(;type=:refne)
+)
+@test modelc isa SoleXplorer.Modelset
+
+modelc = symbolic_analysis(
+    Xc, yc;
+    model=(;type=:randomforest),
+    preprocess=(;rng=Xoshiro(1)),
+    extract_rules=(;type=:trepan)
+)
+@test modelc isa SoleXplorer.Modelset
+
+# TODO: broken
+# modelc = symbolic_analysis(
+#     Xc, yc;
+#     model=(;type=:randomforest),
+#     preprocess=(;rng=Xoshiro(1)),
+#     extract_rules=(;type=:batrees)
+# )
+# @test modelc isa SoleXplorer.Modelset
+
+modelc = symbolic_analysis(
+    Xc, yc;
+    model=(;type=:randomforest),
+    preprocess=(;rng=Xoshiro(1)),
+    extract_rules=(;type=:rulecosi)
+)
+@test modelc isa SoleXplorer.Modelset
+
+modelc = symbolic_analysis(
+    Xc, yc;
+    model=(;type=:randomforest),
+    preprocess=(;rng=Xoshiro(1)),
+    extract_rules=(;type=:lumen)
+)
+@test modelc isa SoleXplorer.Modelset
+
