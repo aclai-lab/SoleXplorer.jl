@@ -56,6 +56,7 @@ export base_set, catch9, catch22_set, complete_set
 #                                 interfaces                                   #
 # ---------------------------------------------------------------------------- #
 include("interfaces/base_interface.jl")
+export modeltype
 
 @reexport using SoleBase: movingwindow, wholewindow, splitwindow, adaptivewindow
 include("interfaces/windowing_interface.jl")

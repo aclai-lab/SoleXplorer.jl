@@ -2,6 +2,8 @@ using Test
 using MLJ, SoleXplorer
 using DataFrames, Random
 
+const SX = SoleXplorer
+
 Xc, yc = @load_iris
 Xc = DataFrame(Xc)
 
@@ -83,5 +85,5 @@ modelr = train_test(
     ),
 )
 @test modelr isa SoleXplorer.Modelset
-
+@test modeltype(modelr) == SX.AbstractRegression
 
