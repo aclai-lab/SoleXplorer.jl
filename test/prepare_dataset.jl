@@ -160,7 +160,7 @@ modelc, dsc = prepare_dataset(Xc, yc)
 @test SX.get_treatment(dsc.info) == :aggregate
 @test isnothing(SX.get_reducefunc(dsc.info))
 @test SX.get_train_ratio(dsc.info) == 0.8
-@test SX.get_valid_ratio(dsc.info) == 1.0
+@test SX.get_valid_ratio(dsc.info) == 0.0
 @test SX.get_rng(dsc.info) == TaskLocalRNG()
 @test SX.get_vnames(dsc.info) isa Vector{String}
 @test_nowarn sprint(show, dsc.info)
