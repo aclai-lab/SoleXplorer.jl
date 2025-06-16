@@ -255,16 +255,17 @@ function validate_modelset(
     set_params!(modelset, validate_params(get_params(modelset), user_params, rng))
 
     # ModalDecisionTrees package needs features to be passed also in model params
-    if get_features(modelset) === nothing
-        features = validate_features(
-            get_pfeatures(modelset),
-            features
-        )
-        set_params!(modelset, merge(get_params(modelset), (features=features,)))
-        set_features!(modelset, features)
-    else
+    # if get_features(modelset) === nothing
+    #     @show "PASO"
+    #     features = validate_features(
+    #         get_pfeatures(modelset),
+    #         features
+    #     )
+    #     set_params!(modelset, merge(get_params(modelset), (features=features,)))
+    #     set_features!(modelset, features)
+    # else
         set_features!(modelset, validate_features(get_features(modelset), features))
-    end
+    # end
 
     set_winparams!(modelset, validate_winparams(get_winparams(modelset), win, get_treatment(modelset)))
     set_tuning!(modelset, validate_tuning(get_tuning(modelset), tuning, rng, modeltype(modelset)))

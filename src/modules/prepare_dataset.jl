@@ -475,7 +475,7 @@ function _prepare_dataset(
         tuning,
         extract_rules,
         preprocess,
-        reducefunc,
+        # reducefunc,
         measures
     )
     Modelset(modelset,), __prepare_dataset(X, y, modelset)

@@ -22,6 +22,12 @@ modelts = symbolic_analysis(
 )
 @test modelts isa SoleXplorer.Modelset
 
+modelts = symbolic_analysis(
+    Xts, yts;
+    model=(type=:decisiontree, params=(;max_depth=5, reducefunc=maximum)),
+)
+@test modelts isa SoleXplorer.Modelset
+
 # ---------------------------------------------------------------------------- #
 #                               modal time series                              #
 # ---------------------------------------------------------------------------- #
