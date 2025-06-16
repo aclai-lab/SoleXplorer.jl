@@ -51,7 +51,7 @@ get_resultsparams(m::ModelSetup)          = m.resultsparams
 get_rulesparams(m::ModelSetup)            = m.rulesparams
 get_measures(m::ModelSetup)               = m.measures
 
-get_pfeatures(m::ModelSetup)              = m.params.features
+# get_pfeatures(m::ModelSetup)              = m.params.features
 get_treatment(m::ModelSetup)              = m.config.treatment
 
 get_rawmodel(m::ModelSetup)               = m.rawmodel[1]
@@ -59,8 +59,8 @@ get_resampled_rawmodel(m::ModelSetup)     = m.rawmodel[2]
 get_learn_method(m::ModelSetup)           = m.learn_method[1]
 get_resampled_learn_method(m::ModelSetup) = m.learn_method[2]
 
-get_test(m::ModelSetup)                   = m.tt.test
-get_valid(m::ModelSetup)                  = m.tt.valid
+# get_test(m::ModelSetup)                   = m.tt.test
+# get_valid(m::ModelSetup)                  = m.tt.valid
 
 set_config!(m::ModelSetup,       config::NamedTuple)                        = m.config = config
 set_params!(m::ModelSetup,       params::NamedTuple)                        = m.params = params
@@ -200,15 +200,15 @@ mutable struct Modelset{T<:AbstractModelType} <: AbstractModelset{T}
     rules      :: Union{Rule,             AbstractVector{<:Rule},          Nothing}
     measures   :: Union{AbstractMeasures, Nothing}
 
-    function Modelset(
-        setup      :: AbstractModelSetup{T},
-        # ds         :: AbstractDataset,
-        predictor  :: MLJ.Model,
-        mach       :: MLJ.Machine,
-        model      :: AbstractModel
-    )::Modelset where {T<:AbstractModelType}
-        new{T}(setup, predictor, mach, model, nothing, nothing)
-    end
+    # function Modelset(
+    #     setup      :: AbstractModelSetup{T},
+    #     # ds         :: AbstractDataset,
+    #     predictor  :: MLJ.Model,
+    #     mach       :: MLJ.Machine,
+    #     model      :: AbstractModel
+    # )::Modelset where {T<:AbstractModelType}
+    #     new{T}(setup, predictor, mach, model, nothing, nothing)
+    # end
 
     function Modelset(
         setup      :: AbstractModelSetup{T},

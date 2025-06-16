@@ -85,3 +85,27 @@ modelr = train_test(
 @test modelr isa SoleXplorer.Modelset
 @test modeltype(modelr) == SX.AbstractRegression
 
+# ---------------------------------------------------------------------------- #
+#                          modelsetup and modelset                             #
+# ---------------------------------------------------------------------------- #
+modelc = train_test(Xc, yc)
+@test modelc isa SoleXplorer.Modelset
+
+@test SX.get_resample(modelc.setup) isa SX.Resample
+@test SX.get_resultsparams(modelc.setup) isa Function
+@test_nowarn sprint(show, modelc.setup)
+
+@test SX.DecisionTreeClassifierModel(modelc.setup) isa SX.ModelSetup
+@test SX.RandomForestClassifierModel(modelc.setup) isa SX.ModelSetup
+@test SX.AdaBoostClassifierModel(modelc.setup) isa SX.ModelSetup
+@test SX.DecisionTreeRegressorModel(modelc.setup) isa SX.ModelSetup
+@test SX.RandomForestRegressorModel(modelc.setup) isa SX.ModelSetup
+@test SX.ModalDecisionTreeModel(modelc.setup) isa SX.ModelSetup
+@test SX.ModalRandomForestModel(modelc.setup) isa SX.ModelSetup
+@test SX.ModalAdaBoostModel(modelc.setup) isa SX.ModelSetup
+@test SX.XGBoostClassifierModel(modelc.setup) isa SX.ModelSetup
+@test SX.XGBoostRegressorModel(modelc.setup) isa SX.ModelSetup
+
+@test_nowarn sprint(show, modelc)
+
+
