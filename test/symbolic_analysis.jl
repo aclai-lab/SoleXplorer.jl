@@ -27,6 +27,12 @@ modelts = symbolic_analysis(
 # ---------------------------------------------------------------------------- #
 modelts = symbolic_analysis(
     Xts, yts;
+    model=(;type=:modaldecisiontree)
+)
+@test modelts isa SoleXplorer.Modelset
+
+modelts = symbolic_analysis(
+    Xts, yts;
     model=(;type=:modaldecisiontree),
     preprocess=(;rng=Xoshiro(1)),
     features=(minimum, maximum),
@@ -123,5 +129,79 @@ modelts = symbolic_analysis(
     preprocess=(;rng=Xoshiro(1)),
     features=(complete_set...,),
     measures=(accuracy,)
+)
+@test modelts isa SoleXplorer.Modelset
+
+# ---------------------------------------------------------------------------- #
+#                                    tuning                                    #
+# ---------------------------------------------------------------------------- #
+modelc = symbolic_analysis(
+    Xc, yc;
+    tuning=true
+)
+@test modelts isa SoleXplorer.Modelset
+
+modelc = symbolic_analysis(
+    Xc, yc;
+    tuning=(
+        method=(type=grid, params=(;resolution=25)), 
+        params=(repeats=35, n=10),
+        ranges=(
+            SoleXplorer.range(:merge_purity_threshold, lower=0.1, upper=2.0),
+            SoleXplorer.range(:feature_importance, values=[:impurity, :split])
+        )
+    )
+)
+@test modelts isa SoleXplorer.Modelset
+
+modelc = symbolic_analysis(
+    Xc, yc;
+    tuning=(
+        method=(;type=randomsearch), 
+        params=(repeats=35, n=10),
+        ranges=(
+            SoleXplorer.range(:merge_purity_threshold, lower=0.1, upper=2.0),
+            SoleXplorer.range(:feature_importance, values=[:impurity, :split])
+        )
+    )
+)
+@test modelts isa SoleXplorer.Modelset
+
+modelc = symbolic_analysis(
+    Xc, yc;
+    tuning=(
+        method=(type=latinhypercube, params=(;popsize=80)), 
+        params=(repeats=35, n=10),
+        ranges=(
+            SoleXplorer.range(:merge_purity_threshold, lower=0.1, upper=2.0),
+            SoleXplorer.range(:feature_importance, values=[:impurity, :split])
+        )
+    )
+)
+@test modelts isa SoleXplorer.Modelset
+
+modelc = symbolic_analysis(
+    Xc, yc;
+    tuning=(
+        method=(type=particleswarm, params=(;n_particles=5)), 
+        params=(repeats=35, n=10),
+        ranges=(
+            SoleXplorer.range(:merge_purity_threshold, lower=0.1, upper=2.0),
+            SoleXplorer.range(:feature_importance, values=[:impurity, :split])
+        )
+    )
+)
+@test modelts isa SoleXplorer.Modelset
+
+modelc = symbolic_analysis(
+    Xc, yc;
+    tuning=(
+        method=(;type=adaptiveparticleswarm), 
+        params=(repeats=35, n=10),
+        ranges=(
+            SoleXplorer.range(:merge_purity_threshold, lower=0.1, upper=2.0),
+            SoleXplorer.range(:feature_importance, values=[:impurity, :split])
+        )
+    )
 )
 @test modelts isa SoleXplorer.Modelset
