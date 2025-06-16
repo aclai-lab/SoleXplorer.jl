@@ -46,7 +46,7 @@ end
 # ---------------------------------------------------------------------------- #
 #                                   tuning                                     #
 # ---------------------------------------------------------------------------- #
-const AVAIL_TUNING_METHODS  = (grid, randomsearch, latinhypercube, treeparzen, particleswarm, adaptiveparticleswarm)
+const AVAIL_TUNING_METHODS  = (grid, randomsearch, latinhypercube, particleswarm, adaptiveparticleswarm)
 
 const TUNING_METHODS_PARAMS = Dict{Union{DataType, UnionAll},NamedTuple}(
     grid                  => (
