@@ -71,10 +71,10 @@ function validate_params(
 end
 
 function validate_features(
-    defaults::Tuple,
+    defaults::OptVecCall,
     users::OptTuple
 )
-    features = users === nothing ? defaults : users
+    features = users === nothing ? defaults : [users...]
 
     # check if all features are functions
     all(f -> f isa Base.Callable, features) || throw(ArgumentError("All features must be functions"))

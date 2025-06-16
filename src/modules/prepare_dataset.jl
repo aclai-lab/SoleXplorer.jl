@@ -194,7 +194,7 @@ function _treatment(
     X::AbstractMatrix{T},
     vnames::VarNames,
     treatment::Symbol,
-    features::FeatNames,
+    features::Union{Vector{<:Base.Callable}, Nothing},
     winparams::WinParams;
     reducefunc::OptCallable=nothing
 ) where T
@@ -260,7 +260,7 @@ function _treatment(
     return result_matrix, col_names
 end
 
-_treatment(df::DataFrame, args...) = _treatment(Matrix(df), args...)
+_treatment(df::DataFrame, args...; kwargs...) = _treatment(Matrix(df), args...; kwargs...)
 
 # ---------------------------------------------------------------------------- #
 #                                 partitioning                                 #
@@ -377,7 +377,7 @@ function __prepare_dataset(
     y::AbstractVector;
     algo::DataType,
     treatment::Symbol,
-    features::Tuple,
+    features::Vector{<:Base.Callable},
     train_ratio::Float64,
     valid_ratio::Float64,
     rng::AbstractRNG,
@@ -413,7 +413,7 @@ function __prepare_dataset(
     column_eltypes = eltype.(eachcol(X))
 
     if all(t -> t <: AbstractVector{<:Number}, column_eltypes) && !(winparams === nothing)
-        X, vnames = _treatment(X, vnames, treatment, features, winparams; reducefunc)
+        X, vnames = _treatment(X, vnames, treatment, [features...], winparams; reducefunc)
     end
 
     ds_info = DatasetInfo(

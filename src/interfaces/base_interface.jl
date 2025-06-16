@@ -11,6 +11,7 @@ const OptSymbol         = Optional{Symbol}
 const OptTuple          = Optional{Tuple}
 const OptNamedTuple     = Optional{NamedTuple}
 const OptCallable       = Optional{<:Base.Callable}
+const OptVecCall        = Optional{Vector{<:Base.Callable}}
 const OptDataType       = Optional{DataType}
 
 const OptStringVec      = Optional{Vector{<:AbstractString}}

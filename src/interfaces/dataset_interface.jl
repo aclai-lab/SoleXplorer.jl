@@ -137,12 +137,6 @@ function Base.show(io::IO, ds::Dataset)
     println(io, "Dataset:")
     println(io, "  X shape:        ", size(ds.X))
     println(io, "  y length:       ", length(ds.y))
-    if ds.tt isa AbstractVector
-        println(io, "  Train/Valid/Test:     ", length(ds.tt), " folds")
-    else
-        println(io, "  Train indices:  ", length(ds.tt.train))
-        println(io, "  Valid indices:  ", length(ds.tt.valid))
-        println(io, "  Test indices:   ", length(ds.tt.test))
-    end
+    println(io, "  Train/Valid/Test:     ", length(ds.tt), " folds")
     print(io, ds.info)
 end
