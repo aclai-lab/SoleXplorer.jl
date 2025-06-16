@@ -151,3 +151,38 @@ modelc, dsc = prepare_dataset(
     Xc, yc;
     model=(type=:decisiontree, params=(;invalid=5))
 )
+
+# ---------------------------------------------------------------------------- #
+#                                dataset info                                  #
+# ---------------------------------------------------------------------------- #
+modelc, dsc = prepare_dataset(Xc, yc)
+
+@test SX.get_treatment(dsc.info) == :aggregate
+@test isnothing(SX.get_reducefunc(dsc.info))
+@test SX.get_train_ratio(dsc.info) == 0.8
+@test SX.get_valid_ratio(dsc.info) == 1.0
+@test SX.get_rng(dsc.info) == TaskLocalRNG()
+@test SX.get_vnames(dsc.info) isa Vector{String}
+
+dsc.info
+
+# ---------------------------------------------------------------------------- #
+#                                     tt                                       #
+# ---------------------------------------------------------------------------- #
+@test SX.get_train(dsc.tt[1]) isa Vector{Int64}
+@test isempty(SX.get_valid(dsc.tt[1]))
+@test SX.get_test(dsc.tt[1]) isa Vector{Int64}
+@test length(dsc.tt[1]) == 150
+
+dsc.tt[1]
+
+# ---------------------------------------------------------------------------- #
+#                                   dataset                                    #
+# ---------------------------------------------------------------------------- #
+@test SX.get_X(dsc) isa Matrix
+@test SX.get_y(dsc) isa AbstractVector
+@test SX.get_tt(dsc) isa AbstractVector
+@test SX.get_info(dsc) isa SX.DatasetInfo
+
+dsc
+
