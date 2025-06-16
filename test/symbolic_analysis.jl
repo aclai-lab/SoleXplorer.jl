@@ -54,3 +54,74 @@ early_stop  = symbolic_analysis(
     # with early stopping a validation set is required
     preprocess=(valid_ratio = 0.3, rng=Xoshiro(1))
 )
+
+# ---------------------------------------------------------------------------- #
+#                              catch9 and catch22                              #
+# ---------------------------------------------------------------------------- #
+modelts = symbolic_analysis(
+    Xts, yts;
+    model=(;type=:decisiontree),
+    preprocess=(;rng=Xoshiro(1)),
+    features=(
+        mode_5,
+        mode_10,
+        embedding_dist,
+        acf_timescale,
+        acf_first_min,
+        ami2,
+        trev,
+        outlier_timing_pos,
+        outlier_timing_neg,
+        whiten_timescale,
+        forecast_error,
+        ami_timescale,
+        high_fluctuation,
+        stretch_decreasing,
+        stretch_high,
+        entropy_pairs,
+        rs_range,
+        dfa,
+        low_freq_power,
+        centroid_freq,
+        transition_variance,
+        periodicity
+    ),
+    measures=(accuracy,)
+)
+@test modelts isa SoleXplorer.Modelset
+
+modelts = symbolic_analysis(
+    Xts, yts;
+    model=(;type=:decisiontree),
+    preprocess=(;rng=Xoshiro(1)),
+    features=(base_set...,),
+    measures=(accuracy,)
+)
+@test modelts isa SoleXplorer.Modelset
+
+modelts = symbolic_analysis(
+    Xts, yts;
+    model=(;type=:decisiontree),
+    preprocess=(;rng=Xoshiro(1)),
+    features=(catch9...,),
+    measures=(accuracy,)
+)
+@test modelts isa SoleXplorer.Modelset
+
+modelts = symbolic_analysis(
+    Xts, yts;
+    model=(;type=:decisiontree),
+    preprocess=(;rng=Xoshiro(1)),
+    features=(catch22_set...,),
+    measures=(accuracy,)
+)
+@test modelts isa SoleXplorer.Modelset
+
+modelts = symbolic_analysis(
+    Xts, yts;
+    model=(;type=:decisiontree),
+    preprocess=(;rng=Xoshiro(1)),
+    features=(complete_set...,),
+    measures=(accuracy,)
+)
+@test modelts isa SoleXplorer.Modelset
