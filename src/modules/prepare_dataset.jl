@@ -260,7 +260,7 @@ function _treatment(
     return result_matrix, col_names
 end
 
-_treatment(df::DataFrame, args...; kwargs...) = _treatment(Matrix(df), args...; kwargs...)
+# _treatment(df::DataFrame, args...; kwargs...) = _treatment(Matrix(df), args...; kwargs...)
 
 # ---------------------------------------------------------------------------- #
 #                                 partitioning                                 #

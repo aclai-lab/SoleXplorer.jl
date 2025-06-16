@@ -215,19 +215,6 @@ modelc = symbolic_analysis(
 # ---------------------------------------------------------------------------- #
 #                              rules extraction                                #
 # ---------------------------------------------------------------------------- #
-using Test
-using MLJ, SoleXplorer
-using DataFrames, Random
-using SoleData
-
-Xc, yc = @load_iris
-Xc = DataFrame(Xc)
-
-Xr, yr = @load_boston
-Xr = DataFrame(Xr)
-
-Xts, yts = SoleData.load_arff_dataset("NATOPS")
-
 modelc = symbolic_analysis(
     Xc, yc;
     model=(;type=:randomforest),

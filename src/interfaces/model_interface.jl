@@ -130,7 +130,7 @@ const DEFAULT_PREPROC = (
     rng         = TaskLocalRNG()
 )
 
-const PREPROC_KEYS = (:train_ratio, :valid_ratio, :rng)
+const PREPROC_KEYS = (:train_ratio, :valid_ratio, :vnames, :rng)
 
 const AVAIL_MODELS = Dict{Symbol,Function}(
     :decisiontree_classifier => DecisionTreeClassifierModel,

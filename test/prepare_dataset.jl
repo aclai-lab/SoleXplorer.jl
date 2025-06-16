@@ -94,6 +94,20 @@ modelc, dsc = prepare_dataset(Xc, y_symbol)
 @test modelc isa SoleXplorer.Modelset
 @test dsc    isa SoleXplorer.Dataset
 
+@test_nowarn SX.check_dataset_type(Xc)
+@test_nowarn SX.hasnans(Xc)
+@test_nowarn SX.code_dataset(Xc)
+@test_nowarn SX.code_dataset(yc)
+@test_nowarn SX.code_dataset(Xc, yc)
+@test_nowarn SX.check_dimensions(Xc)
+@test_nowarn SX.check_dimensions(Matrix(Xc))
+@test_nowarn SX.find_max_length(Xc)
+
+modelc, dsc = prepare_dataset(
+    Xc, yc;
+    preprocess=(;vnames=["p1", "p2", "p3", "p4"])
+)
+
 # ---------------------------------------------------------------------------- #
 #                                 resamplig                                    #
 # ---------------------------------------------------------------------------- #
