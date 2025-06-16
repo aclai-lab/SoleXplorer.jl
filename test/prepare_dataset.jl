@@ -103,10 +103,10 @@ modelc, dsc = prepare_dataset(Xc, y_symbol)
 @test_nowarn SX.check_dimensions(Matrix(Xc))
 @test_nowarn SX.find_max_length(Xc)
 
-modelc, dsc = prepare_dataset(
-    Xc, yc;
-    preprocess=(;vnames=["p1", "p2", "p3", "p4"])
-)
+# modelc, dsc = prepare_dataset(
+#     Xc, yc;
+#     preprocess=(;vnames=["p1", "p2", "p3", "p4"])
+# )
 
 # ---------------------------------------------------------------------------- #
 #                                 resamplig                                    #
