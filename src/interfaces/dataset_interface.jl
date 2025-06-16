@@ -41,7 +41,7 @@ struct DatasetInfo <: AbstractDatasetSetup
         0 ≤ train_ratio ≤ 1 || throw(ArgumentError("train_ratio must be between 0 and 1"))
         0 ≤ valid_ratio ≤ 1 || throw(ArgumentError("valid_ratio must be between 0 and 1"))
 
-        new(treatment, reducefunc, train_ratio, valid_ratio, rng, vnames)
+        new(treatment, reducefunc, train_ratio, 1-valid_ratio, rng, vnames)
     end
 end
 

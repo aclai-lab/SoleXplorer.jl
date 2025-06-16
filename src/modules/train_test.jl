@@ -22,18 +22,23 @@ end
 #                                  train_test                                  #
 # ---------------------------------------------------------------------------- #
 function _traintest!(model::AbstractModelset, ds::AbstractDataset)::Modelset
+    n_folds = length(ds.tt)
+    model.model = Vector{AbstractModel}(undef, n_folds)
+    model.setup.tt = Vector{Tuple}(undef, n_folds)
+
     # Early stopping is a regularization technique in XGBoost that prevents overfitting by monitoring model performance 
     # on a validation dataset and stopping training when performance no longer improves.
     if haskey(model.setup.params, :watchlist) && model.setup.params.watchlist == makewatchlist
-        model.setup.params = merge(model.setup.params, (watchlist = makewatchlist(ds),))
+        # @inbounds for i in 1:n_folds
+        #     watchlist = makewatchlist(ds[i])
+        #     @show watchlist
+            model.setup.params = merge(model.setup.params, (watchlist = makewatchlist(ds),))
+        #     model.setup.params = merge(model.setup.params, (watchlist,))
+        # end
     end
 
     model.predictor = get_predictor!(model.setup)
     model.mach = MLJ.machine(model.predictor, MLJ.table(@views ds.X), @views ds.y)
-
-    n_folds = length(ds.tt)
-    model.model = Vector{AbstractModel}(undef, n_folds)
-    model.setup.tt = Vector{Tuple}(undef, n_folds)
 
     # TODO this can be parallelizable
     @inbounds for i in 1:n_folds
