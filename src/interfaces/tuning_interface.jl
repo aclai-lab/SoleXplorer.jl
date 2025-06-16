@@ -71,10 +71,6 @@ const TUNING_METHODS_PARAMS = Dict{Union{DataType, UnionAll},NamedTuple}(
         periodic_ae            = false,
         rng                    = TaskLocalRNG()
     ),
-    treeparzen            => (
-        config                 = Config(0.25, 25, 24, 20, 1.0),
-        max_simultaneous_draws = 1
-    ),
     particleswarm         => (
         n_particles            = 3,
         w                      = 1.0,

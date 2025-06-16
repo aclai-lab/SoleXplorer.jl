@@ -83,3 +83,5 @@ modelr = train_test(
     ),
 )
 @test modelr isa SoleXplorer.Modelset
+
+
