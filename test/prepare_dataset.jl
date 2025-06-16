@@ -163,8 +163,12 @@ modelc, dsc = prepare_dataset(Xc, yc)
 @test SX.get_valid_ratio(dsc.info) == 1.0
 @test SX.get_rng(dsc.info) == TaskLocalRNG()
 @test SX.get_vnames(dsc.info) isa Vector{String}
+@test_nowarn sprint(show, dsc.info)
 
-dsc.info
+output = sprint(show, dsc.info)
+@test occursin("DatasetInfo:", output)
+@test occursin("treatment:", output)
+@test occursin("aggregate", output)
 
 # ---------------------------------------------------------------------------- #
 #                                     tt                                       #
@@ -173,8 +177,7 @@ dsc.info
 @test isempty(SX.get_valid(dsc.tt[1]))
 @test SX.get_test(dsc.tt[1]) isa Vector{Int64}
 @test length(dsc.tt[1]) == 150
-
-dsc.tt[1]
+@test_nowarn sprint(show, dsc.tt[1])
 
 # ---------------------------------------------------------------------------- #
 #                                   dataset                                    #
@@ -183,6 +186,5 @@ dsc.tt[1]
 @test SX.get_y(dsc) isa AbstractVector
 @test SX.get_tt(dsc) isa AbstractVector
 @test SX.get_info(dsc) isa SX.DatasetInfo
-
-dsc
+@test_nowarn sprint(show, dsc)
 
