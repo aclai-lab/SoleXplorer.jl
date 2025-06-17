@@ -105,7 +105,7 @@ modelc, dsc = prepare_dataset(Xc, y_symbol)
 
 modelc, dsc = prepare_dataset(
     Xc, yc;
-    preprocess=(;train_ratio=0.5, vnames=["p1", "p2", "p3", "p4"], reducefunc=maximum)
+    preprocess=(train_ratio=0.5, vnames=["p1", "p2", "p3", "p4"], modalreduce=maximum)
 )
 @test modelc isa SoleXplorer.Modelset
 @test dsc    isa SoleXplorer.Dataset
@@ -216,4 +216,19 @@ output = sprint(show, dsc.info)
 @test SX.get_tt(dsc) isa AbstractVector
 @test SX.get_info(dsc) isa SX.DatasetInfo
 @test_nowarn sprint(show, dsc)
+
+# ---------------------------------------------------------------------------- #
+#              check vnames, modalreduce, and modal feature names               #
+# ---------------------------------------------------------------------------- #
+vnames=[:p1, :p2, :p3, :p4]
+modelc, _ = prepare_dataset(
+    Xc, yc;
+    preprocess=(;vnames)
+)
+@test modelc.setup.preprocess.vnames == vnames
+
+_, dsmin = prepare_dataset(Xts, yts; model=(;type=:modaldecisiontree), preprocess=(;modalreduce=minimum))
+_, dsmax = prepare_dataset(Xts, yts; model=(;type=:modaldecisiontree), preprocess=(;modalreduce=maximum))
+@test all(dsmin.X .<= dsmax.X)
+
 

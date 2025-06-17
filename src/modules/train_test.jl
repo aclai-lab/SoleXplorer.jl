@@ -73,9 +73,9 @@ end
 #     tuning        :: NamedTupleBool = false,
 #     extract_rules :: NamedTupleBool = false,
 #     preprocess    :: OptNamedTuple  = nothing,
-#     reducefunc    :: OptCallable    = nothing,
+#     modalreduce    :: OptCallable    = nothing,
 # )::Modelset
-#     modelset = validate_modelset(model, eltype(y); resample, win, features, tuning, extract_rules, preprocess, reducefunc)
+#     modelset = validate_modelset(model, eltype(y); resample, win, features, tuning, extract_rules, preprocess, modalreduce)
 #     model = Modelset(modelset, _prepare_dataset(X, y, modelset))
 #     _traintest!(model)
 

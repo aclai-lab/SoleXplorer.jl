@@ -26,7 +26,7 @@ The dataset interface consists of several key components:
 |-------|------|-------------|
 | `algo` | `Symbol` | Algorithm to use for dataset processing |
 | `treatment` | `Symbol` | Data treatment method (e.g., `:standardize`, `:normalize`) |
-| `reducefunc` | `Union{<:Base.Callable, Nothing}` | Optional function for dimensionality reduction |
+| `modalreduce` | `Union{<:Base.Callable, Nothing}` | Optional function for dimensionality reduction |
 | `train_ratio` | `Real` | Proportion of data to use for training (0-1) |
 | `valid_ratio` | `Real` | Proportion of data to use for validation (0-1) |
 | `rng` | `AbstractRNG` | Random number generator for reproducible splits |
@@ -39,7 +39,7 @@ The dataset interface consists of several key components:
 DatasetInfo(
     algo::Symbol, 
     treatment::Symbol,
-    reducefunc::Union{<:Base.Callable, Nothing},
+    modalreduce::Union{<:Base.Callable, Nothing},
     train_ratio::Real,
     valid_ratio::Real,
     rng::AbstractRNG,

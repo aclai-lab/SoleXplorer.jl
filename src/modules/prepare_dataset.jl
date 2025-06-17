@@ -153,7 +153,7 @@ find_max_length(df::DataFrame) = find_max_length(Matrix(df))
 """
     _treatment(X::AbstractMatrix{T}, vnames::VarNames, treatment::Symbol,
               features::FeatNames, winparams::WinParams; 
-              reducefunc::Base.Callable=mean) -> Tuple{Matrix, Vector{String}}
+              modalreduce::Base.Callable=mean) -> Tuple{Matrix, Vector{String}}
 
 Process a matrix data by applying feature extraction or dimension reduction.
 
@@ -167,7 +167,7 @@ Process a matrix data by applying feature extraction or dimension reduction.
 - `winparams::WinParams`: Parameters for windowing time series:
   - `type`: Window function to use (e.g., `adaptivewindow`, `wholewindow`)
   - `params`: Additional parameters for the window function
-- `reducefunc::Base.Callable=mean`: Function to reduce windows in `:reducesize` mode (default: `mean`)
+- `modalreduce::Base.Callable=mean`: Function to reduce windows in `:reducesize` mode (default: `mean`)
 
 # Returns
 - `Tuple{Matrix, Vector{String}}`: Processed matrix and column names:
@@ -196,7 +196,7 @@ function _treatment(
     treatment::Symbol,
     features::Union{Vector{<:Base.Callable}, Nothing},
     winparams::WinParams;
-    reducefunc::OptCallable=nothing
+    modalreduce::OptCallable=nothing
 ) where T
     # working with audio files, we need to consider audio of different lengths.
     max_interval = first(find_max_length(X))
@@ -236,13 +236,14 @@ function _treatment(
         end
 
     elseif treatment == :reducesize   # modal
+        @show "Q"
         col_names = vnames
         
         n_rows = size(X, 1)
         n_cols = length(col_names)
         result_matrix = Matrix{T}(undef, n_rows, n_cols)
 
-        reducefunc === nothing && (reducefunc = mean)
+        modalreduce === nothing && (modalreduce = mean)
         
         for (row_idx, row) in enumerate(eachrow(X))
             row_intervals = winparams.type(maximum(length.(collect(row))); winparams.params...)
@@ -250,7 +251,7 @@ function _treatment(
             
             # calculate reduced values for this row
             reduced_data = [
-                vcat([reducefunc(col[r]) for r in row_intervals],
+                vcat([modalreduce(col[r]) for r in row_intervals],
                      fill(NaN, interval_diff)) for col in row
             ]
             result_matrix[row_idx, :] = reduced_data
@@ -360,7 +361,7 @@ Supports both classification and regression tasks, with extensive customization 
   - `train_ratio`: Ratio of data for training vs testing
   - `valid_ratio`: Ratio of training data for validation
   - `rng`: Random number generator
-- `reducefunc::OptCallable=nothing`: Function for reducing time series data
+- `modalreduce::OptCallable=nothing`: Function for reducing time series data
   in `:reducesize` treatment mode (default: `mean`)
 
 # Returns
@@ -384,7 +385,7 @@ function __prepare_dataset(
     resample::Union{Resample, Nothing},
     winparams::WinParams,
     vnames::Union{VarNames,Nothing}=nothing,
-    reducefunc::OptCallable=nothing
+    modalreduce::OptCallable=nothing
 )::Dataset
     X = Matrix(df)
     # check parameters
@@ -413,12 +414,12 @@ function __prepare_dataset(
     column_eltypes = eltype.(eachcol(X))
 
     if all(t -> t <: AbstractVector{<:Number}, column_eltypes) && !(winparams === nothing)
-        X, vnames = _treatment(X, vnames, treatment, [features...], winparams; reducefunc)
+        X, vnames = _treatment(X, vnames, treatment, [features...], winparams; modalreduce)
     end
 
     ds_info = DatasetInfo(
         treatment,
-        reducefunc,
+        modalreduce,
         train_ratio,
         valid_ratio,
         rng,
@@ -438,7 +439,7 @@ function __prepare_dataset(
     model::AbstractModelSetup
 )::Dataset
     # modal reduce function, optional for propositional
-    # reducefunc = haskey(model.preprocess, :reducefunc) ? model.config.reducefunc : nothing
+    # modalreduce = haskey(model.preprocess, :modalreduce) ? model.config.modalreduce : nothing
 
     __prepare_dataset(
         X, y;
@@ -451,7 +452,7 @@ function __prepare_dataset(
         resample=model.resample,
         winparams=model.winparams,
         vnames=model.preprocess.vnames,
-        reducefunc=model.preprocess.reducefunc,
+        modalreduce=model.preprocess.modalreduce,
     )
 end
 
@@ -465,7 +466,7 @@ function _prepare_dataset(
     tuning        :: NamedTupleBool = false,
     extract_rules :: NamedTupleBool = false,
     preprocess    :: OptNamedTuple  = nothing,
-    # reducefunc    :: OptCallable    = nothing,
+    # modalreduce    :: OptCallable    = nothing,
     measures      :: OptTuple       = nothing,
 )::Tuple{Modelset, Dataset}
     modelset = validate_modelset(
@@ -476,7 +477,7 @@ function _prepare_dataset(
         tuning,
         extract_rules,
         preprocess,
-        # reducefunc,
+        # modalreduce,
         measures
     )
     Modelset(modelset,), __prepare_dataset(X, y, modelset)

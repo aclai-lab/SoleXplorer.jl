@@ -237,7 +237,7 @@ function validate_modelset(
     tuning        :: NamedTupleBool = false,
     extract_rules :: NamedTupleBool = false,
     preprocess    :: OptNamedTuple  = nothing,
-    # reducefunc    :: OptCallable    = nothing,
+    # modalreduce    :: OptCallable    = nothing,
     measures      :: OptTuple       = nothing,
 )::ModelSetup
     check_params(model, (:type, :params))
@@ -257,9 +257,9 @@ function validate_modelset(
 
     # grab additional extra params
     user_params = get(model, :params, nothing)
-    if !(user_params === nothing) && haskey(user_params, :reducefunc)
-        set_config!(modelset, merge(get_config(modelset), (reducefunc = user_params.reducefunc,)))
-        user_params = NamedTuple(k => v for (k, v) in pairs(user_params) if k != :reducefunc)
+    if !(user_params === nothing) && haskey(user_params, :modalreduce)
+        set_config!(modelset, merge(get_config(modelset), (modalreduce = user_params.modalreduce,)))
+        user_params = NamedTuple(k => v for (k, v) in pairs(user_params) if k != :modalreduce)
     end
     set_params!(modelset, validate_params(get_params(modelset), user_params, rng))
 
@@ -285,7 +285,7 @@ function validate_modelset(
     set_resample!(modelset, validate_resample(resample, rng, modelset.preprocess.train_ratio))
     set_measures!(modelset, validate_measures(get_measures(modelset), measures))
     
-    # modelset.preprocess.reducefunc === nothing || (modelset.config = merge(get_config(modelset), (reducefunc=reducefunc,)))
+    # modelset.preprocess.modalreduce === nothing || (modelset.config = merge(get_config(modelset), (modalreduce=modalreduce,)))
 
     return modelset
 end

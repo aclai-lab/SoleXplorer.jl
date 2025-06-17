@@ -24,7 +24,7 @@ modelts = symbolic_analysis(
 
 modelts = symbolic_analysis(
     Xts, yts;
-    model=(type=:decisiontree, params=(;max_depth=5, reducefunc=maximum)),
+    model=(type=:decisiontree, params=(;max_depth=5, modalreduce=maximum)),
 )
 @test modelts isa SoleXplorer.Modelset
 

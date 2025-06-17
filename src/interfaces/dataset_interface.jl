@@ -4,7 +4,7 @@
 """
     DatasetInfo(
         treatment::Symbol,
-        reducefunc::OptCallable,
+        modalreduce::OptCallable,
         train_ratio::Real,
         valid_ratio::Real,
         rng::AbstractRNG,
@@ -15,7 +15,7 @@ Create a configuration for dataset preparation and splitting in machine learning
 
 # Fields
 - `treatment::Symbol`: Data treatment method (e.g., `:standardize`, `:normalize`)
-- `reducefunc::OptCallable`: Optional function for dimensionality reduction
+- `modalreduce::OptCallable`: Optional function for dimensionality reduction
 - `train_ratio::Real`: Proportion of data to use for training (must be between 0 and 1)
 - `valid_ratio::Real`: Proportion of data to use for validation (must be between 0 and 1)
 - `rng::AbstractRNG`: Random number generator for reproducible splits
@@ -23,7 +23,7 @@ Create a configuration for dataset preparation and splitting in machine learning
 """
 struct DatasetInfo <: AbstractDatasetSetup
     treatment   :: Symbol
-    reducefunc  :: OptCallable
+    modalreduce  :: OptCallable
     train_ratio :: Real
     valid_ratio :: Real
     rng         :: AbstractRNG
@@ -31,7 +31,7 @@ struct DatasetInfo <: AbstractDatasetSetup
 
     function DatasetInfo(
         treatment   :: Symbol,
-        reducefunc  :: OptCallable,
+        modalreduce  :: OptCallable,
         train_ratio :: Real,
         valid_ratio :: Real,
         rng         :: AbstractRNG,
@@ -41,12 +41,12 @@ struct DatasetInfo <: AbstractDatasetSetup
         0 ≤ train_ratio ≤ 1 || throw(ArgumentError("train_ratio must be between 0 and 1"))
         0 ≤ valid_ratio ≤ 1 || throw(ArgumentError("valid_ratio must be between 0 and 1"))
 
-        new(treatment, reducefunc, train_ratio, 1-valid_ratio, rng, vnames)
+        new(treatment, modalreduce, train_ratio, 1-valid_ratio, rng, vnames)
     end
 end
 
 get_treatment(dsinfo::DatasetInfo)   :: Symbol = dsinfo.treatment
-get_reducefunc(dsinfo::DatasetInfo)  :: OptCallable = dsinfo.reducefunc
+get_reducefunc(dsinfo::DatasetInfo)  :: OptCallable = dsinfo.modalreduce
 get_train_ratio(dsinfo::DatasetInfo) :: Real = dsinfo.train_ratio
 get_valid_ratio(dsinfo::DatasetInfo) :: Real = dsinfo.valid_ratio
 get_rng(dsinfo::DatasetInfo)         :: AbstractRNG = dsinfo.rng
