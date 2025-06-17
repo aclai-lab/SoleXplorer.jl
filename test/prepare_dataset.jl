@@ -103,6 +103,12 @@ modelc, dsc = prepare_dataset(Xc, y_symbol)
 @test_nowarn SX.check_dimensions(Matrix(Xc))
 @test_nowarn SX.find_max_length(Xc)
 
+# dataset is composed also of non numeric columns
+Xnn = hcat(Xc, DataFrame(target = yc))
+SX.code_dataset(Xnn)
+
+modelts, dts = prepare_dataset(Xts, yts)
+
 modelc, dsc = prepare_dataset(
     Xc, yc;
     preprocess=(train_ratio=0.5, vnames=["p1", "p2", "p3", "p4"], modalreduce=maximum)
@@ -181,6 +187,15 @@ modelc, dsc = prepare_dataset(
     preprocess=(;vnames=[:p1, :p2, :p3, :p4, :p5])
 )
 
+Xrc, yrc = SoleData.load_arff_dataset("NATOPS")
+Xrc[1,1] = Xrc[1,1][1:end-4]
+Xrc[1,2] = Xrc[1,1][1:end-3]
+
+@test_throws ArgumentError prepare_dataset(
+    Xrc, yrc;
+    model=(;type=:modaldecisiontree)
+)
+
 # ---------------------------------------------------------------------------- #
 #                                dataset info                                  #
 # ---------------------------------------------------------------------------- #
@@ -230,5 +245,4 @@ modelc, _ = prepare_dataset(
 _, dsmin = prepare_dataset(Xts, yts; model=(;type=:modaldecisiontree), preprocess=(;modalreduce=minimum))
 _, dsmax = prepare_dataset(Xts, yts; model=(;type=:modaldecisiontree), preprocess=(;modalreduce=maximum))
 @test all(dsmin.X .<= dsmax.X)
-
 

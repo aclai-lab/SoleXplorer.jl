@@ -18,7 +18,7 @@ modelts = symbolic_analysis(
     Xts, yts;
     model=(;type=:xgboost),
     preprocess=(;rng=Xoshiro(1)),
-    measures=(accuracy,)
+    measures=(log_loss, accuracy, confusion_matrix, kappa)
 )
 @test modelts isa SoleXplorer.Modelset
 

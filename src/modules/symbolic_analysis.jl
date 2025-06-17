@@ -24,7 +24,6 @@ function eval_measures!(model::Modelset)::Measures
     fold_weights(mode) = nfolds .* test_fold_sizes ./ sum(test_fold_sizes)
     fold_weights(::MLJBase.StatisticalMeasuresBase.Sum) = nothing
 
-
     measurements_vector = mapreduce(vcat, 1:nfolds) do k
         yhat_given_operation = Dict(op=>op(get_mach(model), rows=tt[k][1]) for op in unique(_operations))
         test = tt[k][1]

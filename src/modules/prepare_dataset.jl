@@ -204,7 +204,7 @@ function _treatment(
 
     # define column names and prepare data structure based on treatment type
     if treatment == :aggregate        # propositional
-        if n_intervals == 1
+        if length(n_intervals) == 1
             col_names = [string(f, "(", v, ")") for f in features for v in vnames]
             
             n_rows = size(X, 1)
