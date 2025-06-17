@@ -105,7 +105,7 @@ modelc, dsc = prepare_dataset(Xc, y_symbol)
 
 # dataset is composed also of non numeric columns
 Xnn = hcat(Xc, DataFrame(target = yc))
-SX.code_dataset(Xnn)
+@test_nowarn SX.code_dataset(Xnn)
 
 modelts, dts = prepare_dataset(Xts, yts)
 
@@ -246,3 +246,12 @@ _, dsmin = prepare_dataset(Xts, yts; model=(;type=:modaldecisiontree), preproces
 _, dsmax = prepare_dataset(Xts, yts; model=(;type=:modaldecisiontree), preprocess=(;modalreduce=maximum))
 @test all(dsmin.X .<= dsmax.X)
 
+# ---------------------------------------------------------------------------- #
+#                                  windowing                                   #
+# ---------------------------------------------------------------------------- #
+modelts, dts = prepare_dataset(
+    Xts, yts;
+    win=(type=adaptivewindow, params=(nwindows=3, relative_overlap=0.1))
+)
+@test modelts isa SoleXplorer.Modelset
+@test dts    isa SoleXplorer.Dataset

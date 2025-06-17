@@ -21,6 +21,7 @@ modelts = symbolic_analysis(
     measures=(log_loss, accuracy, confusion_matrix, kappa)
 )
 @test modelts isa SoleXplorer.Modelset
+@test modelts.measures.measures isa Vector
 
 modelts = symbolic_analysis(
     Xts, yts;
@@ -273,3 +274,5 @@ modelts = symbolic_analysis(
     features=(forecast_error, dfa)
 )
 @test modelts.mach.model.conditions == [forecast_error, dfa]
+
+
