@@ -38,7 +38,8 @@ function _traintest!(model::AbstractModelset, ds::AbstractDataset)::Modelset
     end
 
     model.predictor = get_predictor!(model.setup)
-    model.mach = MLJ.machine(model.predictor, MLJ.table(@views ds.X), @views ds.y)
+    model.mach = MLJ.machine(model.predictor, MLJ.table(@views ds.X; names=ds.info.vnames), @views ds.y)
+    # model.mach = MLJ.machine(model.predictor, DataFrame(ds.X, ds.info.vnames), @views ds.y)
 
     # TODO this can be parallelizable
     @inbounds for i in 1:n_folds

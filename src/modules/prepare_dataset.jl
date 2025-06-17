@@ -438,19 +438,20 @@ function __prepare_dataset(
     model::AbstractModelSetup
 )::Dataset
     # modal reduce function, optional for propositional
-    reducefunc = haskey(model.config, :reducefunc) ? model.config.reducefunc : nothing
+    # reducefunc = haskey(model.preprocess, :reducefunc) ? model.config.reducefunc : nothing
 
     __prepare_dataset(
         X, y;
         algo=modeltype(model),
         treatment=model.config.treatment,
-        reducefunc,
         features=model.features,
         train_ratio=model.preprocess.train_ratio,
         valid_ratio=model.preprocess.valid_ratio,
         rng=model.preprocess.rng,
         resample=model.resample,
         winparams=model.winparams,
+        vnames=model.preprocess.vnames,
+        reducefunc=model.preprocess.reducefunc,
     )
 end
 
@@ -464,7 +465,7 @@ function _prepare_dataset(
     tuning        :: NamedTupleBool = false,
     extract_rules :: NamedTupleBool = false,
     preprocess    :: OptNamedTuple  = nothing,
-    reducefunc    :: OptCallable    = nothing,
+    # reducefunc    :: OptCallable    = nothing,
     measures      :: OptTuple       = nothing,
 )::Tuple{Modelset, Dataset}
     modelset = validate_modelset(

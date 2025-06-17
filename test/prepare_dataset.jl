@@ -103,10 +103,12 @@ modelc, dsc = prepare_dataset(Xc, y_symbol)
 @test_nowarn SX.check_dimensions(Matrix(Xc))
 @test_nowarn SX.find_max_length(Xc)
 
-# modelc, dsc = prepare_dataset(
-#     Xc, yc;
-#     preprocess=(;vnames=["p1", "p2", "p3", "p4"])
-# )
+modelc, dsc = prepare_dataset(
+    Xc, yc;
+    preprocess=(;train_ratio=0.5, vnames=["p1", "p2", "p3", "p4"], reducefunc=maximum)
+)
+@test modelc isa SoleXplorer.Modelset
+@test dsc    isa SoleXplorer.Dataset
 
 # ---------------------------------------------------------------------------- #
 #                                 resamplig                                    #
@@ -167,6 +169,16 @@ modelc, dsc = prepare_dataset(
 @test_throws ArgumentError prepare_dataset(
     Xc, yc;
     model=(type=:decisiontree, params=(;invalid=5))
+)
+
+@test_throws ArgumentError prepare_dataset(
+    Xc, yc;
+    preprocess=(train_ratio=0.5, invalid=maximum)
+)
+
+@test_throws ArgumentError prepare_dataset(
+    Xc, yc;
+    preprocess=(;vnames=[:p1, :p2, :p3, :p4, :p5])
 )
 
 # ---------------------------------------------------------------------------- #

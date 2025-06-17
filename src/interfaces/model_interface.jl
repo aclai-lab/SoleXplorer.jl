@@ -125,12 +125,14 @@ const DEFAULT_FEATS = [maximum, minimum, MLJ.mean, std]
 const DEFAULT_MEAS  = (log_loss,)
 
 const DEFAULT_PREPROC = (
-    train_ratio = 0.8,
+    train_ratio = 0.7,
     valid_ratio = 1.0,
+    vnames      = nothing,
+    reducefunc  = mean,
     rng         = TaskLocalRNG()
 )
 
-const PREPROC_KEYS = (:train_ratio, :valid_ratio, :vnames, :rng)
+# const PREPROC_KEYS = (:train_ratio, :valid_ratio, :vnames, :reducefunc, :rng)
 
 const AVAIL_MODELS = Dict{Symbol,Function}(
     :decisiontree_classifier => DecisionTreeClassifierModel,

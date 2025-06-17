@@ -10,6 +10,15 @@ function check_params(
     isempty(unknown_keys) || throw(ArgumentError("Unknown fields: $unknown_keys"))
 end
 
+function check_params(
+    params::OptNamedTuple,
+    allowed_keys::NamedTuple
+)
+    params === nothing && return
+    unknown_keys = setdiff(keys(params), keys(allowed_keys))
+    isempty(unknown_keys) || throw(ArgumentError("Unknown fields: $unknown_keys"))
+end
+
 filter_params(p) = p === nothing ? NamedTuple() : p
 
 function get_type(
@@ -228,13 +237,13 @@ function validate_modelset(
     tuning        :: NamedTupleBool = false,
     extract_rules :: NamedTupleBool = false,
     preprocess    :: OptNamedTuple  = nothing,
-    reducefunc    :: OptCallable    = nothing,
+    # reducefunc    :: OptCallable    = nothing,
     measures      :: OptTuple       = nothing,
 )::ModelSetup
     check_params(model, (:type, :params))
     check_params(resample, (:type, :params))
     check_params(win, (:type, :params))
-    check_params(preprocess, PREPROC_KEYS)
+    check_params(preprocess, DEFAULT_PREPROC)
 
     # grab rng form preprocess and feed it to every process
     rng = if preprocess === nothing 
@@ -256,7 +265,6 @@ function validate_modelset(
 
     # ModalDecisionTrees package needs features to be passed also in model params
     # if get_features(modelset) === nothing
-    #     @show "PASO"
     #     features = validate_features(
     #         get_pfeatures(modelset),
     #         features
@@ -277,7 +285,7 @@ function validate_modelset(
     set_resample!(modelset, validate_resample(resample, rng, modelset.preprocess.train_ratio))
     set_measures!(modelset, validate_measures(get_measures(modelset), measures))
     
-    reducefunc === nothing || (modelset.config = merge(get_config(modelset), (reducefunc=reducefunc,)))
+    # modelset.preprocess.reducefunc === nothing || (modelset.config = merge(get_config(modelset), (reducefunc=reducefunc,)))
 
     return modelset
 end

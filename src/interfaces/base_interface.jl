@@ -14,7 +14,7 @@ const OptCallable       = Optional{<:Base.Callable}
 const OptVecCall        = Optional{Vector{<:Base.Callable}}
 const OptDataType       = Optional{DataType}
 
-const OptStringVec      = Optional{Vector{<:AbstractString}}
+const OptStringVec      = Optional{Vector{<:SymbolString}}
 
 const Cat_Value = Union{AbstractString, Symbol, MLJ.CategoricalValue}
 const Reg_Value = Number
