@@ -236,7 +236,6 @@ function _treatment(
         end
 
     elseif treatment == :reducesize   # modal
-        @show "Q"
         col_names = vnames
         
         n_rows = size(X, 1)

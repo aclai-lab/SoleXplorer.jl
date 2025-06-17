@@ -31,7 +31,6 @@ function _traintest!(model::AbstractModelset, ds::AbstractDataset)::Modelset
     if haskey(model.setup.params, :watchlist) && model.setup.params.watchlist == makewatchlist
         # @inbounds for i in 1:n_folds
         #     watchlist = makewatchlist(ds[i])
-        #     @show watchlist
             model.setup.params = merge(model.setup.params, (watchlist = makewatchlist(ds),))
         #     model.setup.params = merge(model.setup.params, (watchlist,))
         # end

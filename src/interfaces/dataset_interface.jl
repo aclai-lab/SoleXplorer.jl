@@ -23,7 +23,7 @@ Create a configuration for dataset preparation and splitting in machine learning
 """
 struct DatasetInfo <: AbstractDatasetSetup
     treatment   :: Symbol
-    modalreduce  :: OptCallable
+    modalreduce :: OptCallable
     train_ratio :: Real
     valid_ratio :: Real
     rng         :: AbstractRNG
@@ -46,7 +46,7 @@ struct DatasetInfo <: AbstractDatasetSetup
 end
 
 get_treatment(dsinfo::DatasetInfo)   :: Symbol = dsinfo.treatment
-get_reducefunc(dsinfo::DatasetInfo)  :: OptCallable = dsinfo.modalreduce
+get_modalreduce(dsinfo::DatasetInfo) :: OptCallable = dsinfo.modalreduce
 get_train_ratio(dsinfo::DatasetInfo) :: Real = dsinfo.train_ratio
 get_valid_ratio(dsinfo::DatasetInfo) :: Real = dsinfo.valid_ratio
 get_rng(dsinfo::DatasetInfo)         :: AbstractRNG = dsinfo.rng

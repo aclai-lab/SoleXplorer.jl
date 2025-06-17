@@ -264,3 +264,12 @@ modelc = symbolic_analysis(
 )
 @test modelc isa SoleXplorer.Modelset
 
+# ---------------------------------------------------------------------------- #
+#                   check modal features correctly in model                    #
+# ---------------------------------------------------------------------------- #
+modelts = symbolic_analysis(
+    Xts, yts;
+    model=(;type=:modaldecisiontree),
+    features=(forecast_error, dfa)
+)
+@test modelts.mach.model.conditions == [forecast_error, dfa]

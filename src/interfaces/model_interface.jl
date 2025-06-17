@@ -51,7 +51,7 @@ get_resultsparams(m::ModelSetup)          = m.resultsparams
 get_rulesparams(m::ModelSetup)            = m.rulesparams
 get_measures(m::ModelSetup)               = m.measures
 
-# get_pfeatures(m::ModelSetup)              = m.params.features
+get_pfeatures(m::ModelSetup)              = haskey(m.params, :features) ? m.params.features : nothing
 get_treatment(m::ModelSetup)              = m.config.treatment
 
 get_rawmodel(m::ModelSetup)               = m.rawmodel[1]

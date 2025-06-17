@@ -187,8 +187,8 @@ modelc, dsc = prepare_dataset(
 modelc, dsc = prepare_dataset(Xc, yc)
 
 @test SX.get_treatment(dsc.info) == :aggregate
-@test isnothing(SX.get_reducefunc(dsc.info))
-@test SX.get_train_ratio(dsc.info) == 0.8
+@test SX.get_modalreduce(dsc.info) == mean
+@test SX.get_train_ratio(dsc.info) == 0.7
 @test SX.get_valid_ratio(dsc.info) == 0.0
 @test SX.get_rng(dsc.info) == TaskLocalRNG()
 @test SX.get_vnames(dsc.info) isa Vector{String}
@@ -218,7 +218,7 @@ output = sprint(show, dsc.info)
 @test_nowarn sprint(show, dsc)
 
 # ---------------------------------------------------------------------------- #
-#              check vnames, modalreduce, and modal feature names               #
+#                         check vnames and modalreduce                         #
 # ---------------------------------------------------------------------------- #
 vnames=[:p1, :p2, :p3, :p4]
 modelc, _ = prepare_dataset(
