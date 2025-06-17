@@ -201,7 +201,7 @@ function _treatment(
     # working with audio files, we need to consider audio of different lengths.
     max_interval = first(find_max_length(X))
     n_intervals = winparams.type(max_interval; winparams.params...)
-@show length(n_intervals)
+
     # define column names and prepare data structure based on treatment type
     if treatment == :aggregate        # propositional
         if length(n_intervals) == 1

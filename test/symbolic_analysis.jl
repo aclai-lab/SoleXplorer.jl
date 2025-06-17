@@ -275,4 +275,14 @@ modelts = symbolic_analysis(
 )
 @test modelts.mach.model.conditions == [forecast_error, dfa]
 
-
+# ---------------------------------------------------------------------------- #
+#                       check statisticalmeasure Sum()                         #
+# ---------------------------------------------------------------------------- #
+modelr = symbolic_analysis(
+    Xr, yr;
+    model=(;type=:decisiontree),
+    preprocess=(;rng=Xoshiro(1)),
+    measures=(rmse, l1, l1_sum,)
+)
+@test modelts isa SoleXplorer.Modelset
+@test modelts.measures.measures isa Vector
