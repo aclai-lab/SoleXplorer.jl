@@ -10,6 +10,15 @@ function check_params(
     isempty(unknown_keys) || throw(ArgumentError("Unknown fields: $unknown_keys"))
 end
 
+function check_params(
+    params::OptNamedTuple,
+    allowed_keys::NamedTuple
+)
+    params === nothing && return
+    unknown_keys = setdiff(keys(params), keys(allowed_keys))
+    isempty(unknown_keys) || throw(ArgumentError("Unknown fields: $unknown_keys"))
+end
+
 filter_params(p) = p === nothing ? NamedTuple() : p
 
 function get_type(
@@ -71,10 +80,10 @@ function validate_params(
 end
 
 function validate_features(
-    defaults::Tuple,
+    defaults::OptVecCall,
     users::OptTuple
 )
-    features = users === nothing ? defaults : users
+    features = users === nothing ? defaults : [users...]
 
     # check if all features are functions
     all(f -> f isa Base.Callable, features) || throw(ArgumentError("All features must be functions"))
@@ -228,13 +237,13 @@ function validate_modelset(
     tuning        :: NamedTupleBool = false,
     extract_rules :: NamedTupleBool = false,
     preprocess    :: OptNamedTuple  = nothing,
-    reducefunc    :: OptCallable    = nothing,
+    # modalreduce    :: OptCallable    = nothing,
     measures      :: OptTuple       = nothing,
 )::ModelSetup
     check_params(model, (:type, :params))
     check_params(resample, (:type, :params))
     check_params(win, (:type, :params))
-    check_params(preprocess, PREPROC_KEYS)
+    check_params(preprocess, DEFAULT_PREPROC)
 
     # grab rng form preprocess and feed it to every process
     rng = if preprocess === nothing 
@@ -248,22 +257,23 @@ function validate_modelset(
 
     # grab additional extra params
     user_params = get(model, :params, nothing)
-    if !(user_params === nothing) && haskey(user_params, :reducefunc)
-        set_config!(modelset, merge(get_config(modelset), (reducefunc = user_params.reducefunc,)))
-        user_params = NamedTuple(k => v for (k, v) in pairs(user_params) if k != :reducefunc)
+    if !(user_params === nothing) && haskey(user_params, :modalreduce)
+        set_config!(modelset, merge(get_config(modelset), (modalreduce = user_params.modalreduce,)))
+        user_params = NamedTuple(k => v for (k, v) in pairs(user_params) if k != :modalreduce)
     end
     set_params!(modelset, validate_params(get_params(modelset), user_params, rng))
 
     # ModalDecisionTrees package needs features to be passed also in model params
-    if get_features(modelset) === nothing
+    pfeats = get_pfeatures(modelset)
+    if pfeats === nothing
+        set_features!(modelset, validate_features(get_features(modelset), features))
+    else
         features = validate_features(
-            get_pfeatures(modelset),
+            pfeats,
             features
         )
         set_params!(modelset, merge(get_params(modelset), (features=features,)))
         set_features!(modelset, features)
-    else
-        set_features!(modelset, validate_features(get_features(modelset), features))
     end
 
     set_winparams!(modelset, validate_winparams(get_winparams(modelset), win, get_treatment(modelset)))
@@ -276,7 +286,7 @@ function validate_modelset(
     set_resample!(modelset, validate_resample(resample, rng, modelset.preprocess.train_ratio))
     set_measures!(modelset, validate_measures(get_measures(modelset), measures))
     
-    reducefunc === nothing || (modelset.config = merge(get_config(modelset), (reducefunc=reducefunc,)))
+    # modelset.preprocess.modalreduce === nothing || (modelset.config = merge(get_config(modelset), (modalreduce=modalreduce,)))
 
     return modelset
 end

@@ -2,7 +2,7 @@ name: CI
 on:
   push:
     branches:
-      - main
+      - 65-new-test-suite-needed
     tags: ['*']
   pull_request:
   workflow_dispatch:
@@ -24,7 +24,7 @@ jobs:
       matrix:
         version:
           - '1'
-          - 'pre'
+          # - 'lts'
         os:
           - ubuntu-latest
         arch:

@@ -33,41 +33,41 @@ const WIN_PARAMS = Dict(
 # ---------------------------------------------------------------------------- #
 #                                  InfoFeat                                    #
 # ---------------------------------------------------------------------------- #
-"""
-    InfoFeat{T<:VarName} <: AbstractFeature
+# """
+#     InfoFeat{T<:VarName} <: AbstractFeature
 
-A structure that represents a feature extraction operation on a specific variable and window.
+# A structure that represents a feature extraction operation on a specific variable and window.
 
-# Type Parameters
-- `T`: Type of variable name (either `Symbol` or `String`)
+# # Type Parameters
+# - `T`: Type of variable name (either `Symbol` or `String`)
 
-# Fields
-- `id :: Int`: Unique identifier for the feature
-- `var :: T`: Variable name/identifier (column name in dataset)
-- `feat :: Symbol`: Name of the feature extraction function
-- `nwin :: Int`: Window number this feature applies to
+# # Fields
+# - `id :: Int`: Unique identifier for the feature
+# - `var :: T`: Variable name/identifier (column name in dataset)
+# - `feat :: Symbol`: Name of the feature extraction function
+# - `nwin :: Int`: Window number this feature applies to
 
-# Constructor
-```julia
-InfoFeat(id::Int, var::VarName, feat::Symbol, nwin::Int)
-"""
-struct InfoFeat{T<:VarName} <: AbstractFeature
-    id     :: Int
-    var    :: T
-    feat   :: Symbol
-    nwin   :: Int
+# # Constructor
+# ```julia
+# InfoFeat(id::Int, var::VarName, feat::Symbol, nwin::Int)
+# """
+# struct InfoFeat{T<:VarName} <: AbstractFeature
+#     id     :: Int
+#     var    :: T
+#     feat   :: Symbol
+#     nwin   :: Int
 
-    function InfoFeat(id::Int, var::VarName, feat::Symbol, nwin::Int)
-        nwin > 0 || throw(ArgumentError("Window number must be positive"))
-        new{typeof(var)}(id, var, feat, nwin)
-    end
-end
+#     function InfoFeat(id::Int, var::VarName, feat::Symbol, nwin::Int)
+#         nwin > 0 || throw(ArgumentError("Window number must be positive"))
+#         new{typeof(var)}(id, var, feat, nwin)
+#     end
+# end
 
-# Value access methods
-Base.getproperty(f::InfoFeat, s::Symbol) = getfield(f, s)
-Base.propertynames(::InfoFeat)           = (:id, :feat, :var, :nwin)
+# # Value access methods
+# Base.getproperty(f::InfoFeat, s::Symbol) = getfield(f, s)
+# Base.propertynames(::InfoFeat)           = (:id, :feat, :var, :nwin)
 
-feature_id(f::InfoFeat)    = f.id
-variable_name(f::InfoFeat) = f.var
-feature_type(f::InfoFeat)  = f.feat
-window_number(f::InfoFeat) = f.nwin
+# feature_id(f::InfoFeat)    = f.id
+# variable_name(f::InfoFeat) = f.var
+# feature_type(f::InfoFeat)  = f.feat
+# window_number(f::InfoFeat) = f.nwin

@@ -153,7 +153,7 @@ find_max_length(df::DataFrame) = find_max_length(Matrix(df))
 """
     _treatment(X::AbstractMatrix{T}, vnames::VarNames, treatment::Symbol,
               features::FeatNames, winparams::WinParams; 
-              reducefunc::Base.Callable=mean) -> Tuple{Matrix, Vector{String}}
+              modalreduce::Base.Callable=mean) -> Tuple{Matrix, Vector{String}}
 
 Process a matrix data by applying feature extraction or dimension reduction.
 
@@ -167,7 +167,7 @@ Process a matrix data by applying feature extraction or dimension reduction.
 - `winparams::WinParams`: Parameters for windowing time series:
   - `type`: Window function to use (e.g., `adaptivewindow`, `wholewindow`)
   - `params`: Additional parameters for the window function
-- `reducefunc::Base.Callable=mean`: Function to reduce windows in `:reducesize` mode (default: `mean`)
+- `modalreduce::Base.Callable=mean`: Function to reduce windows in `:reducesize` mode (default: `mean`)
 
 # Returns
 - `Tuple{Matrix, Vector{String}}`: Processed matrix and column names:
@@ -194,9 +194,9 @@ function _treatment(
     X::AbstractMatrix{T},
     vnames::VarNames,
     treatment::Symbol,
-    features::FeatNames,
+    features::Union{Vector{<:Base.Callable}, Nothing},
     winparams::WinParams;
-    reducefunc::OptCallable=nothing
+    modalreduce::OptCallable=nothing
 ) where T
     # working with audio files, we need to consider audio of different lengths.
     max_interval = first(find_max_length(X))
@@ -204,7 +204,7 @@ function _treatment(
 
     # define column names and prepare data structure based on treatment type
     if treatment == :aggregate        # propositional
-        if n_intervals == 1
+        if length(n_intervals) == 1
             col_names = [string(f, "(", v, ")") for f in features for v in vnames]
             
             n_rows = size(X, 1)
@@ -242,7 +242,7 @@ function _treatment(
         n_cols = length(col_names)
         result_matrix = Matrix{T}(undef, n_rows, n_cols)
 
-        reducefunc === nothing && (reducefunc = mean)
+        modalreduce === nothing && (modalreduce = mean)
         
         for (row_idx, row) in enumerate(eachrow(X))
             row_intervals = winparams.type(maximum(length.(collect(row))); winparams.params...)
@@ -250,7 +250,7 @@ function _treatment(
             
             # calculate reduced values for this row
             reduced_data = [
-                vcat([reducefunc(col[r]) for r in row_intervals],
+                vcat([modalreduce(col[r]) for r in row_intervals],
                      fill(NaN, interval_diff)) for col in row
             ]
             result_matrix[row_idx, :] = reduced_data
@@ -260,7 +260,7 @@ function _treatment(
     return result_matrix, col_names
 end
 
-_treatment(df::DataFrame, args...) = _treatment(Matrix(df), args...)
+# _treatment(df::DataFrame, args...; kwargs...) = _treatment(Matrix(df), args...; kwargs...)
 
 # ---------------------------------------------------------------------------- #
 #                                 partitioning                                 #
@@ -304,18 +304,18 @@ function _partition(
     y::AbstractVector{<:Y_Value},
     train_ratio::Float64,
     valid_ratio::Float64,
-    resample::Union{Resample, Nothing},
+    resample::Resample,
     rng::AbstractRNG
 )::Union{TT_indexes{Int}, Vector{TT_indexes{Int}}}
-    if resample === nothing
-        tt = MLJ.partition(eachindex(y), train_ratio; shuffle=true, rng)
-        if valid_ratio == 1.0
-            return TT_indexes(tt[1], eltype(tt[1])[], tt[2])
-        else
-            tv = MLJ.partition(tt[1], valid_ratio; shuffle=true, rng)
-            return TT_indexes(tv[1], tv[2], tt[2])
-        end
-    else
+    # if resample === nothing
+    #     tt = MLJ.partition(eachindex(y), train_ratio; shuffle=true, rng)
+    #     if valid_ratio == 1.0
+    #         return TT_indexes(tt[1], eltype(tt[1])[], tt[2])
+    #     else
+    #         tv = MLJ.partition(tt[1], valid_ratio; shuffle=true, rng)
+    #         return TT_indexes(tv[1], tv[2], tt[2])
+    #     end
+    # else
         resample_cv = resample.type(; resample.params...)
         tt = MLJ.MLJBase.train_test_pairs(resample_cv, 1:length(y), y)
         if valid_ratio == 1.0
@@ -324,7 +324,7 @@ function _partition(
             tv = collect((MLJ.partition(t[1], train_ratio)..., t[2]) for t in tt)
             return [TT_indexes(train, valid, test) for (train, valid, test) in tv]
         end
-    end
+    # end
 end
 
 # ---------------------------------------------------------------------------- #
@@ -360,7 +360,7 @@ Supports both classification and regression tasks, with extensive customization 
   - `train_ratio`: Ratio of data for training vs testing
   - `valid_ratio`: Ratio of training data for validation
   - `rng`: Random number generator
-- `reducefunc::OptCallable=nothing`: Function for reducing time series data
+- `modalreduce::OptCallable=nothing`: Function for reducing time series data
   in `:reducesize` treatment mode (default: `mean`)
 
 # Returns
@@ -377,14 +377,14 @@ function __prepare_dataset(
     y::AbstractVector;
     algo::DataType,
     treatment::Symbol,
-    features::Tuple,
+    features::Vector{<:Base.Callable},
     train_ratio::Float64,
     valid_ratio::Float64,
     rng::AbstractRNG,
     resample::Union{Resample, Nothing},
     winparams::WinParams,
     vnames::Union{VarNames,Nothing}=nothing,
-    reducefunc::OptCallable=nothing
+    modalreduce::OptCallable=nothing
 )::Dataset
     X = Matrix(df)
     # check parameters
@@ -413,12 +413,12 @@ function __prepare_dataset(
     column_eltypes = eltype.(eachcol(X))
 
     if all(t -> t <: AbstractVector{<:Number}, column_eltypes) && !(winparams === nothing)
-        X, vnames = _treatment(X, vnames, treatment, features, winparams; reducefunc)
+        X, vnames = _treatment(X, vnames, treatment, [features...], winparams; modalreduce)
     end
 
     ds_info = DatasetInfo(
         treatment,
-        reducefunc,
+        modalreduce,
         train_ratio,
         valid_ratio,
         rng,
@@ -438,19 +438,20 @@ function __prepare_dataset(
     model::AbstractModelSetup
 )::Dataset
     # modal reduce function, optional for propositional
-    reducefunc = haskey(model.config, :reducefunc) ? model.config.reducefunc : nothing
+    # modalreduce = haskey(model.preprocess, :modalreduce) ? model.config.modalreduce : nothing
 
     __prepare_dataset(
         X, y;
         algo=modeltype(model),
         treatment=model.config.treatment,
-        reducefunc,
         features=model.features,
         train_ratio=model.preprocess.train_ratio,
         valid_ratio=model.preprocess.valid_ratio,
         rng=model.preprocess.rng,
         resample=model.resample,
         winparams=model.winparams,
+        vnames=model.preprocess.vnames,
+        modalreduce=model.preprocess.modalreduce,
     )
 end
 
@@ -464,7 +465,7 @@ function _prepare_dataset(
     tuning        :: NamedTupleBool = false,
     extract_rules :: NamedTupleBool = false,
     preprocess    :: OptNamedTuple  = nothing,
-    reducefunc    :: OptCallable    = nothing,
+    # modalreduce    :: OptCallable    = nothing,
     measures      :: OptTuple       = nothing,
 )::Tuple{Modelset, Dataset}
     modelset = validate_modelset(
@@ -475,7 +476,7 @@ function _prepare_dataset(
         tuning,
         extract_rules,
         preprocess,
-        reducefunc,
+        # modalreduce,
         measures
     )
     Modelset(modelset,), __prepare_dataset(X, y, modelset)

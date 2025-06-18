@@ -46,7 +46,7 @@ end
 # ---------------------------------------------------------------------------- #
 #                                   tuning                                     #
 # ---------------------------------------------------------------------------- #
-const AVAIL_TUNING_METHODS  = (grid, randomsearch, latinhypercube, treeparzen, particleswarm, adaptiveparticleswarm)
+const AVAIL_TUNING_METHODS  = (grid, randomsearch, latinhypercube, particleswarm, adaptiveparticleswarm)
 
 const TUNING_METHODS_PARAMS = Dict{Union{DataType, UnionAll},NamedTuple}(
     grid                  => (
@@ -70,10 +70,6 @@ const TUNING_METHODS_PARAMS = Dict{Union{DataType, UnionAll},NamedTuple}(
         ae_power               = 2,
         periodic_ae            = false,
         rng                    = TaskLocalRNG()
-    ),
-    treeparzen            => (
-        config                 = Config(0.25, 25, 24, 20, 1.0),
-        max_simultaneous_draws = 1
     ),
     particleswarm         => (
         n_particles            = 3,

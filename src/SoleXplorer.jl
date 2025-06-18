@@ -56,6 +56,7 @@ export base_set, catch9, catch22_set, complete_set
 #                                 interfaces                                   #
 # ---------------------------------------------------------------------------- #
 include("interfaces/base_interface.jl")
+export modeltype
 
 @reexport using SoleBase: movingwindow, wholewindow, splitwindow, adaptivewindow
 include("interfaces/windowing_interface.jl")
@@ -67,8 +68,6 @@ export Dataset, get_X, get_y, get_tt, get_info, get_Xtrain, get_Xvalid, get_Xtes
 include("interfaces/resample_interface.jl")
 
 @reexport using MLJ: Grid as grid, RandomSearch as randomsearch, LatinHypercube as latinhypercube
-using TreeParzen: Config
-@reexport using TreeParzen: MLJTreeParzenTuning as treeparzen
 @reexport using MLJParticleSwarmOptimization: ParticleSwarm as particleswarm, AdaptiveParticleSwarm as adaptiveparticleswarm
 include("interfaces/tuning_interface.jl")
 export range

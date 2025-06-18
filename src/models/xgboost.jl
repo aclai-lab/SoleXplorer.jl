@@ -10,16 +10,16 @@ get_encoding(classes_seen) = Dict(MLJ.int(c) => c for c in MLJ.classes(classes_s
 get_classlabels(encoding)  = [string(encoding[i]) for i in sort(keys(encoding) |> collect)]
 
 function makewatchlist(ds::Dataset)
-    isempty(ds.Xvalid) && throw(ArgumentError("No validation data provided, use preprocess valid_ratio parameter"))
+    isempty(ds.tt[1].valid) && throw(ArgumentError("No validation data provided, use preprocess valid_ratio parameter"))
 
-    _Xtrain, _Xvalid, _ytrain, _yvalid = ds.Xtrain isa AbstractVector ? 
-            (ds.Xtrain[1], ds.Xvalid[1], ds.ytrain[1], ds.yvalid[1]) :
-            (ds.Xtrain, ds.Xvalid, ds.ytrain, ds.yvalid)
+    # _Xtrain, _Xvalid, _ytrain, _yvalid = ds.Xtrain isa AbstractVector ? 
+    #         (ds.Xtrain[1], ds.Xvalid[1], ds.ytrain[1], ds.yvalid[1]) :
+    #         (ds.Xtrain, ds.Xvalid, ds.ytrain, ds.yvalid)
             
-    y_coded_train = @. MLJ.levelcode(_ytrain) - 1 # convert to 0-based indexing
-    y_coded_valid = @. MLJ.levelcode(_yvalid) - 1 # convert to 0-based indexing
-    dtrain        = XGB.DMatrix((_Xtrain, y_coded_train); feature_names=ds.info.vnames)
-    dvalid        = XGB.DMatrix((_Xvalid, y_coded_valid); feature_names=ds.info.vnames)
+    y_coded_train = @. MLJ.levelcode(ds.y[ds.tt[1].train]) - 1 # convert to 0-based indexing
+    y_coded_valid = @. MLJ.levelcode(ds.y[ds.tt[1].valid]) - 1 # convert to 0-based indexing
+    dtrain        = XGB.DMatrix((ds.X[ds.tt[1].train, :], y_coded_train); feature_names=ds.info.vnames)
+    dvalid        = XGB.DMatrix((ds.X[ds.tt[1].valid, :], y_coded_valid); feature_names=ds.info.vnames)
 
     XGB.OrderedDict(["train" => dtrain, "eval" => dvalid])
 end

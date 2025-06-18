@@ -1,8 +1,8 @@
 # ---------------------------------------------------------------------------- #
 #                              rules extraction                                #
 # ---------------------------------------------------------------------------- #
-function rules_extraction!(model::Modelset)
-    model.rules = EXTRACT_RULES[model.setup.rulesparams.type](model)
+function rules_extraction!(model::Modelset, ds::Dataset)
+    model.rules = EXTRACT_RULES[model.setup.rulesparams.type](model, ds)
 end
 
 # ---------------------------------------------------------------------------- #
@@ -23,7 +23,6 @@ function eval_measures!(model::Modelset)::Measures
     # external mode of aggregation:
     fold_weights(mode) = nfolds .* test_fold_sizes ./ sum(test_fold_sizes)
     fold_weights(::MLJBase.StatisticalMeasuresBase.Sum) = nothing
-
 
     measurements_vector = mapreduce(vcat, 1:nfolds) do k
         yhat_given_operation = Dict(op=>op(get_mach(model), rows=tt[k][1]) for op in unique(_operations))
@@ -66,11 +65,11 @@ end
 #                              symbolic_analysis                               #
 # ---------------------------------------------------------------------------- #
 function symbolic_analysis(args...; extract_rules::NamedTupleBool=false, kwargs...)
-    model, ds = _prepare_dataset(args...; kwargs...)
+    model, ds = _prepare_dataset(args...; extract_rules, kwargs...)
     _traintest!(model, ds)
 
     if !isa(extract_rules, Bool) || extract_rules
-        rules_extraction!(model)
+        rules_extraction!(model, ds)
     end
 
     eval_measures!(model)
@@ -87,9 +86,9 @@ end
 #     tuning        :: NamedTupleBool = false,
 #     extract_rules :: NamedTupleBool = false,
 #     preprocess    :: OptNamedTuple  = nothing,
-#     reducefunc    :: OptCallable    = nothing
+#     modalreduce    :: OptCallable    = nothing
 # )::Modelset
-#     modelset = validate_modelset(model, eltype(y); resample, win, features, tuning, extract_rules, preprocess, reducefunc)
+#     modelset = validate_modelset(model, eltype(y); resample, win, features, tuning, extract_rules, preprocess, modalreduce)
 #     model = Modelset(modelset, _prepare_dataset(X, y, modelset))
 #     _traintest!(model)
 
