@@ -1,6 +1,6 @@
-using Test
-using MLJ, SoleXplorer
-using DataFrames, Random
+# using Test
+# using MLJ, SoleXplorer
+# using DataFrames, Random
 
 Xc, yc = @load_iris
 Xc = DataFrame(Xc)

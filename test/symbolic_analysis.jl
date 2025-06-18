@@ -1,7 +1,7 @@
-using Test
-using MLJ, SoleXplorer
-using DataFrames, Random
-using SoleData
+# using Test
+# using MLJ, SoleXplorer
+# using DataFrames, Random
+# using SoleData
 
 Xc, yc = @load_iris
 Xc = DataFrame(Xc)
