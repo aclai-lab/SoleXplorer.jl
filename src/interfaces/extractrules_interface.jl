@@ -1,8 +1,6 @@
 # ---------------------------------------------------------------------------- #
-#                                     types                                    #
+#                                     struct                                   #
 # ---------------------------------------------------------------------------- #
-const Rule      = Union{DecisionList, DecisionEnsemble, DecisionSet}
-
 """
     RulesParams <: AbstractTypeParams
 

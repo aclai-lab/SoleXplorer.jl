@@ -21,24 +21,60 @@ end
 # ---------------------------------------------------------------------------- #
 #                                  train_test                                  #
 # ---------------------------------------------------------------------------- #
-function _traintest!(model::AbstractModelset, ds::AbstractDataset)::Modelset
-    n_folds = length(ds.tt)
-    model.model = Vector{AbstractModel}(undef, n_folds)
-    model.setup.tt = Vector{Tuple}(undef, n_folds)
+# function _traintest!(model::AbstractModelset, ds::AbstractDataset)::Modelset
+#     n_folds         = length(ds.tt)
+#     model.fitresult = Vector{Tuple}(undef, n_folds)
+#     model.model     = Vector{AbstractModel}(undef, n_folds)
+#     # model.setup.tt  = Vector{Tuple}(undef, n_folds)
+
+#     # Early stopping is a regularization technique in XGBoost that prevents overfitting by monitoring model performance 
+#     # on a validation dataset and stopping training when performance no longer improves.
+#     if haskey(model.setup.params, :watchlist) && model.setup.params.watchlist == makewatchlist
+#         # @inbounds for i in 1:n_folds
+#         #     watchlist = makewatchlist(ds[i])
+#             model.setup.params = merge(model.setup.params, (watchlist = makewatchlist(ds),))
+#         #     model.setup.params = merge(model.setup.params, (watchlist,))
+#         # end
+#     end
+
+#     # model.predictor = get_predictor!(model.setup)
+#     mach = MLJ.machine(get_predictor!(model.setup), MLJ.table(@views ds.X; names=ds.info.vnames), @views ds.y)
+#     # mach = MLJ.machine(get_predictor!(model.setup), DataFrame(ds.X, ds.info.vnames), @views ds.y)
+
+#     # TODO this can be parallelizable
+#     @inbounds for i in 1:n_folds
+#         train = ds.tt[i].train
+#         test  = ds.tt[i].test
+#         X_test  = DataFrame((@views ds.X[test, :]), ds.info.vnames)
+#         y_test  = @views ds.y[test]
+        
+#         MLJ.fit!(mach, rows=train, verbosity=0)
+#         model.fitresult[i] = mach.fitresult
+#         model.model[i] = model.setup.learn_method(mach, X_test, y_test)
+#         # model.setup.tt[i] = (ds.tt[i].test, ds.tt[i].valid)
+#     end
+
+#     return model, mach
+# end
+
+function _train_machine(model::AbstractModelset, ds::AbstractDataset)::MLJ.Machine
+    MLJ.machine(
+        get_predictor!(model.setup),
+        MLJ.table(@views ds.X; names=ds.info.vnames),
+        @views ds.y
+    )
+end
+
+function _test_model!(model::AbstractModelset, mach::MLJ.Machine, ds::AbstractDataset)
+    n_folds         = length(ds.tt)
+    model.fitresult = Vector{Tuple}(undef, n_folds)
+    model.model     = Vector{AbstractModel}(undef, n_folds)
 
     # Early stopping is a regularization technique in XGBoost that prevents overfitting by monitoring model performance 
     # on a validation dataset and stopping training when performance no longer improves.
     if haskey(model.setup.params, :watchlist) && model.setup.params.watchlist == makewatchlist
-        # @inbounds for i in 1:n_folds
-        #     watchlist = makewatchlist(ds[i])
-            model.setup.params = merge(model.setup.params, (watchlist = makewatchlist(ds),))
-        #     model.setup.params = merge(model.setup.params, (watchlist,))
-        # end
+        model.setup.params = merge(model.setup.params, (watchlist = makewatchlist(ds),))
     end
-
-    model.predictor = get_predictor!(model.setup)
-    model.mach = MLJ.machine(model.predictor, MLJ.table(@views ds.X; names=ds.info.vnames), @views ds.y)
-    # model.mach = MLJ.machine(model.predictor, DataFrame(ds.X, ds.info.vnames), @views ds.y)
 
     # TODO this can be parallelizable
     @inbounds for i in 1:n_folds
@@ -47,19 +83,19 @@ function _traintest!(model::AbstractModelset, ds::AbstractDataset)::Modelset
         X_test  = DataFrame((@views ds.X[test, :]), ds.info.vnames)
         y_test  = @views ds.y[test]
         
-        MLJ.fit!(model.mach, rows=train, verbosity=0)
-        model.model[i] = model.setup.learn_method(model.mach, X_test, y_test)
-        model.setup.tt[i] = (ds.tt[i].test, ds.tt[i].valid)
-    end
+        MLJ.fit!(mach, rows=train, verbosity=0)
+        model.fitresult[i] = mach.fitresult
+        model.model[i] = model.setup.learn_method(mach, X_test, y_test)
 
-    return model
+    end
 end
 
 function train_test(args...; kwargs...)
     model, ds = _prepare_dataset(args...; kwargs...)
-    _traintest!(model, ds)
+    mach = _train_machine(model, ds)
+    _test_model!(model, mach, ds)
 
-    return model
+    return model, mach
 end
 
 # function train_test(

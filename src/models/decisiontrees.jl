@@ -59,7 +59,7 @@ function DecisionTreeClassifierModel()::ModelSetup{AbstractClassification}
         rulesparams,
         DEFAULT_PREPROC,
         DEFAULT_MEAS,
-        nothing
+        # nothing
     )
 end
 

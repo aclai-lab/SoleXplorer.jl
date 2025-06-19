@@ -37,7 +37,7 @@ mutable struct ModelSetup{T<:AbstractModelType} <: AbstractModelSetup{T}
     rulesparams   :: Union{RulesParams, Bool}
     preprocess    :: NamedTuple
     measures      :: Union{Tuple, Nothing}
-    tt            :: Union{Vector{Tuple}, Nothing}
+    # tt            :: Union{Vector{Tuple}, Nothing}
 end
 
 get_config(m::ModelSetup)                 = m.config
@@ -196,11 +196,12 @@ Modelset(
 mutable struct Modelset{T<:AbstractModelType} <: AbstractModelset{T}
     setup      :: AbstractModelSetup{T}
     # ds         :: AbstractDataset
-    predictor  :: Union{MLJ.Model,        Nothing}
-    mach       :: Union{MLJ.Machine,      Nothing}
-    model      :: Union{AbstractModel,    AbstractVector{<:AbstractModel}, Nothing}
-    rules      :: Union{Rule,             AbstractVector{<:Rule},          Nothing}
-    measures   :: Union{AbstractMeasures, Nothing}
+    # predictor  :: Union{MLJ.Model,                       Nothing}
+    # mach       :: Union{MLJ.Machine,                     Nothing}
+    fitresult  :: OptVecTuple
+    model      :: OptVecAbsModel
+    rules      :: OptVecRules
+    measures   :: OptAbsMeas
 
     # function Modelset(
     #     setup      :: AbstractModelSetup{T},
@@ -216,21 +217,21 @@ mutable struct Modelset{T<:AbstractModelType} <: AbstractModelset{T}
         setup      :: AbstractModelSetup{T},
         # ds         :: Dataset
     )::Modelset where {T<:AbstractModelType}
-        new{T}(setup, nothing, nothing, nothing, nothing, nothing)
+        new{T}(setup, nothing, nothing, nothing, nothing)
     end
 end
 
-get_mach(m::Modelset)       = m.mach
-get_mach_model(m::Modelset) = m.mach.model
+# get_mach(m::Modelset)       = m.mach
+get_mach_model(m::Modelset) = m.setup.type(;m.setup.params...)
 get_solemodel(m::Modelset)  = m.model
-get_mach_y(m::Modelset)     = m.mach.args[2]()
+# get_mach_y(m::Modelset)     = m.mach.args[2]()
 get_setup_meas(m::Modelset) = m.setup.measures
-get_setup_tt(m::Modelset)   = m.setup.tt
+# get_setup_tt(m::Modelset)   = m.setup.tt
 
 function Base.show(io::IO, mc::Modelset)
     println(io, "Modelset:")
     println(io, "    setup      =", mc.setup)
-    println(io, "    predictor  =", mc.predictor)
+    # println(io, "    predictor  =", mc.predictor)
     println(io, "    rules      =", mc.rules === nothing ? "nothing" : string(mc.rules))
     # println(io, "    accuracy   =", mc.accuracy === nothing ? "nothing" : string(mc.accuracy))
 end

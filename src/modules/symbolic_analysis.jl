@@ -8,14 +8,14 @@ end
 # ---------------------------------------------------------------------------- #
 #                                  measures                                    #
 # ---------------------------------------------------------------------------- #
-function eval_measures!(model::Modelset)::Measures
-    _measures = MLJBase._actual_measures([get_setup_meas(model)...], get_solemodel(model))
+function eval_measures!(model::Modelset, mach::MLJ.Machine, y::Any, tt::Vector{<:TT_indexes})::Measures
+    _measures   = MLJBase._actual_measures([get_setup_meas(model)...], get_solemodel(model))
     _operations = MLJBase._actual_operations(nothing, _measures, get_mach_model(model), 0)
 
-    y = get_mach_y(model)
-    tt = get_setup_tt(model)
+    # y = get_mach_y(model)
+    # tt = get_setup_tt(model)
     nfolds = length(tt)
-    test_fold_sizes = [length(tt[k][1]) for k in 1:nfolds]
+    test_fold_sizes = [length(tt[k].test) for k in 1:nfolds]
 
     nmeasures = length(get_setup_meas(model))
 
@@ -25,8 +25,8 @@ function eval_measures!(model::Modelset)::Measures
     fold_weights(::MLJBase.StatisticalMeasuresBase.Sum) = nothing
 
     measurements_vector = mapreduce(vcat, 1:nfolds) do k
-        yhat_given_operation = Dict(op=>op(get_mach(model), rows=tt[k][1]) for op in unique(_operations))
-        test = tt[k][1]
+        yhat_given_operation = Dict(op=>op(mach, rows=tt[k].test) for op in unique(_operations))
+        test = tt[k].test
 
         [map(_measures, _operations) do m, op
             m(
@@ -66,13 +66,14 @@ end
 # ---------------------------------------------------------------------------- #
 function symbolic_analysis(args...; extract_rules::NamedTupleBool=false, kwargs...)
     model, ds = _prepare_dataset(args...; extract_rules, kwargs...)
-    _traintest!(model, ds)
+    mach = _train_machine(model, ds)
+    _test_model!(model, mach, ds)
 
     if !isa(extract_rules, Bool) || extract_rules
         rules_extraction!(model, ds)
     end
 
-    eval_measures!(model)
+    eval_measures!(model, mach, @views(ds.y), ds.tt)
 
     return model
 end
