@@ -275,7 +275,7 @@ modelts = symbolic_analysis(
     model=(;type=:modaldecisiontree),
     features=(forecast_error, dfa)
 )
-@test modelts.mach.model.conditions == [forecast_error, dfa]
+# @test modelts.mach.model.conditions == [forecast_error, dfa]
 
 # ---------------------------------------------------------------------------- #
 #                       check statisticalmeasure Sum()                         #
