@@ -69,7 +69,7 @@ const OptStringVec      = Optional{Vector{<:SymbolString}}
 
 const OptVecAbsModel    = Optional{Vector{<:AbstractModel}}
 const OptAbsMeas        = Optional{AbstractMeasures}
-const OptVecRules       = Optional{Vector{<:Rule}}
+const OptRules          = Optional{Rule}
 
 const Cat_Value = Union{AbstractString, Symbol, MLJ.CategoricalValue}
 const Reg_Value = Number

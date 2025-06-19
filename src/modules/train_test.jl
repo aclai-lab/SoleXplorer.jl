@@ -58,6 +58,12 @@ end
 # end
 
 function _train_machine(model::AbstractModelset, ds::AbstractDataset)::MLJ.Machine
+    # Early stopping is a regularization technique in XGBoost that prevents overfitting by monitoring model performance 
+    # on a validation dataset and stopping training when performance no longer improves.
+    if haskey(model.setup.params, :watchlist) && model.setup.params.watchlist == makewatchlist
+        model.setup.params = merge(model.setup.params, (watchlist = makewatchlist(ds),))
+    end
+
     MLJ.machine(
         get_predictor!(model.setup),
         MLJ.table(@views ds.X; names=ds.info.vnames),
@@ -67,14 +73,8 @@ end
 
 function _test_model!(model::AbstractModelset, mach::MLJ.Machine, ds::AbstractDataset)
     n_folds         = length(ds.tt)
-    model.fitresult = Vector{Tuple}(undef, n_folds)
+    # model.fitresult = Vector{Tuple}(undef, n_folds)
     model.model     = Vector{AbstractModel}(undef, n_folds)
-
-    # Early stopping is a regularization technique in XGBoost that prevents overfitting by monitoring model performance 
-    # on a validation dataset and stopping training when performance no longer improves.
-    if haskey(model.setup.params, :watchlist) && model.setup.params.watchlist == makewatchlist
-        model.setup.params = merge(model.setup.params, (watchlist = makewatchlist(ds),))
-    end
 
     # TODO this can be parallelizable
     @inbounds for i in 1:n_folds
@@ -84,7 +84,7 @@ function _test_model!(model::AbstractModelset, mach::MLJ.Machine, ds::AbstractDa
         y_test  = @views ds.y[test]
         
         MLJ.fit!(mach, rows=train, verbosity=0)
-        model.fitresult[i] = mach.fitresult
+        # model.fitresult[i] = mach.fitresult
         model.model[i] = model.setup.learn_method(mach, X_test, y_test)
 
     end
@@ -95,7 +95,7 @@ function train_test(args...; kwargs...)
     mach = _train_machine(model, ds)
     _test_model!(model, mach, ds)
 
-    return model, mach
+    return model, mach, ds
 end
 
 # function train_test(

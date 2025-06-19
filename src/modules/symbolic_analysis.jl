@@ -1,8 +1,8 @@
 # ---------------------------------------------------------------------------- #
 #                              rules extraction                                #
 # ---------------------------------------------------------------------------- #
-function rules_extraction!(model::Modelset, ds::Dataset)
-    model.rules = EXTRACT_RULES[model.setup.rulesparams.type](model, ds)
+function rules_extraction!(model::Modelset, ds::Dataset, mach::MLJ.Machine)
+    model.rules = EXTRACT_RULES[model.setup.rulesparams.type](model, ds, mach)
 end
 
 # ---------------------------------------------------------------------------- #
@@ -70,7 +70,7 @@ function symbolic_analysis(args...; extract_rules::NamedTupleBool=false, kwargs.
     _test_model!(model, mach, ds)
 
     if !isa(extract_rules, Bool) || extract_rules
-        rules_extraction!(model, ds)
+        rules_extraction!(model, ds, mach)
     end
 
     eval_measures!(model, mach, @views(ds.y), ds.tt)

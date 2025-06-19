@@ -1,7 +1,8 @@
-# using Test
-# using MLJ, SoleXplorer
-# using DataFrames, Random
-# using SoleData
+using Test
+using MLJ, SoleXplorer
+using DataFrames, Random
+using SoleData
+const SX = SoleXplorer
 
 Xc, yc = @load_iris
 Xc = DataFrame(Xc)
@@ -67,6 +68,7 @@ early_stop  = symbolic_analysis(
     # with early stopping a validation set is required
     preprocess=(valid_ratio = 0.3, rng=Xoshiro(1))
 )
+@test early_stop isa SoleXplorer.Modelset
 
 # ---------------------------------------------------------------------------- #
 #                              catch9 and catch22                              #

@@ -91,47 +91,35 @@ const RULES_PARAMS = Dict{Symbol,NamedTuple}(
 )
 
 const EXTRACT_RULES = Dict{Symbol, Function}(
-    :intrees => (m, ds) -> begin
+    :intrees => (m, ds, _) -> begin
         method = SolePostHoc.RuleExtraction.InTreesRuleExtractor()
-        # if m.setup.resample === nothing
-        #     df = DataFrame(ds.Xtest, ds.info.vnames)
-        #     RuleExtraction.modalextractrules(method, m.model, df, ds.ytest; m.setup.rulesparams.params...)
-        # else
-            reduce(vcat, map(enumerate(m.model)) do (i, model)
-                df = DataFrame(ds.X[ds.tt[i].test, :], ds.info.vnames)
-                RuleExtraction.modalextractrules(method, model, df, ds.y[ds.tt[i].test]; m.setup.rulesparams.params...)
-            end)
-        # end
+
+        reduce(vcat, map(enumerate(m.model)) do (i, model)
+            df = DataFrame(ds.X[ds.tt[i].test, :], ds.info.vnames)
+            RuleExtraction.modalextractrules(method, model, df, ds.y[ds.tt[i].test]; m.setup.rulesparams.params...)
+        end)
     end,
     
-    :refne => (m, ds) -> begin
+    :refne => (m, ds, _) -> begin
         method = SolePostHoc.RuleExtraction.REFNERuleExtractor()
-        # if m.setup.resample === nothing
-        #     Xmin  = map(minimum, eachcol(ds.Xtest))
-        #     Xmax  = map(maximum, eachcol(ds.Xtest))
-        #     RuleExtraction.modalextractrules(method, m.model, Xmin, Xmax; m.setup.rulesparams.params...)
-        # else
-            reduce(vcat, map(enumerate(m.model)) do (i, model)
-                Xmin = map(minimum, eachcol(ds.X[ds.tt[i].test, :]))
-                Xmax = map(maximum, eachcol(ds.X[ds.tt[i].test, :]))
-                RuleExtraction.modalextractrules(method, model, Xmin, Xmax; m.setup.rulesparams.params...)
-            end)
-        # end
+
+        reduce(vcat, map(enumerate(m.model)) do (i, model)
+            Xmin = map(minimum, eachcol(ds.X[ds.tt[i].test, :]))
+            Xmax = map(maximum, eachcol(ds.X[ds.tt[i].test, :]))
+            RuleExtraction.modalextractrules(method, model, Xmin, Xmax; m.setup.rulesparams.params...)
+        end)
     end,
     
-    :trepan => (m, ds) -> begin
+    :trepan => (m, ds, _) -> begin
         method = SolePostHoc.RuleExtraction.TREPANRuleExtractor()
-        # if m.setup.resample === nothing
-        #     RuleExtraction.modalextractrules(method, m.model, ds.Xtest; m.setup.rulesparams.params...)
-        # else
-            reduce(vcat, map(enumerate(m.model)) do (i, model)
-                RuleExtraction.modalextractrules(method, model, ds.X[ds.tt[i].test, :]; m.setup.rulesparams.params...)
-            end)
-        # end
+
+        reduce(vcat, map(enumerate(m.model)) do (i, model)
+            RuleExtraction.modalextractrules(method, model, ds.X[ds.tt[i].test, :]; m.setup.rulesparams.params...)
+        end)
     end,
     
     # TODO: broken
-    # :batrees => (m, ds) -> begin
+    # :batrees => (m, ds, _) -> begin
     #     # m isa tree_warn && throw(ArgumentError("batrees not supported for decision tree model type"))
     #     method = SolePostHoc.RuleExtraction.BATreesRuleExtractor()
     #     # if m.setup.resample === nothing
@@ -143,31 +131,23 @@ const EXTRACT_RULES = Dict{Symbol, Function}(
     #     # end
     # end,
 
-    :rulecosi => (m, ds) -> begin
+    :rulecosi => (m, ds, _) -> begin
         # m isa tree_warn && throw(ArgumentError("rulecosi not supported for decision tree model type"))
         method = SolePostHoc.RuleExtraction.RULECOSIPLUSRuleExtractor()
-        # if m.setup.resample === nothing
-        #     df = DataFrame(ds.Xtest, ds.info.vnames)
-        #     RuleExtraction.modalextractrules(method, m.model, df, String.(ds.ytest); m.setup.rulesparams.params...)
-        # else
-            reduce(vcat, map(enumerate(m.model)) do (i, model)
-                df = DataFrame(ds.X[ds.tt[i].test, :], ds.info.vnames)
-                RuleExtraction.modalextractrules(method, model, df, String.(ds.y[ds.tt[i].test]); m.setup.rulesparams.params...)
-            end)
-        # end
+
+        reduce(vcat, map(enumerate(m.model)) do (i, model)
+            df = DataFrame(ds.X[ds.tt[i].test, :], ds.info.vnames)
+            RuleExtraction.modalextractrules(method, model, df, String.(ds.y[ds.tt[i].test]); m.setup.rulesparams.params...)
+        end)
     end,
 
-    :lumen => (m, ds) -> begin
+    :lumen => (m, ds, mach) -> begin
         # m isa tree_warn && throw(ArgumentError("lumen not supported for decision tree model type"))
         method = SolePostHoc.RuleExtraction.LumenRuleExtractor()
-        rawmodel = m.setup.rawmodel(m.mach)
-        # if m.setup.resample === nothing
-        #     rawmodel = m.setup.rawmodel(m.mach)
-        #     RuleExtraction.modalextractrules(method, rawmodel; solemodel=m.model, apply_function=m.setup.config.rawapply, m.setup.rulesparams.params...)
-        # else
-            reduce(vcat, map(enumerate(m.model)) do (i, model)
-                RuleExtraction.modalextractrules(method, rawmodel; solemodel=model, apply_function=m.setup.config.rawapply, m.setup.rulesparams.params...)
-            end)
-        # end
+        rawmodel = m.setup.rawmodel(mach)
+
+        reduce(vcat, map(enumerate(m.model)) do (i, model)
+            RuleExtraction.modalextractrules(method, rawmodel; solemodel=model, apply_function=m.setup.config.rawapply, m.setup.rulesparams.params...)
+        end)
     end
 )

@@ -198,9 +198,9 @@ mutable struct Modelset{T<:AbstractModelType} <: AbstractModelset{T}
     # ds         :: AbstractDataset
     # predictor  :: Union{MLJ.Model,                       Nothing}
     # mach       :: Union{MLJ.Machine,                     Nothing}
-    fitresult  :: OptVecTuple
+    # fitresult  :: OptVecTuple
     model      :: OptVecAbsModel
-    rules      :: OptVecRules
+    rules      :: OptRules
     measures   :: OptAbsMeas
 
     # function Modelset(
@@ -217,7 +217,7 @@ mutable struct Modelset{T<:AbstractModelType} <: AbstractModelset{T}
         setup      :: AbstractModelSetup{T},
         # ds         :: Dataset
     )::Modelset where {T<:AbstractModelType}
-        new{T}(setup, nothing, nothing, nothing, nothing)
+        new{T}(setup, nothing, nothing, nothing)
     end
 end
 

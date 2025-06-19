@@ -1,6 +1,7 @@
-# using Test
-# using MLJ, SoleXplorer
-# using DataFrames, Random
+using Test
+using MLJ, SoleXplorer
+using DataFrames, Random
+const SX = SoleXplorer
 
 Xc, yc = @load_iris
 Xc = DataFrame(Xc)
@@ -12,16 +13,16 @@ Xr = DataFrame(Xr)
 #                        train and test usage examples                         #
 # ---------------------------------------------------------------------------- #
 # basic setup
-modelc = train_test(Xc, yc)
+modelc, _, _ = train_test(Xc, yc)
 @test modelc isa SoleXplorer.Modelset
-modelr = train_test(Xr, yr)
+modelr, _, _ = train_test(Xr, yr)
 @test modelr isa SoleXplorer.Modelset
 
 # ---------------------------------------------------------------------------- #
 #                                     tuning                                   #
 # ---------------------------------------------------------------------------- #
 # model type specification
-modelc = train_test(
+modelc, _, _ = train_test(
     Xc, yc;
     model=(;type=:decisiontree),
     tuning=(
@@ -35,7 +36,7 @@ modelc = train_test(
 )
 @test modelc isa SoleXplorer.Modelset
 
-modelc = train_test(
+modelc, _, _ = train_test(
     Xc, yc;
     model=(;type=:randomforest),
     tuning=(
@@ -48,7 +49,7 @@ modelc = train_test(
 )
 @test modelc isa SoleXplorer.Modelset
 
-modelc = train_test(
+modelc, _, _ = train_test(
     Xc, yc;
     model=(;type=:adaboost),
     tuning=(
@@ -58,7 +59,7 @@ modelc = train_test(
 )
 @test modelc isa SoleXplorer.Modelset
 
-modelr = train_test(
+modelr, _, _ = train_test(
     Xr, yr;
     model=(;type=:decisiontree),
         tuning=(
@@ -71,7 +72,7 @@ modelr = train_test(
 )
 @test modelr isa SoleXplorer.Modelset
 
-modelr = train_test(
+modelr, _, _ = train_test(
     Xr, yr;
     model=(;type=:randomforest),
     tuning=(
@@ -88,7 +89,7 @@ modelr = train_test(
 # ---------------------------------------------------------------------------- #
 #                          modelsetup and modelset                             #
 # ---------------------------------------------------------------------------- #
-modelc = train_test(Xc, yc)
+modelc, _, _ = train_test(Xc, yc)
 @test modelc isa SoleXplorer.Modelset
 
 @test SX.get_resample(modelc.setup) isa SX.Resample
