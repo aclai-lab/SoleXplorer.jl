@@ -192,19 +192,15 @@ function XGBoostRegressorModel()::ModelSetup{AbstractRegression}
     learn_method = (
         (mach, X, y) -> begin
             trees        = XGB.trees(mach.fitresult[1])
-            encoding     = get_encoding(mach.fitresult[2])
-            classlabels  = get_classlabels(encoding)
             featurenames = mach.report.vals[1].features
-            solem        = solemodel(trees, @views(Matrix(X)), @views(y); classlabels, featurenames)
+            solem        = solemodel(trees, @views(Matrix(X)), @views(y); featurenames)
             apply!(solem, mapcols(col -> Float32.(col), X), @views(y))
             return solem
         end,
         (mach, X, y) -> begin
             trees        = XGB.trees(mach.fitresult.fitresult[1])
-            encoding     = get_encoding(mach.fitresult.fitresult[2])
-            classlabels  = get_classlabels(encoding)
             featurenames = mach.fitresult.report.vals[1].features
-            solem        = solemodel(trees, @views(Matrix(X)), @views(y); classlabels, featurenames)
+            solem        = solemodel(trees, @views(Matrix(X)), @views(y); featurenames)
             apply!(solem, mapcols(col -> Float32.(col), X), @views(y))
             return solem
         end
