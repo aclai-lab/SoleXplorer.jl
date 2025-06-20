@@ -101,7 +101,7 @@ Base.length(t::TT_indexes) = length(t.train) + length(t.valid) + length(t.test)
 struct Dataset{T<:AbstractMatrix,S} <: AbstractDataset
     X           :: T
     y           :: S
-    tt          :: Union{TT_indexes, AbstractVector{<:TT_indexes}}
+    tt          :: Vector{<:TT_indexes}
     info        :: DatasetInfo
 end
 
