@@ -27,10 +27,10 @@ function DecisionTreeClassifierModel()::ModelSetup{AbstractClassification}
         mach -> MLJ.fitted_params(mach).best_fitted_params.tree    
     )
 
-    learn_method = (
-        (mach, X, y) -> (solem = solemodel(MLJ.fitted_params(mach).tree); apply!(solem, X, y); solem),
-        (mach, X, y) -> (solem = solemodel(MLJ.fitted_params(mach).best_fitted_params.tree); apply!(solem, X, y); solem)
-    )
+    # learn_method = (
+    #     (mach, X, y) -> (solem = solemodel(MLJ.fitted_params(mach).tree); apply!(solem, X, y); solem),
+    #     (mach, X, y) -> (solem = solemodel(MLJ.fitted_params(mach).best_fitted_params.tree); apply!(solem, X, y); solem)
+    # )
 
     tuning = SoleXplorer.TuningParams(
         SoleXplorer.TuningStrategy(latinhypercube, (ntour = 20,)),
@@ -53,7 +53,7 @@ function DecisionTreeClassifierModel()::ModelSetup{AbstractClassification}
         nothing,
         winparams,
         rawmodel,
-        learn_method,
+        # learn_method,
         tuning,
         resultsparams,
         rulesparams,
@@ -85,22 +85,22 @@ function RandomForestClassifierModel()::ModelSetup{AbstractClassification}
         mach -> MLJ.fitted_params(mach).best_fitted_params.forest
     )
 
-    learn_method = (
-        (mach, X, y) -> begin
-            classlabels  = (mach).fitresult[2][sortperm((mach).fitresult[3])]
-            featurenames = MLJ.report(mach).features
-            solem        = solemodel(MLJ.fitted_params(mach).forest; classlabels, featurenames)
-            apply!(solem, X, y)
-            return solem
-        end,
-        (mach, X, y) -> begin
-            classlabels  = (mach).fitresult.fitresult[2][sortperm((mach).fitresult.fitresult[3])]
-            featurenames = MLJ.report(mach).best_report.features
-            solem        = solemodel(MLJ.fitted_params(mach).best_fitted_params.forest; classlabels, featurenames)
-            apply!(solem, X, y)
-            return solem
-        end
-    )
+    # learn_method = (
+    #     (mach, X, y) -> begin
+    #         classlabels  = (mach).fitresult[2][sortperm((mach).fitresult[3])]
+    #         featurenames = MLJ.report(mach).features
+    #         solem        = solemodel(MLJ.fitted_params(mach).forest; classlabels, featurenames)
+    #         apply!(solem, X, y)
+    #         return solem
+    #     end,
+    #     (mach, X, y) -> begin
+    #         classlabels  = (mach).fitresult.fitresult[2][sortperm((mach).fitresult.fitresult[3])]
+    #         featurenames = MLJ.report(mach).best_report.features
+    #         solem        = solemodel(MLJ.fitted_params(mach).best_fitted_params.forest; classlabels, featurenames)
+    #         apply!(solem, X, y)
+    #         return solem
+    #     end
+    # )
 
     tuning = SoleXplorer.TuningParams(
         SoleXplorer.TuningStrategy(latinhypercube, (ntour = 20,)),
@@ -123,7 +123,7 @@ function RandomForestClassifierModel()::ModelSetup{AbstractClassification}
         nothing,
         winparams,
         rawmodel,
-        learn_method,
+        # learn_method,
         tuning,
         resultsparams,
         rulesparams,
@@ -149,24 +149,24 @@ function AdaBoostClassifierModel()::ModelSetup{AbstractClassification}
         mach -> MLJ.fitted_params(mach).best_fitted_params.stumps
     )
 
-    learn_method = (
-        (mach, X, y) -> begin
-            weights      = mach.fitresult[2]
-            classlabels  = sort(mach.fitresult[3])
-            featurenames = MLJ.report(mach).features
-            solem        = solemodel(MLJ.fitted_params(mach).stumps; weights, classlabels, featurenames)
-            apply!(solem, X, y)
-            return solem
-        end,
-        (mach, X, y) -> begin
-            weights      = mach.fitresult.fitresult[2]
-            classlabels  = sort(mach.fitresult.fitresult[3])
-            featurenames = MLJ.report(mach).best_report.features
-            solem        = solemodel(MLJ.fitted_params(mach).best_fitted_params.stumps; weights, classlabels, featurenames)
-            apply!(solem, X, y)
-            return solem
-        end
-    )
+    # learn_method = (
+    #     (mach, X, y) -> begin
+    #         weights      = mach.fitresult[2]
+    #         classlabels  = sort(mach.fitresult[3])
+    #         featurenames = MLJ.report(mach).features
+    #         solem        = solemodel(MLJ.fitted_params(mach).stumps; weights, classlabels, featurenames)
+    #         apply!(solem, X, y)
+    #         return solem
+    #     end,
+    #     (mach, X, y) -> begin
+    #         weights      = mach.fitresult.fitresult[2]
+    #         classlabels  = sort(mach.fitresult.fitresult[3])
+    #         featurenames = MLJ.report(mach).best_report.features
+    #         solem        = solemodel(MLJ.fitted_params(mach).best_fitted_params.stumps; weights, classlabels, featurenames)
+    #         apply!(solem, X, y)
+    #         return solem
+    #     end
+    # )
 
     tuning = SoleXplorer.TuningParams(
         SoleXplorer.TuningStrategy(latinhypercube, (ntour = 20,)),
@@ -189,7 +189,7 @@ function AdaBoostClassifierModel()::ModelSetup{AbstractClassification}
         nothing,
         winparams,
         rawmodel,
-        learn_method,
+        # learn_method,
         tuning,
         resultsparams,
         rulesparams,
@@ -222,10 +222,10 @@ function DecisionTreeRegressorModel()::ModelSetup{AbstractRegression}
         mach -> MLJ.fitted_params(mach).best_fitted_params.tree
     )
 
-    learn_method = (
-        (mach, X, y) -> (solem = solemodel(MLJ.fitted_params(mach).tree); apply!(solem, X, y); solem),
-        (mach, X, y) -> (solem = solemodel(MLJ.fitted_params(mach).best_fitted_params.tree); apply!(solem, X, y); solem)
-    )
+    # learn_method = (
+    #     (mach, X, y) -> (solem = solemodel(MLJ.fitted_params(mach).tree); apply!(solem, X, y); solem),
+    #     (mach, X, y) -> (solem = solemodel(MLJ.fitted_params(mach).best_fitted_params.tree); apply!(solem, X, y); solem)
+    # )
 
     tuning = SoleXplorer.TuningParams(
         SoleXplorer.TuningStrategy(latinhypercube, (ntour = 20,)),
@@ -248,7 +248,7 @@ function DecisionTreeRegressorModel()::ModelSetup{AbstractRegression}
         nothing,
         winparams,
         rawmodel,
-        learn_method,
+        # learn_method,
         tuning,
         resultsparams,
         rulesparams,
@@ -280,20 +280,20 @@ function RandomForestRegressorModel()::ModelSetup{AbstractRegression}
         mach -> MLJ.fitted_params(mach).best_fitted_params.forest
     )
 
-    learn_method = (
-        (mach, X, y) -> begin
-            featurenames = MLJ.report(mach).features
-            solem        = solemodel(MLJ.fitted_params(mach).forest; featurenames)
-            apply!(solem, X, y)
-            return solem
-        end,
-        (mach, X, y) -> begin
-            featurenames = MLJ.report(mach).best_report.features
-            solem        = solemodel(MLJ.fitted_params(mach).best_fitted_params.forest; featurenames)
-            apply!(solem, X, y)
-            return solem
-        end
-    )
+    # learn_method = (
+    #     (mach, X, y) -> begin
+    #         featurenames = MLJ.report(mach).features
+    #         solem        = solemodel(MLJ.fitted_params(mach).forest; featurenames)
+    #         apply!(solem, X, y)
+    #         return solem
+    #     end,
+    #     (mach, X, y) -> begin
+    #         featurenames = MLJ.report(mach).best_report.features
+    #         solem        = solemodel(MLJ.fitted_params(mach).best_fitted_params.forest; featurenames)
+    #         apply!(solem, X, y)
+    #         return solem
+    #     end
+    # )
 
     tuning = SoleXplorer.TuningParams(
         SoleXplorer.TuningStrategy(latinhypercube, (ntour = 20,)),
@@ -316,7 +316,7 @@ function RandomForestRegressorModel()::ModelSetup{AbstractRegression}
         nothing,
         winparams,
         rawmodel,
-        learn_method,
+        # learn_method,
         tuning,
         resultsparams,
         rulesparams,

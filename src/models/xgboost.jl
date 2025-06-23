@@ -81,26 +81,26 @@ function XGBoostClassifierModel()::ModelSetup{AbstractClassification}
         mach -> XGB.trees(mach.fitresult.fitresult[1])
     )
 
-    learn_method = (
-        (mach, X, y) -> begin
-            trees        = XGB.trees(mach.fitresult[1])
-            encoding     = get_encoding(mach.fitresult[2])
-            classlabels  = get_classlabels(encoding)
-            featurenames = mach.report.vals[1].features
-            solem        = solemodel(trees, @views(Matrix(X)), @views(y); classlabels, featurenames)
-            apply!(solem, mapcols(col -> Float32.(col), X), @views(y))
-            return solem
-        end,
-        (mach, X, y) -> begin
-            trees        = XGB.trees(mach.fitresult.fitresult[1])
-            encoding     = get_encoding(mach.fitresult.fitresult[2])
-            classlabels  = get_classlabels(encoding)
-            featurenames = mach.fitresult.report.vals[1].features
-            solem        = solemodel(trees, @views(Matrix(X)), @views(y); classlabels, featurenames)
-            apply!(solem, mapcols(col -> Float32.(col), X), @views(y))
-            return solem
-        end
-    )
+    # learn_method = (
+    #     (mach, X, y) -> begin
+    #         trees        = XGB.trees(mach.fitresult[1])
+    #         encoding     = get_encoding(mach.fitresult[2])
+    #         classlabels  = get_classlabels(encoding)
+    #         featurenames = mach.report.vals[1].features
+    #         solem        = solemodel(trees, @views(Matrix(X)), @views(y); classlabels, featurenames)
+    #         apply!(solem, mapcols(col -> Float32.(col), X), @views(y))
+    #         return solem
+    #     end,
+    #     (mach, X, y) -> begin
+    #         trees        = XGB.trees(mach.fitresult.fitresult[1])
+    #         encoding     = get_encoding(mach.fitresult.fitresult[2])
+    #         classlabels  = get_classlabels(encoding)
+    #         featurenames = mach.fitresult.report.vals[1].features
+    #         solem        = solemodel(trees, @views(Matrix(X)), @views(y); classlabels, featurenames)
+    #         apply!(solem, mapcols(col -> Float32.(col), X), @views(y))
+    #         return solem
+    #     end
+    # )
 
     tuning = SoleXplorer.TuningParams(
         SoleXplorer.TuningStrategy(latinhypercube, (ntour = 20,)),
@@ -123,7 +123,7 @@ function XGBoostClassifierModel()::ModelSetup{AbstractClassification}
         nothing,
         winparams,
         rawmodel,
-        learn_method,
+        # learn_method,
         tuning,
         resultsparams,
         rulesparams,
@@ -189,22 +189,22 @@ function XGBoostRegressorModel()::ModelSetup{AbstractRegression}
         mach -> XGB.trees(mach.fitresult.fitresult[1])
     )
 
-    learn_method = (
-        (mach, X, y) -> begin
-            trees        = XGB.trees(mach.fitresult[1])
-            featurenames = mach.report.vals[1].features
-            solem        = solemodel(trees, @views(Matrix(X)), @views(y); featurenames)
-            apply!(solem, mapcols(col -> Float32.(col), X), @views(y))
-            return solem
-        end,
-        (mach, X, y) -> begin
-            trees        = XGB.trees(mach.fitresult.fitresult[1])
-            featurenames = mach.fitresult.report.vals[1].features
-            solem        = solemodel(trees, @views(Matrix(X)), @views(y); featurenames)
-            apply!(solem, mapcols(col -> Float32.(col), X), @views(y))
-            return solem
-        end
-    )
+    # learn_method = (
+    #     (mach, X, y) -> begin
+    #         trees        = XGB.trees(mach.fitresult[1])
+    #         featurenames = mach.report.vals[1].features
+    #         solem        = solemodel(trees, @views(Matrix(X)), @views(y); featurenames)
+    #         apply!(solem, mapcols(col -> Float32.(col), X), @views(y))
+    #         return solem
+    #     end,
+    #     (mach, X, y) -> begin
+    #         trees        = XGB.trees(mach.fitresult.fitresult[1])
+    #         featurenames = mach.fitresult.report.vals[1].features
+    #         solem        = solemodel(trees, @views(Matrix(X)), @views(y); featurenames)
+    #         apply!(solem, mapcols(col -> Float32.(col), X), @views(y))
+    #         return solem
+    #     end
+    # )
 
     tuning = SoleXplorer.TuningParams(
         SoleXplorer.TuningStrategy(latinhypercube, (ntour = 20,)),
@@ -227,7 +227,7 @@ function XGBoostRegressorModel()::ModelSetup{AbstractRegression}
         nothing,
         winparams,
         rawmodel,
-        learn_method,
+        # learn_method,
         tuning,
         resultsparams,
         rulesparams,

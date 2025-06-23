@@ -79,9 +79,16 @@
 #     :regression     => RegResults
 # )
 
-struct Measures <: AbstractMeasures
-    per_fold        :: AbstractVector
-    measures        :: AbstractVector{<:MLJBase.StatisticalMeasuresBase.Wrapper}
-    measures_values :: AbstractVector
-    operations      :: AbstractVector{<:Base.Callable}
+mutable struct Measures <: AbstractMeasures
+    # yhat            :: AbstractVector
+    per_fold        :: OptVector
+    measures        :: OptVecMeas
+    measures_values :: OptVector
+    operations      :: OptVecCall
+
+    # function Measures(
+    #     yhat      :: AbstractVector,
+    # )::Measures
+    #     new(yhat, nothing, nothing, nothing, nothing)
+    # end
 end

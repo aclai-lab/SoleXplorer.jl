@@ -57,6 +57,8 @@ const NamedTupleBool    = Union{NamedTuple, Bool}
 const SymbolString      = Union{Symbol,AbstractString}
 const Rule              = Union{DecisionList, DecisionEnsemble, DecisionSet}
 
+const OptModel          = Optional{MLJ.Model}
+
 const OptSymbol         = Optional{Symbol}
 const OptTuple          = Optional{Tuple}
 const OptVecTuple       = Optional{Vector{<:Tuple}}
@@ -65,9 +67,10 @@ const OptCallable       = Optional{<:Base.Callable}
 const OptVecCall        = Optional{Vector{<:Base.Callable}}
 const OptDataType       = Optional{DataType}
 
+const OptVector         = Optional{AbstractVector}
 const OptStringVec      = Optional{Vector{<:SymbolString}}
-
 const OptVecAbsModel    = Optional{Vector{<:AbstractModel}}
+const OptVecMeas        = Optional{AbstractVector{<:MLJBase.StatisticalMeasuresBase.Wrapper}}
 const OptAbsMeas        = Optional{AbstractMeasures}
 const OptRules          = Optional{Rule}
 

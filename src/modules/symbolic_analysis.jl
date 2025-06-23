@@ -6,18 +6,63 @@ function rules_extraction!(model::Modelset, ds::Dataset, mach::MLJ.Machine)
 end
 
 # ---------------------------------------------------------------------------- #
+#                               get operations                                 #
+# ---------------------------------------------------------------------------- #
+function get_operations(
+    measures   :: Vector,
+    prediction :: Symbol,
+)
+    map(measures) do m
+        kind_of_proxy = MLJBase.StatisticalMeasuresBase.kind_of_proxy(m)
+        observation_scitype = MLJBase.StatisticalMeasuresBase.observation_scitype(m)
+        isnothing(kind_of_proxy) && (return sole_predict)
+
+        if prediction === :probabilistic
+            if kind_of_proxy === MLJBase.LearnAPI.Distribution()
+                return sole_predict
+            elseif kind_of_proxy === MLJBase.LearnAPI.Point()
+                if observation_scitype <: Union{Missing,Finite}
+                    return sole_predict_mode
+                elseif observation_scitype <:Union{Missing,Infinite}
+                    return sole_predict_mean
+                else
+                    throw(err_ambiguous_operation(prediction, m))
+                end
+            else
+                throw(err_ambiguous_operation(prediction, m))
+            end
+        elseif prediction === :deterministic
+            if kind_of_proxy === MLJBase.LearnAPI.Distribution()
+                throw(err_incompatible_prediction_types(prediction, m))
+            elseif kind_of_proxy === MLJBase.LearnAPI.Point()
+                return sole_predict
+            else
+                throw(err_ambiguous_operation(prediction, m))
+            end
+        elseif prediction === :interval
+            if kind_of_proxy === MLJBase.LearnAPI.ConfidenceInterval()
+                return sole_predict
+            else
+                throw(err_ambiguous_operation(prediction, m))
+            end
+        else
+            throw(MLJBase.ERR_UNSUPPORTED_PREDICTION_TYPE)
+        end
+    end
+end
+
+# ---------------------------------------------------------------------------- #
 #                                  measures                                    #
 # ---------------------------------------------------------------------------- #
-function eval_measures!(model::Modelset, mach::MLJ.Machine, y::Any, tt::Vector{<:TT_indexes})::Measures
-    _measures   = MLJBase._actual_measures([get_setup_meas(model)...], get_solemodel(model))
-    _operations = MLJBase._actual_operations(nothing, _measures, get_mach_model(model), 0)
+function eval_measures!(mach::MLJ.Machine, model::Modelset)::Measures
+    measures        = MLJBase._actual_measures([get_setup_meas(model)...], get_solemodel(model))
+    operations      = get_operations(measures, MLJBase.prediction_type(model.type))
 
-    # y = get_mach_y(model)
-    # tt = get_setup_tt(model)
-    nfolds = length(tt)
-    test_fold_sizes = [length(tt[k].test) for k in 1:nfolds]
-
-    nmeasures = length(get_setup_meas(model))
+    # y_test          = get_y_test_folds(mach, model)
+    y_test          = get_y_test_folds(model)
+    nfolds          = length(y_test)
+    test_fold_sizes = [length(y_test[k]) for k in 1:nfolds]
+    nmeasures       = length(get_setup_meas(model))
 
     # weights used to aggregate per-fold measurements, which depends on a measures
     # external mode of aggregation:
@@ -25,13 +70,24 @@ function eval_measures!(model::Modelset, mach::MLJ.Machine, y::Any, tt::Vector{<
     fold_weights(::MLJBase.StatisticalMeasuresBase.Sum) = nothing
 
     measurements_vector = mapreduce(vcat, 1:nfolds) do k
-        yhat_given_operation = Dict(op=>op(mach, rows=tt[k].test) for op in unique(_operations))
-        test = tt[k].test
+        # yhat_given_operation = Dict(op=>op(mach, rows=yhat[k].test) for op in unique(operations))
+        # yhat_given_operation = Dict(op=>op(mach, model.model[k]) for op in unique(operations))
+        yhat_given_operation = Dict(op=>op(model.model[k]) for op in unique(operations))
 
-        [map(_measures, _operations) do m, op
+        test = y_test[k]
+
+        [map(measures, operations) do m, op
+            # m(
+            #     yhat_given_operation[op],
+            #     y[test],
+            #     # MLJBase._view(weights, test),
+            #     # class_weights
+            #     MLJBase._view(nothing, test),
+            #     nothing
+            # )
             m(
                 yhat_given_operation[op],
-                y[test],
+                test,
                 # MLJBase._view(weights, test),
                 # class_weights
                 MLJBase._view(nothing, test),
@@ -43,22 +99,22 @@ function eval_measures!(model::Modelset, mach::MLJ.Machine, y::Any, tt::Vector{<
     measurements_matrix = permutedims(reduce(hcat, measurements_vector))
 
     # measurements for each fold:
-    _fold = map(1:nmeasures) do k
+    fold = map(1:nmeasures) do k
         measurements_matrix[:,k]
     end
 
     # overall aggregates:
-    _measures_values = map(1:nmeasures) do k
+    measures_values = map(1:nmeasures) do k
         m = get_setup_meas(model)[k]
         mode = MLJBase.StatisticalMeasuresBase.external_aggregation_mode(m)
         MLJBase.StatisticalMeasuresBase.aggregate(
-            _fold[k];
+            fold[k];
             mode,
             weights=fold_weights(mode)
         )
     end
 
-    model.measures = Measures(_fold, _measures, _measures_values, _operations)
+    model.measures = Measures(fold, measures, measures_values, operations)
 end
 
 # ---------------------------------------------------------------------------- #
@@ -66,49 +122,14 @@ end
 # ---------------------------------------------------------------------------- #
 function symbolic_analysis(args...; extract_rules::NamedTupleBool=false, kwargs...)
     model, ds = _prepare_dataset(args...; extract_rules, kwargs...)
-    mach = _train_machine(model, ds)
+    mach = _train_machine!(model, ds)
     _test_model!(model, mach, ds)
 
     if !isa(extract_rules, Bool) || extract_rules
         rules_extraction!(model, ds, mach)
     end
 
-    eval_measures!(model, mach, @views(ds.y), ds.tt)
+    eval_measures!(mach, model)
 
     return model
 end
-# function symbolic_analysis(
-#     X             :: AbstractDataFrame,
-#     y             :: AbstractVector;
-#     model         :: NamedTuple     = (;type=:decisiontree),
-#     resample      :: NamedTuple     = (;type=Holdout),
-#     win           :: OptNamedTuple  = nothing,
-#     features      :: OptTuple       = nothing,
-#     tuning        :: NamedTupleBool = false,
-#     extract_rules :: NamedTupleBool = false,
-#     preprocess    :: OptNamedTuple  = nothing,
-#     modalreduce    :: OptCallable    = nothing
-# )::Modelset
-#     modelset = validate_modelset(model, eltype(y); resample, win, features, tuning, extract_rules, preprocess, modalreduce)
-#     model = Modelset(modelset, _prepare_dataset(X, y, modelset))
-#     _traintest!(model)
-
-#     if !isa(extract_rules, Bool) || extract_rules
-#         rules_extraction!(model)
-#     end
-
-#     # save results into model
-#     # model.results = RESULTS[get_algo(model.setup)](model.setup, model.model)
-
-#     return model
-# end
-
-# # y is not a vector, but a symbol or a string that identifies a column in X
-# function symbolic_analysis(
-#     X::AbstractDataFrame,
-#     y::SymbolString;
-#     kwargs...
-# )::Modelset
-#     symbolic_analysis(X[!, Not(y)], X[!, y]; kwargs...)
-# end
-

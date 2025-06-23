@@ -281,7 +281,7 @@ function validate_modelset(
     set_rulesparams!(modelset, validate_rulesparams(get_rulesparams(modelset), extract_rules, rng))
 
     set_rawmodel!(modelset, get_tuning(modelset) == false ? get_rawmodel(modelset) : get_resampled_rawmodel(modelset))
-    set_learn_method!(modelset, get_tuning(modelset) == false ? get_learn_method(modelset) : get_resampled_learn_method(modelset))
+    # set_learn_method!(modelset, get_tuning(modelset) == false ? get_learn_method(modelset) : get_resampled_learn_method(modelset))
     preprocess === nothing || (modelset.preprocess = merge(get_preprocess(modelset), preprocess))
     set_resample!(modelset, validate_resample(resample, rng, modelset.preprocess.train_ratio))
     set_measures!(modelset, validate_measures(get_measures(modelset), measures))
