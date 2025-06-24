@@ -12,9 +12,6 @@ function apply(
     X     :: AbstractDataFrame,
     y     :: AbstractVector
 )
-    # catch deserialized machine with no data:
-    # isempty(mach.args) && throw(MLJBase.err_serialized(:predict))
-
     get_tuning(model) === false ? begin
         solem = solemodel(MLJ.fitted_params(mach).tree)
         apply!(solem, X, y)
@@ -33,9 +30,6 @@ function apply(
     X     :: AbstractDataFrame,
     y     :: AbstractVector
 )
-    # catch deserialized machine with no data:
-    # isempty(mach.args) && throw(MLJBase.err_serialized(:predict))
-
     get_tuning(model) === false ? begin
         classlabels  = (mach).fitresult[2][sortperm((mach).fitresult[3])]
         featurenames = MLJ.report(mach).features
@@ -57,9 +51,6 @@ function apply(
     X     :: AbstractDataFrame,
     y     :: AbstractVector
 )
-    # catch deserialized machine with no data:
-    # isempty(mach.args) && throw(MLJBase.err_serialized(:predict))
-
     get_tuning(model) === false ? begin
         featurenames = MLJ.report(mach).features
         solem        = solemodel(MLJ.fitted_params(mach).forest; featurenames)
@@ -80,9 +71,6 @@ function apply(
     X     :: AbstractDataFrame,
     y     :: AbstractVector
 )
-    # catch deserialized machine with no data:
-    # isempty(mach.args) && throw(MLJBase.err_serialized(:predict))
-
     get_tuning(model) === false ? begin
         weights      = mach.fitresult[2]
         classlabels  = sort(mach.fitresult[3])
@@ -109,23 +97,20 @@ function apply(
     X     :: AbstractDataFrame,
     y     :: AbstractVector
 )
-    # catch deserialized machine with no data:
-    # isempty(mach.args) && throw(MLJBase.err_serialized(:predict))
-
     get_tuning(model) === false ? begin
         trees        = XGB.trees(mach.fitresult[1])
         encoding     = get_encoding(mach.fitresult[2])
         classlabels  = get_classlabels(encoding)
         featurenames = mach.report.vals[1].features
-        solem        = solemodel(trees, @views(Matrix(X)), @views(y); classlabels, featurenames)
-        apply!(solem, mapcols(col -> Float32.(col), X), @views(y))
+        solem        = solemodel(trees, Matrix(X), y; classlabels, featurenames)
+        apply!(solem, mapcols(col -> Float32.(col), X), y)
     end : begin
         trees        = XGB.trees(mach.fitresult.fitresult[1])
         encoding     = get_encoding(mach.fitresult.fitresult[2])
         classlabels  = get_classlabels(encoding)
         featurenames = mach.fitresult.report.vals[1].features
-        solem        = solemodel(trees, @views(Matrix(X)), @views(y); classlabels, featurenames)
-        apply!(solem, mapcols(col -> Float32.(col), X), @views(y))
+        solem        = solemodel(trees, Matrix(X), y; classlabels, featurenames)
+        apply!(solem, mapcols(col -> Float32.(col), X), y)
         return solem
     end
 
@@ -136,21 +121,19 @@ function apply(
     mach  :: MLJ.Machine{<:MLJXGBoostInterface.XGBoostRegressor,<:Any,true},
     model :: Modelset,
     X     :: AbstractDataFrame,
-    y     :: AbstractVector
+    y     :: AbstractVector,
+    bs    :: AbstractFloat
 )
-    # catch deserialized machine with no data:
-    # isempty(mach.args) && throw(MLJBase.err_serialized(:predict))
-
     get_tuning(model) === false ? begin
         trees        = XGB.trees(mach.fitresult[1])
         featurenames = mach.report.vals[1].features
-        solem        = solemodel(trees, @views(Matrix(X)), @views(y); featurenames)
-        apply!(solem, mapcols(col -> Float32.(col), X), @views(y))
+        solem        = solemodel(trees, Matrix(X), y; featurenames)
+        apply!(solem, mapcols(col -> Float32.(col), X), y; base_score=bs)
     end : begin
         trees        = XGB.trees(mach.fitresult.fitresult[1])
         featurenames = mach.fitresult.report.vals[1].features
-        solem        = solemodel(trees, @views(Matrix(X)), @views(y); featurenames)
-        apply!(solem, mapcols(col -> Float32.(col), X), @views(y))
+        solem        = solemodel(trees, Matrix(X), y; featurenames)
+        apply!(solem, mapcols(col -> Float32.(col), X), y; base_score=bs)
     end
 
     return solem

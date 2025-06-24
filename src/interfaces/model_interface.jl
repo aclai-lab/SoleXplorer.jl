@@ -173,6 +173,7 @@ get_setup_meas(m::Modelset)      = m.setup.measures
 get_tuning(m::Modelset)          = m.setup.tuning
 get_type(m::Modelset)            = m.setup.type
 # get_prediction_type(m::Modelset) = supertype(typeof(m.type))
+get_base_score(m::Modelset)      = haskey(m.setup.params, :base_score) ? m.setup.params.base_score : nothing
 
 function Base.show(io::IO, mc::Modelset)
     println(io, "Modelset:")

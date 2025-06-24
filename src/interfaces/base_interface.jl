@@ -74,6 +74,6 @@ const OptVecMeas        = Optional{AbstractVector{<:MLJBase.StatisticalMeasuresB
 const OptAbsMeas        = Optional{AbstractMeasures}
 const OptRules          = Optional{Rule}
 
-const Cat_Value = Union{AbstractString, Symbol, MLJ.CategoricalValue}
-const Reg_Value = Number
-const Y_Value   = Union{Cat_Value, Reg_Value}
+# const Cat_Value = Union{AbstractString, Symbol, MLJ.CategoricalValue}
+# const Reg_Value = Number
+# const Y_Value   = Union{Cat_Value, Reg_Value}

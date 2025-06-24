@@ -59,10 +59,10 @@ end
 function validate_model(model::Symbol, y::DataType)::ModelSetup
     if haskey(AVAIL_MODELS, model)
         return AVAIL_MODELS[model]()
-    elseif y <: Reg_Value
+    elseif y <: SoleModels.RLabel
         model_r = Symbol(model, "_regressor")
         haskey(AVAIL_MODELS, model_r) && return AVAIL_MODELS[model_r]()
-    elseif y <: Cat_Value
+    elseif y <: SoleModels.CLabel
         model_c = Symbol(model, "_classifier")
         haskey(AVAIL_MODELS, model_c) && return AVAIL_MODELS[model_c]()        
     end

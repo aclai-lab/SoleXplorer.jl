@@ -1,17 +1,17 @@
 # ---------------------------------------------------------------------------- #
 #                                   get model                                  #
 # ---------------------------------------------------------------------------- #
-function get_predictor(modelset::AbstractModelSetup)::MLJ.Model
-    predictor = modelset.type(; modelset.params...)
+function get_predictor(model::AbstractModelSetup)::MLJ.Model
+    predictor = model.type(;model.params...)
 
-    modelset.tuning == false || begin
-        ranges = [r(predictor) for r in modelset.tuning.ranges]
+    model.tuning == false || begin
+        ranges = [r(predictor) for r in model.tuning.ranges]
 
         predictor = MLJ.TunedModel(; 
             model=predictor, 
-            tuning=modelset.tuning.method.type(;modelset.tuning.method.params...),
+            tuning=model.tuning.method.type(;model.tuning.method.params...),
             range=ranges, 
-            modelset.tuning.params...
+            model.tuning.params...
         )
     end
 
@@ -32,8 +32,8 @@ function _train_machine!(model::AbstractModelset, ds::AbstractDataset)::MLJ.Mach
 
     MLJ.machine(
         model.type,
-        MLJ.table(@views ds.X; names=ds.info.vnames),
-        @views ds.y
+        MLJ.table(ds.X; names=ds.info.vnames),
+        ds.y
     )
 end
 
@@ -43,7 +43,6 @@ end
 function _test_model!(model::AbstractModelset, mach::MLJ.Machine, ds::AbstractDataset)
     n_folds     = length(ds.tt)
     model.model = Vector{AbstractModel}(undef, n_folds)
-    yhat        = Vector(undef, n_folds)
 
     # TODO this can be parallelizable
     @inbounds for i in 1:n_folds
@@ -51,12 +50,18 @@ function _test_model!(model::AbstractModelset, mach::MLJ.Machine, ds::AbstractDa
         test    = ds.tt[i].test
         X_test  = DataFrame((@views ds.X[test, :]), ds.info.vnames)
         y_test  = @views ds.y[test]
-        
-        MLJ.fit!(mach, rows=train, verbosity=0)
-        model.model[i] = apply(mach, model, X_test, y_test)
-    end
 
-    # model.measures = Measures(yhat)
+        # xgboost reg:squarederror default base_score is mean(y_train)
+        if model.setup.type == MLJXGBoostInterface.XGBoostRegressor 
+            base_score = get_base_score(model) == -Inf ? mean(ds.y[train]) : 0.5
+            mach.model.base_score = base_score
+            MLJ.fit!(mach, rows=train, verbosity=0)
+            model.model[i] = apply(mach, model, X_test, y_test, base_score)
+        else
+            MLJ.fit!(mach, rows=train, verbosity=0)
+            model.model[i] = apply(mach, model, X_test, y_test)
+        end
+    end
 end
 
 function train_test(args...; kwargs...)

@@ -29,48 +29,48 @@ function XGBoostClassifierModel()::ModelSetup{AbstractClassification}
     config = (type=DecisionEnsemble, treatment=:aggregate, rawapply=XGB.predict)
 
     params = (;
-        test                        = 1, 
-        num_round                   = 10, 
-        booster                     = "gbtree", 
-        disable_default_eval_metric = 0, 
-        eta                         = 0.3,      # alias: learning_rate
-        num_parallel_tree           = 1, 
-        gamma                       = 0.0, 
-        max_depth                   = 6, 
-        min_child_weight            = 1.0, 
-        max_delta_step              = 0.0, 
-        subsample                   = 1.0, 
-        colsample_bytree            = 1.0, 
-        colsample_bylevel           = 1.0, 
-        colsample_bynode            = 1.0, 
-        lambda                      = 1.0, 
-        alpha                       = 0.0, 
-        tree_method                 = "auto", 
-        sketch_eps                  = 0.03, 
-        scale_pos_weight            = 1.0, 
-        updater                     = nothing, 
-        refresh_leaf                = 1, 
-        process_type                = "default", 
-        grow_policy                 = "depthwise", 
-        max_leaves                  = 0, 
-        max_bin                     = 256, 
-        predictor                   = "cpu_predictor", 
-        sample_type                 = "uniform", 
-        normalize_type              = "tree", 
-        rate_drop                   = 0.0, 
-        one_drop                    = 0, 
-        skip_drop                   = 0.0, 
-        feature_selector            = "cyclic", 
-        top_k                       = 0, 
-        tweedie_variance_power      = 1.5, 
-        objective                   = "automatic", 
-        base_score                  = 0.5, 
-        early_stopping_rounds       = 0, 
-        watchlist                   = nothing, 
-        nthread                     = 1, 
-        importance_type             = "gain", 
-        seed                        = nothing, 
-        validate_parameters         = false, 
+        test                        = 1,
+        num_round                   = 10,
+        booster                     = "gbtree",
+        disable_default_eval_metric = 0,
+        eta                         = 0.3,     # alias: learning_rate
+        num_parallel_tree           = 1,
+        gamma                       = 0.0,
+        max_depth                   = 6,
+        min_child_weight            = 1.0,
+        max_delta_step              = 0.0,
+        subsample                   = 1.0,
+        colsample_bytree            = 1.0,
+        colsample_bylevel           = 1.0,
+        colsample_bynode            = 1.0,
+        lambda                      = 1.0,
+        alpha                       = 0.0,
+        tree_method                 = "auto",
+        sketch_eps                  = 0.03,
+        scale_pos_weight            = 1.0,
+        updater                     = nothing,
+        refresh_leaf                = 1,
+        process_type                = "default",
+        grow_policy                 = "depthwise",
+        max_leaves                  = 0,
+        max_bin                     = 256,
+        predictor                   = "cpu_predictor",
+        sample_type                 = "uniform",
+        normalize_type              = "tree",
+        rate_drop                   = 0.0,
+        one_drop                    = 0,
+        skip_drop                   = 0.0,
+        feature_selector            = "cyclic",
+        top_k                       = 0,
+        tweedie_variance_power      = 1.5,
+        objective                   = "automatic",
+        base_score                  = 0.5,
+        early_stopping_rounds       = 0,
+        watchlist                   = nothing,
+        nthread                     = 1,
+        importance_type             = "gain",
+        seed                        = nothing,
+        validate_parameters         = false,
         eval_metric                 = String[]
     )
 
@@ -80,27 +80,6 @@ function XGBoostClassifierModel()::ModelSetup{AbstractClassification}
         mach -> XGB.trees(mach.fitresult[1]),
         mach -> XGB.trees(mach.fitresult.fitresult[1])
     )
-
-    # learn_method = (
-    #     (mach, X, y) -> begin
-    #         trees        = XGB.trees(mach.fitresult[1])
-    #         encoding     = get_encoding(mach.fitresult[2])
-    #         classlabels  = get_classlabels(encoding)
-    #         featurenames = mach.report.vals[1].features
-    #         solem        = solemodel(trees, @views(Matrix(X)), @views(y); classlabels, featurenames)
-    #         apply!(solem, mapcols(col -> Float32.(col), X), @views(y))
-    #         return solem
-    #     end,
-    #     (mach, X, y) -> begin
-    #         trees        = XGB.trees(mach.fitresult.fitresult[1])
-    #         encoding     = get_encoding(mach.fitresult.fitresult[2])
-    #         classlabels  = get_classlabels(encoding)
-    #         featurenames = mach.fitresult.report.vals[1].features
-    #         solem        = solemodel(trees, @views(Matrix(X)), @views(y); classlabels, featurenames)
-    #         apply!(solem, mapcols(col -> Float32.(col), X), @views(y))
-    #         return solem
-    #     end
-    # )
 
     tuning = SoleXplorer.TuningParams(
         SoleXplorer.TuningStrategy(latinhypercube, (ntour = 20,)),
@@ -123,7 +102,6 @@ function XGBoostClassifierModel()::ModelSetup{AbstractClassification}
         nothing,
         winparams,
         rawmodel,
-        # learn_method,
         tuning,
         resultsparams,
         rulesparams,
@@ -137,48 +115,48 @@ function XGBoostRegressorModel()::ModelSetup{AbstractRegression}
     config = (type=DecisionEnsemble, treatment=:aggregate, rawapply=XGB.predict)
 
     params = (;
-        test                        = 1, 
-        num_round                   = 10, 
-        booster                     = "gbtree", 
-        disable_default_eval_metric = 0, 
-        eta                         = 0.3,      # alias: learning_rate
-        num_parallel_tree           = 1, 
-        gamma                       = 0.0, 
-        max_depth                   = 6, 
-        min_child_weight            = 1.0, 
-        max_delta_step              = 0.0, 
-        subsample                   = 1.0, 
-        colsample_bytree            = 1.0, 
-        colsample_bylevel           = 1.0, 
-        colsample_bynode            = 1.0, 
-        lambda                      = 1.0, 
-        alpha                       = 0.0, 
-        tree_method                 = "auto", 
-        sketch_eps                  = 0.03, 
-        scale_pos_weight            = 1.0, 
-        updater                     = nothing, 
-        refresh_leaf                = 1, 
-        process_type                = "default", 
-        grow_policy                 = "depthwise", 
-        max_leaves                  = 0, 
-        max_bin                     = 256, 
-        predictor                   = "cpu_predictor", 
-        sample_type                 = "uniform", 
-        normalize_type              = "tree", 
-        rate_drop                   = 0.0, 
-        one_drop                    = 0, 
-        skip_drop                   = 0.0, 
-        feature_selector            = "cyclic", 
-        top_k                       = 0, 
-        tweedie_variance_power      = 1.5, 
-        objective                   = "reg:squarederror", 
-        base_score                  = 0.5, 
-        early_stopping_rounds       = 0, 
-        watchlist                   = nothing, 
-        nthread                     = 1, 
-        importance_type             = "gain", 
-        seed                        = nothing, 
-        validate_parameters         = false, 
+        test                        = 1,
+        num_round                   = 10,
+        booster                     = "gbtree",
+        disable_default_eval_metric = 0,
+        eta                         = 0.3,     # alias: learning_rate
+        num_parallel_tree           = 1,
+        gamma                       = 0.0,
+        max_depth                   = 6,
+        min_child_weight            = 1.0,
+        max_delta_step              = 0.0,
+        subsample                   = 1.0,
+        colsample_bytree            = 1.0,
+        colsample_bylevel           = 1.0,
+        colsample_bynode            = 1.0,
+        lambda                      = 1.0,
+        alpha                       = 0.0,
+        tree_method                 = "auto",
+        sketch_eps                  = 0.03,
+        scale_pos_weight            = 1.0,
+        updater                     = nothing,
+        refresh_leaf                = 1,
+        process_type                = "default",
+        grow_policy                 = "depthwise",
+        max_leaves                  = 0,
+        max_bin                     = 256,
+        predictor                   = "cpu_predictor",
+        sample_type                 = "uniform",
+        normalize_type              = "tree",
+        rate_drop                   = 0.0,
+        one_drop                    = 0,
+        skip_drop                   = 0.0,
+        feature_selector            = "cyclic",
+        top_k                       = 0,
+        tweedie_variance_power      = 1.5,
+        objective                   = "reg:squarederror",
+        base_score                  = -Inf,
+        early_stopping_rounds       = 0,
+        watchlist                   = nothing,
+        nthread                     = 1,
+        importance_type             = "gain",
+        seed                        = nothing,
+        validate_parameters         = false,
         eval_metric                 = String[]
     )
 
@@ -188,23 +166,6 @@ function XGBoostRegressorModel()::ModelSetup{AbstractRegression}
         mach -> XGB.trees(mach.fitresult[1]),
         mach -> XGB.trees(mach.fitresult.fitresult[1])
     )
-
-    # learn_method = (
-    #     (mach, X, y) -> begin
-    #         trees        = XGB.trees(mach.fitresult[1])
-    #         featurenames = mach.report.vals[1].features
-    #         solem        = solemodel(trees, @views(Matrix(X)), @views(y); featurenames)
-    #         apply!(solem, mapcols(col -> Float32.(col), X), @views(y))
-    #         return solem
-    #     end,
-    #     (mach, X, y) -> begin
-    #         trees        = XGB.trees(mach.fitresult.fitresult[1])
-    #         featurenames = mach.fitresult.report.vals[1].features
-    #         solem        = solemodel(trees, @views(Matrix(X)), @views(y); featurenames)
-    #         apply!(solem, mapcols(col -> Float32.(col), X), @views(y))
-    #         return solem
-    #     end
-    # )
 
     tuning = SoleXplorer.TuningParams(
         SoleXplorer.TuningStrategy(latinhypercube, (ntour = 20,)),
@@ -227,7 +188,6 @@ function XGBoostRegressorModel()::ModelSetup{AbstractRegression}
         nothing,
         winparams,
         rawmodel,
-        # learn_method,
         tuning,
         resultsparams,
         rulesparams,
