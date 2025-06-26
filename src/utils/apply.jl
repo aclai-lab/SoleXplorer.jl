@@ -31,12 +31,12 @@ function apply(
     y     :: AbstractVector
 )
     get_tuning(model) === false ? begin
-        classlabels  = (mach).fitresult[2][sortperm((mach).fitresult[3])]
+        classlabels  = string.(mach.fitresult[2][sortperm((mach).fitresult[3])])
         featurenames = MLJ.report(mach).features
         solem        = solemodel(MLJ.fitted_params(mach).forest; classlabels, featurenames)
         apply!(solem, X, y)
     end : begin
-        classlabels  = (mach).fitresult.fitresult[2][sortperm((mach).fitresult.fitresult[3])]
+        classlabels  = string.(mach.fitresult.fitresult[2][sortperm((mach).fitresult.fitresult[3])])
         featurenames = MLJ.report(mach).best_report.features
         solem        = solemodel(MLJ.fitted_params(mach).best_fitted_params.forest; classlabels, featurenames)
         apply!(solem, X, y)
@@ -73,13 +73,13 @@ function apply(
 )
     get_tuning(model) === false ? begin
         weights      = mach.fitresult[2]
-        classlabels  = sort(mach.fitresult[3])
+        classlabels  = sort(string.(mach.fitresult[3]))
         featurenames = MLJ.report(mach).features
         solem        = solemodel(MLJ.fitted_params(mach).stumps; weights, classlabels, featurenames)
         apply!(solem, X, y)
     end : begin
         weights      = mach.fitresult.fitresult[2]
-        classlabels  = sort(mach.fitresult.fitresult[3])
+        classlabels  = sort(string.(mach.fitresult.fitresult[3]))
         featurenames = MLJ.report(mach).best_report.features
         solem        = solemodel(MLJ.fitted_params(mach).best_fitted_params.stumps; weights, classlabels, featurenames)
         apply!(solem, X, y)
@@ -100,14 +100,14 @@ function apply(
     get_tuning(model) === false ? begin
         trees        = XGB.trees(mach.fitresult[1])
         encoding     = get_encoding(mach.fitresult[2])
-        classlabels  = get_classlabels(encoding)
+        classlabels  = string.(get_classlabels(encoding))
         featurenames = mach.report.vals[1].features
         solem        = solemodel(trees, Matrix(X), y; classlabels, featurenames)
         apply!(solem, mapcols(col -> Float32.(col), X), y)
     end : begin
         trees        = XGB.trees(mach.fitresult.fitresult[1])
         encoding     = get_encoding(mach.fitresult.fitresult[2])
-        classlabels  = get_classlabels(encoding)
+        classlabels  = string.(get_classlabels(encoding))
         featurenames = mach.fitresult.report.vals[1].features
         solem        = solemodel(trees, Matrix(X), y; classlabels, featurenames)
         apply!(solem, mapcols(col -> Float32.(col), X), y)

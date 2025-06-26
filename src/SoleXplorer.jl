@@ -37,11 +37,10 @@ using Reexport
 using MLJ, MLJBase
 
 # classification measures
-@reexport using MLJ: accuracy, confusion_matrix, kappa, log_loss, precision, recall, specificity, sensitivity
-@reexport using MLJ: auc, brier_score
+@reexport using MLJ: accuracy, confusion_matrix, kappa, log_loss
 
 # regression measures
-@reexport using MLJ: rms, rmse, mae, mape
+@reexport using MLJ: rms, l1, l2, mae, mav
 
 # ---------------------------------------------------------------------------- #
 #                                    utils                                     #

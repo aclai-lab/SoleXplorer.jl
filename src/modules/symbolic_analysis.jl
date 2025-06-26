@@ -68,23 +68,13 @@ function eval_measures!(mach::MLJ.Machine, model::Modelset)::Measures
     # external mode of aggregation:
     fold_weights(mode) = nfolds .* test_fold_sizes ./ sum(test_fold_sizes)
     fold_weights(::MLJBase.StatisticalMeasuresBase.Sum) = nothing
-
+    
     measurements_vector = mapreduce(vcat, 1:nfolds) do k
-        # yhat_given_operation = Dict(op=>op(mach, rows=yhat[k].test) for op in unique(operations))
-        # yhat_given_operation = Dict(op=>op(mach, model.model[k]) for op in unique(operations))
         yhat_given_operation = Dict(op=>op(model.model[k]) for op in unique(operations))
 
         test = y_test[k]
 
         [map(measures, operations) do m, op
-            # m(
-            #     yhat_given_operation[op],
-            #     y[test],
-            #     # MLJBase._view(weights, test),
-            #     # class_weights
-            #     MLJBase._view(nothing, test),
-            #     nothing
-            # )
             m(
                 yhat_given_operation[op],
                 test,
@@ -131,5 +121,5 @@ function symbolic_analysis(args...; extract_rules::NamedTupleBool=false, kwargs.
 
     eval_measures!(mach, model)
 
-    return model
+    return model, mach, ds
 end
