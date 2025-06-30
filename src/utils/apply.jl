@@ -143,20 +143,20 @@ end
 function apply(
     mach    :: MLJ.Machine{<:MLJXGBoostInterface.XGBoostRegressor,<:Any,true},
     tuning  :: Bool,
-    X       :: AbstractMatrix,
+    X       :: AbstractDataFrame,
     y       :: AbstractVector,
     bs      :: AbstractFloat
 )
     tuning === false ? begin
         trees        = XGB.trees(mach.fitresult[1])
         featurenames = mach.report.vals[1].features
-        solem        = solemodel(trees, X, y; featurenames)
-        apply!(solem, X, y; base_score=bs)
+        solem        = solemodel(trees, Matrix(X), y; featurenames)
+        apply!(solem, mapcols(col -> Float32.(col), X), y; base_score=bs)
     end : begin
         trees        = XGB.trees(mach.fitresult.fitresult[1])
         featurenames = mach.fitresult.report.vals[1].features
-        solem        = solemodel(trees, X, y; featurenames)
-        apply!(solem, X, y; base_score=bs)
+        solem        = solemodel(trees, Matrix(X), y; featurenames)
+        apply!(solem, mapcols(col -> Float32.(col), X), y; base_score=bs)
     end
 
     return solem
