@@ -56,10 +56,10 @@ function _test_model!(model::AbstractModelset, mach::MLJ.Machine, ds::AbstractDa
             base_score = get_base_score(model) == -Inf ? mean(ds.y[train]) : 0.5
             mach.model.base_score = base_score
             MLJ.fit!(mach, rows=train, verbosity=0)
-            model.model[i] = apply(mach, model, X_test, y_test, base_score)
+            model.model[i] = apply(mach, get_tuning(model), X_test, y_test, base_score)
         else
             MLJ.fit!(mach, rows=train, verbosity=0)
-            model.model[i] = apply(mach, model, X_test, y_test)
+            model.model[i] = apply(mach, get_tuning(model), X_test, y_test)
         end
     end
 end
