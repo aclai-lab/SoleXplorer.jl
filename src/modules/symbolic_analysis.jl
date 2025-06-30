@@ -54,7 +54,7 @@ end
 # ---------------------------------------------------------------------------- #
 #                                  measures                                    #
 # ---------------------------------------------------------------------------- #
-function eval_measures!(mach::MLJ.Machine, model::Modelset)::Measures
+function eval_measures!(model::Modelset)::Measures
     measures        = MLJBase._actual_measures([get_setup_meas(model)...], get_solemodel(model))
     operations      = get_operations(measures, MLJBase.prediction_type(model.type))
 
@@ -119,7 +119,7 @@ function symbolic_analysis(args...; extract_rules::NamedTupleBool=false, kwargs.
         rules_extraction!(model, ds, mach)
     end
 
-    eval_measures!(mach, model)
+    eval_measures!(model)
 
     return model, mach, ds
 end
