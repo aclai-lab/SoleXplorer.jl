@@ -144,6 +144,7 @@ function apply(
     mach    :: MLJ.Machine{<:MLJXGBoostInterface.XGBoostRegressor,<:Any,true},
     tuning  :: Bool,
     X       :: AbstractDataFrame,
+    # X       :: AbstractMatrix,
     y       :: AbstractVector,
     bs      :: AbstractFloat
 )
@@ -152,6 +153,8 @@ function apply(
         featurenames = mach.report.vals[1].features
         solem        = solemodel(trees, Matrix(X), y; featurenames)
         apply!(solem, mapcols(col -> Float32.(col), X), y; base_score=bs)
+        # solem        = solemodel(trees, X, y; featurenames)
+        # apply!(solem, DataFrame(Float32.(X), featurenames), y; base_score=bs)
     end : begin
         trees        = XGB.trees(mach.fitresult.fitresult[1])
         featurenames = mach.fitresult.report.vals[1].features

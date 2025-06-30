@@ -106,7 +106,7 @@ function XGBoostClassifierModel()::ModelSetup{AbstractClassification}
         resultsparams,
         rulesparams,
         DEFAULT_PREPROC,
-        DEFAULT_MEAS,
+        nothing,
     )
 end
 
@@ -192,7 +192,7 @@ function XGBoostRegressorModel()::ModelSetup{AbstractRegression}
         resultsparams,
         rulesparams,
         DEFAULT_PREPROC,
-        DEFAULT_MEAS,
+        nothing,
     )
 end
     

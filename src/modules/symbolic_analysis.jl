@@ -119,7 +119,7 @@ function symbolic_analysis(args...; extract_rules::NamedTupleBool=false, kwargs.
         rules_extraction!(model, ds, mach)
     end
 
-    eval_measures!(model)
+    get_measures(model.setup) === nothing || eval_measures!(model)
 
     return model, mach, ds
 end

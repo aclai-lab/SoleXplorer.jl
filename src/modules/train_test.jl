@@ -49,6 +49,7 @@ function _test_model!(model::AbstractModelset, mach::MLJ.Machine, ds::AbstractDa
         train   = ds.tt[i].train
         test    = ds.tt[i].test
         X_test  = DataFrame((@views ds.X[test, :]), ds.info.vnames)
+        # X_test  = @views ds.X[test, :]
         y_test  = @views ds.y[test]
 
         # xgboost reg:squarederror default base_score is mean(y_train)

@@ -100,7 +100,7 @@ XGBoostRegressorModel(dtmodel       :: ModelSetup) = dtmodel
 # const TypeModalForest = Union{TypeMRF, TypeMAB}
 
 const DEFAULT_FEATS = [maximum, minimum, MLJ.mean, std]
-const DEFAULT_MEAS  = (log_loss,)
+# const DEFAULT_MEAS  = (log_loss,)
 
 const DEFAULT_PREPROC = (
     train_ratio = 0.7,

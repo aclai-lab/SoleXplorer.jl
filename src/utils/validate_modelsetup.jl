@@ -92,10 +92,9 @@ function validate_features(
 end
 
 function validate_measures(
-    defaults::Tuple,
     users::OptTuple
 )
-    measures = users === nothing ? defaults : users
+    measures = users === nothing ? nothing : users
 
     # check if all measures are functions
     # all(f -> f isa Base.Callable, measures) || throw(ArgumentError("All measures must be functions"))
@@ -284,7 +283,7 @@ function validate_modelset(
     # set_learn_method!(modelset, get_tuning(modelset) == false ? get_learn_method(modelset) : get_resampled_learn_method(modelset))
     preprocess === nothing || (modelset.preprocess = merge(get_preprocess(modelset), preprocess))
     set_resample!(modelset, validate_resample(resample, rng, modelset.preprocess.train_ratio))
-    set_measures!(modelset, validate_measures(get_measures(modelset), measures))
+    set_measures!(modelset, validate_measures(measures))
     
     # modelset.preprocess.modalreduce === nothing || (modelset.config = merge(get_config(modelset), (modalreduce=modalreduce,)))
 
