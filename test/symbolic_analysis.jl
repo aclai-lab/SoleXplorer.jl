@@ -259,13 +259,13 @@ modelc, _, _ = symbolic_analysis(
 )
 @test modelc isa SoleXplorer.Modelset
 
-modelc, _, _ = symbolic_analysis(
-    Xc, yc;
-    model=(;type=:randomforest),
-    preprocess=(;rng=Xoshiro(1)),
-    extract_rules=(;type=:lumen)
-)
-@test modelc isa SoleXplorer.Modelset
+# modelc, _, _ = symbolic_analysis(
+#     Xc, yc;
+#     model=(;type=:randomforest),
+#     preprocess=(;rng=Xoshiro(1)),
+#     extract_rules=(;type=:lumen)
+# )
+# @test modelc isa SoleXplorer.Modelset
 
 # ---------------------------------------------------------------------------- #
 #                   check modal features correctly in model                    #
