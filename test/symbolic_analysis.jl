@@ -15,7 +15,7 @@ Xts, yts = SoleData.load_arff_dataset("NATOPS")
 # ---------------------------------------------------------------------------- #
 #                           propositional time series                          #
 # ---------------------------------------------------------------------------- #
-modelts = symbolic_analysis(
+modelts, _, _ = symbolic_analysis(
     Xts, yts;
     model=(;type=:xgboost),
     preprocess=(;rng=Xoshiro(1)),
@@ -24,7 +24,7 @@ modelts = symbolic_analysis(
 @test modelts isa SoleXplorer.Modelset
 @test modelts.measures.measures isa Vector
 
-modelts = symbolic_analysis(
+modelts, _, _ = symbolic_analysis(
     Xts, yts;
     model=(type=:decisiontree, params=(;max_depth=5, modalreduce=maximum)),
 )
@@ -33,13 +33,13 @@ modelts = symbolic_analysis(
 # ---------------------------------------------------------------------------- #
 #                               modal time series                              #
 # ---------------------------------------------------------------------------- #
-modelts = symbolic_analysis(
+modelts, _, _ = symbolic_analysis(
     Xts, yts;
     model=(;type=:modaldecisiontree)
 )
 @test modelts isa SoleXplorer.Modelset
 
-modelts = symbolic_analysis(
+modelts, _, _ = symbolic_analysis(
     Xts, yts;
     model=(;type=:modaldecisiontree),
     preprocess=(;rng=Xoshiro(1)),
@@ -51,7 +51,7 @@ modelts = symbolic_analysis(
 # ---------------------------------------------------------------------------- #
 #             xgboost makewatchlist for early stopping technique               #
 # ---------------------------------------------------------------------------- #
-early_stop  = symbolic_analysis(
+early_stop , _, _ = symbolic_analysis(
     Xc, yc; 
     model=(
         type=:xgboost_classifier,
@@ -73,7 +73,7 @@ early_stop  = symbolic_analysis(
 # ---------------------------------------------------------------------------- #
 #                              catch9 and catch22                              #
 # ---------------------------------------------------------------------------- #
-modelts = symbolic_analysis(
+modelts, _, _ = symbolic_analysis(
     Xts, yts;
     model=(;type=:decisiontree),
     preprocess=(;rng=Xoshiro(1)),
@@ -105,7 +105,7 @@ modelts = symbolic_analysis(
 )
 @test modelts isa SoleXplorer.Modelset
 
-modelts = symbolic_analysis(
+modelts, _, _ = symbolic_analysis(
     Xts, yts;
     model=(;type=:decisiontree),
     preprocess=(;rng=Xoshiro(1)),
@@ -114,7 +114,7 @@ modelts = symbolic_analysis(
 )
 @test modelts isa SoleXplorer.Modelset
 
-modelts = symbolic_analysis(
+modelts, _, _ = symbolic_analysis(
     Xts, yts;
     model=(;type=:decisiontree),
     preprocess=(;rng=Xoshiro(1)),
@@ -123,7 +123,7 @@ modelts = symbolic_analysis(
 )
 @test modelts isa SoleXplorer.Modelset
 
-modelts = symbolic_analysis(
+modelts, _, _ = symbolic_analysis(
     Xts, yts;
     model=(;type=:decisiontree),
     preprocess=(;rng=Xoshiro(1)),
@@ -132,7 +132,7 @@ modelts = symbolic_analysis(
 )
 @test modelts isa SoleXplorer.Modelset
 
-modelts = symbolic_analysis(
+modelts, _, _ = symbolic_analysis(
     Xts, yts;
     model=(;type=:decisiontree),
     preprocess=(;rng=Xoshiro(1)),
@@ -144,13 +144,13 @@ modelts = symbolic_analysis(
 # ---------------------------------------------------------------------------- #
 #                                    tuning                                    #
 # ---------------------------------------------------------------------------- #
-modelc = symbolic_analysis(
+modelc, mach, _ = symbolic_analysis(
     Xc, yc;
     tuning=true
 )
 @test modelts isa SoleXplorer.Modelset
 
-modelc = symbolic_analysis(
+modelc, _, _ = symbolic_analysis(
     Xc, yc;
     tuning=(
         method=(type=grid, params=(;resolution=25)), 
@@ -163,7 +163,7 @@ modelc = symbolic_analysis(
 )
 @test modelts isa SoleXplorer.Modelset
 
-modelc = symbolic_analysis(
+modelc, _, _ = symbolic_analysis(
     Xc, yc;
     tuning=(
         method=(;type=randomsearch), 
@@ -176,7 +176,7 @@ modelc = symbolic_analysis(
 )
 @test modelts isa SoleXplorer.Modelset
 
-modelc = symbolic_analysis(
+modelc, _, _ = symbolic_analysis(
     Xc, yc;
     tuning=(
         method=(type=latinhypercube, params=(;popsize=80)), 
@@ -189,7 +189,7 @@ modelc = symbolic_analysis(
 )
 @test modelts isa SoleXplorer.Modelset
 
-modelc = symbolic_analysis(
+modelc, _, _ = symbolic_analysis(
     Xc, yc;
     tuning=(
         method=(type=particleswarm, params=(;n_particles=5)), 
@@ -202,7 +202,7 @@ modelc = symbolic_analysis(
 )
 @test modelts isa SoleXplorer.Modelset
 
-modelc = symbolic_analysis(
+modelc, _, _ = symbolic_analysis(
     Xc, yc;
     tuning=(
         method=(;type=adaptiveparticleswarm), 
@@ -218,7 +218,7 @@ modelc = symbolic_analysis(
 # ---------------------------------------------------------------------------- #
 #                              rules extraction                                #
 # ---------------------------------------------------------------------------- #
-modelc = symbolic_analysis(
+modelc, _, _ = symbolic_analysis(
     Xc, yc;
     model=(;type=:randomforest),
     preprocess=(;rng=Xoshiro(1)),
@@ -226,7 +226,7 @@ modelc = symbolic_analysis(
 )
 @test modelc isa SoleXplorer.Modelset
 
-modelc = symbolic_analysis(
+modelc, _, _ = symbolic_analysis(
     Xc, yc;
     model=(;type=:randomforest),
     preprocess=(;rng=Xoshiro(1)),
@@ -234,7 +234,7 @@ modelc = symbolic_analysis(
 )
 @test modelc isa SoleXplorer.Modelset
 
-modelc = symbolic_analysis(
+modelc, _, _ = symbolic_analysis(
     Xc, yc;
     model=(;type=:randomforest),
     preprocess=(;rng=Xoshiro(1)),
@@ -243,7 +243,7 @@ modelc = symbolic_analysis(
 @test modelc isa SoleXplorer.Modelset
 
 # TODO: broken
-# modelc = symbolic_analysis(
+# modelc, _, _ = symbolic_analysis(
 #     Xc, yc;
 #     model=(;type=:randomforest),
 #     preprocess=(;rng=Xoshiro(1)),
@@ -251,7 +251,7 @@ modelc = symbolic_analysis(
 # )
 # @test modelc isa SoleXplorer.Modelset
 
-modelc = symbolic_analysis(
+modelc, _, _ = symbolic_analysis(
     Xc, yc;
     model=(;type=:randomforest),
     preprocess=(;rng=Xoshiro(1)),
@@ -259,7 +259,7 @@ modelc = symbolic_analysis(
 )
 @test modelc isa SoleXplorer.Modelset
 
-modelc = symbolic_analysis(
+modelc, _, _ = symbolic_analysis(
     Xc, yc;
     model=(;type=:randomforest),
     preprocess=(;rng=Xoshiro(1)),
@@ -270,17 +270,17 @@ modelc = symbolic_analysis(
 # ---------------------------------------------------------------------------- #
 #                   check modal features correctly in model                    #
 # ---------------------------------------------------------------------------- #
-modelts = symbolic_analysis(
+modelts, mach, _ = symbolic_analysis(
     Xts, yts;
     model=(;type=:modaldecisiontree),
     features=(forecast_error, dfa)
 )
-# @test modelts.mach.model.conditions == [forecast_error, dfa]
+@test mach.model.conditions == [forecast_error, dfa]
 
 # ---------------------------------------------------------------------------- #
 #                       check statisticalmeasure Sum()                         #
 # ---------------------------------------------------------------------------- #
-modelr = symbolic_analysis(
+modelr, _, _ = symbolic_analysis(
     Xr, yr;
     model=(;type=:decisiontree),
     preprocess=(;rng=Xoshiro(1)),

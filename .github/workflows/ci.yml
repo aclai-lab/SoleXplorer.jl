@@ -24,7 +24,7 @@ jobs:
       matrix:
         version:
           - '1'
-          # - 'lts'
+          # - 'lts' broken: expects SolePostHoc to be registered
         os:
           - ubuntu-latest
         arch:

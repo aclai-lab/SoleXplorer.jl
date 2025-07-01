@@ -119,7 +119,6 @@ export get_algo, get_labels, get_predictions
 
 # import MLJ: predict, predict_mode, predict_mean
 include("utils/apply.jl")
-include("utils/predict.jl")
 # export get_predict
 
 end

@@ -54,12 +54,10 @@ end
 # ---------------------------------------------------------------------------- #
 #                                  measures                                    #
 # ---------------------------------------------------------------------------- #
-function eval_measures!(model::Modelset)::Measures
+function eval_measures!(model::Modelset, y_test::AbstractVector)::Measures
     measures        = MLJBase._actual_measures([get_setup_meas(model)...], get_solemodel(model))
     operations      = get_operations(measures, MLJBase.prediction_type(model.type))
 
-    # y_test          = get_y_test_folds(mach, model)
-    y_test          = get_y_test_folds(model)
     nfolds          = length(y_test)
     test_fold_sizes = [length(y_test[k]) for k in 1:nfolds]
     nmeasures       = length(get_setup_meas(model))
@@ -70,7 +68,7 @@ function eval_measures!(model::Modelset)::Measures
     fold_weights(::MLJBase.StatisticalMeasuresBase.Sum) = nothing
     
     measurements_vector = mapreduce(vcat, 1:nfolds) do k
-        yhat_given_operation = Dict(op=>op(model.model[k]) for op in unique(operations))
+        yhat_given_operation = Dict(op=>op(model.model[k], y_test[k]) for op in unique(operations))
 
         test = y_test[k]
 
@@ -108,6 +106,23 @@ function eval_measures!(model::Modelset)::Measures
 end
 
 # ---------------------------------------------------------------------------- #
+#                               get predictions                                #
+# ---------------------------------------------------------------------------- #
+get_y_test(model::AbstractModel)  = model.info.supporting_labels
+get_y_test_folds(model::Modelset) = [get_y_test(m) for m in model.model]
+
+function sole_predict(solem::AbstractModel, y_test)
+    classes_seen = unique(y_test)
+    eltype(solem.info.supporting_predictions) <: SoleModels.CLabel ?
+        begin
+            preds = categorical(solem.info.supporting_predictions, levels=levels(classes_seen))
+            [UnivariateFinite([p], [1.0]) for p in preds]
+        end :
+        solem.info.supporting_predictions
+end
+sole_predict_mode(solem::AbstractModel, y_test) = solem.info.supporting_predictions
+
+# ---------------------------------------------------------------------------- #
 #                              symbolic_analysis                               #
 # ---------------------------------------------------------------------------- #
 function symbolic_analysis(args...; extract_rules::NamedTupleBool=false, kwargs...)
@@ -119,7 +134,14 @@ function symbolic_analysis(args...; extract_rules::NamedTupleBool=false, kwargs.
         rules_extraction!(model, ds, mach)
     end
 
-    get_measures(model.setup) === nothing || eval_measures!(model)
+    get_measures(model.setup) === nothing || begin
+        y_test = if haskey(model.model[1].info, :supporting_labels)
+            get_y_test_folds(model)
+        else
+            @views [String.(ds.y[i.test]) for i in ds.tt]
+        end
+        eval_measures!(model, y_test)
+    end
 
     return model, mach, ds
 end

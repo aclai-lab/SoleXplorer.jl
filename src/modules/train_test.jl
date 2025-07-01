@@ -4,7 +4,7 @@
 function get_predictor(model::AbstractModelSetup)::MLJ.Model
     predictor = model.type(;model.params...)
 
-    model.tuning == false || begin
+    model.tuning === false || begin
         ranges = [r(predictor) for r in model.tuning.ranges]
 
         predictor = MLJ.TunedModel(; 
@@ -49,18 +49,19 @@ function _test_model!(model::AbstractModelset, mach::MLJ.Machine, ds::AbstractDa
         train   = ds.tt[i].train
         test    = ds.tt[i].test
         X_test  = DataFrame((@views ds.X[test, :]), ds.info.vnames)
-        # X_test  = @views ds.X[test, :]
         y_test  = @views ds.y[test]
 
         # xgboost reg:squarederror default base_score is mean(y_train)
         if model.setup.type == MLJXGBoostInterface.XGBoostRegressor 
             base_score = get_base_score(model) == -Inf ? mean(ds.y[train]) : 0.5
-            mach.model.base_score = base_score
+            get_tuning(model) === false ?
+                (mach.model.base_score = base_score) :
+                (mach.model.model.base_score = base_score)
             MLJ.fit!(mach, rows=train, verbosity=0)
-            model.model[i] = apply(mach, get_tuning(model), X_test, y_test, base_score)
+            model.model[i] = apply(mach, X_test, y_test, base_score)
         else
             MLJ.fit!(mach, rows=train, verbosity=0)
-            model.model[i] = apply(mach, get_tuning(model), X_test, y_test)
+            model.model[i] = apply(mach, X_test, y_test)
         end
     end
 end
