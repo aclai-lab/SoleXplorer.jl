@@ -9,13 +9,6 @@ hasnans(X::AbstractMatrix) = any(x -> x == 1, SoleData.hasnans.(eachcol(X)))
 # conversion of variable names to symbols
 symbols_generator(strings::AbstractVector{<:AbstractString})::Base.Generator{Vector{String}} = (Symbol(s) for s in strings)
 
-"""
-    check_row_consistency(X::AbstractMatrix) -> Bool
-
-Check that all elements within each row of the matrix have consistent dimensions.
-This is important for time series or array data where operations expect 
-columns within a row to have matching dimensions.
-"""
 function check_row_consistency(X::AbstractMatrix) 
     for row in eachrow(X)
         # skip rows with only scalar values
@@ -37,29 +30,6 @@ function check_row_consistency(X::AbstractMatrix)
     return true
 end
 
-"""
-    code_dataset(X::AbstractDataFrame) -> AbstractDataFrame
-    code_dataset(y::AbstractVector) -> AbstractVector
-    code_dataset(X::AbstractDataFrame, y::AbstractVector) -> Tuple{AbstractDataFrame, AbstractVector}
-
-Convert categorical/non-numeric data to numeric form by replacing categories with their level codes.
-
-# Arguments
-- `X::AbstractDataFrame`: DataFrame containing columns to be converted
-- `y::AbstractVector`: Vector of target values to be converted
-
-# Returns
-- The input data with non-numeric values converted to their corresponding level codes
-
-# Details
-This function converts categorical or other non-numeric data to a numeric representation:
-- For DataFrames: Each non-numeric column is replaced with integer level codes
-- For vectors: Non-numeric elements are replaced with integer level codes
-- When both X and y are provided, both are converted and returned as a tuple
-
-Level codes maintain the original categorical information while allowing algorithms
-that require numeric inputs to process the data.
-"""
 function code_dataset(X::AbstractDataFrame)
     for (name, col) in pairs(eachcol(X))
         if !(eltype(col) <: Number)
@@ -82,21 +52,6 @@ end
 
 code_dataset(X::AbstractDataFrame, y::AbstractVector) = code_dataset(X), code_dataset(y)
 
-"""
-    check_dimensions(X::AbstractMatrix) -> Int
-
-Check that all elements in a matrix have consistent dimensions.
-
-# Arguments
-- `X::AbstractMatrix`: Matrix containing array-like elements to check for dimension consistency
-
-# Returns
-- `Int`: The number of dimensions of the elements (0 if matrix is empty)
-
-# Throws
-- `ArgumentError`: If elements have more than 1 dimension
-- `DimensionMismatch`: If elements have inconsistent dimensions
-"""
 function check_dimensions(X::AbstractMatrix)
     isempty(X) && return 0
     
@@ -116,21 +71,6 @@ end
 
 check_dimensions(df::DataFrame) = check_dimensions(Matrix(df))
 
-"""
-    find_max_length(X::AbstractMatrix) -> Tuple{Vararg{Int}}
-
-Find the maximum dimensions of elements in a matrix containing either scalar values or array-like elements.
-
-# Arguments
-- `X::AbstractMatrix`: A matrix where each element can be either a scalar or an array-like structure
-
-# Returns
-- `Tuple{Vararg{Int}}`: A tuple containing the maximum sizes:
-  - For empty matrices: Returns `0`
-  - For matrices with scalar values: Returns `(1,)`
-  - For matrices with vector elements: Returns `(max_length,)` where `max_length` is the length of the longest vector
-  - For matrices with multi-dimensional arrays: Returns a tuple with maximum size in each dimension
-"""
 function find_max_length(X::AbstractMatrix)
     isempty(X) && return 0
     
@@ -153,46 +93,6 @@ find_max_length(df::DataFrame) = find_max_length(Matrix(df))
 # ---------------------------------------------------------------------------- #
 #                                 treatment                                    #
 # ---------------------------------------------------------------------------- #
-"""
-    _treatment(X::AbstractMatrix{T}, vnames::VarNames, treatment::Symbol,
-              features::FeatNames, winparams::WinParams; 
-              modalreduce::Base.Callable=mean) -> Tuple{Matrix, Vector{String}}
-
-Process a matrix data by applying feature extraction or dimension reduction.
-
-# Arguments
-- `X::AbstractMatrix{T}`: Matrix where each element is a time series (array) or scalar value
-- `vnames::VarNames`: Names of variables/columns in the original data
-- `treatment::Symbol`: Treatment method to apply:
-  - `:aggregate`: Extract features from time series (propositional approach)
-  - `:reducesize`: Reduce time series dimensions while preserving temporal structure
-- `features::FeatNames`: Functions to extract features from time series segments
-- `winparams::WinParams`: Parameters for windowing time series:
-  - `type`: Window function to use (e.g., `adaptivewindow`, `wholewindow`)
-  - `params`: Additional parameters for the window function
-- `modalreduce::Base.Callable=mean`: Function to reduce windows in `:reducesize` mode (default: `mean`)
-
-# Returns
-- `Tuple{Matrix, Vector{String}}`: Processed matrix and column names:
-  - For `:aggregate`: Matrix of extracted features with column names like `"func(var)w1"`
-  - For `:reducesize`: Matrix where each cell contains a reduced vector with original column names
-
-# Details
-## Aggregate Treatment
-When `treatment = :aggregate`:
-1. Divides each time series into windows using the specified windowing function
-2. Applies each feature function to each window of each variable
-3. Creates a feature matrix where each row contains features extracted from original data
-4. Handles variable-length time series by padding with NaN values as needed
-5. Column names include function name, variable name and window index (e.g. "mean(temp)w1")
-
-## Reducesize Treatment
-When `treatment = :reducesize`:
-1. Divides each time series into windows using the specified windowing function
-2. Applies the reduction function to each window (by default `mean`)
-3. Returns a matrix where each element is a reduced-length vector
-4. Maintains original column names
-"""
 function _treatment(
     X::AbstractMatrix{T},
     vnames::Vector{Symbol},
@@ -263,118 +163,28 @@ function _treatment(
     return result_matrix, col_names
 end
 
-# _treatment(df::DataFrame, args...; kwargs...) = _treatment(Matrix(df), args...; kwargs...)
-
 # ---------------------------------------------------------------------------- #
 #                                 partitioning                                 #
 # ---------------------------------------------------------------------------- #
-"""
-    _partition(y::AbstractVector{<:SoleModels.Label}, train_ratio::Float64, valid_ratio::Float64, 
-               resample::Union{Resample, Nothing}, rng::AbstractRNG)
-               -> Union{DataSplit{Int}, Vector{DataSplit{Int}}}
-
-Partitions the input vector `y` into training, validation, and testing indices based on 
-the specified parameters. Supports both simple partitioning and cross-validation.
-
-# Arguments
-- `y::AbstractVector{<:SoleModels.Label}`: The target variable to partition
-- `train_ratio::Float64`: The ratio of data to be used for training (from the non-test portion)
-- `valid_ratio::Float64`: Controls validation set creation:
-  - When 1.0: No validation set is created (empty array)
-  - When < 1.0: Creates a validation set as fraction of the training data
-- `resample::Union{Resample, Nothing}`: Resampling strategy:
-  - When `nothing`: Performs a single train/valid/test split
-  - When a `Resample` object: Performs cross-validation according to the resampling strategy
-- `rng::AbstractRNG`: Random number generator for reproducibility
-
-# Returns
-- `Union{DataSplit{Int}, Vector{DataSplit{Int}}}`: Either:
-  - A single `DataSplit{Int}` object with train/valid/test indices (when resample is `nothing`)
-  - A vector of `DataSplit{Int}` objects for cross-validation folds (when using resampling)
-
-# Details
-## Simple Partitioning (resample = nothing)
-When `resample` is `nothing`, a single train/test split is created using `train_ratio`,
-followed by a train/validation split of the training data using `valid_ratio`.
-
-## Cross-Validation (resample != nothing)
-When a resampling strategy is provided, the function:
-1. Creates multiple train/test splits according to the strategy (e.g. k-fold CV)
-2. For each fold, optionally splits the training data to create validation sets
-3. Returns a vector of `DataSplit` objects, one for each fold
-"""
 function _partition(
     y::AbstractVector{<:SoleModels.Label},
     train_ratio::Float64,
     valid_ratio::Float64,
-    resample::Resample,
-    rng::AbstractRNG
+    resample::Resample
 )::Union{DataSplit{Int}, Vector{DataSplit{Int}}}
-    # if resample === nothing
-    #     tt = MLJ.partition(eachindex(y), train_ratio; shuffle=true, rng)
-    #     if valid_ratio == 1.0
-    #         return DataSplit(tt[1], eltype(tt[1])[], tt[2])
-    #     else
-    #         tv = MLJ.partition(tt[1], valid_ratio; shuffle=true, rng)
-    #         return DataSplit(tv[1], tv[2], tt[2])
-    #     end
-    # else
-        resample_cv = resample.type(; resample.params...)
-        tt = MLJ.MLJBase.train_test_pairs(resample_cv, 1:length(y), y)
-        if valid_ratio == 1.0
-            return [DataSplit(train, eltype(train)[], test) for (train, test) in tt]
-        else
-            tv = collect((MLJ.partition(t[1], train_ratio)..., t[2]) for t in tt)
-            return [DataSplit(train, valid, test) for (train, valid, test) in tv]
-        end
-    # end
+    resample_cv = resample.type(; resample.params...)
+    tt = MLJ.MLJBase.train_test_pairs(resample_cv, 1:length(y), y)
+    if valid_ratio == 1.0
+        return [DataSplit(train, eltype(train)[], test) for (train, test) in tt]
+    else
+        tv = collect((MLJ.partition(t[1], train_ratio)..., t[2]) for t in tt)
+        return [DataSplit(train, valid, test) for (train, valid, test) in tv]
+    end
 end
 
 # ---------------------------------------------------------------------------- #
 #                               prepare dataset                                #
 # ---------------------------------------------------------------------------- #
-"""
-    prepare_dataset(X::AbstractDataFrame, y::AbstractVector; kwargs...)::Modelset
-    prepare_dataset(X::AbstractDataFrame, y::SymbolString; kwargs...)::Modelset
-
-Prepares a dataset for machine learning by processing the input data and configuring a model setup.
-Supports both classification and regression tasks, with extensive customization options.
-
-# Arguments
-- `X::AbstractDataFrame`: The input data containing features
-- `y::AbstractVector` or `y::SymbolString`: The target variable, either as a vector or 
-  as a column name/symbol from `X`
-
-# Optional Keyword Arguments
-- `model::OptNamedTuple=nothing`: Model configuration with fields:
-  - `type`: Model type (e.g., `:xgboost`, `:randomforest`)
-  - `params`: Model-specific parameters
-- `resample::OptNamedTuple=nothing`: Resampling strategy
-  - `type`: Resampling method (e.g., `:cv`, `:stratifiedcv`)
-  - `params`: Resampling parameters like `nfolds`
-- `win::OptNamedTuple=nothing`: Windowing parameters for time series data
-  - `type`: Window function (e.g., `adaptivewindow`, `wholewindow`)
-  - `params`: Window parameters like `nwindows`
-- `features::OptTuple=nothing`: Statistical functions to extract from time series
-  (e.g., `(mean, std, maximum)`)
-- `tuning::OptNamedTupleBool=nothing`: Hyperparameter tuning configuration
-- `rules::OptNamedTuple=nothing`: Rules for post-hoc explanation
-- `preprocess::OptNamedTuple=nothing`: Data preprocessing parameters:
-  - `train_ratio`: Ratio of data for training vs testing
-  - `valid_ratio`: Ratio of training data for validation
-  - `rng`: Random number generator
-- `modalreduce::OptCallable=nothing`: Function for reducing time series data
-  in `:reducesize` treatment mode (default: `mean`)
-
-# Returns
-- `Modelset`: A complete modelset containing both the configured model setup and prepared dataset
-
-# Notes
-- For non-numeric data in `X`, use `code_dataset(X)` before calling this function
-- Time series data should be stored as vectors within DataFrame cells
-- If `y` is provided as a column name, it will be extracted from `X`
-- When `model=nothing`, a default model setup is used
-"""
 function __prepare_dataset(
     df          :: AbstractDataFrame,
     y           :: AbstractVector;
@@ -394,7 +204,6 @@ function __prepare_dataset(
     check_dataset_type(X) || throw(ArgumentError("DataFrame must contain only numeric values, use SoleXplorer.code_dataset() to convert non-numeric data"))
     size(X, 1) == length(y) || throw(ArgumentError("Number of rows in DataFrame must match length of class labels"))
     check_row_consistency(X) || throw(ArgumentError("Elements within each row must have consistent dimensions"))
-    # treatment in AVAIL_TREATMENTS || throw(ArgumentError("Treatment must be one of: $AVAIL_TREATMENTS"))
 
     if algo == AbstractRegression
         y isa AbstractVector{<:SoleModels.RLabel} || throw(ArgumentError("Regression requires a numeric target variable"))
@@ -440,9 +249,6 @@ function __prepare_dataset(
     y::AbstractVector,
     model::AbstractModelSetup
 )::Dataset
-    # modal reduce function, optional for propositional
-    # modalreduce = haskey(model.preprocess, :modalreduce) ? model.config.modalreduce : nothing
-
     __prepare_dataset(
         X, y;
         algo=modeltype(model),
