@@ -5,30 +5,12 @@ using SoleData: PatchedFunction, nanpatchedfunction
 using SoleModels
 using SoleModels: AbstractModel, DecisionList, DecisionForest, DecisionEnsemble, DecisionSet
 using SolePostHoc
-# using ModalDecisionTrees
-# using ModalDecisionLists
+
 import MultiData.hasnans
 
-# using Reexport
-# using MLJ
-# @reexport using MLJ: Grid as grid, RandomSearch as randomsearch, LatinHypercube as latinhypercube
-# using TreeParzen: Config
-# @reexport using TreeParzen: MLJTreeParzenTuning as treeparzen
-# @reexport using MLJParticleSwarmOptimization: ParticleSwarm as particleswarm, AdaptiveParticleSwarm as adaptiveparticleswarm
-
-# using MLJDecisionTreeInterface, MLJXGBoostInterface
-# import MLJModelInterface as MMI
-
-# import DecisionTree as DT
-# import XGBoost as XGB
-
 using DataFrames
-# using OrderedCollections
-# using Random
-
-# using Base.Threads: @threads
-
 using Random
+
 using Reexport
 
 # ---------------------------------------------------------------------------- #
@@ -51,10 +33,6 @@ export mode_5, mode_10, embedding_dist, acf_timescale, acf_first_min, ami2, trev
 export outlier_timing_neg, whiten_timescale, forecast_error, ami_timescale, high_fluctuation, stretch_decreasing
 export stretch_high, entropy_pairs, rs_range, dfa, low_freq_power, centroid_freq, transition_variance, periodicity
 export base_set, catch9, catch22_set, complete_set
-
-# utility from other packages
-# @reexport using SoleData: load_arff_dataset
-# @reexport using Random: seed!, Xoshiro, MersenneTwister
 
 # ---------------------------------------------------------------------------- #
 #                                 interfaces                                   #
@@ -115,10 +93,7 @@ export train_test
 include("modules/symbolic_analysis.jl")
 export compute_results!, symbolic_analysis
 export get_algo, get_labels, get_predictions
-# export get_accuracy
 
-# import MLJ: predict, predict_mode, predict_mean
 include("utils/apply.jl")
-# export get_predict
 
 end

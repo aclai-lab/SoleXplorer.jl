@@ -1,26 +1,6 @@
 # ---------------------------------------------------------------------------- #
 #                                  dataset info                                #
 # ---------------------------------------------------------------------------- #
-"""
-    DatasetInfo(
-        treatment::Symbol,
-        modalreduce::OptCallable,
-        train_ratio::Real,
-        valid_ratio::Real,
-        rng::AbstractRNG,
-        vnames::OptStringVec
-    ) -> DatasetInfo
-
-Create a configuration for dataset preparation and splitting in machine learning workflows.
-
-# Fields
-- `treatment::Symbol`: Data treatment method (e.g., `:standardize`, `:normalize`)
-- `modalreduce::OptCallable`: Optional function for dimensionality reduction
-- `train_ratio::Real`: Proportion of data to use for training (must be between 0 and 1)
-- `valid_ratio::Real`: Proportion of data to use for validation (must be between 0 and 1)
-- `rng::AbstractRNG`: Random number generator for reproducible splits
-- `vnames::OptStringVec`: Optional feature/variable names
-"""
 struct DatasetInfo <: AbstractDatasetSetup
     treatment   :: Symbol
     modalreduce :: OptCallable
@@ -31,7 +11,7 @@ struct DatasetInfo <: AbstractDatasetSetup
 
     function DatasetInfo(
         treatment   :: Symbol,
-        modalreduce  :: OptCallable,
+        modalreduce :: OptCallable,
         train_ratio :: Real,
         valid_ratio :: Real,
         rng         :: AbstractRNG,
@@ -98,11 +78,20 @@ Base.length(t::TT_indexes) = length(t.train) + length(t.valid) + length(t.test)
 # ---------------------------------------------------------------------------- #
 #                                   dataset                                    #
 # ---------------------------------------------------------------------------- #
-struct Dataset{T<:AbstractMatrix,S} <: AbstractDataset
-    X           :: T
-    y           :: S
+struct Dataset{T,S} <: AbstractDataset
+    X           :: Matrix{<:T}
+    y           :: AbstractVector{<:S}
     tt          :: Vector{<:TT_indexes}
     info        :: DatasetInfo
+
+    function Dataset(
+        X       :: Matrix{<:T},
+        y       :: AbstractVector{<:S},
+        args...
+    ) where {T,S}
+        size(X, 1) == length(y) || throw(ArgumentError("Number of rows in X must match length of y"))
+        new{T,S}(X, y, args...)
+    end
 end
 
 """
