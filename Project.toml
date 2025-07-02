@@ -31,7 +31,7 @@ ModalDecisionTrees = {rev = "64-modaladaboost", url = "https://github.com/aclai-
 ScikitLearn = {url = "https://github.com/PasoStudio73/ScikitLearn.jl"}
 SoleBase = {rev = "10-compatibility-with-decisiontree-package", url = "https://github.com/aclai-lab/SoleBase.jl"}
 SoleModels = {rev = "55-xgboost-regression", url = "https://github.com/aclai-lab/SoleModels.jl"}
-SolePostHoc = {rev = "lumen_dirtyTest", url = "https://github.com/aclai-lab/SolePostHoc.jl"}
+SolePostHoc = {rev = "devPaso", url = "https://github.com/aclai-lab/SolePostHoc.jl"}
 
 [compat]
 Catch22 = "0.4 - 0.7"
