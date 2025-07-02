@@ -76,17 +76,17 @@ const RULES_PARAMS = Dict{Symbol,NamedTuple}(
     ),
 
     :lumen        => (
-        # minimization_scheme     = :mitespresso,
-        # vertical                = 1.0,
-        # horizontal              = 1.0,
-        # ott_mode                = false,
-        # controllo               = false,
-        # start_time              = time(),
-        # minimization_kwargs     = (;),
-        # filteralphabetcallback  = identity,
-        # silent                  = true,
-        # return_info             = false,
-        # vetImportance           = []
+        minimization_scheme     = :mitespresso,
+        vertical                = 1.0,
+        horizontal              = 1.0,
+        ott_mode                = false,
+        controllo               = false,
+        start_time              = time(),
+        minimization_kwargs     = (;),
+        filteralphabetcallback  = identity,
+        silent                  = true,
+        return_info             = false,
+        vetImportance           = []
     )
 )
 

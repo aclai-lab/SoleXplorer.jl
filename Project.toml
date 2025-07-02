@@ -30,7 +30,8 @@ XGBoost = "009559a3-9522-5dbb-924b-0b6ed2b22bb9"
 ModalDecisionTrees = {rev = "64-modaladaboost", url = "https://github.com/aclai-lab/ModalDecisionTrees.jl"}
 ScikitLearn = {url = "https://github.com/PasoStudio73/ScikitLearn.jl"}
 SoleBase = {rev = "10-compatibility-with-decisiontree-package", url = "https://github.com/aclai-lab/SoleBase.jl"}
-SolePostHoc = {rev = "devPaso", url = "https://github.com/aclai-lab/SolePostHoc.jl"}
+SoleModels = {rev = "55-xgboost-regressiong", url = "https://github.com/aclai-lab/SoleModels.jl"}
+SolePostHoc = {rev = "lumen_dirtyTest", url = "https://github.com/aclai-lab/SolePostHoc.jl"}
 
 [compat]
 Catch22 = "0.4 - 0.7"
@@ -51,7 +52,7 @@ Reexport = "1.2"
 ScikitLearn = "0.7.1, 0.7"
 SoleBase = "0.13.2, 0.13"
 SoleData = "0.16.2, 0.16"
-SoleModels = "0.10.1, 0.10"
+SoleModels = "0.10.2, 0.10"
 XGBoost = "2"
 julia = "1"
 
