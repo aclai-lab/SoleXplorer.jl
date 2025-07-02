@@ -286,5 +286,5 @@ modelr, _, _ = symbolic_analysis(
     preprocess=(;rng=Xoshiro(1)),
     measures=(rmse, l1, l1_sum,)
 )
-@test modelts isa SoleXplorer.Modelset
-@test modelts.measures.measures isa Vector
+@test modelr isa SoleXplorer.Modelset
+@test modelr.measures.measures isa Vector
