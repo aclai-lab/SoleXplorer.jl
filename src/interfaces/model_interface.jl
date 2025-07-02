@@ -9,47 +9,58 @@ mutable struct ModelSetup{T<:AbstractModelType} <: AbstractModelSetup{T}
     resample      :: Union{Resample, Nothing}
     winparams     :: WinParams
     rawmodel      :: Union{Base.Callable, Tuple{Base.Callable, Base.Callable}}
-    # learn_method  :: Union{Base.Callable, Tuple{Base.Callable, Base.Callable}}
     tuning        :: Union{TuningParams, Bool}
     resultsparams :: Function
     rulesparams   :: Union{RulesParams, Bool}
     preprocess    :: NamedTuple
     measures      :: Union{Tuple, Nothing}
-    # tt            :: Union{Vector{Tuple}, Nothing}
 end
 
-get_config(m::ModelSetup)                 = m.config
-get_params(m::ModelSetup)                 = m.params
-get_features(m::ModelSetup)               = m.features
-get_winparams(m::ModelSetup)              = m.winparams
-get_tuning(m::ModelSetup)                 = m.tuning
-get_resample(m::ModelSetup)               = m.resample
-get_preprocess(m::ModelSetup)             = m.preprocess
-get_resultsparams(m::ModelSetup)          = m.resultsparams
-get_rulesparams(m::ModelSetup)            = m.rulesparams
-get_measures(m::ModelSetup)               = m.measures
+get_params(             m :: ModelSetup) = m.params
+get_features(           m :: ModelSetup) = m.features
+get_resample(           m :: ModelSetup) = m.resample
+get_winparams(          m :: ModelSetup) = m.winparams
+get_tuning(             m :: ModelSetup) = m.tuning
+get_rulesparams(        m :: ModelSetup) = m.rulesparams
+get_preprocess(         m :: ModelSetup) = m.preprocess
 
-get_pfeatures(m::ModelSetup)              = haskey(m.params, :features) ? m.params.features : nothing
-get_treatment(m::ModelSetup)              = m.config.treatment
+# raw models
+get_rawmodel(           m :: ModelSetup) = m.rawmodel[1]
 
-get_rawmodel(m::ModelSetup)               = m.rawmodel[1]
-get_resampled_rawmodel(m::ModelSetup)     = m.rawmodel[2]
-# get_learn_method(m::ModelSetup)           = m.learn_method[1]
-# get_resampled_learn_method(m::ModelSetup) = m.learn_method[2]
+# config structure
+get_treatment(          m :: ModelSetup) = m.config.treatment
 
-# get_test(m::ModelSetup)                   = m.tt.test
-# get_valid(m::ModelSetup)                  = m.tt.valid
+# params structure
+get_pfeatures(          m :: ModelSetup) = haskey(m.params, :features) ? m.params.features : nothing
 
-set_config!(m::ModelSetup,       config::NamedTuple)                        = m.config = config
-set_params!(m::ModelSetup,       params::NamedTuple)                        = m.params = params
-set_features!(m::ModelSetup,     features::AbstractVector{<:Base.Callable}) = m.features = features
-set_winparams!(m::ModelSetup,    winparams::WinParams)                      = m.winparams = winparams
-set_tuning!(m::ModelSetup,       tuning::Union{TuningParams, Bool})         = m.tuning = tuning
-set_resample!(m::ModelSetup,     resample::Union{Resample, Nothing})        = m.resample = resample
-set_rulesparams!(m::ModelSetup,  rulesparams::Union{RulesParams, Bool})     = m.rulesparams = rulesparams
-set_rawmodel!(m::ModelSetup,     rawmodel::Base.Callable)                   = m.rawmodel = rawmodel
-set_learn_method!(m::ModelSetup, learn_method::Base.Callable)               = m.learn_method = learn_method
-set_measures!(m::ModelSetup,     measures::Union{Tuple, Nothing})           = m.measures = measures
+# preprocess structure
+get_train_ratio(        m :: ModelSetup) = m.preprocess.train_ratio
+get_valid_ratio(        m :: ModelSetup) = m.preprocess.valid_ratio
+get_rng(                m :: ModelSetup) = m.preprocess.rng
+get_vnames(             m :: ModelSetup) = m.preprocess.vnames
+get_modalreduce(        m :: ModelSetup) = m.preprocess.modalreduce
+
+# parameters settings, used in prepare_dataset
+set_params!(      m :: ModelSetup, params      :: NamedTuple)                = m.params      = params
+set_features!(    m :: ModelSetup, features    :: Vector{<:Base.Callable})   = m.features    = features
+set_resample!(    m :: ModelSetup, resample    :: Union{Resample, Nothing})  = m.resample    = resample
+set_winparams!(   m :: ModelSetup, winparams   :: WinParams)                 = m.winparams   = winparams
+set_rawmodel!(    m :: ModelSetup, rawmodel    :: Base.Callable)             = m.rawmodel    = rawmodel
+set_tuning!(      m :: ModelSetup, tuning      :: Union{TuningParams, Bool}) = m.tuning      = tuning
+set_rulesparams!( m :: ModelSetup, rulesparams :: Union{RulesParams, Bool})  = m.rulesparams = rulesparams
+set_measures!(    m :: ModelSetup, measures    :: Union{Tuple, Nothing})     = m.measures    = measures
+
+###
+# get_config(        m::ModelSetup)                 = m.config
+# get_winparams(     m::ModelSetup)              = m.winparams
+# get_resample(      m::ModelSetup)               = m.resample
+# get_resultsparams( m :: ModelSetup)          = m.resultsparams
+# get_measures(      m::ModelSetup)               = m.measures
+# get_rawmodel(m::ModelSetup)               = m.rawmodel[1]
+# get_resampled_rawmodel( m :: ModelSetup) = m.rawmodel[2]
+
+# set_config!(m::ModelSetup,       config::NamedTuple)                        = m.config = config
+# set_learn_method!(m::ModelSetup, learn_method::Base.Callable)               = m.learn_method = learn_method
 
 # function Base.show(io::IO, ::MIME"text/plain", m::ModelSetup)
 #     println(io, "ModelSetup")

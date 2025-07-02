@@ -92,14 +92,10 @@ get_valid_ratio( ds :: Dataset) :: Real             = ds.info.valid_ratio
 get_rng(         ds :: Dataset) :: AbstractRNG      = ds.info.rng
 get_vnames(      ds :: Dataset) :: Vector{Symbol} = ds.info.vnames
 
-# utilities
-get_X_shape(  ds :: Dataset) :: Tuple{Integer,Integer} = size(ds.X)
-get_y_length( ds :: Dataset) :: Integer                = length(ds.y)
-
 function Base.show(io::IO, ds::Dataset)
     println(io, "Dataset:")
-    println(io, "  X shape:        ",       get_X_shape( ds))
-    println(io, "  y length:       ",       get_y_length(ds))
+    println(io, "  X shape:        ",       size(  ds.X))
+    println(io, "  y length:       ",       length(ds.y))
     println(io, "  Train/Valid/Test:     ", length(ds.tt), " folds")
     println(io, get_info(ds))
 end

@@ -1,7 +1,6 @@
 # ---------------------------------------------------------------------------- #
 #                                   utils                                      #
 # ---------------------------------------------------------------------------- #
-check_dataset_type(df::AbstractDataFrame) = all(col -> eltype(col) <: Union{Real,AbstractArray{<:Real}}, eachcol(df))
 check_dataset_type(X::AbstractMatrix) = eltype(X) <: Union{Real,AbstractArray{<:Real}}
 hasnans(df::AbstractDataFrame) = any(x -> x == 1, SoleData.hasnans.(eachcol(df)))
 hasnans(X::AbstractMatrix) = any(x -> x == 1, SoleData.hasnans.(eachcol(X)))
@@ -10,18 +9,18 @@ hasnans(X::AbstractMatrix) = any(x -> x == 1, SoleData.hasnans.(eachcol(X)))
 symbols_generator(strings::AbstractVector{<:AbstractString})::Base.Generator{Vector{String}} = (Symbol(s) for s in strings)
 
 function check_row_consistency(X::AbstractMatrix) 
-    for row in eachrow(X)
-        # skip rows with only scalar values
-        any(el -> el isa AbstractArray, row) || continue
+    for col in eachcol(X)
+        # skip cols with only scalar values
+        any(el -> el isa AbstractArray, col) || continue
         
         # find first array element to use as reference
-        ref_idx = findfirst(el -> el isa AbstractArray, row)
+        ref_idx = findfirst(el -> el isa AbstractArray, col)
         ref_idx === nothing && continue
         
-        ref_size = size(row[ref_idx])
+        ref_size = size(col[ref_idx])
         
         # check if any array element has different size (short-circuit)
-        if any(row) do el
+        if any(col) do el
                 el isa AbstractArray && size(el) != ref_size
             end
             return false
@@ -168,8 +167,8 @@ end
 # ---------------------------------------------------------------------------- #
 function _partition(
     y::AbstractVector{<:SoleModels.Label},
-    train_ratio::Float64,
-    valid_ratio::Float64,
+    train_ratio::Real,
+    valid_ratio::Real,
     resample::Resample
 )::Union{DataSplit{Int}, Vector{DataSplit{Int}}}
     resample_cv = resample.type(; resample.params...)
@@ -187,7 +186,7 @@ end
 # ---------------------------------------------------------------------------- #
 function __prepare_dataset(
     df          :: AbstractDataFrame,
-    y           :: AbstractVector;
+    y           :: AbstractVector{<:SoleModels.Label};
     algo        :: DataType,
     treatment   :: Symbol,
     features    :: Vector{<:Base.Callable},
@@ -200,9 +199,10 @@ function __prepare_dataset(
     modalreduce :: OptCallable=nothing
 ) :: Dataset
     X = Matrix(df)
+
     # check parameters
     check_dataset_type(X) || throw(ArgumentError("DataFrame must contain only numeric values, use SoleXplorer.code_dataset() to convert non-numeric data"))
-    size(X, 1) == length(y) || throw(ArgumentError("Number of rows in DataFrame must match length of class labels"))
+    nrow(df) == length(y) || throw(ArgumentError("Number of rows in DataFrame must match length of class labels"))
     check_row_consistency(X) || throw(ArgumentError("Elements within each row must have consistent dimensions"))
 
     if algo == AbstractRegression
@@ -239,7 +239,7 @@ function __prepare_dataset(
 
     return Dataset(
         X, y,
-        _partition(y, train_ratio, valid_ratio, resample, rng),
+        _partition(y, train_ratio, valid_ratio, resample),
         ds_info
     )
 end
@@ -251,18 +251,22 @@ function __prepare_dataset(
 )::Dataset
     __prepare_dataset(
         X, y;
-        algo=modeltype(model),
-        treatment=model.config.treatment,
-        features=model.features,
-        train_ratio=model.preprocess.train_ratio,
-        valid_ratio=model.preprocess.valid_ratio,
-        rng=model.preprocess.rng,
-        resample=model.resample,
-        winparams=model.winparams,
-        vnames=model.preprocess.vnames,
-        modalreduce=model.preprocess.modalreduce,
+        dataset_args(model)...
     )
 end
+
+dataset_args(model::AbstractModelSetup)::NamedTuple = (
+    algo        = modeltype(       model),
+    treatment   = get_treatment(   model),
+    features    = get_features(    model),
+    train_ratio = get_train_ratio( model),
+    valid_ratio = get_valid_ratio( model),
+    rng         = get_rng(         model),
+    resample    = get_resample(    model),
+    winparams   = get_winparams(   model),
+    vnames      = get_vnames(      model),
+    modalreduce = get_modalreduce( model)
+)
 
 function _prepare_dataset(
     X             :: AbstractDataFrame,
@@ -293,9 +297,9 @@ prepare_dataset(args...; kwargs...)::Tuple{Modelset, Dataset} = _prepare_dataset
 
 # y is not a vector, but a symbol or a string that identifies a column in X
 function prepare_dataset(
-    X::AbstractDataFrame,
-    y::SymbolString;
+    X :: AbstractDataFrame,
+    y :: SymbolString;
     kwargs...
-)::Tuple{Modelset, Dataset}
+) :: Tuple{Modelset, Dataset}
     prepare_dataset(X[!, Not(y)], X[!, y]; kwargs...)
 end

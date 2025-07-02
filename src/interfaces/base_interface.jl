@@ -27,14 +27,12 @@ abstract type AbstractRegression     <: AbstractModelType end
 Abstract type for model configuration and parameters
 """
 abstract type AbstractModelSetup{T<:AbstractModelType} end
-
 modeltype(::AbstractModelSetup{T}) where {T} = T
 
 """
 Abstract type for fitted model configurations
 """
 abstract type AbstractModelset{T<:AbstractModelType} end
-
 modeltype(::AbstractModelset{T}) where {T} = T
 
 """
