@@ -6,6 +6,9 @@ check_dataset_type(X::AbstractMatrix) = eltype(X) <: Union{Real,AbstractArray{<:
 hasnans(df::AbstractDataFrame) = any(x -> x == 1, SoleData.hasnans.(eachcol(df)))
 hasnans(X::AbstractMatrix) = any(x -> x == 1, SoleData.hasnans.(eachcol(X)))
 
+# conversion of variable names to symbols
+symbols_generator(strings::AbstractVector{<:AbstractString})::Base.Generator{Vector{String}} = (Symbol(s) for s in strings)
+
 """
     check_row_consistency(X::AbstractMatrix) -> Bool
 
@@ -192,11 +195,11 @@ When `treatment = :reducesize`:
 """
 function _treatment(
     X::AbstractMatrix{T},
-    vnames::VarNames,
+    vnames::Vector{Symbol},
     treatment::Symbol,
     features::Union{Vector{<:Base.Callable}, Nothing},
     winparams::WinParams;
-    modalreduce::OptCallable=nothing
+    modalreduce::Base.Callable=mean
 ) where T
     # working with audio files, we need to consider audio of different lengths.
     max_interval = first(find_max_length(X))
@@ -205,14 +208,14 @@ function _treatment(
     # define column names and prepare data structure based on treatment type
     if treatment == :aggregate        # propositional
         if length(n_intervals) == 1
-            col_names = [string(f, "(", v, ")") for f in features for v in vnames]
+            col_names = [(f, "(", v, ")") for f in features for v in vnames]
             
             n_rows = size(X, 1)
             n_cols = length(col_names)
             result_matrix = Matrix{eltype(T)}(undef, n_rows, n_cols)
         else
             # define column names with features names and window indices
-            col_names = [string(f, "(", v, ")w", i) 
+            col_names = [(f, "(", v, ")w", i) 
                          for f in features 
                          for v in vnames 
                          for i in 1:length(n_intervals)]
@@ -268,7 +271,7 @@ end
 """
     _partition(y::AbstractVector{<:SoleModels.Label}, train_ratio::Float64, valid_ratio::Float64, 
                resample::Union{Resample, Nothing}, rng::AbstractRNG)
-               -> Union{TT_indexes{Int}, Vector{TT_indexes{Int}}}
+               -> Union{DataSplit{Int}, Vector{DataSplit{Int}}}
 
 Partitions the input vector `y` into training, validation, and testing indices based on 
 the specified parameters. Supports both simple partitioning and cross-validation.
@@ -285,9 +288,9 @@ the specified parameters. Supports both simple partitioning and cross-validation
 - `rng::AbstractRNG`: Random number generator for reproducibility
 
 # Returns
-- `Union{TT_indexes{Int}, Vector{TT_indexes{Int}}}`: Either:
-  - A single `TT_indexes{Int}` object with train/valid/test indices (when resample is `nothing`)
-  - A vector of `TT_indexes{Int}` objects for cross-validation folds (when using resampling)
+- `Union{DataSplit{Int}, Vector{DataSplit{Int}}}`: Either:
+  - A single `DataSplit{Int}` object with train/valid/test indices (when resample is `nothing`)
+  - A vector of `DataSplit{Int}` objects for cross-validation folds (when using resampling)
 
 # Details
 ## Simple Partitioning (resample = nothing)
@@ -298,7 +301,7 @@ followed by a train/validation split of the training data using `valid_ratio`.
 When a resampling strategy is provided, the function:
 1. Creates multiple train/test splits according to the strategy (e.g. k-fold CV)
 2. For each fold, optionally splits the training data to create validation sets
-3. Returns a vector of `TT_indexes` objects, one for each fold
+3. Returns a vector of `DataSplit` objects, one for each fold
 """
 function _partition(
     y::AbstractVector{<:SoleModels.Label},
@@ -306,23 +309,23 @@ function _partition(
     valid_ratio::Float64,
     resample::Resample,
     rng::AbstractRNG
-)::Union{TT_indexes{Int}, Vector{TT_indexes{Int}}}
+)::Union{DataSplit{Int}, Vector{DataSplit{Int}}}
     # if resample === nothing
     #     tt = MLJ.partition(eachindex(y), train_ratio; shuffle=true, rng)
     #     if valid_ratio == 1.0
-    #         return TT_indexes(tt[1], eltype(tt[1])[], tt[2])
+    #         return DataSplit(tt[1], eltype(tt[1])[], tt[2])
     #     else
     #         tv = MLJ.partition(tt[1], valid_ratio; shuffle=true, rng)
-    #         return TT_indexes(tv[1], tv[2], tt[2])
+    #         return DataSplit(tv[1], tv[2], tt[2])
     #     end
     # else
         resample_cv = resample.type(; resample.params...)
         tt = MLJ.MLJBase.train_test_pairs(resample_cv, 1:length(y), y)
         if valid_ratio == 1.0
-            return [TT_indexes(train, eltype(train)[], test) for (train, test) in tt]
+            return [DataSplit(train, eltype(train)[], test) for (train, test) in tt]
         else
             tv = collect((MLJ.partition(t[1], train_ratio)..., t[2]) for t in tt)
-            return [TT_indexes(train, valid, test) for (train, valid, test) in tv]
+            return [DataSplit(train, valid, test) for (train, valid, test) in tv]
         end
     # end
 end
@@ -373,19 +376,19 @@ Supports both classification and regression tasks, with extensive customization 
 - When `model=nothing`, a default model setup is used
 """
 function __prepare_dataset(
-    df::AbstractDataFrame,
-    y::AbstractVector;
-    algo::DataType,
-    treatment::Symbol,
-    features::Vector{<:Base.Callable},
-    train_ratio::Float64,
-    valid_ratio::Float64,
-    rng::AbstractRNG,
-    resample::Union{Resample, Nothing},
-    winparams::WinParams,
-    vnames::Union{VarNames,Nothing}=nothing,
-    modalreduce::OptCallable=nothing
-)::Dataset
+    df          :: AbstractDataFrame,
+    y           :: AbstractVector;
+    algo        :: DataType,
+    treatment   :: Symbol,
+    features    :: Vector{<:Base.Callable},
+    train_ratio :: Real,
+    valid_ratio :: Real,
+    rng         :: AbstractRNG,
+    resample    :: Union{Resample, Nothing},
+    winparams   :: WinParams,
+    vnames      :: Union{VarNames,Nothing}=nothing,
+    modalreduce :: OptCallable=nothing
+) :: Dataset
     X = Matrix(df)
     # check parameters
     check_dataset_type(X) || throw(ArgumentError("DataFrame must contain only numeric values, use SoleXplorer.code_dataset() to convert non-numeric data"))
@@ -402,10 +405,10 @@ function __prepare_dataset(
     end
 
     if vnames === nothing
-        vnames = names(df)
+        vnames = propertynames(df)
     else
         size(X, 2) == length(vnames) || throw(ArgumentError("Number of columns in DataFrame must match length of variable names"))
-        vnames isa AbstractVector{<:AbstractString} || (vnames = string.(vnames))
+        vnames isa Vector{Symbol} || (vnames = collect(symbols_generator(vnames)))
     end
 
     hasnans(X) && @warn "DataFrame contains NaN values"

@@ -1,22 +1,22 @@
 # ---------------------------------------------------------------------------- #
 #                                  dataset info                                #
 # ---------------------------------------------------------------------------- #
-struct DatasetInfo <: AbstractDatasetSetup
+struct DatasetInfo <: AbstractDatasetInfo
     treatment   :: Symbol
-    modalreduce :: OptCallable
+    modalreduce :: Base.Callable
     train_ratio :: Real
     valid_ratio :: Real
     rng         :: AbstractRNG
-    vnames      :: OptStringVec
+    vnames      :: Vector{Symbol}
 
     function DatasetInfo(
         treatment   :: Symbol,
-        modalreduce :: OptCallable,
+        modalreduce :: Base.Callable,
         train_ratio :: Real,
         valid_ratio :: Real,
         rng         :: AbstractRNG,
-        vnames      :: OptStringVec
-    )::DatasetInfo
+        vnames      :: Vector{Symbol}
+    ) :: DatasetInfo
         # Validate ratios
         0 ≤ train_ratio ≤ 1 || throw(ArgumentError("train_ratio must be between 0 and 1"))
         0 ≤ valid_ratio ≤ 1 || throw(ArgumentError("valid_ratio must be between 0 and 1"))
@@ -24,13 +24,6 @@ struct DatasetInfo <: AbstractDatasetSetup
         new(treatment, modalreduce, train_ratio, 1-valid_ratio, rng, vnames)
     end
 end
-
-get_treatment(dsinfo::DatasetInfo)   :: Symbol = dsinfo.treatment
-get_modalreduce(dsinfo::DatasetInfo) :: OptCallable = dsinfo.modalreduce
-get_train_ratio(dsinfo::DatasetInfo) :: Real = dsinfo.train_ratio
-get_valid_ratio(dsinfo::DatasetInfo) :: Real = dsinfo.valid_ratio
-get_rng(dsinfo::DatasetInfo)         :: AbstractRNG = dsinfo.rng
-get_vnames(dsinfo::DatasetInfo)      :: OptStringVec = dsinfo.vnames
 
 function Base.show(io::IO, info::DatasetInfo)
     println(io, "DatasetInfo:")
@@ -41,91 +34,72 @@ function Base.show(io::IO, info::DatasetInfo)
 end
 
 # ---------------------------------------------------------------------------- #
-#                              indexes collection                              #
+#                             datasplit collection                             #
 # ---------------------------------------------------------------------------- #
-"""
-    TT_indexes{T<:Integer} <: AbstractVector{T}
-
-A struct that stores indices for train-validation-test splits of a dataset,
-used in Dataset struct.
-
-# Fields
-- `train::Vector{T}`: Vector of indices for the training set
-- `valid::Vector{T}`: Vector of indices for the validation set
-- `test::Vector{T}`:  Vector of indices for the test set
-"""
-struct TT_indexes{T<:Integer} <: AbstractIndexCollection
+struct DataSplit{T<:Integer} <: AbstractDataSplit
     train :: Vector{T}
     valid :: Vector{T}
     test  :: Vector{T}
 
-    function TT_indexes(
-        train :: AbstractVector{T},
-        valid :: AbstractVector{T},
-        test  :: AbstractVector{T}
-    ) where {T<:Integer}
-        new{T}(train, valid, test)
+    function DataSplit(
+        train :: Vector{T},
+        args...
+    ) :: DataSplit{T} where {T<:Integer}
+        new{T}(train, args...)
     end
 end
-
-get_train(tt::TT_indexes) = tt.train
-get_valid(tt::TT_indexes) = tt.valid
-get_test(tt::TT_indexes)  = tt.test
-
-Base.show(io::IO, t::TT_indexes) = print(io, "TT_indexes(train=", t.train, ", validation=", t.valid, ", test=", t.test, ")")
-Base.length(t::TT_indexes) = length(t.train) + length(t.valid) + length(t.test)
 
 # ---------------------------------------------------------------------------- #
 #                                   dataset                                    #
 # ---------------------------------------------------------------------------- #
 struct Dataset{T,S} <: AbstractDataset
-    X           :: Matrix{<:T}
-    y           :: AbstractVector{<:S}
-    tt          :: Vector{<:TT_indexes}
+    X           :: Matrix{T}
+    y           :: Vector{S}
+    tt          :: Vector{<:DataSplit}
     info        :: DatasetInfo
 
     function Dataset(
-        X       :: Matrix{<:T},
-        y       :: AbstractVector{<:S},
+        X       :: Matrix{T},
+        y       :: AbstractVector{S},
         args...
-    ) where {T,S}
+    ) :: Dataset{T,S} where {T,S}
+        # validate input dimensions
         size(X, 1) == length(y) || throw(ArgumentError("Number of rows in X must match length of y"))
-        new{T,S}(X, y, args...)
+
+        new{T,S}(X, y isa Vector ? y : Vector(y), args...)
     end
 end
 
-"""
-    get_X(ds::Dataset) -> AbstractMatrix
+get_X(     ds :: Dataset) :: Matrix{T} where T    = ds.X
+get_y(     ds :: Dataset) :: Vector{S} where S    = ds.y
+get_tt(    ds :: Dataset) :: Vector{<:DataSplit} = ds.tt
+get_info(  ds :: Dataset) :: DatasetInfo          = ds.info
 
-Get the original feature matrix from a Dataset structure.
-"""
-get_X(ds::Dataset)      = ds.X
+# tt structure
+get_train( ds :: Dataset) :: Vector{Vector{Integer}} = collect(x.train for x in ds.tt)
+get_valid( ds :: Dataset) :: Vector{Vector{Integer}} = collect(x.valid for x in ds.tt)
+get_test(  ds :: Dataset) :: Vector{Vector{Integer}} = collect(x.test  for x in ds.tt)
 
-"""
-    get_y(ds::Dataset) -> Any
+get_train( ds :: Dataset, i :: Integer) :: Vector{<:Integer} = ds.tt[i].train
+get_valid( ds :: Dataset, i :: Integer) :: Vector{<:Integer} = ds.tt[i].valid
+get_test(  ds :: Dataset, i :: Integer) :: Vector{<:Integer} = ds.tt[i].test 
 
-Get the original target vector/matrix from a Dataset structure.
-"""
-get_y(ds::Dataset)      = ds.y
+# info structure
+get_treatment(   ds :: Dataset) :: Symbol           = ds.info.treatment
+get_modalreduce( ds :: Dataset) :: Base.Callable    = ds.info.modalreduce
+get_train_ratio( ds :: Dataset) :: Real             = ds.info.train_ratio
+get_valid_ratio( ds :: Dataset) :: Real             = ds.info.valid_ratio
+get_rng(         ds :: Dataset) :: AbstractRNG      = ds.info.rng
+get_vnames(      ds :: Dataset) :: Vector{Symbol} = ds.info.vnames
 
-"""
-    get_tt(ds::Dataset) -> Union{TT_indexes, AbstractVector{<:TT_indexes}}
-
-Get the train-validation-test split indices from a Dataset structure.
-"""
-get_tt(ds::Dataset)     = ds.tt
-
-"""
-    get_info(ds::Dataset) -> DatasetInfo
-
-Get the dataset configuration and metadata from a Dataset structure.
-"""
-get_info(ds::Dataset)   = ds.info
+# utilities
+get_X_shape(  ds :: Dataset) :: Tuple{Integer,Integer} = size(ds.X)
+get_y_length( ds :: Dataset) :: Integer                = length(ds.y)
 
 function Base.show(io::IO, ds::Dataset)
     println(io, "Dataset:")
-    println(io, "  X shape:        ", size(ds.X))
-    println(io, "  y length:       ", length(ds.y))
+    println(io, "  X shape:        ",       get_X_shape( ds))
+    println(io, "  y length:       ",       get_y_length(ds))
     println(io, "  Train/Valid/Test:     ", length(ds.tt), " folds")
-    print(io, ds.info)
+    println(io, get_info(ds))
 end

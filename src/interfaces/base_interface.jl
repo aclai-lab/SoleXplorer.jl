@@ -1,11 +1,11 @@
 # ---------------------------------------------------------------------------- #
-#                         abstract types definition                            #
+#                        abstract types definitions                            #
 # ---------------------------------------------------------------------------- #
 """
 Abstract types for dataset struct
 """
-abstract type AbstractDatasetSetup end
-abstract type AbstractIndexCollection end
+abstract type AbstractDatasetInfo end
+abstract type AbstractDataSplit end
 abstract type AbstractDataset end
 
 """
