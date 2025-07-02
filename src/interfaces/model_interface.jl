@@ -1,28 +1,6 @@
 # ---------------------------------------------------------------------------- #
 #                                   Modelset                                   #
 # ---------------------------------------------------------------------------- #
-"""
-    ModelSetup{T<:AbstractModelType} <: AbstractModelSetup{T}
-
-A mutable structure that defines the configuration for machine learning models in the SoleXplorer framework.
-
-`ModelSetup` encapsulates all parameters and configuration needed to initialize, train, and
-evaluate a machine learning model, including hyperparameter tuning, rule extraction, and
-data preprocessing options.
-
-# Fields
-- `type::Base.Callable`: Model type function, defining what kind of model will be created (e.g., decision tree, random forest).
-- `config::NamedTuple`: General configuration parameters for the model and framework.
-- `params::NamedTuple`: Model-specific hyperparameters.
-- `features::Union{AbstractVector{<:Base.Callable}, Nothing}`: Feature extraction functions to apply, or `nothing` if no feature transformation is needed.
-- `resample::Union{Resample, Nothing}`: Resampling strategy for cross-validation or train/test splitting, or `nothing` for default behavior.
-- `winparams::WinParams`: Window parameters for time series or sequential data processing.
-- `rawmodel::Union{Base.Callable, Tuple{Base.Callable, Base.Callable}}`: Function(s) to create the base model instance(s).
-- `learn_method::Union{Base.Callable, Tuple{Base.Callable, Base.Callable}}`: Function(s) that define how model learning/training is performed.
-- `tuning::Union{TuningParams, Bool}`: Hyperparameter tuning configuration, or a boolean to enable/disable tuning with default parameters.
-- `rulesparams::Union{RulesParams, Bool}`: Rule extraction configuration, or a boolean to enable/disable rule extraction with default parameters.
-- `preprocess::NamedTuple`: Data preprocessing configuration with options like train/validation split ratios and random seed.
-"""
 mutable struct ModelSetup{T<:AbstractModelType} <: AbstractModelSetup{T}
     type          :: Base.Callable
     config        :: NamedTuple
@@ -31,13 +9,13 @@ mutable struct ModelSetup{T<:AbstractModelType} <: AbstractModelSetup{T}
     resample      :: Union{Resample, Nothing}
     winparams     :: WinParams
     rawmodel      :: Union{Base.Callable, Tuple{Base.Callable, Base.Callable}}
-    learn_method  :: Union{Base.Callable, Tuple{Base.Callable, Base.Callable}}
+    # learn_method  :: Union{Base.Callable, Tuple{Base.Callable, Base.Callable}}
     tuning        :: Union{TuningParams, Bool}
     resultsparams :: Function
     rulesparams   :: Union{RulesParams, Bool}
     preprocess    :: NamedTuple
     measures      :: Union{Tuple, Nothing}
-    tt            :: Union{Vector{Tuple}, Nothing}
+    # tt            :: Union{Vector{Tuple}, Nothing}
 end
 
 get_config(m::ModelSetup)                 = m.config
@@ -56,8 +34,8 @@ get_treatment(m::ModelSetup)              = m.config.treatment
 
 get_rawmodel(m::ModelSetup)               = m.rawmodel[1]
 get_resampled_rawmodel(m::ModelSetup)     = m.rawmodel[2]
-get_learn_method(m::ModelSetup)           = m.learn_method[1]
-get_resampled_learn_method(m::ModelSetup) = m.learn_method[2]
+# get_learn_method(m::ModelSetup)           = m.learn_method[1]
+# get_resampled_learn_method(m::ModelSetup) = m.learn_method[2]
 
 # get_test(m::ModelSetup)                   = m.tt.test
 # get_valid(m::ModelSetup)                  = m.tt.valid
@@ -122,7 +100,7 @@ XGBoostRegressorModel(dtmodel       :: ModelSetup) = dtmodel
 # const TypeModalForest = Union{TypeMRF, TypeMAB}
 
 const DEFAULT_FEATS = [maximum, minimum, MLJ.mean, std]
-const DEFAULT_MEAS  = (log_loss,)
+# const DEFAULT_MEAS  = (log_loss,)
 
 const DEFAULT_PREPROC = (
     train_ratio = 0.7,
@@ -157,50 +135,16 @@ const AVAIL_MODELS = Dict{Symbol,Function}(
 # ---------------------------------------------------------------------------- #
 #                              Modelset struct                                 #
 # ---------------------------------------------------------------------------- #
-"""
-    Modelset{T<:AbstractModelType} <: AbstractModelset{T}
-
-A mutable structure that serves as the primary container for machine learning models in the SoleXplorer framework.
-
-`Modelset` encapsulates all components of a machine learning workflow, including model configuration,
-dataset, trained model, extracted rules, and performance results. It provides a unified interface
-for model training, evaluation, rule extraction, and interpretation.
-
-# Fields
-- `setup::AbstractModelSetup{T}`: Model setup and configuration parameters.
-- `ds::AbstractDataset`: Dataset containing features and target variables for training/testing.
-- `predictor::Union{MLJ.Model, Nothing}`: The underlying MLJ model specification/definition.
-- `mach::Union{MLJ.Machine, AbstractVector{<:MLJ.Machine}, Nothing}`: The fitted MLJ machine(s) 
-  that contain the trained model state. May be a vector for ensemble or cross-validation models.
-- `model::Union{AbstractModel, AbstractVector{<:AbstractModel}, Nothing}`: The trained model 
-  instance(s). May be a vector for ensemble or cross-validation models.
-- `rules::Union{Rule, AbstractVector{<:Rule}, Nothing}`: Extracted symbolic rules that represent 
-  the model's decision logic in an interpretable format. May be multiple rules for ensemble models.
-- `results::Union{AbstractResults, Nothing}`: Performance metrics and evaluation results.
-
-# Constructors
-```julia
-Modelset(
-    setup::AbstractModelSetup{T},
-    ds::AbstractDataset,
-    predictor::MLJ.Model,
-    mach::MLJ.Machine,
-    model::AbstractModel
-) where {T<:AbstractModelType}
-
-Modelset(
-    setup::AbstractModelSetup{T},
-    ds::Dataset
-) where {T<:AbstractModelType}
-"""
 mutable struct Modelset{T<:AbstractModelType} <: AbstractModelset{T}
     setup      :: AbstractModelSetup{T}
     # ds         :: AbstractDataset
-    predictor  :: Union{MLJ.Model,        Nothing}
-    mach       :: Union{MLJ.Machine,      Nothing}
-    model      :: Union{AbstractModel,    AbstractVector{<:AbstractModel}, Nothing}
-    rules      :: Union{Rule,             AbstractVector{<:Rule},          Nothing}
-    measures   :: Union{AbstractMeasures, Nothing}
+    # predictor  :: Union{MLJ.Model,                       Nothing}
+    # mach       :: Union{MLJ.Machine,                     Nothing}
+    # fitresult  :: OptVecTuple
+    type       :: OptModel
+    model      :: OptVecAbsModel
+    rules      :: OptRules
+    measures   :: OptAbsMeas
 
     # function Modelset(
     #     setup      :: AbstractModelSetup{T},
@@ -216,21 +160,25 @@ mutable struct Modelset{T<:AbstractModelType} <: AbstractModelset{T}
         setup      :: AbstractModelSetup{T},
         # ds         :: Dataset
     )::Modelset where {T<:AbstractModelType}
-        new{T}(setup, nothing, nothing, nothing, nothing, nothing)
+        new{T}(setup, nothing, nothing, nothing, nothing)
     end
 end
 
-get_mach(m::Modelset)       = m.mach
-get_mach_model(m::Modelset) = m.mach.model
-get_solemodel(m::Modelset)  = m.model
-get_mach_y(m::Modelset)     = m.mach.args[2]()
-get_setup_meas(m::Modelset) = m.setup.measures
-get_setup_tt(m::Modelset)   = m.setup.tt
+# get_mach_model(m::Modelset)  = m.setup.type(;m.setup.params...)
+get_solemodel(m::Modelset)       = m.model
+
+get_setup_meas(m::Modelset)      = m.setup.measures
+# get_yhat(m::Modelset)            = m.measures.yhat
+
+get_tuning(m::Modelset)          = m.setup.tuning
+get_type(m::Modelset)            = m.setup.type
+# get_prediction_type(m::Modelset) = supertype(typeof(m.type))
+get_base_score(m::Modelset)      = haskey(m.setup.params, :base_score) ? m.setup.params.base_score : nothing
 
 function Base.show(io::IO, mc::Modelset)
     println(io, "Modelset:")
     println(io, "    setup      =", mc.setup)
-    println(io, "    predictor  =", mc.predictor)
+    # println(io, "    predictor  =", mc.predictor)
     println(io, "    rules      =", mc.rules === nothing ? "nothing" : string(mc.rules))
     # println(io, "    accuracy   =", mc.accuracy === nothing ? "nothing" : string(mc.accuracy))
 end

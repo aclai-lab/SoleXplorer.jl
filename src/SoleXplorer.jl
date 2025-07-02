@@ -36,7 +36,11 @@ using Reexport
 # ---------------------------------------------------------------------------- #
 using MLJ, MLJBase
 
+# classification measures
 @reexport using MLJ: accuracy, confusion_matrix, kappa, log_loss
+
+# regression measures
+@reexport using MLJ: rms, l1, l2, mae, mav
 
 # ---------------------------------------------------------------------------- #
 #                                    utils                                     #
@@ -111,9 +115,10 @@ export train_test
 include("modules/symbolic_analysis.jl")
 export compute_results!, symbolic_analysis
 export get_algo, get_labels, get_predictions
-export get_accuracy
+# export get_accuracy
 
-# include("user_interfaces/predict.jl")
+# import MLJ: predict, predict_mode, predict_mean
+include("utils/apply.jl")
 # export get_predict
 
 end

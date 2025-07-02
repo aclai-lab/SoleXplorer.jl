@@ -266,7 +266,7 @@ end
 #                                 partitioning                                 #
 # ---------------------------------------------------------------------------- #
 """
-    _partition(y::AbstractVector{<:Y_Value}, train_ratio::Float64, valid_ratio::Float64, 
+    _partition(y::AbstractVector{<:SoleModels.Label}, train_ratio::Float64, valid_ratio::Float64, 
                resample::Union{Resample, Nothing}, rng::AbstractRNG)
                -> Union{TT_indexes{Int}, Vector{TT_indexes{Int}}}
 
@@ -274,7 +274,7 @@ Partitions the input vector `y` into training, validation, and testing indices b
 the specified parameters. Supports both simple partitioning and cross-validation.
 
 # Arguments
-- `y::AbstractVector{<:Y_Value}`: The target variable to partition
+- `y::AbstractVector{<:SoleModels.Label}`: The target variable to partition
 - `train_ratio::Float64`: The ratio of data to be used for training (from the non-test portion)
 - `valid_ratio::Float64`: Controls validation set creation:
   - When 1.0: No validation set is created (empty array)
@@ -301,7 +301,7 @@ When a resampling strategy is provided, the function:
 3. Returns a vector of `TT_indexes` objects, one for each fold
 """
 function _partition(
-    y::AbstractVector{<:Y_Value},
+    y::AbstractVector{<:SoleModels.Label},
     train_ratio::Float64,
     valid_ratio::Float64,
     resample::Resample,
@@ -394,10 +394,10 @@ function __prepare_dataset(
     # treatment in AVAIL_TREATMENTS || throw(ArgumentError("Treatment must be one of: $AVAIL_TREATMENTS"))
 
     if algo == AbstractRegression
-        y isa AbstractVector{<:Reg_Value} || throw(ArgumentError("Regression requires a numeric target variable"))
+        y isa AbstractVector{<:SoleModels.RLabel} || throw(ArgumentError("Regression requires a numeric target variable"))
         y isa AbstractFloat || (y = Float64.(y))
     elseif algo == AbstractClassification
-        y isa AbstractVector{<:Cat_Value} || throw(ArgumentError("Classification requires a categorical target variable"))
+        y isa AbstractVector{<:SoleModels.CLabel} || throw(ArgumentError("Classification requires a categorical target variable"))
         y isa MLJ.CategoricalArray || (y = coerce(y, MLJ.Multiclass))
     end
 
@@ -465,7 +465,6 @@ function _prepare_dataset(
     tuning        :: NamedTupleBool = false,
     extract_rules :: NamedTupleBool = false,
     preprocess    :: OptNamedTuple  = nothing,
-    # modalreduce    :: OptCallable    = nothing,
     measures      :: OptTuple       = nothing,
 )::Tuple{Modelset, Dataset}
     modelset = validate_modelset(
@@ -476,7 +475,6 @@ function _prepare_dataset(
         tuning,
         extract_rules,
         preprocess,
-        # modalreduce,
         measures
     )
     Modelset(modelset,), __prepare_dataset(X, y, modelset)

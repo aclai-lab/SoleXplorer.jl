@@ -59,10 +59,10 @@ end
 function validate_model(model::Symbol, y::DataType)::ModelSetup
     if haskey(AVAIL_MODELS, model)
         return AVAIL_MODELS[model]()
-    elseif y <: Reg_Value
+    elseif y <: SoleModels.RLabel
         model_r = Symbol(model, "_regressor")
         haskey(AVAIL_MODELS, model_r) && return AVAIL_MODELS[model_r]()
-    elseif y <: Cat_Value
+    elseif y <: SoleModels.CLabel
         model_c = Symbol(model, "_classifier")
         haskey(AVAIL_MODELS, model_c) && return AVAIL_MODELS[model_c]()        
     end
@@ -92,10 +92,9 @@ function validate_features(
 end
 
 function validate_measures(
-    defaults::Tuple,
     users::OptTuple
 )
-    measures = users === nothing ? defaults : users
+    measures = users === nothing ? nothing : users
 
     # check if all measures are functions
     # all(f -> f isa Base.Callable, measures) || throw(ArgumentError("All measures must be functions"))
@@ -281,10 +280,10 @@ function validate_modelset(
     set_rulesparams!(modelset, validate_rulesparams(get_rulesparams(modelset), extract_rules, rng))
 
     set_rawmodel!(modelset, get_tuning(modelset) == false ? get_rawmodel(modelset) : get_resampled_rawmodel(modelset))
-    set_learn_method!(modelset, get_tuning(modelset) == false ? get_learn_method(modelset) : get_resampled_learn_method(modelset))
+    # set_learn_method!(modelset, get_tuning(modelset) == false ? get_learn_method(modelset) : get_resampled_learn_method(modelset))
     preprocess === nothing || (modelset.preprocess = merge(get_preprocess(modelset), preprocess))
     set_resample!(modelset, validate_resample(resample, rng, modelset.preprocess.train_ratio))
-    set_measures!(modelset, validate_measures(get_measures(modelset), measures))
+    set_measures!(modelset, validate_measures(measures))
     
     # modelset.preprocess.modalreduce === nothing || (modelset.config = merge(get_config(modelset), (modalreduce=modalreduce,)))
 

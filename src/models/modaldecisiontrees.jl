@@ -38,10 +38,10 @@ function ModalDecisionTreeModel()::ModelSetup{AbstractClassification}
         mach -> MLJ.report(mach).best_report.rawmodel
     )
 
-    learn_method = (
-        (mach, X, y) -> ((_, solem) = MLJ.report(mach).sprinkle(X, y); solem),
-        (mach, X, y) -> ((_, solem) = MLJ.report(mach).best_report.sprinkle(X, y); solem)
-    )
+    # learn_method = (
+    #     (mach, X, y) -> ((_, solem) = MLJ.report(mach).sprinkle(X, y); solem),
+    #     (mach, X, y) -> ((_, solem) = MLJ.report(mach).best_report.sprinkle(X, y); solem)
+    # )
 
     tuning = SoleXplorer.TuningParams(
         SoleXplorer.TuningStrategy(latinhypercube, (ntour = 20,)),
@@ -64,13 +64,12 @@ function ModalDecisionTreeModel()::ModelSetup{AbstractClassification}
         nothing,
         winparams,
         rawmodel,
-        learn_method,
+        # learn_method,
         tuning,
         resultsparams,
         rulesparams,
         DEFAULT_PREPROC,
-        DEFAULT_MEAS,
-        nothing
+        nothing,
     )
 end
 
@@ -111,10 +110,10 @@ function ModalRandomForestModel()::ModelSetup{AbstractClassification}
         mach -> MLJ.report(mach).best_report.rawmodel
     )
 
-    learn_method = (
-        (mach, X, y) -> ((_, solem) = MLJ.report(mach).sprinkle(X, y); solem),
-        (mach, X, y) -> ((_, solem) = MLJ.report(mach).best_report.sprinkle(X, y); solem)
-    )
+    # learn_method = (
+    #     (mach, X, y) -> ((_, solem) = MLJ.report(mach).sprinkle(X, y); solem),
+    #     (mach, X, y) -> ((_, solem) = MLJ.report(mach).best_report.sprinkle(X, y); solem)
+    # )
 
     tuning = SoleXplorer.TuningParams(
         SoleXplorer.TuningStrategy(latinhypercube, (ntour = 20,)),
@@ -137,13 +136,12 @@ function ModalRandomForestModel()::ModelSetup{AbstractClassification}
         nothing,
         winparams,
         rawmodel,
-        learn_method,
+        # learn_method,
         tuning,
         resultsparams,
         rulesparams,
         DEFAULT_PREPROC,
-        DEFAULT_MEAS,
-        nothing
+        nothing,
     )
 end
 
@@ -182,10 +180,10 @@ function ModalAdaBoostModel()::ModelSetup{AbstractClassification}
         mach -> MLJ.report(mach).best_report.rawmodel
     )
 
-    learn_method = (
-        (mach, X, y) -> ((_, solem) = MLJ.report(mach).sprinkle(X, y); solem),
-        (mach, X, y) -> ((_, solem) = MLJ.report(mach).best_report.sprinkle(X, y); solem)
-    )
+    # learn_method = (
+    #     (mach, X, y) -> ((_, solem) = MLJ.report(mach).sprinkle(X, y); solem),
+    #     (mach, X, y) -> ((_, solem) = MLJ.report(mach).best_report.sprinkle(X, y); solem)
+    # )
 
     tuning = SoleXplorer.TuningParams(
         SoleXplorer.TuningStrategy(latinhypercube, (ntour = 20,)),
@@ -208,12 +206,11 @@ function ModalAdaBoostModel()::ModelSetup{AbstractClassification}
         nothing,
         winparams,
         rawmodel,
-        learn_method,
+        # learn_method,
         tuning,
         resultsparams,
         rulesparams,
         DEFAULT_PREPROC,
-        DEFAULT_MEAS,
-        nothing
+        nothing,
     )
 end
