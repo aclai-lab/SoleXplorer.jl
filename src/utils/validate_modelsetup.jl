@@ -236,7 +236,6 @@ function validate_modelset(
     tuning        :: NamedTupleBool = false,
     extract_rules :: NamedTupleBool = false,
     preprocess    :: OptNamedTuple  = nothing,
-    # modalreduce    :: OptCallable    = nothing,
     measures      :: OptTuple       = nothing,
 )::ModelSetup
     check_params(model, (:type, :params))

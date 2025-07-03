@@ -52,28 +52,25 @@ end
 # ---------------------------------------------------------------------------- #
 #                                   dataset                                    #
 # ---------------------------------------------------------------------------- #
-struct Dataset{T,S} <: AbstractDataset
-    X           :: Matrix{T}
+struct Dataset{S} <: AbstractDataset
+    X           :: DataFrame
     y           :: Vector{S}
     tt          :: Vector{<:DataSplit}
     info        :: DatasetInfo
 
     function Dataset(
-        X       :: Matrix{T},
+        X       :: DataFrame,
         y       :: AbstractVector{S},
         args...
-    ) :: Dataset{T,S} where {T,S}
-        # validate input dimensions
-        size(X, 1) == length(y) || throw(ArgumentError("Number of rows in X must match length of y"))
-
-        new{T,S}(X, y isa Vector ? y : Vector(y), args...)
+    ) :: Dataset{S} where S
+        new{S}(X, y isa Vector ? y : Vector(y), args...)
     end
 end
 
-get_X(     ds :: Dataset) :: Matrix{T} where T    = ds.X
-get_y(     ds :: Dataset) :: Vector{S} where S    = ds.y
-get_tt(    ds :: Dataset) :: Vector{<:DataSplit} = ds.tt
-get_info(  ds :: Dataset) :: DatasetInfo          = ds.info
+get_X(     ds :: Dataset) :: DataFrame where T = ds.X
+get_y(     ds :: Dataset) :: Vector{S}            where S = ds.y
+get_tt(    ds :: Dataset) :: Vector{<:DataSplit}          = ds.tt
+get_info(  ds :: Dataset) :: DatasetInfo                  = ds.info
 
 # tt structure
 get_train( ds :: Dataset) :: Vector{Vector{Integer}} = collect(x.train for x in ds.tt)

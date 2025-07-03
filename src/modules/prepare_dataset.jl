@@ -1,14 +1,18 @@
 # ---------------------------------------------------------------------------- #
 #                                   utils                                      #
 # ---------------------------------------------------------------------------- #
-check_dataset_type(X::AbstractMatrix) = eltype(X) <: Union{Real,AbstractArray{<:Real}}
-hasnans(df::AbstractDataFrame) = any(x -> x == 1, SoleData.hasnans.(eachcol(df)))
-hasnans(X::AbstractMatrix) = any(x -> x == 1, SoleData.hasnans.(eachcol(X)))
+check_dataset_type(X::AbstractDataFrame) = eltype(X) <: Union{Real,AbstractArray{<:Real}}
+check_dataset_type(X::AbstractMatrix)    = eltype(X) <: Union{Real,AbstractArray{<:Real}}
+
+hasnans(X::AbstractDataFrame) = any(x -> x == 1, SoleData.hasnans.(eachcol(X)))
+# hasnans(X::AbstractMatrix) = any(x -> x == 1, SoleData.hasnans.(eachcol(X)))
 
 # conversion of variable names to symbols
 symbols_generator(strings::AbstractVector{<:AbstractString})::Base.Generator{Vector{String}} = (Symbol(s) for s in strings)
+symbols_generator(strings::MLJ.CategoricalArray)::Base.Generator{<:MLJ.CategoricalVector}    = (Symbol(s) for s in strings)
 
-function check_row_consistency(X::AbstractMatrix) 
+# check time series consistencies
+function check_row_consistency(X::AbstractDataFrame) 
     for col in eachcol(X)
         # skip cols with only scalar values
         any(el -> el isa AbstractArray, col) || continue
@@ -185,7 +189,18 @@ end
 #                               prepare dataset                                #
 # ---------------------------------------------------------------------------- #
 function __prepare_dataset(
-    df          :: AbstractDataFrame,
+    X     :: AbstractDataFrame,
+    y     :: AbstractVector,
+    model :: AbstractModelSetup
+) :: Dataset
+    __prepare_dataset(
+        X, y;
+        dataset_args(model)...
+    )
+end
+
+function __prepare_dataset(
+    X           :: AbstractDataFrame,
     y           :: AbstractVector{<:SoleModels.Label};
     algo        :: DataType,
     treatment   :: Symbol,
@@ -198,25 +213,25 @@ function __prepare_dataset(
     vnames      :: Union{VarNames,Nothing}=nothing,
     modalreduce :: OptCallable=nothing
 ) :: Dataset
-    X = Matrix(df)
+    # X = Matrix(df)
 
     # check parameters
-    check_dataset_type(X) || throw(ArgumentError("DataFrame must contain only numeric values, use SoleXplorer.code_dataset() to convert non-numeric data"))
-    nrow(df) == length(y) || throw(ArgumentError("Number of rows in DataFrame must match length of class labels"))
-    check_row_consistency(X) || throw(ArgumentError("Elements within each row must have consistent dimensions"))
+    # check_dataset_type(X) || throw(ArgumentError("DataFrame must contain only numeric values, use SoleXplorer.code_dataset() to convert non-numeric data"))
+    nrow(X) == length(y)     || throw(ArgumentError("Number of rows in DataFrame must match length of class labels"))
+    check_row_consistency(X)
 
     if algo == AbstractRegression
         y isa AbstractVector{<:SoleModels.RLabel} || throw(ArgumentError("Regression requires a numeric target variable"))
         y isa AbstractFloat || (y = Float64.(y))
     elseif algo == AbstractClassification
         y isa AbstractVector{<:SoleModels.CLabel} || throw(ArgumentError("Classification requires a categorical target variable"))
-        y isa MLJ.CategoricalArray || (y = coerce(y, MLJ.Multiclass))
+        y isa Vector{Symbol} || (y = collect(symbols_generator(y)))
     end
 
     if vnames === nothing
-        vnames = propertynames(df)
+        vnames = propertynames(X)
     else
-        size(X, 2) == length(vnames) || throw(ArgumentError("Number of columns in DataFrame must match length of variable names"))
+        ncol(X) == length(vnames) || throw(ArgumentError("Number of columns in DataFrame must match length of variable names"))
         vnames isa Vector{Symbol} || (vnames = collect(symbols_generator(vnames)))
     end
 
@@ -241,17 +256,6 @@ function __prepare_dataset(
         X, y,
         _partition(y, train_ratio, valid_ratio, resample),
         ds_info
-    )
-end
-
-function __prepare_dataset(
-    X::AbstractDataFrame,
-    y::AbstractVector,
-    model::AbstractModelSetup
-)::Dataset
-    __prepare_dataset(
-        X, y;
-        dataset_args(model)...
     )
 end
 
