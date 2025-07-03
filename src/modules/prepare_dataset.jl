@@ -13,24 +13,23 @@ symbols_generator(strings::MLJ.CategoricalArray)::Base.Generator{<:MLJ.Categoric
 
 # check time series consistencies
 function check_row_consistency(X::AbstractDataFrame) 
-    for col in eachcol(X)
+    for row in eachrow(X)
         # skip cols with only scalar values
-        any(el -> el isa AbstractArray, col) || continue
+        any(el -> el isa AbstractArray, row) || continue
         
         # find first array element to use as reference
-        ref_idx = findfirst(el -> el isa AbstractArray, col)
+        ref_idx = findfirst(el -> el isa AbstractArray, row)
         ref_idx === nothing && continue
         
-        ref_size = size(col[ref_idx])
+        ref_size = size(row[ref_idx])
         
         # check if any array element has different size (short-circuit)
-        if any(col) do el
+        if any(row) do el
                 el isa AbstractArray && size(el) != ref_size
             end
-            return false
+            throw(DimensionMismatch("Inconsistent dimensions across elements in row: $(row)"))
         end
     end
-    return true
 end
 
 function code_dataset(X::AbstractDataFrame)

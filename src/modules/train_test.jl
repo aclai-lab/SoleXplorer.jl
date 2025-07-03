@@ -29,10 +29,10 @@ function _train_machine!(model::AbstractModelset, ds::AbstractDataset)::MLJ.Mach
     end
 
     model.type = get_predictor(model.setup)
-
+@show typeof(ds.X)
     MLJ.machine(
         model.type,
-        MLJ.table(ds.X; names=ds.info.vnames),
+        ds.X,
         ds.y
     )
 end
