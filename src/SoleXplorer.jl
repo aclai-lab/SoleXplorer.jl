@@ -1,40 +1,27 @@
 module SoleXplorer
+using  Reexport
 
-using SoleData
-using SoleData: PatchedFunction, nanpatchedfunction
-using SoleModels
-using SoleModels: AbstractModel, DecisionList, DecisionForest, DecisionEnsemble, DecisionSet
-using SolePostHoc
+using  SoleBase: Label, CLabel, RLabel, XGLabel
+using  SoleData
+using  SoleData: PatchedFunction, nanpatchedfunction
+using  SoleModels
+using  SoleModels: AbstractModel, DecisionList, DecisionForest, DecisionEnsemble, DecisionSet
+using  SolePostHoc
 # using ModalDecisionTrees
 # using ModalDecisionLists
 import MultiData.hasnans
 
-# using Reexport
-# using MLJ
-# @reexport using MLJ: Grid as grid, RandomSearch as randomsearch, LatinHypercube as latinhypercube
-# using TreeParzen: Config
-# @reexport using TreeParzen: MLJTreeParzenTuning as treeparzen
-# @reexport using MLJParticleSwarmOptimization: ParticleSwarm as particleswarm, AdaptiveParticleSwarm as adaptiveparticleswarm
-
-# using MLJDecisionTreeInterface, MLJXGBoostInterface
-# import MLJModelInterface as MMI
-
-# import DecisionTree as DT
-# import XGBoost as XGB
-
-using DataFrames
-# using OrderedCollections
-# using Random
-
-# using Base.Threads: @threads
-
-using Random
-using Reexport
+using  DataFrames
+using  Random
 
 # ---------------------------------------------------------------------------- #
 #                                     MLJ                                      #
 # ---------------------------------------------------------------------------- #
-using MLJ, MLJBase
+# using  Tables
+# using  Tables: MatrixTable
+using  MLJ, MLJBase
+
+import MLJ: MLJType
 
 # classification measures
 @reexport using MLJ: accuracy, confusion_matrix, kappa, log_loss
@@ -43,9 +30,15 @@ using MLJ, MLJBase
 @reexport using MLJ: rms, l1, l2, mae, mav
 
 # ---------------------------------------------------------------------------- #
+#                                 show utils                                   #
+# ---------------------------------------------------------------------------- #
+# simplified string rep of an Type:
+simple_repr(T) = string(T.name.name)
+
+# ---------------------------------------------------------------------------- #
 #                                    utils                                     #
 # ---------------------------------------------------------------------------- #
-using Catch22
+using  Catch22
 include("utils/featureset.jl")
 export mode_5, mode_10, embedding_dist, acf_timescale, acf_first_min, ami2, trev, outlier_timing_pos
 export outlier_timing_neg, whiten_timescale, forecast_error, ami_timescale, high_fluctuation, stretch_decreasing
@@ -66,6 +59,7 @@ export modeltype
 include("interfaces/windowing_interface.jl")
 
 include("interfaces/dataset_interface.jl")
+export TableSource, VectorSource, source
 export Dataset, get_X, get_y, get_tt, get_info, get_Xtrain, get_Xvalid, get_Xtest, get_ytrain, get_yvalid, get_ytest
 
 @reexport using MLJ: CV, Holdout, StratifiedCV, TimeSeriesCV

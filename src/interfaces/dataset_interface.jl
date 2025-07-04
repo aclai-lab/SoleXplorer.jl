@@ -1,26 +1,55 @@
 # ---------------------------------------------------------------------------- #
-#                                  dataset info                                #
+#                                 data source                                  #
 # ---------------------------------------------------------------------------- #
-"""
-    DatasetInfo(
-        treatment::Symbol,
-        modalreduce::OptCallable,
-        train_ratio::Real,
-        valid_ratio::Real,
-        rng::AbstractRNG,
-        vnames::OptStringVec
-    ) -> DatasetInfo
+# 'Source' wrappers for storing data as arguments.
+# inspired by MLJ's `Source` interface, but simplified for Sole.
+abstract type AbstractSource     <: MLJType        end
 
-Create a configuration for dataset preparation and splitting in machine learning workflows.
+struct TableSource{T<:DataFrame} <: AbstractSource
+    data :: T
+end
 
-# Fields
-- `treatment::Symbol`: Data treatment method (e.g., `:standardize`, `:normalize`)
-- `modalreduce::OptCallable`: Optional function for dimensionality reduction
-- `train_ratio::Real`: Proportion of data to use for training (must be between 0 and 1)
-- `valid_ratio::Real`: Proportion of data to use for validation (must be between 0 and 1)
-- `rng::AbstractRNG`: Random number generator for reproducible splits
-- `vnames::OptStringVec`: Optional feature/variable names
-"""
+struct VectorSource{S<:Label, T<:AbstractVector{S}} <: AbstractSource
+    data :: T
+end
+
+source(X::T) where {T<:DataFrame} = TableSource{T}(X)
+source(X::T) where {S, T<:AbstractVector{S}} = VectorSource{S,T}(X)
+
+nrows_at_source(X::TableSource)  = nrow(X.data)
+ncols_at_source(X::TableSource)  = ncol(X.data)
+nrows_at_source(X::VectorSource) = length(X.data)
+
+# select rows in a TableSource
+# examples: ts(rows=1:10), ts(rows=:) -> select all rows
+function (X::TableSource)(; rows=:)
+    rows == (:) && return X.data
+    return @views X.data[rows, :]
+end
+# select elements in a VectorSource
+# kepts 'rows' for consistency
+function (X::VectorSource)(; rows=:)
+    rows == (:) && return X.data
+    return @views X.data[rows]
+end
+
+Base.isempty(X::AbstractSource)  = isempty(X.data)
+color(::AbstractSource) = :yellow
+
+function Base.show(io::IO, source::TableSource{T}) where T
+    nrows = nrows_at_source(source)
+    nclos = ncols_at_source(source)
+    print(io, "TableSource{$T}($nrows x $nclos)")
+end
+
+function Base.show(io::IO, source::VectorSource{S,T}) where {S,T}
+    nrows = nrows_at_source(source)
+    print(io, "VectorSource{$S,$T}(length=$nrows)")
+end
+
+# ---------------------------------------------------------------------------- #
+#                                 dataset info                                 #
+# ---------------------------------------------------------------------------- #
 struct DatasetInfo <: AbstractDatasetSetup
     treatment   :: Symbol
     modalreduce :: OptCallable
@@ -63,17 +92,6 @@ end
 # ---------------------------------------------------------------------------- #
 #                              indexes collection                              #
 # ---------------------------------------------------------------------------- #
-"""
-    TT_indexes{T<:Integer} <: AbstractVector{T}
-
-A struct that stores indices for train-validation-test splits of a dataset,
-used in Dataset struct.
-
-# Fields
-- `train::Vector{T}`: Vector of indices for the training set
-- `valid::Vector{T}`: Vector of indices for the validation set
-- `test::Vector{T}`:  Vector of indices for the test set
-"""
 struct TT_indexes{T<:Integer} <: AbstractIndexCollection
     train :: Vector{T}
     valid :: Vector{T}
@@ -105,32 +123,9 @@ struct Dataset{T<:AbstractMatrix,S} <: AbstractDataset
     info        :: DatasetInfo
 end
 
-"""
-    get_X(ds::Dataset) -> AbstractMatrix
-
-Get the original feature matrix from a Dataset structure.
-"""
 get_X(ds::Dataset)      = ds.X
-
-"""
-    get_y(ds::Dataset) -> Any
-
-Get the original target vector/matrix from a Dataset structure.
-"""
 get_y(ds::Dataset)      = ds.y
-
-"""
-    get_tt(ds::Dataset) -> Union{TT_indexes, AbstractVector{<:TT_indexes}}
-
-Get the train-validation-test split indices from a Dataset structure.
-"""
 get_tt(ds::Dataset)     = ds.tt
-
-"""
-    get_info(ds::Dataset) -> DatasetInfo
-
-Get the dataset configuration and metadata from a Dataset structure.
-"""
 get_info(ds::Dataset)   = ds.info
 
 function Base.show(io::IO, ds::Dataset)
