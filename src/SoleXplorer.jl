@@ -72,8 +72,8 @@ export range
 
 include("interfaces/extractrules_interface.jl")
 
-include("interfaces/model_interface.jl")
-export Modelset
+# include("interfaces/model_interface.jl")
+# export Modelset
 
 include("interfaces/measures_interface.jl")
 
@@ -94,7 +94,16 @@ using MLJXGBoostInterface
 include("models/xgboost.jl")
 export makewatchlist
 
-include("utils/validate_modelsetup.jl")
+include("interfaces/model_interface.jl")
+
+include("validation/validate_modelsetup.jl")
+
+include("interfaces/modelset_interface.jl")
+export Modelset
+export decisiontreeclassifier, randomforestclassifier, adaboostclassifier
+export decisiontreeregressor, randomforestregressor
+export modaldecisiontree, modalrandomforest, modaladaboost
+export xgboostclassifier, xgboostregressor
 
 # ---------------------------------------------------------------------------- #
 #                                   modules                                    #

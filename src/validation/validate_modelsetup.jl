@@ -56,20 +56,6 @@ end
 # ---------------------------------------------------------------------------- #
 #                             validating functions                             #
 # ---------------------------------------------------------------------------- #
-function validate_model(model::Symbol, y::DataType)::ModelSetup
-    if haskey(AVAIL_MODELS, model)
-        return AVAIL_MODELS[model]()
-    elseif y <: SoleModels.RLabel
-        model_r = Symbol(model, "_regressor")
-        haskey(AVAIL_MODELS, model_r) && return AVAIL_MODELS[model_r]()
-    elseif y <: SoleModels.CLabel
-        model_c = Symbol(model, "_classifier")
-        haskey(AVAIL_MODELS, model_c) && return AVAIL_MODELS[model_c]()        
-    end
-
-    throw(ArgumentError("Model $model not found in available models"))
-end
-
 function validate_params(
     defaults::NamedTuple,
     users::OptNamedTuple,
@@ -227,53 +213,38 @@ end
 # ---------------------------------------------------------------------------- #
 #                              validate modelset                               #
 # ---------------------------------------------------------------------------- #
-function validate_modelset(
+function validate_modelset(;
     model         :: NamedTuple,
-    y             :: OptDataType;
     resample      :: NamedTuple,
     win           :: OptNamedTuple  = nothing,
     features      :: OptTuple       = nothing,
     tuning        :: NamedTupleBool = false,
     extract_rules :: NamedTupleBool = false,
     preprocess    :: OptNamedTuple  = nothing,
-    # modalreduce    :: OptCallable    = nothing,
     measures      :: OptTuple       = nothing,
 )::ModelSetup
-    check_params(model, (:type, :params))
+    # propagate user rng to every field that needs it
+    rng = hasproperty(preprocess, :rng) ? preprocess.rng : TaskLocalRNG()
+    model = validate_model(model, rng)
+    
     check_params(resample, (:type, :params))
     check_params(win, (:type, :params))
     check_params(preprocess, DEFAULT_PREPROC)
 
-    # grab rng form preprocess and feed it to every process
-    rng = if preprocess === nothing 
-        nothing
-    else
-        haskey(preprocess, :rng) ? preprocess.rng : nothing
-    end
+    
+    
 
-    haskey(model, :type) || throw(ArgumentError("Each model specification must contain a 'type' field"))
-    modelset = validate_model(model.type, y)
+
 
     # grab additional extra params
-    user_params = get(model, :params, nothing)
-    if !(user_params === nothing) && haskey(user_params, :modalreduce)
-        set_config!(modelset, merge(get_config(modelset), (modalreduce = user_params.modalreduce,)))
-        user_params = NamedTuple(k => v for (k, v) in pairs(user_params) if k != :modalreduce)
-    end
-    set_params!(modelset, validate_params(get_params(modelset), user_params, rng))
+    # user_params = get(model, :params, nothing)
+    # if !(user_params === nothing) && haskey(user_params, :modalreduce)
+    #     set_config!(modelset, merge(get_config(modelset), (modalreduce = user_params.modalreduce,)))
+    #     user_params = NamedTuple(k => v for (k, v) in pairs(user_params) if k != :modalreduce)
+    # end
+    # set_params!(modelset, validate_params(get_params(modelset), user_params, rng))
 
-    # ModalDecisionTrees package needs features to be passed also in model params
-    pfeats = get_pfeatures(modelset)
-    if pfeats === nothing
-        set_features!(modelset, validate_features(get_features(modelset), features))
-    else
-        features = validate_features(
-            pfeats,
-            features
-        )
-        set_params!(modelset, merge(get_params(modelset), (features=features,)))
-        set_features!(modelset, features)
-    end
+
 
     set_winparams!(modelset, validate_winparams(get_winparams(modelset), win, get_treatment(modelset)))
     set_tuning!(modelset, validate_tuning(get_tuning(modelset), tuning, rng, modeltype(modelset)))
