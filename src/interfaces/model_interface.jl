@@ -28,7 +28,7 @@ const AVAIL_MODELS = (
 # )::Tuple{Vararg{Function}}
 
 set_rng!(m::MLJ.Model, rng::AbstractRNG) = m.rng = rng
-set_features!(m::ModelSetup, features::Vector{<:Base.Callable}) = m.features = features
+set_features!(m::MLJ.Model, features::Vector{<:Base.Callable}) = m.features = features
 
 # ---------------------------------------------------------------------------- #
 #                               validate model                                 #
