@@ -79,8 +79,6 @@ ModalAdaBoostModel(dtmodel          :: ModelSetup) = dtmodel
 XGBoostClassifierModel(dtmodel      :: ModelSetup) = dtmodel
 XGBoostRegressorModel(dtmodel       :: ModelSetup) = dtmodel
 
-const DEFAULT_FEATS = [maximum, minimum, MLJ.mean, std]
-
 const DEFAULT_PREPROC = (
     train_ratio = 0.7,
     valid_ratio = 1.0,

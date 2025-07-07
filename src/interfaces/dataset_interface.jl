@@ -3,7 +3,7 @@
 # ---------------------------------------------------------------------------- #
 # 'Source' wrappers for storing data as arguments.
 # inspired by MLJ's `Source` interface, but simplified for Sole.
-abstract type AbstractSource     <: MLJType        end
+abstract type AbstractSource <: MLJType end
 
 struct TableSource{T<:DataFrame} <: AbstractSource
     data :: T

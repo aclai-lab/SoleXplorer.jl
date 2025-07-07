@@ -1,39 +1,56 @@
 # ---------------------------------------------------------------------------- #
+#                               abstract types                                 #
+# ---------------------------------------------------------------------------- #
+abstract type AbstractMLJModel <: MLJType end
+
+# ---------------------------------------------------------------------------- #
 #                                   models                                     #
 # ---------------------------------------------------------------------------- #
-decisiontreeclassifier(; kwargs...) = DecisionTreeClassifier(; kwargs...)
-randomforestclassifier(; kwargs...) = RandomForestClassifier(; kwargs...)
-adaboostclassifier(; kwargs...)     = AdaBoostStumpClassifier(; kwargs...)
+struct MLJModel{T} <: AbstractMLJModel
+    type::Type{T}
+end
+(m::MLJModel)(; kwargs...) = m.type(; kwargs...)
 
-decisiontreeregressor(; kwargs...)  = DecisionTreeRegressor(; kwargs...)
-randomforestregressor(; kwargs...)  = RandomForestRegressor(; kwargs...)
+# classification models
+const decisiontreeclassifier = MLJModel(DecisionTreeClassifier)
+const randomforestclassifier = MLJModel(RandomForestClassifier)
+const adaboostclassifier     = MLJModel(AdaBoostStumpClassifier)
 
-modaldecisiontree(; kwargs...)      = ModalDecisionTree(; kwargs...)
-modalrandomforest(; kwargs...)      = ModalRandomForest(; kwargs...)
-modaladaboost(; kwargs...)          = ModalAdaBoost(; kwargs...)
+# regression models
+const decisiontreeregressor  = MLJModel(DecisionTreeRegressor)
+const randomforestregressor  = MLJModel(RandomForestRegressor)
 
-xgboostclassifier(; kwargs...)      = XGBoostClassifier(; kwargs...)
-xgboostregressor(; kwargs...)       = XGBoostRegressor(; kwargs...)
+# modal models
+const modaldecisiontree      = MLJModel(ModalDecisionTree)
+const modalrandomforest      = MLJModel(ModalRandomForest)
+const modaladaboost          = MLJModel(ModalAdaBoost)
 
-const AVAIL_MODELS = (
-    decisiontreeclassifier, randomforestclassifier, adaboostclassifier,
-    decisiontreeregressor, randomforestregressor,
-    modaldecisiontree, modalrandomforest, modaladaboost,
-    xgboostclassifier, xgboostregressor,
-)::Tuple{Vararg{Function}}
+# XGBoost models
+const xgboostclassifier      = MLJModel(XGBoostClassifier)
+const xgboostregressor       = MLJModel(XGBoostRegressor)
 
-# used to pass features to modaltype models in params
-# const MODAL_MODELS = (
-#     modaldecisiontree, modalrandomforest, modaladaboost,
-# )::Tuple{Vararg{Function}}
+# ---------------------------------------------------------------------------- #
+#                                   types                                      #
+# ---------------------------------------------------------------------------- #
+const DEFAULT_FEATS = [maximum, minimum, MLJ.mean, std]
 
-set_rng!(m::MLJ.Model, rng::AbstractRNG) = m.rng = rng
-set_features!(m::MLJ.Model, features::Vector{<:Base.Callable}) = m.features = features
+# ---------------------------------------------------------------------------- #
+#                                 utilities                                    #
+# ---------------------------------------------------------------------------- #
+function set_rng(m::MLJ.Model, rng::AbstractRNG)::MLJ.Model
+    m.rng = rng
+    return m
+end
+
+function set_features(m::MLJ.Model, features::Vector{<:Base.Callable})::MLJ.Model
+    m.features = features
+    return m
+end
 
 # ---------------------------------------------------------------------------- #
 #                               validate model                                 #
 # ---------------------------------------------------------------------------- #
-function validate_model(m::NamedTuple, rng::AbstractRNG)::MLJ.Model
+function mljmodel(m::NamedTuple, rng::AbstractRNG)::MLJ.Model
     issubset(keys(m), (:type, :params)) || throw(ArgumentError("Unknown fields."))
 
     modeltype = get(m, :type, nothing)
@@ -42,12 +59,12 @@ function validate_model(m::NamedTuple, rng::AbstractRNG)::MLJ.Model
     modelparams = get(m, :params, NamedTuple())
 
     # check if modeltype is available
-    if modeltype ∈ AVAIL_MODELS
+    if modeltype isa MLJModel
         model = modeltype(;modelparams...)
         # set rng if the model supports it
-        hasproperty(model, :rng) && set_rng!(model, rng)
-        # ModalDecisionTrees package needs features to be passed also in model params
-        hasproperty(model, :features) && set_features!(model, get(m, :features, DEFAULT_FEATS))
+        hasproperty(model, :rng) && (model = set_rng(model, rng))
+        # ModalDecisionTrees package needs features to be passed in model params
+        hasproperty(model, :features) && (model = set_features(model, get(m, :features, DEFAULT_FEATS)))
     else
         throw(ArgumentError("Model $model not found in available models"))
     end
