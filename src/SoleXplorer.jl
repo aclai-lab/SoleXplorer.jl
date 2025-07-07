@@ -99,17 +99,16 @@ export makewatchlist
 
 import MLJ: params
 include("interfaces/model_interface.jl")
-export MLJModel
 @reexport using MLJ: params
-
-include("validation/validate_modelsetup.jl")
-
-include("interfaces/modelset_interface.jl")
-export Modelset
 export decisiontreeclassifier, randomforestclassifier, adaboostclassifier
 export decisiontreeregressor, randomforestregressor
 export modaldecisiontree, modalrandomforest, modaladaboost
 export xgboostclassifier, xgboostregressor
+
+include("validation/validate_modelsetup.jl")
+
+include("interfaces/modelset_interface.jl")
+export ModelSet, modelset
 
 # ---------------------------------------------------------------------------- #
 #                                   modules                                    #

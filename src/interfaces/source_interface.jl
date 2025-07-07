@@ -4,10 +4,21 @@
 abstract type AbstractSource <: MLJType end
 
 # ---------------------------------------------------------------------------- #
+#                                   types                                      #
+# ---------------------------------------------------------------------------- #
+const NUMERIC_TYPE = Union{Number, Missing}
+
+# ---------------------------------------------------------------------------- #
+#                                 utilities                                    #
+# ---------------------------------------------------------------------------- #
+is_numeric_dataframe(X::AbstractDataFrame) = all(T -> T <: NUMERIC_TYPE, eltype.(eachcol(X)))
+
+# ---------------------------------------------------------------------------- #
 #                                   source                                     #
 # ---------------------------------------------------------------------------- #
 # 'Source' wrappers for storing data as arguments.
 # inspired by MLJ's `Source` interface, but simplified for Sole.
+# and extended to support time series and vector data.
 struct TableSource{T<:AbstractDataFrame} <: AbstractSource
     data :: T
 end
@@ -16,12 +27,26 @@ struct VectorSource{S<:Label, T<:AbstractVector{S}} <: AbstractSource
     data :: T
 end
 
+struct TimeSeriesSource{T<:AbstractDataFrame} <: AbstractSource
+    data      :: T
+    params    :: NamedTuple
+
+    function TimeSeriesSource(X::T, params::NamedTuple) where T<:AbstractDataFrame
+        data = process_multidim_ds(X, params)
+        new{T}(data, params)
+    end
+end
+
 # ---------------------------------------------------------------------------- #
 #                                 constructors                                 #
 # ---------------------------------------------------------------------------- #
 function source end
 
-source(X::T) where {T<:AbstractDataFrame} = TableSource{T}(X)
+function source(X::T, ts_params::NamedTuple) where {T<:AbstractDataFrame}
+    is_numeric_dataframe(X) ?
+        TableSource{T}(X) :
+        TimeSeriesSource(X, ts_params)
+end
 source(X::T) where {S, T<:AbstractVector{S}} = VectorSource{S,T}(X)
 
 # ---------------------------------------------------------------------------- #

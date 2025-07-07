@@ -172,24 +172,14 @@ function _partition(
     resample::Resample,
     rng::AbstractRNG
 )::Union{TT_indexes{Int}, Vector{TT_indexes{Int}}}
-    # if resample === nothing
-    #     tt = MLJ.partition(eachindex(y), train_ratio; shuffle=true, rng)
-    #     if valid_ratio == 1.0
-    #         return TT_indexes(tt[1], eltype(tt[1])[], tt[2])
-    #     else
-    #         tv = MLJ.partition(tt[1], valid_ratio; shuffle=true, rng)
-    #         return TT_indexes(tv[1], tv[2], tt[2])
-    #     end
-    # else
-        resample_cv = resample.type(; resample.params...)
-        tt = MLJ.MLJBase.train_test_pairs(resample_cv, 1:length(y), y)
-        if valid_ratio == 1.0
-            return [TT_indexes(train, eltype(train)[], test) for (train, test) in tt]
-        else
-            tv = collect((MLJ.partition(t[1], train_ratio)..., t[2]) for t in tt)
-            return [TT_indexes(train, valid, test) for (train, valid, test) in tv]
-        end
-    # end
+    resample_cv = resample.type(; resample.params...)
+    tt = MLJ.MLJBase.train_test_pairs(resample_cv, 1:length(y), y)
+    if valid_ratio == 1.0
+        return [TT_indexes(train, eltype(train)[], test) for (train, test) in tt]
+    else
+        tv = collect((MLJ.partition(t[1], train_ratio)..., t[2]) for t in tt)
+        return [TT_indexes(train, valid, test) for (train, valid, test) in tv]
+    end
 end
 
 # ---------------------------------------------------------------------------- #
@@ -225,10 +215,10 @@ function __prepare_dataset(
     end
 
     if vnames === nothing
-        vnames = names(df)
+        vnames = propertynames(df)
     else
         size(X, 2) == length(vnames) || throw(ArgumentError("Number of columns in DataFrame must match length of variable names"))
-        vnames isa AbstractVector{<:AbstractString} || (vnames = string.(vnames))
+        vnames isa AbstractVector{<:AbstractString} && (vnames = Symbol.(vnames))
     end
 
     hasnans(X) && @warn "DataFrame contains NaN values"
@@ -286,7 +276,7 @@ function _prepare_dataset(
     win           :: OptNamedTuple  = nothing,
     features      :: OptTuple       = nothing,
     tuning        :: NamedTupleBool = false,
-    extract_rules :: NamedTupleBool = false,
+    # extract_rules :: NamedTupleBool = false,
     preprocess    :: OptNamedTuple  = nothing,
     measures      :: OptTuple       = nothing,
 # )::Tuple{Modelset, Dataset}
