@@ -4,8 +4,8 @@
 mutable struct ModelSetup{T<:AbstractModelType} <: AbstractModelSetup{T}
     type          :: Base.Callable
     config        :: NamedTuple
-    params        :: NamedTuple
-    features      :: Union{AbstractVector{<:Base.Callable}, Nothing}
+    # params        :: NamedTuple
+    # features      :: Union{AbstractVector{<:Base.Callable}, Nothing}
     resample      :: Union{Resample, Nothing}
     winparams     :: WinParams
     rawmodel      :: Union{Base.Callable, Tuple{Base.Callable, Base.Callable}}
@@ -19,8 +19,8 @@ mutable struct ModelSetup{T<:AbstractModelType} <: AbstractModelSetup{T}
 end
 
 get_config(m::ModelSetup)                 = m.config
-get_params(m::ModelSetup)                 = m.params
-get_features(m::ModelSetup)               = m.features
+# get_params(m::ModelSetup)                 = m.params
+# get_features(m::ModelSetup)               = m.features
 get_winparams(m::ModelSetup)              = m.winparams
 get_tuning(m::ModelSetup)                 = m.tuning
 get_resample(m::ModelSetup)               = m.resample
@@ -40,7 +40,7 @@ get_resampled_rawmodel(m::ModelSetup)     = m.rawmodel[2]
 # get_valid(m::ModelSetup)                  = m.tt.valid
 
 set_config!(m::ModelSetup,       config::NamedTuple)                        = m.config = config
-set_params!(m::ModelSetup,       params::NamedTuple)                        = m.params = params
+# set_params!(m::ModelSetup,       params::NamedTuple)                        = m.params = params
 
 set_winparams!(m::ModelSetup,    winparams::WinParams)                      = m.winparams = winparams
 set_tuning!(m::ModelSetup,       tuning::Union{TuningParams, Bool})         = m.tuning = tuning

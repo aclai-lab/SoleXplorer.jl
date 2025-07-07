@@ -7,18 +7,18 @@ function DecisionTreeClassifierModel()::ModelSetup{AbstractClassification}
     type = MLJDecisionTreeInterface.DecisionTreeClassifier
     config  = (type=DecisionTree, treatment=:aggregate, rawapply=DT.apply_tree)
 
-    params = (;
-        max_depth              = -1,
-        min_samples_leaf       = 1,
-        min_samples_split      = 2,
-        min_purity_increase    = 0.0,
-        n_subfeatures          = 0,
-        post_prune             = false,
-        merge_purity_threshold = 1.0,
-        display_depth          = 5,
-        feature_importance     = :impurity, # :impurity or :split
-        rng                    = Random.TaskLocalRNG()
-    )
+    # params = (;
+    #     max_depth              = -1,
+    #     min_samples_leaf       = 1,
+    #     min_samples_split      = 2,
+    #     min_purity_increase    = 0.0,
+    #     n_subfeatures          = 0,
+    #     post_prune             = false,
+    #     merge_purity_threshold = 1.0,
+    #     display_depth          = 5,
+    #     feature_importance     = :impurity, # :impurity or :split
+    #     rng                    = Random.TaskLocalRNG()
+    # )
 
     winparams = WinParams(wholewindow, NamedTuple())
 
@@ -43,8 +43,8 @@ function DecisionTreeClassifierModel()::ModelSetup{AbstractClassification}
     return ModelSetup{AbstractClassification}(
         type,
         config,
-        params,
-        DEFAULT_FEATS,
+        # params,
+        # DEFAULT_FEATS,
         nothing,
         winparams,
         rawmodel,
@@ -60,17 +60,17 @@ function RandomForestClassifierModel()::ModelSetup{AbstractClassification}
     type   = MLJDecisionTreeInterface.RandomForestClassifier
     config = (type=DecisionEnsemble, treatment=:aggregate, rawapply=DT.apply_forest)
 
-    params = (;
-        max_depth           = -1,
-        min_samples_leaf    = 1,
-        min_samples_split   = 2,
-        min_purity_increase = 0.0,
-        n_subfeatures       = -1,
-        n_trees             = 100,
-        sampling_fraction   = 0.7,
-        feature_importance  = :impurity,
-        rng                 = Random.TaskLocalRNG()
-    )
+    # params = (;
+    #     max_depth           = -1,
+    #     min_samples_leaf    = 1,
+    #     min_samples_split   = 2,
+    #     min_purity_increase = 0.0,
+    #     n_subfeatures       = -1,
+    #     n_trees             = 100,
+    #     sampling_fraction   = 0.7,
+    #     feature_importance  = :impurity,
+    #     rng                 = Random.TaskLocalRNG()
+    # )
 
     winparams = WinParams(wholewindow, NamedTuple())
 
@@ -95,8 +95,8 @@ function RandomForestClassifierModel()::ModelSetup{AbstractClassification}
     return ModelSetup{AbstractClassification}(
         type,
         config,
-        params,
-        DEFAULT_FEATS,
+        # params,
+        # DEFAULT_FEATS,
         nothing,
         winparams,
         rawmodel,
@@ -112,11 +112,11 @@ function AdaBoostClassifierModel()::ModelSetup{AbstractClassification}
     type   = MLJDecisionTreeInterface.AdaBoostStumpClassifier
     config = (type=DecisionEnsemble, treatment=:aggregate, rawapply=DT.apply_adaboost_stumps)
 
-    params = (;
-        n_iter             = 10,
-        feature_importance = :impurity,
-        rng                = Random.TaskLocalRNG()
-    )
+    # params = (;
+    #     n_iter             = 10,
+    #     feature_importance = :impurity,
+    #     rng                = Random.TaskLocalRNG()
+    # )
 
     winparams = WinParams(wholewindow, NamedTuple())
 
@@ -141,8 +141,8 @@ function AdaBoostClassifierModel()::ModelSetup{AbstractClassification}
     return ModelSetup{AbstractClassification}(
         type,
         config,
-        params,
-        DEFAULT_FEATS,
+        # params,
+        # DEFAULT_FEATS,
         nothing,
         winparams,
         rawmodel,
@@ -159,17 +159,17 @@ function DecisionTreeRegressorModel()::ModelSetup{AbstractRegression}
     type = MLJDecisionTreeInterface.DecisionTreeRegressor
     config  = (type=DecisionTree, treatment=:aggregate, rawapply=DT.apply_tree)
 
-    params = (;
-        max_depth              = -1,
-        min_samples_leaf       = 5,
-        min_samples_split      = 2,
-        min_purity_increase    = 0.0,
-        n_subfeatures          = 0,
-        post_prune             = false,
-        merge_purity_threshold = 1.0,
-        feature_importance     = :impurity, # :impurity or :split
-        rng                    = Random.TaskLocalRNG()
-    )
+    # params = (;
+    #     max_depth              = -1,
+    #     min_samples_leaf       = 5,
+    #     min_samples_split      = 2,
+    #     min_purity_increase    = 0.0,
+    #     n_subfeatures          = 0,
+    #     post_prune             = false,
+    #     merge_purity_threshold = 1.0,
+    #     feature_importance     = :impurity, # :impurity or :split
+    #     rng                    = Random.TaskLocalRNG()
+    # )
 
     winparams = WinParams(wholewindow, NamedTuple())
 
@@ -199,8 +199,8 @@ function DecisionTreeRegressorModel()::ModelSetup{AbstractRegression}
     return ModelSetup{AbstractRegression}(
         type,
         config,
-        params,
-        DEFAULT_FEATS,
+        # params,
+        # DEFAULT_FEATS,
         nothing,
         winparams,
         rawmodel,
@@ -217,17 +217,17 @@ function RandomForestRegressorModel()::ModelSetup{AbstractRegression}
     type   = MLJDecisionTreeInterface.RandomForestRegressor
     config = (type=DecisionEnsemble, treatment=:aggregate, rawapply=DT.apply_forest)
 
-    params = (;
-        max_depth           = -1,
-        min_samples_leaf    = 1,
-        min_samples_split   = 2,
-        min_purity_increase = 0.0,
-        n_subfeatures       = -1,
-        n_trees             = 100,
-        sampling_fraction   = 0.7,
-        feature_importance  = :impurity,
-        rng                 = Random.TaskLocalRNG()
-    )
+    # params = (;
+    #     max_depth           = -1,
+    #     min_samples_leaf    = 1,
+    #     min_samples_split   = 2,
+    #     min_purity_increase = 0.0,
+    #     n_subfeatures       = -1,
+    #     n_trees             = 100,
+    #     sampling_fraction   = 0.7,
+    #     feature_importance  = :impurity,
+    #     rng                 = Random.TaskLocalRNG()
+    # )
 
     winparams = WinParams(wholewindow, NamedTuple())
 
@@ -267,8 +267,8 @@ function RandomForestRegressorModel()::ModelSetup{AbstractRegression}
     return ModelSetup{AbstractRegression}(
         type,
         config,
-        params,
-        DEFAULT_FEATS,
+        # params,
+        # DEFAULT_FEATS,
         nothing,
         winparams,
         rawmodel,

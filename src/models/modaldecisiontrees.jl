@@ -7,29 +7,29 @@ function ModalDecisionTreeModel()::ModelSetup{AbstractClassification}
     type = MDT.ModalDecisionTree
     config  = (type=DecisionTree, treatment=:reducesize, modalreduce=MLJ.mean, rawapply=MDT.apply)
 
-    params = (;
-        max_depth              = nothing, 
-        min_samples_leaf       = 4, 
-        min_purity_increase    = 0.002, 
-        max_purity_at_leaf     = Inf, 
-        max_modal_depth        = nothing, 
-        relations              = :IA7, 
-        features               = DEFAULT_FEATS, 
-        conditions             = nothing, 
-        featvaltype            = Float64, 
-        initconditions         = nothing, 
-        downsize               = true, 
-        force_i_variables      = true, 
-        fixcallablenans        = true, 
-        print_progress         = false, 
-        rng                    = Random.TaskLocalRNG(), 
-        display_depth          = nothing, 
-        min_samples_split      = nothing, 
-        n_subfeatures          = identity, 
-        post_prune             = false, 
-        merge_purity_threshold = nothing, 
-        feature_importance     = :split,
-    )
+    # params = (;
+    #     max_depth              = nothing, 
+    #     min_samples_leaf       = 4, 
+    #     min_purity_increase    = 0.002, 
+    #     max_purity_at_leaf     = Inf, 
+    #     max_modal_depth        = nothing, 
+    #     relations              = :IA7, 
+    #     features               = DEFAULT_FEATS, 
+    #     conditions             = nothing, 
+    #     featvaltype            = Float64, 
+    #     initconditions         = nothing, 
+    #     downsize               = true, 
+    #     force_i_variables      = true, 
+    #     fixcallablenans        = true, 
+    #     print_progress         = false, 
+    #     rng                    = Random.TaskLocalRNG(), 
+    #     display_depth          = nothing, 
+    #     min_samples_split      = nothing, 
+    #     n_subfeatures          = identity, 
+    #     post_prune             = false, 
+    #     merge_purity_threshold = nothing, 
+    #     feature_importance     = :split,
+    # )
 
     winparams = WinParams(adaptivewindow, NamedTuple())
 
@@ -59,8 +59,8 @@ function ModalDecisionTreeModel()::ModelSetup{AbstractClassification}
     return ModelSetup{AbstractClassification}(
         type,
         config,
-        params,
-        DEFAULT_FEATS,
+        # params,
+        # DEFAULT_FEATS,
         nothing,
         winparams,
         rawmodel,
@@ -77,31 +77,31 @@ function ModalRandomForestModel()::ModelSetup{AbstractClassification}
     type   = MDT.ModalRandomForest
     config = (type=MDT.DecisionForest, treatment=:reducesize, modalreduce=MLJ.mean, rawapply=MDT.apply)
 
-    params = (;
-        sampling_fraction      = 0.7, 
-        ntrees                 = 10, 
-        max_depth              = nothing, 
-        min_samples_leaf       = 1, 
-        min_purity_increase    = -Inf, 
-        max_purity_at_leaf     = Inf, 
-        max_modal_depth        = nothing, 
-        relations              = :IA7, 
-        features               = DEFAULT_FEATS, 
-        conditions             = nothing, 
-        featvaltype            = Float64, 
-        initconditions         = nothing, 
-        downsize               = true, 
-        force_i_variables      = true, 
-        fixcallablenans        = true, 
-        print_progress         = false, 
-        rng                    = Random.TaskLocalRNG(), 
-        display_depth          = nothing, 
-        min_samples_split      = nothing, 
-        n_subfeatures          = MDT.MLJInterface.sqrt_f, 
-        post_prune             = false, 
-        merge_purity_threshold = nothing, 
-        feature_importance     = :split
-    )
+    # params = (;
+    #     sampling_fraction      = 0.7, 
+    #     ntrees                 = 10, 
+    #     max_depth              = nothing, 
+    #     min_samples_leaf       = 1, 
+    #     min_purity_increase    = -Inf, 
+    #     max_purity_at_leaf     = Inf, 
+    #     max_modal_depth        = nothing, 
+    #     relations              = :IA7, 
+    #     features               = DEFAULT_FEATS, 
+    #     conditions             = nothing, 
+    #     featvaltype            = Float64, 
+    #     initconditions         = nothing, 
+    #     downsize               = true, 
+    #     force_i_variables      = true, 
+    #     fixcallablenans        = true, 
+    #     print_progress         = false, 
+    #     rng                    = Random.TaskLocalRNG(), 
+    #     display_depth          = nothing, 
+    #     min_samples_split      = nothing, 
+    #     n_subfeatures          = MDT.MLJInterface.sqrt_f, 
+    #     post_prune             = false, 
+    #     merge_purity_threshold = nothing, 
+    #     feature_importance     = :split
+    # )
 
     winparams = WinParams(adaptivewindow, NamedTuple())
 
@@ -131,8 +131,8 @@ function ModalRandomForestModel()::ModelSetup{AbstractClassification}
     return ModelSetup{AbstractClassification}(
         type,
         config,
-        params,
-        DEFAULT_FEATS,
+        # params,
+        # DEFAULT_FEATS,
         nothing,
         winparams,
         rawmodel,
@@ -149,29 +149,29 @@ function ModalAdaBoostModel()::ModelSetup{AbstractClassification}
     type   = MDT.ModalAdaBoost
     config = (type=DecisionEnsemble, treatment=:reducesize, modalreduce=MLJ.mean, rawapply=MDT.apply)
 
-    params = (;
-        min_samples_leaf       = 1, 
-        min_purity_increase    = 0.0,
-        max_purity_at_leaf     = Inf, 
-        max_modal_depth        = nothing, 
-        relations              = :IA7, 
-        features               = DEFAULT_FEATS, 
-        conditions             = nothing, 
-        featvaltype            = Float64, 
-        initconditions         = nothing, 
-        downsize               = true, 
-        force_i_variables      = true, 
-        fixcallablenans        = true, 
-        print_progress         = false, 
-        rng                    = Random.TaskLocalRNG(), 
-        display_depth          = nothing, 
-        min_samples_split      = 2, 
-        n_subfeatures          = MDT.MLJInterface.sqrt_f,
-        post_prune             = false, 
-        merge_purity_threshold = nothing, 
-        feature_importance     = :split, 
-        n_iter                 = 10
-    )
+    # params = (;
+    #     min_samples_leaf       = 1, 
+    #     min_purity_increase    = 0.0,
+    #     max_purity_at_leaf     = Inf, 
+    #     max_modal_depth        = nothing, 
+    #     relations              = :IA7, 
+    #     features               = DEFAULT_FEATS, 
+    #     conditions             = nothing, 
+    #     featvaltype            = Float64, 
+    #     initconditions         = nothing, 
+    #     downsize               = true, 
+    #     force_i_variables      = true, 
+    #     fixcallablenans        = true, 
+    #     print_progress         = false, 
+    #     rng                    = Random.TaskLocalRNG(), 
+    #     display_depth          = nothing, 
+    #     min_samples_split      = 2, 
+    #     n_subfeatures          = MDT.MLJInterface.sqrt_f,
+    #     post_prune             = false, 
+    #     merge_purity_threshold = nothing, 
+    #     feature_importance     = :split, 
+    #     n_iter                 = 10
+    # )
 
     winparams = WinParams(adaptivewindow, NamedTuple())
 
@@ -201,8 +201,8 @@ function ModalAdaBoostModel()::ModelSetup{AbstractClassification}
     return ModelSetup{AbstractClassification}(
         type,
         config,
-        params,
-        DEFAULT_FEATS,
+        # params,
+        # DEFAULT_FEATS,
         nothing,
         winparams,
         rawmodel,

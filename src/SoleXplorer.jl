@@ -95,6 +95,8 @@ include("models/xgboost.jl")
 export makewatchlist
 
 include("interfaces/model_interface.jl")
+export MLJModel
+export show_params
 
 include("validation/validate_modelsetup.jl")
 

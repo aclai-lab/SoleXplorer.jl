@@ -225,13 +225,8 @@ function validate_modelset(;
 )::ModelSetup
     # propagate user rng to every field that needs it
     rng = hasproperty(preprocess, :rng) ? preprocess.rng : TaskLocalRNG()
-    @show rng
-    @show typeof(rng)
-    model = mljmodel(model, rng)
 
-    @show model
-    @show model.rng
-    @show model.features
+    model = mljmodel(model, rng)
     
     check_params(resample, (:type, :params))
     check_params(win, (:type, :params))

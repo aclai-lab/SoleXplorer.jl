@@ -48,8 +48,9 @@ function set_features(m::MLJ.Model, features::Vector{<:Base.Callable})::MLJ.Mode
 end
 
 # ---------------------------------------------------------------------------- #
-#                               validate model                                 #
+#                                  mljmodel                                    #
 # ---------------------------------------------------------------------------- #
+# converts a NamedTuple specification into an MLJ.Model instance.
 function mljmodel(m::NamedTuple, rng::AbstractRNG)::MLJ.Model
     issubset(keys(m), (:type, :params)) || throw(ArgumentError("Unknown fields."))
 
@@ -71,3 +72,13 @@ function mljmodel(m::NamedTuple, rng::AbstractRNG)::MLJ.Model
 
     return model
 end
+
+# ---------------------------------------------------------------------------- #
+#                                   methods                                    #
+# ---------------------------------------------------------------------------- #
+# returns parameters available in the model
+function show_params(m::MLJ.Model)
+    println("Fields of $(typeof(m)):")
+    NamedTuple{fieldnames(typeof(m))}(getfield.((m,), fieldnames(typeof(m))))
+end
+show_params(obj::MLJModel) = show_params(obj())
