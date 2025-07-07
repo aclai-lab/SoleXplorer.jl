@@ -50,6 +50,32 @@ end
 # ---------------------------------------------------------------------------- #
 params(mach::ModelSet) = params(mach.model)
 
+function Base.show(io::IO, mach::ModelSet)
+    model = mach.model
+    m = model isa Symbol ? ":$model" : model
+    print(io, "machine($m, …)")
+end
+
+function Base.show(io::IO, ::MIME"text/plain", mach::ModelSet{M}) where M
+    header =
+        mach.state == -1 ? "serializable " :
+        mach.state ==  0 ? "untrained " :
+        "trained "
+    header *= "ModelSet"
+    println(io, header)
+    println(io, "  model: $(mach.model)")
+    println(io, "  args: ")
+    for i in eachindex(mach.args)
+        arg = mach.args[i]
+        print(io, "    $i:\t$arg")
+        if arg isa Source
+            println(io, " \u23CE $(elscitype(arg))")
+        else
+            println(io)
+        end
+    end
+end
+
 # ---------------------------------------------------------------------------- #
 #                                   Modelset                                   #
 # ---------------------------------------------------------------------------- #

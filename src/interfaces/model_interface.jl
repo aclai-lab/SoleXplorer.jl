@@ -73,15 +73,3 @@ function mljmodel(m::NamedTuple, rng::AbstractRNG)::MLJ.Model
         throw(ArgumentError("Model $model not found in available models"))
     end
 end
-
-# ---------------------------------------------------------------------------- #
-#                                   methods                                    #
-# ---------------------------------------------------------------------------- #
-function show_params end
-
-# returns parameters available in the model
-function show_params(m::MLJ.Model)
-    println("Fields of $(typeof(m)):")
-    NamedTuple{fieldnames(typeof(m))}(getfield.((m,), fieldnames(typeof(m))))
-end
-show_params(obj::MLJModel) = show_params(obj())

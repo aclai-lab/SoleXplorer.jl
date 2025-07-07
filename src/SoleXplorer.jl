@@ -55,6 +55,7 @@ export base_set, catch9, catch22_set, complete_set
 include("interfaces/base_interface.jl")
 export modeltype
 
+import MLJ: Source
 include("interfaces/source_interface.jl")
 export TableSource, VectorSource, set_source
 
@@ -96,9 +97,10 @@ using MLJXGBoostInterface
 include("models/xgboost.jl")
 export makewatchlist
 
+import MLJ: params
 include("interfaces/model_interface.jl")
 export MLJModel
-export show_params
+@reexport using MLJ: params
 
 include("validation/validate_modelsetup.jl")
 
