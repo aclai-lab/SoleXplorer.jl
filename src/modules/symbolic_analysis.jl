@@ -126,22 +126,25 @@ sole_predict_mode(solem::AbstractModel, y_test) = solem.info.supporting_predicti
 #                              symbolic_analysis                               #
 # ---------------------------------------------------------------------------- #
 function symbolic_analysis(args...; extract_rules::NamedTupleBool=false, kwargs...)
-    model, ds = _prepare_dataset(args...; extract_rules, kwargs...)
-    mach = _train_machine!(model, ds)
-    _test_model!(model, mach, ds)
+    # model, ds = _prepare_dataset(args...; extract_rules, kwargs...)
 
-    if !isa(extract_rules, Bool) || extract_rules
-        rules_extraction!(model, ds, mach)
-    end
+    # mach = _train_machine!(model, ds)
+    # _test_model!(model, mach, ds)
 
-    get_measures(model.setup) === nothing || begin
-        y_test = if haskey(model.model[1].info, :supporting_labels)
-            get_y_test_folds(model)
-        else
-            @views [String.(ds.y[i.test]) for i in ds.tt]
-        end
-        eval_measures!(model, y_test)
-    end
+    # if !isa(extract_rules, Bool) || extract_rules
+    #     rules_extraction!(model, ds, mach)
+    # end
 
-    return model, mach, ds
+    # get_measures(model.setup) === nothing || begin
+    #     y_test = if haskey(model.model[1].info, :supporting_labels)
+    #         get_y_test_folds(model)
+    #     else
+    #         @views [String.(ds.y[i.test]) for i in ds.tt]
+    #     end
+    #     eval_measures!(model, y_test)
+    # end
+
+    # return model, mach, ds
+
+    _prepare_dataset(args...; extract_rules, kwargs...)
 end

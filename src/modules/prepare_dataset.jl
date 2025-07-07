@@ -281,7 +281,7 @@ end
 function _prepare_dataset(
     X             :: AbstractDataFrame,
     y             :: AbstractVector;
-    model         :: NamedTuple     = (;type=decisiontree),
+    model         :: NamedTuple     = (;type=decisiontreeclassifier),
     resample      :: NamedTuple     = (;type=Holdout),
     win           :: OptNamedTuple  = nothing,
     features      :: OptTuple       = nothing,
@@ -289,19 +289,25 @@ function _prepare_dataset(
     extract_rules :: NamedTupleBool = false,
     preprocess    :: OptNamedTuple  = nothing,
     measures      :: OptTuple       = nothing,
-)::Tuple{Modelset, Dataset}
-    args = source.((X, y))
-    modelset = validate_modelset(;
-        model,
-        resample,
-        win,
-        features,
-        tuning,
-        extract_rules,
-        preprocess,
-        measures
-    )
-    Modelset(modelset,), __prepare_dataset(args, modelset)
+# )::Tuple{Modelset, Dataset}
+)
+    # propagate user rng to every field that needs it
+    rng = hasproperty(preprocess, :rng) ? preprocess.rng : TaskLocalRNG()
+
+    mach = modelset(X, y, model; rng)
+    # mach = MLJ.machine(mlj_model, args...)
+
+    # modelset = validate_modelset(;
+    #     model,
+    #     resample,
+    #     win,
+    #     features,
+    #     tuning,
+    #     extract_rules,
+    #     preprocess,
+    #     measures
+    # )
+    # Modelset(modelset,), __prepare_dataset(args, modelset)
 end
 
 prepare_dataset(args...; kwargs...)::Tuple{Modelset, Dataset} = _prepare_dataset(args...; kwargs...)

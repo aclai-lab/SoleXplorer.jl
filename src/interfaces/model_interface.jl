@@ -42,8 +42,8 @@ function set_rng(m::MLJ.Model, rng::AbstractRNG)::MLJ.Model
     return m
 end
 
-function set_features(m::MLJ.Model, features::Vector{<:Base.Callable})::MLJ.Model
-    m.features = features
+function set_conditions(m::MLJ.Model, conditions::Vector{<:Base.Callable})::MLJ.Model
+    m.conditions = Function[conditions...]
     return m
 end
 
@@ -67,12 +67,11 @@ function mljmodel(m::NamedTuple, rng::AbstractRNG)::MLJ.Model
         # set rng if the model supports it
         hasproperty(model, :rng) && (model = set_rng(model, rng))
         # ModalDecisionTrees package needs features to be passed in model params
-        hasproperty(model, :features) && (model = set_features(model, get(m, :features, DEFAULT_FEATS)))
+        hasproperty(model, :features) && (model = set_conditions(model, get(modelparams, :conditions, DEFAULT_FEATS)))
+        return model
     else
         throw(ArgumentError("Model $model not found in available models"))
     end
-
-    return model
 end
 
 # ---------------------------------------------------------------------------- #

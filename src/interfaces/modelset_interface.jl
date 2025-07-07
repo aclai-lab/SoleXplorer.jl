@@ -1,4 +1,56 @@
 # ---------------------------------------------------------------------------- #
+#                                  modelset                                    #
+# ---------------------------------------------------------------------------- #
+# 'ModelSet' wrappers for storing data as arguments.
+# inspired by MLJ's `Machine` interface, but simplified for Sole.
+mutable struct ModelSet{M} <: MLJType
+    model::M
+    args::Tuple{Vararg{AbstractSource}}
+    fitresult
+    report # dictionary of named tuples keyed on method (:fit, :predict, etc):
+    state::Int
+
+    # data # cached model-specific reformatting of args (for C=true):
+    # resampled_data # cached subsample of data (for C=true):
+    # frozen::Bool
+    # old_rows
+    # old_upstream_state
+    # fit_okay::Channel{Bool} # cleared by fit!(::Node) calls; put! by `fit_only!(machine, true)` calls:
+
+    function ModelSet(model::M, args::AbstractSource...) where M
+        mach = new{M}(model, args)
+        # mach.frozen = false
+        mach.state = 0
+        # mach.old_upstream_state = upstream(mach)
+        # mach.fit_okay = Channel{Bool}(1)
+        return mach
+    end
+end
+
+# ---------------------------------------------------------------------------- #
+#                                 constructors                                 #
+# ---------------------------------------------------------------------------- #
+function modelset end
+
+function modelset(
+    X     :: AbstractDataFrame,
+    y     :: AbstractVector,
+    model :: NamedTuple;
+    rng   :: AbstractRNG = TaskLocalRNG(),
+)::ModelSet
+    args = source.((X, y))
+
+    # prepare mlj model to feed the mlj machine
+    mlj_model = mljmodel(model, rng)
+    ModelSet(mlj_model, args...)
+end
+
+# ---------------------------------------------------------------------------- #
+#                                   methods                                    #
+# ---------------------------------------------------------------------------- #
+params(mach::ModelSet) = params(mach.model)
+
+# ---------------------------------------------------------------------------- #
 #                                   Modelset                                   #
 # ---------------------------------------------------------------------------- #
 mutable struct ModelSetup{T<:AbstractModelType} <: AbstractModelSetup{T}

@@ -8,7 +8,7 @@ abstract type AbstractSource <: MLJType end
 # ---------------------------------------------------------------------------- #
 # 'Source' wrappers for storing data as arguments.
 # inspired by MLJ's `Source` interface, but simplified for Sole.
-struct TableSource{T<:DataFrame} <: AbstractSource
+struct TableSource{T<:AbstractDataFrame} <: AbstractSource
     data :: T
 end
 
@@ -21,7 +21,7 @@ end
 # ---------------------------------------------------------------------------- #
 function source end
 
-source(X::T) where {T<:DataFrame} = TableSource{T}(X)
+source(X::T) where {T<:AbstractDataFrame} = TableSource{T}(X)
 source(X::T) where {S, T<:AbstractVector{S}} = VectorSource{S,T}(X)
 
 # ---------------------------------------------------------------------------- #

@@ -55,12 +55,14 @@ export base_set, catch9, catch22_set, complete_set
 include("interfaces/base_interface.jl")
 export modeltype
 
+include("interfaces/source_interface.jl")
+export TableSource, VectorSource, set_source
+
 @reexport using SoleBase: movingwindow, wholewindow, splitwindow, adaptivewindow
 include("interfaces/windowing_interface.jl")
 
 include("interfaces/dataset_interface.jl")
-export TableSource, VectorSource, source
-export Dataset, get_X, get_y, get_tt, get_info, get_Xtrain, get_Xvalid, get_Xtest, get_ytrain, get_yvalid, get_ytest
+# export Dataset, get_X, get_y, get_tt, get_info, get_Xtrain, get_Xvalid, get_Xtest, get_ytrain, get_yvalid, get_ytest
 
 @reexport using MLJ: CV, Holdout, StratifiedCV, TimeSeriesCV
 include("interfaces/resample_interface.jl")
