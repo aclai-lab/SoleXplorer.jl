@@ -35,15 +35,15 @@ function modelset end
 function modelset(
     X         :: AbstractDataFrame,
     y         :: AbstractVector,
-    model     :: NamedTuple;
+    model     :: MLJ.Model;
     ts_params :: NamedTuple = NamedTuple(),
     rng       :: AbstractRNG = TaskLocalRNG(),
 )::ModelSet
     args = (source(X, ts_params), source(y))
 
     # prepare mlj model to feed the mlj machine
-    mlj_model = mljmodel(model, rng)
-    ModelSet(mlj_model, args...)
+    # mlj_model = mljmodel(model, rng)
+    ModelSet(model, args...)
 end
 
 # ---------------------------------------------------------------------------- #

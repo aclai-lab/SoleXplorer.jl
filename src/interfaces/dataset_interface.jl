@@ -1,6 +1,9 @@
 # ---------------------------------------------------------------------------- #
 #                                 dataset info                                 #
 # ---------------------------------------------------------------------------- #
+abstract type AbstractDatasetSetup end
+abstract type AbstractIndexCollection end
+
 struct DatasetInfo <: AbstractDatasetSetup
     treatment   :: Symbol
     modalreduce :: OptCallable
@@ -43,26 +46,26 @@ end
 # ---------------------------------------------------------------------------- #
 #                              indexes collection                              #
 # ---------------------------------------------------------------------------- #
-struct TT_indexes{T<:Integer} <: AbstractIndexCollection
-    train :: Vector{T}
-    valid :: Vector{T}
-    test  :: Vector{T}
+# struct TT_indexes{T<:Integer} <: AbstractIndexCollection
+#     train :: Vector{T}
+#     valid :: Vector{T}
+#     test  :: Vector{T}
 
-    function TT_indexes(
-        train :: AbstractVector{T},
-        valid :: AbstractVector{T},
-        test  :: AbstractVector{T}
-    ) where {T<:Integer}
-        new{T}(train, valid, test)
-    end
-end
+#     function TT_indexes(
+#         train :: AbstractVector{T},
+#         valid :: AbstractVector{T},
+#         test  :: AbstractVector{T}
+#     ) where {T<:Integer}
+#         new{T}(train, valid, test)
+#     end
+# end
 
-get_train(tt::TT_indexes) = tt.train
-get_valid(tt::TT_indexes) = tt.valid
-get_test(tt::TT_indexes)  = tt.test
+# get_train(tt::TT_indexes) = tt.train
+# get_valid(tt::TT_indexes) = tt.valid
+# get_test(tt::TT_indexes)  = tt.test
 
-Base.show(io::IO, t::TT_indexes) = print(io, "TT_indexes(train=", t.train, ", validation=", t.valid, ", test=", t.test, ")")
-Base.length(t::TT_indexes) = length(t.train) + length(t.valid) + length(t.test)
+# Base.show(io::IO, t::TT_indexes) = print(io, "TT_indexes(train=", t.train, ", validation=", t.valid, ", test=", t.test, ")")
+# Base.length(t::TT_indexes) = length(t.train) + length(t.valid) + length(t.test)
 
 # ---------------------------------------------------------------------------- #
 #                                   dataset                                    #

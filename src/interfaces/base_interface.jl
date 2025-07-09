@@ -4,8 +4,6 @@
 """
 Abstract types for dataset struct
 """
-abstract type AbstractDatasetSetup end
-abstract type AbstractIndexCollection end
 abstract type AbstractDataset end
 
 """

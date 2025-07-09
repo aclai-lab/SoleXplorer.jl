@@ -7,8 +7,7 @@ using  SoleData: PatchedFunction, nanpatchedfunction
 using  SoleModels
 using  SoleModels: AbstractModel, DecisionList, DecisionForest, DecisionEnsemble, DecisionSet
 using  SolePostHoc
-# using ModalDecisionTrees
-# using ModalDecisionLists
+
 import MultiData.hasnans
 
 using  DataFrames
@@ -17,15 +16,11 @@ using  Random
 # ---------------------------------------------------------------------------- #
 #                                     MLJ                                      #
 # ---------------------------------------------------------------------------- #
-# using  Tables
-# using  Tables: MatrixTable
 using  MLJ, MLJBase
-
 import MLJ: MLJType
 
 # classification measures
 @reexport using MLJ: accuracy, confusion_matrix, kappa, log_loss
-
 # regression measures
 @reexport using MLJ: rms, l1, l2, mae, mav
 
@@ -55,18 +50,19 @@ export base_set, catch9, catch22_set, complete_set
 include("interfaces/base_interface.jl")
 export modeltype
 
-import MLJ: Source
-include("interfaces/source_interface.jl")
-export TableSource, VectorSource, set_source
+# import MLJ: Source
+# include("interfaces/source.jl")
+# export TableSource, VectorSource, set_source
+
+@reexport using MLJ: Holdout, CV, StratifiedCV, TimeSeriesCV
+include("interfaces/partition.jl")
+export partition
 
 @reexport using SoleBase: movingwindow, wholewindow, splitwindow, adaptivewindow
 include("interfaces/windowing_interface.jl")
 
 include("interfaces/dataset_interface.jl")
 # export Dataset, get_X, get_y, get_tt, get_info, get_Xtrain, get_Xvalid, get_Xtest, get_ytrain, get_yvalid, get_ytest
-
-@reexport using MLJ: CV, Holdout, StratifiedCV, TimeSeriesCV
-include("interfaces/resample_interface.jl")
 
 @reexport using MLJ: Grid as grid, RandomSearch as randomsearch, LatinHypercube as latinhypercube
 @reexport using MLJParticleSwarmOptimization: ParticleSwarm as particleswarm, AdaptiveParticleSwarm as adaptiveparticleswarm
@@ -83,32 +79,40 @@ include("interfaces/measures_interface.jl")
 # ---------------------------------------------------------------------------- #
 #                                   models                                     #
 # ---------------------------------------------------------------------------- #
-import DecisionTree as DT
 using MLJDecisionTreeInterface
-include("models/decisiontrees.jl")
+@reexport using MLJDecisionTreeInterface: 
+    DecisionTreeClassifier, DecisionTreeRegressor,
+    RandomForestClassifier, RandomForestRegressor,
+    AdaBoostStumpClassifier
 
 using ModalDecisionTrees
-const MDT = ModalDecisionTrees
-include("models/modaldecisiontrees.jl")
+@reexport using ModalDecisionTrees: 
+    ModalDecisionTree, ModalRandomForest, ModalAdaBoost
 
-using XGBoost
-const XGB = XGBoost
-using MLJXGBoostInterface
-include("models/xgboost.jl")
-export makewatchlist
+using XGBoost, MLJXGBoostInterface
+@reexport using MLJXGBoostInterface: 
+    XGBoostClassifier, XGBoostRegressor
 
-import MLJ: params
-include("interfaces/model_interface.jl")
-@reexport using MLJ: params
-export decisiontreeclassifier, randomforestclassifier, adaboostclassifier
-export decisiontreeregressor, randomforestregressor
-export modaldecisiontree, modalrandomforest, modaladaboost
-export xgboostclassifier, xgboostregressor
+# import DecisionTree as DT
+# include("models/decisiontrees.jl")
+# const MDT = ModalDecisionTrees
+# include("models/modaldecisiontrees.jl")
+# const XGB = XGBoost
+# include("models/xgboost.jl")
+# export makewatchlist
+
+# import MLJ: params
+# include("interfaces/model.jl")
+# @reexport using MLJ: params
+# export decisiontreeclassifier, randomforestclassifier, adaboostclassifier
+# export decisiontreeregressor, randomforestregressor
+# export modaldecisiontree, modalrandomforest, modaladaboost
+# export xgboostclassifier, xgboostregressor
 
 include("validation/validate_modelsetup.jl")
 
-include("interfaces/modelset_interface.jl")
-export ModelSet, modelset
+# include("interfaces/modelset_interface.jl")
+# export ModelSet, modelset
 
 # ---------------------------------------------------------------------------- #
 #                                   modules                                    #
@@ -117,16 +121,16 @@ include("modules/prepare_dataset.jl")
 export code_dataset
 export prepare_dataset
 
-include("modules/train_test.jl")
-export train_test
+# include("modules/train_test.jl")
+# export train_test
 
-include("modules/symbolic_analysis.jl")
-export compute_results!, symbolic_analysis
-export get_algo, get_labels, get_predictions
-# export get_accuracy
+# include("modules/symbolic_analysis.jl")
+# export compute_results!, symbolic_analysis
+# export get_algo, get_labels, get_predictions
+# # export get_accuracy
 
-# import MLJ: predict, predict_mode, predict_mean
-include("utils/apply.jl")
-# export get_predict
+# # import MLJ: predict, predict_mode, predict_mean
+# include("utils/apply.jl")
+# # export get_predict
 
 end

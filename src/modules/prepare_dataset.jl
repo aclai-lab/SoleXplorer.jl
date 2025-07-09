@@ -165,126 +165,150 @@ end
 # ---------------------------------------------------------------------------- #
 #                                 partitioning                                 #
 # ---------------------------------------------------------------------------- #
-function _partition(
-    y::AbstractVector{<:SoleModels.Label},
-    train_ratio::Float64,
-    valid_ratio::Float64,
-    resample::Resample,
-    rng::AbstractRNG
-)::Union{TT_indexes{Int}, Vector{TT_indexes{Int}}}
-    resample_cv = resample.type(; resample.params...)
-    tt = MLJ.MLJBase.train_test_pairs(resample_cv, 1:length(y), y)
-    if valid_ratio == 1.0
-        return [TT_indexes(train, eltype(train)[], test) for (train, test) in tt]
-    else
-        tv = collect((MLJ.partition(t[1], train_ratio)..., t[2]) for t in tt)
-        return [TT_indexes(train, valid, test) for (train, valid, test) in tv]
-    end
+# function _partition(
+#     y::AbstractVector{<:SoleModels.Label},
+#     train_ratio::Float64,
+#     valid_ratio::Float64,
+#     resample::Resample,
+#     rng::AbstractRNG
+# )::Union{TT_indexes{Int}, Vector{TT_indexes{Int}}}
+#     resample_cv = resample.type(; resample.params...)
+#     tt = MLJ.MLJBase.train_test_pairs(resample_cv, 1:length(y), y)
+#     if valid_ratio == 1.0
+#         return [TT_indexes(train, eltype(train)[], test) for (train, test) in tt]
+#     else
+#         tv = collect((MLJ.partition(t[1], train_ratio)..., t[2]) for t in tt)
+#         return [TT_indexes(train, valid, test) for (train, valid, test) in tv]
+#     end
+# end
+
+# ---------------------------------------------------------------------------- #
+#                                   types                                      #
+# ---------------------------------------------------------------------------- #
+const DEFAULT_FEATS = [maximum, minimum, MLJ.mean, std]
+
+# ---------------------------------------------------------------------------- #
+#                                 utilities                                    #
+# ---------------------------------------------------------------------------- #
+function set_rng!(m::MLJ.Model, rng::AbstractRNG)::MLJ.Model
+    m.rng = rng
+    return m
+end
+
+function set_conditions!(m::MLJ.Model, conditions::Vector{<:Base.Callable})::MLJ.Model
+    m.conditions = Function[conditions...]
+    return m
 end
 
 # ---------------------------------------------------------------------------- #
 #                               prepare dataset                                #
 # ---------------------------------------------------------------------------- #
-function __prepare_dataset(
-    df::AbstractDataFrame,
-    y::AbstractVector;
-    algo::DataType,
-    treatment::Symbol,
-    features::Vector{<:Base.Callable},
-    train_ratio::Float64,
-    valid_ratio::Float64,
-    rng::AbstractRNG,
-    resample::Union{Resample, Nothing},
-    winparams::WinParams,
-    vnames::Union{VarNames,Nothing}=nothing,
-    modalreduce::OptCallable=nothing
-)::Dataset
-    X = Matrix(df)
-    # check parameters
-    check_dataset_type(X) || throw(ArgumentError("DataFrame must contain only numeric values, use SoleXplorer.code_dataset() to convert non-numeric data"))
-    size(X, 1) == length(y) || throw(ArgumentError("Number of rows in DataFrame must match length of class labels"))
-    check_row_consistency(X) || throw(ArgumentError("Elements within each row must have consistent dimensions"))
-    # treatment in AVAIL_TREATMENTS || throw(ArgumentError("Treatment must be one of: $AVAIL_TREATMENTS"))
+# function __prepare_dataset(
+#     df::AbstractDataFrame,
+#     y::AbstractVector;
+#     algo::DataType,
+#     treatment::Symbol,
+#     features::Vector{<:Base.Callable},
+#     train_ratio::Float64,
+#     valid_ratio::Float64,
+#     rng::AbstractRNG,
+#     resample::Union{Resample, Nothing},
+#     winparams::WinParams,
+#     vnames::Union{VarNames,Nothing}=nothing,
+#     modalreduce::OptCallable=nothing
+# )::Dataset
+#     X = Matrix(df)
+#     # check parameters
+#     check_dataset_type(X) || throw(ArgumentError("DataFrame must contain only numeric values, use SoleXplorer.code_dataset() to convert non-numeric data"))
+#     size(X, 1) == length(y) || throw(ArgumentError("Number of rows in DataFrame must match length of class labels"))
+#     check_row_consistency(X) || throw(ArgumentError("Elements within each row must have consistent dimensions"))
+#     # treatment in AVAIL_TREATMENTS || throw(ArgumentError("Treatment must be one of: $AVAIL_TREATMENTS"))
 
-    if algo == AbstractRegression
-        y isa AbstractVector{<:SoleModels.RLabel} || throw(ArgumentError("Regression requires a numeric target variable"))
-        y isa AbstractFloat || (y = Float64.(y))
-    elseif algo == AbstractClassification
-        y isa AbstractVector{<:SoleModels.CLabel} || throw(ArgumentError("Classification requires a categorical target variable"))
-        y isa MLJ.CategoricalArray || (y = coerce(y, MLJ.Multiclass))
-    end
+#     if algo == AbstractRegression
+#         y isa AbstractVector{<:SoleModels.RLabel} || throw(ArgumentError("Regression requires a numeric target variable"))
+#         y isa AbstractFloat || (y = Float64.(y))
+#     elseif algo == AbstractClassification
+#         y isa AbstractVector{<:SoleModels.CLabel} || throw(ArgumentError("Classification requires a categorical target variable"))
+#         y isa MLJ.CategoricalArray || (y = coerce(y, MLJ.Multiclass))
+#     end
 
-    if vnames === nothing
-        vnames = propertynames(df)
-    else
-        size(X, 2) == length(vnames) || throw(ArgumentError("Number of columns in DataFrame must match length of variable names"))
-        vnames isa AbstractVector{<:AbstractString} && (vnames = Symbol.(vnames))
-    end
+#     if vnames === nothing
+#         vnames = propertynames(df)
+#     else
+#         size(X, 2) == length(vnames) || throw(ArgumentError("Number of columns in DataFrame must match length of variable names"))
+#         vnames isa AbstractVector{<:AbstractString} && (vnames = Symbol.(vnames))
+#     end
 
-    hasnans(X) && @warn "DataFrame contains NaN values"
+#     hasnans(X) && @warn "DataFrame contains NaN values"
 
-    column_eltypes = eltype.(eachcol(X))
+#     column_eltypes = eltype.(eachcol(X))
 
-    if all(t -> t <: AbstractVector{<:Number}, column_eltypes) && !(winparams === nothing)
-        X, vnames = _treatment(X, vnames, treatment, [features...], winparams; modalreduce)
-    end
+#     if all(t -> t <: AbstractVector{<:Number}, column_eltypes) && !(winparams === nothing)
+#         X, vnames = _treatment(X, vnames, treatment, [features...], winparams; modalreduce)
+#     end
 
-    ds_info = DatasetInfo(
-        treatment,
-        modalreduce,
-        train_ratio,
-        valid_ratio,
-        rng,
-        vnames
-    )
+#     ds_info = DatasetInfo(
+#         treatment,
+#         modalreduce,
+#         train_ratio,
+#         valid_ratio,
+#         rng,
+#         vnames
+#     )
 
-    return Dataset(
-        X, y,
-        _partition(y, train_ratio, valid_ratio, resample, rng),
-        ds_info
-    )
-end
+#     return Dataset(
+#         X, y,
+#         _partition(y, train_ratio, valid_ratio, resample, rng),
+#         ds_info
+#     )
+# end
 
-function __prepare_dataset(
-    X::AbstractDataFrame,
-    y::AbstractVector,
-    model::AbstractModelSetup
-)::Dataset
-    # modal reduce function, optional for propositional
-    # modalreduce = haskey(model.preprocess, :modalreduce) ? model.config.modalreduce : nothing
+# function __prepare_dataset(
+#     X::AbstractDataFrame,
+#     y::AbstractVector,
+#     model::AbstractModelSetup
+# )::Dataset
+#     # modal reduce function, optional for propositional
+#     # modalreduce = haskey(model.preprocess, :modalreduce) ? model.config.modalreduce : nothing
 
-    __prepare_dataset(
-        X, y;
-        algo=modeltype(model),
-        treatment=model.config.treatment,
-        features=model.features,
-        train_ratio=model.preprocess.train_ratio,
-        valid_ratio=model.preprocess.valid_ratio,
-        rng=model.preprocess.rng,
-        resample=model.resample,
-        winparams=model.winparams,
-        vnames=model.preprocess.vnames,
-        modalreduce=model.preprocess.modalreduce,
-    )
-end
+#     __prepare_dataset(
+#         X, y;
+#         algo=modeltype(model),
+#         treatment=model.config.treatment,
+#         features=model.features,
+#         train_ratio=model.preprocess.train_ratio,
+#         valid_ratio=model.preprocess.valid_ratio,
+#         rng=model.preprocess.rng,
+#         resample=model.resample,
+#         winparams=model.winparams,
+#         vnames=model.preprocess.vnames,
+#         modalreduce=model.preprocess.modalreduce,
+#     )
+# end
 
 function _prepare_dataset(
     X             :: AbstractDataFrame,
     y             :: AbstractVector;
-    model         :: NamedTuple     = (;type=decisiontreeclassifier),
-    resample      :: NamedTuple     = (;type=Holdout),
+    model         :: MLJ.Model     = (;type=decisiontreeclassifier),
+    resample      :: NamedTuple     = (type=holdout(shuffle=true), train_ratio=0.7, rng=TaskLocalRNG()),
     win           :: OptNamedTuple  = nothing,
     features      :: OptTuple       = nothing,
     tuning        :: NamedTupleBool = false,
     # extract_rules :: NamedTupleBool = false,
-    preprocess    :: OptNamedTuple  = nothing,
     measures      :: OptTuple       = nothing,
 # )::Tuple{Modelset, Dataset}
 )
     # propagate user rng to every field that needs it
-    rng = hasproperty(preprocess, :rng) ? preprocess.rng : TaskLocalRNG()
+    rng = hasproperty(resample, :rng) ? resample.rng : TaskLocalRNG()
+    # set rng if the model supports it
+    hasproperty(model, :rng) && (model = set_rng!(model, rng))
+    # ModalDecisionTrees package needs features to be passed in model params
+    hasproperty(model, :features) && (model = set_conditions!(model, get(modelparams, :conditions, DEFAULT_FEATS)))
 
-    mach = modelset(X, y, model; rng)
+    # mach = modelset(X, y, model; rng)
+    ttpairs, pinfo = partition(y; resample...)
+
+
     # mach = MLJ.machine(mlj_model, args...)
 
     # modelset = validate_modelset(;
@@ -300,7 +324,7 @@ function _prepare_dataset(
     # Modelset(modelset,), __prepare_dataset(args, modelset)
 end
 
-prepare_dataset(args...; kwargs...)::Tuple{Modelset, Dataset} = _prepare_dataset(args...; kwargs...)
+prepare_dataset(args...; kwargs...) = _prepare_dataset(args...; kwargs...)
 
 # y is not a vector, but a symbol or a string that identifies a column in X
 function prepare_dataset(

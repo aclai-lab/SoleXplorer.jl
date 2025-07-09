@@ -29,11 +29,11 @@ end
 
 struct TimeSeriesSource{T<:AbstractDataFrame} <: AbstractSource
     data      :: T
-    params    :: NamedTuple
+    ts_params :: NamedTuple
 
-    function TimeSeriesSource(X::T, params::NamedTuple) where T<:AbstractDataFrame
-        data = process_multidim_ds(X, params)
-        new{T}(data, params)
+    function TimeSeriesSource(X::T, ts_params::NamedTuple) where T<:AbstractDataFrame
+        data = process_multidim_ds(X; ts_params...)
+        new{T}(data, ts_params)
     end
 end
 
