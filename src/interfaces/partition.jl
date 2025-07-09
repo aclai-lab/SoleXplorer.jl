@@ -67,11 +67,11 @@ end
 function partition end
 
 function partition(
-    y::AbstractVector{<:SoleModels.Label};
-    type::MLJ.ResamplingStrategy=Holdout(shuffle=true),
-    train_ratio::Real=0.7,
-    valid_ratio::Real=0.0,
-    rng::AbstractRNG=TaskLocalRNG()
+    y           :: AbstractVector{<:SoleModels.Label};
+    type        :: MLJ.ResamplingStrategy=Holdout(shuffle=true),
+    train_ratio :: Real=0.7,
+    valid_ratio :: Real=0.0,
+    rng         :: AbstractRNG=TaskLocalRNG()
 )::Tuple{Vector{PartitionIdxs}, PartitionInfo}
     hasproperty(type, :rng) && (type = set_rng!(type, rng))
 

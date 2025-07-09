@@ -289,7 +289,7 @@ end
 function _prepare_dataset(
     X             :: AbstractDataFrame,
     y             :: AbstractVector;
-    model         :: MLJ.Model     = (;type=decisiontreeclassifier),
+    model         :: MLJ.Model      = (;type=decisiontreeclassifier),
     resample      :: NamedTuple     = (type=holdout(shuffle=true), train_ratio=0.7, rng=TaskLocalRNG()),
     win           :: OptNamedTuple  = nothing,
     features      :: OptTuple       = nothing,
@@ -307,6 +307,7 @@ function _prepare_dataset(
 
     # mach = modelset(X, y, model; rng)
     ttpairs, pinfo = partition(y; resample...)
+    
 
 
     # mach = MLJ.machine(mlj_model, args...)
