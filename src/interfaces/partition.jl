@@ -78,8 +78,7 @@ function partition(
     pinfo = PartitionInfo(type, train_ratio, valid_ratio, rng)
 
     ttpairs = MLJ.MLJBase.train_test_pairs(type, 1:length(y), y)
-    @show typeof(ttpairs[1])
-    @show typeof(ttpairs[1][2])
+
     if valid_ratio == 0.0
         return ([PartitionIdxs(train, eltype(train)[], test) for (train, test) in ttpairs], pinfo)
     else

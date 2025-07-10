@@ -89,11 +89,28 @@ code_dataset!(X::AbstractDataFrame, y::AbstractVector) = code_dataset!(X), code_
 # ---------------------------------------------------------------------------- #
 #                          multidimensional dataset                            #
 # ---------------------------------------------------------------------------- #
-mutable struct DataSet <: AbstractDataSet
+mutable struct PropositionalDataSet <: AbstractDataSet
     mach    :: MLJ.Machine
-    ttpairs :: PartitionIdxs
-    pinfo :: PartitionInfo
-    tinfo :: TreatmentInfo
+    ttpairs :: Vector{PartitionIdxs}
+    pinfo   :: PartitionInfo
+end
+
+mutable struct ModalDataSet <: AbstractDataSet
+    mach    :: MLJ.Machine
+    ttpairs :: Vector{PartitionIdxs}
+    pinfo   :: PartitionInfo
+    tinfo   :: TreatmentInfo
+end
+
+function DataSet(
+    mach    :: MLJ.Machine,
+    ttpairs :: Vector{PartitionIdxs},
+    pinfo   :: PartitionInfo;
+    tinfo   :: Union{TreatmentInfo, Nothing} = nothing
+)
+    isnothing(tinfo) ?
+        PropositionalDataSet(mach, ttpairs, pinfo) :
+        ModalDataSet(mach, ttpairs, pinfo, tinfo)
 end
 
 # ---------------------------------------------------------------------------- #
@@ -110,8 +127,7 @@ function _prepare_dataset(
     tuning        :: NamedTupleBool          = false,
     # extract_rules :: NamedTupleBool = false,
     measures      :: OptTuple                = nothing,
-# )::Tuple{Modelset, Dataset}
-)
+)::AbstractDataSet
     # propagate user rng to every field that needs it
     rng = hasproperty(resample, :rng) ? resample.rng : TaskLocalRNG()
     # set rng if the model supports it
@@ -137,22 +153,13 @@ function _prepare_dataset(
         X, tinfo = treatment(X; win, features, treat, modalreduce)
     else
         X = code_dataset!(X)
+        tinfo = nothing
     end
 
     mach = MLJ.machine(model, X, y)
     ttpairs, pinfo = partition(y; resample...)
 
-    modelset = validate_modelset(;
-        model,
-        resample,
-        win,
-        features,
-        tuning,
-        extract_rules,
-        preprocess,
-        measures
-    )
-    Modelset(modelset,), __prepare_dataset(args, modelset)
+    DataSet(mach, ttpairs, pinfo; tinfo)
 end
 
 prepare_dataset(args...; kwargs...) = _prepare_dataset(args...; kwargs...)
