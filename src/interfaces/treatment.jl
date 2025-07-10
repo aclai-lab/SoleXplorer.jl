@@ -11,15 +11,43 @@
 #                               abstract types                                 #
 # ---------------------------------------------------------------------------- #
 abstract type AbstractTreatmentInfo end
+abstract type AbstractWinFunction end
+
+# ---------------------------------------------------------------------------- #
+#                                  windowing                                   #
+# ---------------------------------------------------------------------------- #
+struct WinFunction <: AbstractWinFunction
+    func   :: Function
+    params :: NamedTuple
+end
+# Make it callable - npoints is passed at execution time
+(w::WinFunction)(npoints::Int; kwargs...) = w.func(npoints; w.params..., kwargs...)
+
+function MovingWindow(;
+    window_size::Int,
+    window_step::Int,
+)
+    WinFunction(movingwindow, (;window_size, window_step))
+end
+
+WholeWindow(;) = WinFunction(wholewindow, (;))
+SplitWindow(;nwindows::Int) = WinFunction(splitwindow, (; nwindows))
+
+function AdaptiveWindow(;
+    nwindows::Int,
+    relative_overlap::AbstractFloat,
+)
+    WinFunction(adaptivewindow, (; nwindows, relative_overlap))
+end
 
 # ---------------------------------------------------------------------------- #
 #                          multidimensional dataset                            #
 # ---------------------------------------------------------------------------- #
 mutable struct TreatmentInfo <: AbstractTreatmentInfo
-    features    :: Union{Vector{<:Base.Callable}, Nothing},
-    winparams   :: WinParams,
-    treatment   :: Symbol=:aggregate,
-    modalreduce :: OptCallable=nothing
+    features    :: Vector{<:Base.Callable}
+    winparams   :: WinFunction
+    treatment   :: Symbol
+    modalreduce :: Base.Callable
 end
 
 # ---------------------------------------------------------------------------- #
@@ -29,71 +57,46 @@ function treatment end
 
 function treatment(
     X           :: AbstractDataFrame;
-    features    :: Union{Vector{<:Base.Callable}, Nothing},
-    winparams   :: WinParams,
-    treat       :: Symbol=:aggregate,
-    modalreduce :: OptCallable=nothing
+    treat       :: Symbol,
+    win         :: WinFunction=AdaptiveWindow(nwindows=3, relative_overlap=0.1),
+    features    :: Vector{<:Base.Callable}=[maximum, minimum],
+    modalreduce :: Base.Callable=mean
 )
     vnames = propertynames(X)
 
-    # working with audio files, we need to consider audio of different lengths.
-    # max_interval = first(find_max_length(X))
-    # n_intervals = winparams.type(max_interval; winparams.params...)
+    # run the windowing algo and set windows indexes
+    intervals = win(length(X[1,1]))
+    n_intervals = length(intervals)
 
     # define column names and prepare data structure based on treatment type
     if treat == :aggregate        # propositional
-        if length(n_intervals) == 1
-            col_names = [string(f, "(", v, ")") for f in features for v in vnames]
-            
-            n_rows = size(X, 1)
-            n_cols = length(col_names)
-            result_matrix = Matrix{eltype(T)}(undef, n_rows, n_cols)
+        if n_intervals == 1
+            # Apply feature to whole time series
+            _X = DataFrame(
+                [Symbol(f, "(", v, ")") => [f(ts) for ts in X[!, v]]
+                    for f in features
+                    for v in vnames]...)
+            # _X = DataFrame(pairs...)  # Add the splat operator!
         else
-            # define column names with features names and window indices
-            col_names = [string(f, "(", v, ")w", i) 
-                         for f in features 
-                         for v in vnames 
-                         for i in 1:length(n_intervals)]
-            
-            n_rows = size(X, 1)
-            n_cols = length(col_names)
-            result_matrix = Matrix{eltype(T)}(undef, n_rows, n_cols)
-        end
-            
-        # fill matrix
-        for (row_idx, row) in enumerate(eachrow(X))
-            row_intervals = winparams.type(maximum(length.(collect(row))); winparams.params...)
-            interval_diff = length(n_intervals) - length(row_intervals)
-
-            # calculate feature values for this row
-            feature_values = vcat([
-                vcat([f(col[r]) for r in row_intervals],
-                    fill(NaN, interval_diff)) for col in row, f in features
-            ]...)
-            result_matrix[row_idx, :] = feature_values
+            # apply feature to specific intervals
+            _X = DataFrame(
+                Symbol(f, "(", v, ")w", i) => f.(getindex.(X[!, v], Ref(interval)))
+                for f in features
+                for v in vnames
+                for (i, interval) in enumerate(intervals)
+            )
         end
 
     elseif treat == :reducesize   # modal
-        col_names = vnames
-        
-        n_rows = size(X, 1)
-        n_cols = length(col_names)
-        result_matrix = Matrix{T}(undef, n_rows, n_cols)
+        _X = DataFrame(
+            [v => [[modalreduce(ts[interval]) for interval in intervals]
+                for ts in X[!, v]]
+            for v in vnames]...
+        )
 
-        modalreduce === nothing && (modalreduce = mean)
-        
-        for (row_idx, row) in enumerate(eachrow(X))
-            row_intervals = winparams.type(maximum(length.(collect(row))); winparams.params...)
-            interval_diff = length(n_intervals) - length(row_intervals)
-            
-            # calculate reduced values for this row
-            reduced_data = [
-                vcat([modalreduce(col[r]) for r in row_intervals],
-                     fill(NaN, interval_diff)) for col in row
-            ]
-            result_matrix[row_idx, :] = reduced_data
-        end
+    else
+        error("Unknown treatment type: $treat")
     end
 
-    return result_matrix, col_names
+    return _X, TreatmentInfo(features, win, treat, modalreduce)
 end

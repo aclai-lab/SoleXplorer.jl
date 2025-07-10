@@ -2,6 +2,7 @@ module SoleXplorer
 using  Reexport
 
 using  SoleBase: Label, CLabel, RLabel, XGLabel
+using  SoleBase: movingwindow, wholewindow, splitwindow, adaptivewindow
 using  SoleData
 using  SoleData: PatchedFunction, nanpatchedfunction
 using  SoleModels
@@ -58,7 +59,10 @@ export modeltype
 include("interfaces/partition.jl")
 export partition
 
-@reexport using SoleBase: movingwindow, wholewindow, splitwindow, adaptivewindow
+include("interfaces/treatment.jl")
+export WinFunction, MovingWindow, WholeWindow, SplitWindow, AdaptiveWindow
+
+# @reexport using SoleBase: movingwindow, wholewindow, splitwindow, adaptivewindow
 include("interfaces/windowing_interface.jl")
 
 include("interfaces/dataset_interface.jl")

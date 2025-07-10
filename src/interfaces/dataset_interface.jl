@@ -73,7 +73,7 @@ end
 struct Dataset{T<:AbstractMatrix,S} <: AbstractDataset
     X           :: T
     y           :: S
-    tt          :: Vector{<:TT_indexes}
+    tt          :: Vector{<:PartitionIdxs}
     info        :: DatasetInfo
 end
 
