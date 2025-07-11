@@ -69,30 +69,30 @@ function treatment(
     n_intervals = length(intervals)
 
     # define column names and prepare data structure based on treatment type
-    if treat == :aggregate        # propositional
+    # propositional
+    if treat == :aggregate
         if n_intervals == 1
-            # Apply feature to whole time series
+            # apply feature to whole time-series
             _X = DataFrame(
                 [Symbol(f, "(", v, ")") => [f(ts) for ts in X[!, v]]
                     for f in features
                     for v in vnames]...)
-            # _X = DataFrame(pairs...)  # Add the splat operator!
         else
             # apply feature to specific intervals
             _X = DataFrame(
-                Symbol(f, "(", v, ")w", i) => f.(getindex.(X[!, v], Ref(interval)))
+                Symbol(f, "(", v, ")w", i) => f.(map(v -> @view(v[interval]), X[!, v]))
                 for f in features
                 for v in vnames
                 for (i, interval) in enumerate(intervals)
             )
         end
 
-    elseif treat == :reducesize   # modal
-        _X = DataFrame(
-            [v => [[modalreduce(ts[interval]) for interval in intervals]
-                for ts in X[!, v]]
-            for v in vnames]...
-        )
+    # modal
+    elseif treat == :reducesize
+        _X = DataFrame([
+            col => map(v -> modalreduce.(@views v[i] for i in intervals), X[!, col])
+            for col in vnames
+        ])
 
     else
         error("Unknown treatment type: $treat")

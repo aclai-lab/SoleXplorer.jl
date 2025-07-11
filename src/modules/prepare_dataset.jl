@@ -165,10 +165,10 @@ end
 prepare_dataset(args...; kwargs...) = _prepare_dataset(args...; kwargs...)
 
 # y is not a vector, but a symbol or a string that identifies a column in X
-function prepare_dataset(
-    X::AbstractDataFrame,
-    y::SymbolString;
-    kwargs...
-)::Tuple{Modelset, Dataset}
-    prepare_dataset(X[!, Not(y)], X[!, y]; kwargs...)
-end
+# function prepare_dataset(
+#     X::AbstractDataFrame,
+#     y::SymbolString;
+#     kwargs...
+# )::Tuple{Modelset, Dataset}
+#     prepare_dataset(X[!, Not(y)], X[!, y]; kwargs...)
+# end
