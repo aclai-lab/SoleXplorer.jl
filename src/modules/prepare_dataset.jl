@@ -144,12 +144,7 @@ function _prepare_dataset(
     # nel secondo caso, per economia di calcolo, verranno ridotti per finestre,
     # secondo un parametro di riduzione 'modalreduce' tipicamente mean, comunque definito dall'utente.
     if X[1, 1] isa AbstractArray
-        if model isa Modal
-            treat = :reducesize
-        else
-            treat = :aggregate
-            win   = WholeWindow()
-        end
+        treat = model isa Modal ? :reducesize : :aggregate
         X, tinfo = treatment(X; win, features, treat, modalreduce)
     else
         X = code_dataset!(X)

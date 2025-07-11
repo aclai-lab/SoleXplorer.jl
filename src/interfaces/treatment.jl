@@ -41,6 +41,56 @@ function AdaptiveWindow(;
 end
 
 # ---------------------------------------------------------------------------- #
+#                                  utilities                                   #
+# ---------------------------------------------------------------------------- #
+function apply_vectorized!(
+    X::DataFrame,
+    X_col::Vector{Vector{Float64}},
+    feature_func::Function,
+    col_name::Symbol
+)::Nothing
+    X[!, col_name] = collect(feature_func(X_col[i]) for i in 1:length(X_col))
+    return nothing
+end
+
+function apply_vectorized!(
+    X::DataFrame,
+    X_col::Vector{Vector{Float64}},
+    feature_func::Function,
+    col_name::Symbol,
+    interval::UnitRange{Int64}
+)::Nothing
+    X[!, col_name] = collect(feature_func(@views X_col[i][interval]) for i in 1:length(X_col))
+    return nothing
+end
+
+function apply_vectorized!(
+    X::DataFrame,
+    X_col::Vector{Vector{Float64}},
+    modalreduce_func::Function,
+    col_name::Symbol,
+    intervals::Vector{UnitRange{Int64}},
+    n_rows::Int,
+    n_intervals::Int
+)::Nothing
+    result_column = Vector{Vector{Float64}}(undef, n_rows)
+    row_result = Vector{Float64}(undef, n_intervals)
+    
+    @inbounds @fastmath for row_idx in 1:n_rows
+        ts = X_col[row_idx]
+        
+        for (i, interval) in enumerate(intervals)
+            row_result[i] = modalreduce_func(@view(ts[interval]))
+        end
+        result_column[row_idx] = copy(row_result)
+    end
+
+    X[!, col_name] = result_column
+    
+    return nothing
+end
+
+# ---------------------------------------------------------------------------- #
 #                          multidimensional dataset                            #
 # ---------------------------------------------------------------------------- #
 mutable struct TreatmentInfo <: AbstractTreatmentInfo
@@ -63,6 +113,9 @@ function treatment(
     modalreduce :: Base.Callable=mean
 )
     vnames = propertynames(X)
+    n_rows = nrow(X)
+    _X = DataFrame()
+
 
     # run the windowing algo and set windows indexes
     intervals = win(length(X[1,1]))
@@ -73,26 +126,29 @@ function treatment(
     if treat == :aggregate
         if n_intervals == 1
             # apply feature to whole time-series
-            _X = DataFrame(
-                [Symbol(f, "(", v, ")") => [f(ts) for ts in X[!, v]]
-                    for f in features
-                    for v in vnames]...)
+            for f in features
+                @simd for v in vnames
+                    col_name = Symbol(f, "(", v, ")")
+                    apply_vectorized!(_X, X[!, v], f, col_name)
+                end
+            end
         else
             # apply feature to specific intervals
-            _X = DataFrame(
-                Symbol(f, "(", v, ")w", i) => f.(map(v -> @view(v[interval]), X[!, v]))
-                for f in features
-                for v in vnames
-                for (i, interval) in enumerate(intervals)
-            )
+            for f in features
+                @simd for v in vnames
+                    for (i, interval) in enumerate(intervals)
+                        col_name = Symbol(f, "(", v, ")w", i)
+                        apply_vectorized!(_X, X[!, v], f, col_name, interval)
+                    end
+                end
+            end
         end
 
     # modal
     elseif treat == :reducesize
-        _X = DataFrame([
-            col => map(v -> modalreduce.(@views v[i] for i in intervals), X[!, col])
-            for col in vnames
-        ])
+        for v in vnames
+            apply_vectorized!(_X, X[!, v], modalreduce, v, intervals, n_rows, n_intervals)
+        end
 
     else
         error("Unknown treatment type: $treat")
