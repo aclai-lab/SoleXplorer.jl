@@ -16,82 +16,78 @@ Xts, yts = SoleData.load_arff_dataset("NATOPS")
 #                        prepare dataset usage examples                        #
 # ---------------------------------------------------------------------------- #
 # basic setup
-modelc, dsc = prepare_dataset(Xc, yc)
-@test modelc isa SoleXplorer.Modelset
-@test dsc    isa SoleXplorer.Dataset
-modelr, dsr = prepare_dataset(Xr, yr)
-@test modelr isa SoleXplorer.Modelset
-@test dsr    isa SoleXplorer.Dataset
+modelc = prepare_dataset(Xc, yc)
+@test modelc isa SoleXplorer.PropositionalDataSet{DecisionTreeClassifier}
+modelr = prepare_dataset(Xr, yr)
+@test modelr isa SoleXplorer.PropositionalDataSet{DecisionTreeRegressor}
+
 
 # model type specification
-modelc, dsc = prepare_dataset(
+modelc = prepare_dataset(
     Xc, yc;
-    model=(;type=:decisiontree)
+    model=DecisionTreeClassifier()
 )
-@test modelc isa SoleXplorer.Modelset
-@test dsc    isa SoleXplorer.Dataset
+@test modelc isa SoleXplorer.PropositionalDataSet{DecisionTreeClassifier}
 
-modelc, dsc = prepare_dataset(
+modelc = prepare_dataset(
     Xc, yc;
-    model=(;type=:randomforest)
+    model=RandomForestClassifier()
 )
-@test modelc isa SoleXplorer.Modelset
-@test dsc    isa SoleXplorer.Dataset
+@test modelc isa SoleXplorer.PropositionalDataSet{RandomForestClassifier}
 
-modelc, dsc = prepare_dataset(
+modelc = prepare_dataset(
     Xc, yc;
-    model=(;type=:adaboost)
+    model=AdaBoostStumpClassifier()
 )
-@test modelc isa SoleXplorer.Modelset
-@test dsc    isa SoleXplorer.Dataset
+@test modelc isa SoleXplorer.PropositionalDataSet{AdaBoostStumpClassifier}
 
-modelr, dsr = prepare_dataset(
+modelr = prepare_dataset(
     Xr, yr;
-    model=(;type=:decisiontree)
+    model=DecisionTreeRegressor()
 )
-@test modelr isa SoleXplorer.Modelset
-@test dsr    isa SoleXplorer.Dataset
+@test modelr isa SoleXplorer.PropositionalDataSet{DecisionTreeRegressor}
 
-modelr, dsr = prepare_dataset(
+modelr = prepare_dataset(
     Xr, yr;
-    model=(;type=:randomforest)
+    model=RandomForestRegressor()
 )
-@test modelr isa SoleXplorer.Modelset
-@test dsr    isa SoleXplorer.Dataset
+@test modelr isa SoleXplorer.PropositionalDataSet{RandomForestRegressor}
 
-modelc, dsc = prepare_dataset(
-    Xc, yc;
-    model=(;type=:modaldecisiontree)
+modelc = prepare_dataset(
+    Xts, yts;
+    model=ModalDecisionTree()
 )
-@test modelc isa SoleXplorer.Modelset
-@test dsc    isa SoleXplorer.Dataset
+@test modelc isa SoleXplorer.ModalDataSet{ModalDecisionTree}
 
-modelc, dsc = prepare_dataset(
-    Xc, yc;
-    model=(;type=:modalrandomforest)
+modelc = prepare_dataset(
+    Xts, yts;
+    model=ModalRandomForest()
 )
-@test modelc isa SoleXplorer.Modelset
-@test dsc    isa SoleXplorer.Dataset
+@test modelc isa SoleXplorer.ModalDataSet{ModalRandomForest}
 
-modelc, dsc = prepare_dataset(
-    Xc, yc;
-    model=(;type=:modaladaboost)
+modelc = prepare_dataset(
+    Xts, yts;
+    model=ModalAdaBoost()
 )
-@test modelc isa SoleXplorer.Modelset
-@test dsc    isa SoleXplorer.Dataset
+@test modelc isa SoleXplorer.ModalDataSet{ModalAdaBoost}
 
-modelc, dsc = prepare_dataset(
+modelc = prepare_dataset(
     Xc, yc;
-    model=(;type=:xgboost)
+    model=XGBoostClassifier()
 )
-@test modelc isa SoleXplorer.Modelset
-@test dsc    isa SoleXplorer.Dataset
+@test modelc isa SoleXplorer.PropositionalDataSet{XGBoostClassifier}
+
+modelr = prepare_dataset(
+    Xr, yr;
+    model=XGBoostRegressor()
+)
+@test modelr isa SoleXplorer.PropositionalDataSet{XGBoostRegressor}
 
 # ---------------------------------------------------------------------------- #
 #                covering various examples to complete codecov                 #
 # ---------------------------------------------------------------------------- #
 y_symbol = :petal_width
-modelc, dsc = prepare_dataset(Xc, y_symbol)
+modelc = prepare_dataset(Xc, y_symbol)
 @test modelc isa SoleXplorer.Modelset
 @test dsc    isa SoleXplorer.Dataset
 
@@ -110,7 +106,7 @@ Xnn = hcat(Xc, DataFrame(target = yc))
 
 modelts, dts = prepare_dataset(Xts, yts)
 
-modelc, dsc = prepare_dataset(
+modelc = prepare_dataset(
     Xc, yc;
     preprocess=(train_ratio=0.5, vnames=["p1", "p2", "p3", "p4"], modalreduce=maximum)
 )
@@ -120,35 +116,35 @@ modelc, dsc = prepare_dataset(
 # ---------------------------------------------------------------------------- #
 #                                 resamplig                                    #
 # ---------------------------------------------------------------------------- #
-modelc, dsc = prepare_dataset(
+modelc = prepare_dataset(
     Xc, yc;
     resample=(;type=CV)
 )
 @test modelc isa SoleXplorer.Modelset
 @test dsc    isa SoleXplorer.Dataset
 
-modelc, dsc = prepare_dataset(
+modelc = prepare_dataset(
     Xc, yc;
     resample=(;type=Holdout)
 )
 @test modelc isa SoleXplorer.Modelset
 @test dsc    isa SoleXplorer.Dataset
 
-modelc, dsc = prepare_dataset(
+modelc = prepare_dataset(
     Xc, yc;
     resample=(;type=StratifiedCV)
 )
 @test modelc isa SoleXplorer.Modelset
 @test dsc    isa SoleXplorer.Dataset
 
-modelc, dsc = prepare_dataset(
+modelc = prepare_dataset(
     Xc, yc;
     resample=(;type=TimeSeriesCV)
 )
 @test modelc isa SoleXplorer.Modelset
 @test dsc    isa SoleXplorer.Dataset
 
-modelc, dsc = prepare_dataset(
+modelc = prepare_dataset(
     Xc, yc;
     resample=(type=CV, params=(nfolds=10, shuffle=true, rng=rng=Xoshiro(1)))
 )
@@ -158,7 +154,7 @@ modelc, dsc = prepare_dataset(
 # ---------------------------------------------------------------------------- #
 #                            validate modelsetup                               #
 # ---------------------------------------------------------------------------- #
-modelc, dsc = prepare_dataset(
+modelc = prepare_dataset(
     Xc, yc;
     model=(type=:decisiontree, params=(;max_depth=5))
 )
@@ -200,7 +196,7 @@ Xrc[1,2] = Xrc[1,1][1:end-3]
 # ---------------------------------------------------------------------------- #
 #                                dataset info                                  #
 # ---------------------------------------------------------------------------- #
-modelc, dsc = prepare_dataset(Xc, yc)
+modelc = prepare_dataset(Xc, yc)
 
 @test SX.get_treatment(dsc.info) == :aggregate
 @test SX.get_modalreduce(dsc.info) == mean

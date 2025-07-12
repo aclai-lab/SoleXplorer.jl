@@ -9,6 +9,22 @@ abstract type AbstractDataSet end
 const Modal = Union{ModalDecisionTree, ModalRandomForest, ModalAdaBoost}
 
 # ---------------------------------------------------------------------------- #
+#                                  defaults                                    #
+# ---------------------------------------------------------------------------- #
+# utilizzato in caso non venga specificato il modello da utilizzare
+# restituisce un modello di classificazione o di regressione
+# a seconda del tipo di y.
+function _DefaultModel(y::AbstractVector)::MLJ.Model
+    if     eltype(y) <: CLabel
+        return DecisionTreeClassifier()
+    elseif eltype(y) <: RLabel
+        return DecisionTreeRegressor()
+    else
+        throw(ArgumentError("Unsupported type for y: $(eltype(y))"))
+    end
+end
+
+# ---------------------------------------------------------------------------- #
 #                                 utilities                                    #
 # ---------------------------------------------------------------------------- #
 function set_rng!(m::MLJ.Model, rng::AbstractRNG)::MLJ.Model
@@ -89,28 +105,28 @@ code_dataset!(X::AbstractDataFrame, y::AbstractVector) = code_dataset!(X), code_
 # ---------------------------------------------------------------------------- #
 #                          multidimensional dataset                            #
 # ---------------------------------------------------------------------------- #
-mutable struct PropositionalDataSet <: AbstractDataSet
+mutable struct PropositionalDataSet{M} <: AbstractDataSet
     mach    :: MLJ.Machine
-    ttpairs :: Vector{PartitionIdxs}
+    pidxs   :: Vector{PartitionIdxs}
     pinfo   :: PartitionInfo
 end
 
-mutable struct ModalDataSet <: AbstractDataSet
+mutable struct ModalDataSet{M} <: AbstractDataSet
     mach    :: MLJ.Machine
-    ttpairs :: Vector{PartitionIdxs}
+    pidxs   :: Vector{PartitionIdxs}
     pinfo   :: PartitionInfo
     tinfo   :: TreatmentInfo
 end
 
 function DataSet(
-    mach    :: MLJ.Machine,
-    ttpairs :: Vector{PartitionIdxs},
+    mach    :: MLJ.Machine{M},
+    pidxs   :: Vector{PartitionIdxs},
     pinfo   :: PartitionInfo;
     tinfo   :: Union{TreatmentInfo, Nothing} = nothing
-)
+) where {M<:MLJ.Model}
     isnothing(tinfo) ?
-        PropositionalDataSet(mach, ttpairs, pinfo) :
-        ModalDataSet(mach, ttpairs, pinfo, tinfo)
+        PropositionalDataSet{M}(mach, pidxs, pinfo) :
+        ModalDataSet{M}(mach, pidxs, pinfo, tinfo)
 end
 
 # ---------------------------------------------------------------------------- #
@@ -119,8 +135,8 @@ end
 function _prepare_dataset(
     X             :: AbstractDataFrame,
     y             :: AbstractVector;
-    model         :: MLJ.Model               = (;type=decisiontreeclassifier),
-    resample      :: NamedTuple              = (type=holdout(shuffle=true), train_ratio=0.7, rng=TaskLocalRNG()),
+    model         :: MLJ.Model               = _DefaultModel(y),
+    resample      :: NamedTuple              = (type=Holdout(shuffle=true), train_ratio=0.7, rng=TaskLocalRNG()),
     win           :: WinFunction             = AdaptiveWindow(nwindows=3, relative_overlap=0.1),
     features      :: Vector{<:Base.Callable} = [maximum, minimum],
     modalreduce   :: Base.Callable           = mean,
@@ -159,11 +175,11 @@ end
 
 prepare_dataset(args...; kwargs...) = _prepare_dataset(args...; kwargs...)
 
-# y is not a vector, but a symbol or a string that identifies a column in X
-# function prepare_dataset(
-#     X::AbstractDataFrame,
-#     y::SymbolString;
-#     kwargs...
-# )::Tuple{Modelset, Dataset}
-#     prepare_dataset(X[!, Not(y)], X[!, y]; kwargs...)
-# end
+# y is not a vector, but a symbol that identifies a column in X
+function prepare_dataset(
+    X::AbstractDataFrame,
+    y::Symbol;
+    kwargs...
+)::Tuple{Modelset, Dataset}
+    prepare_dataset(X[!, Not(y)], X[!, y]; kwargs...)
+end
