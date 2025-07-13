@@ -144,7 +144,7 @@ function _prepare_dataset(
     win           :: WinFunction             = AdaptiveWindow(nwindows=3, relative_overlap=0.1),
     features      :: Vector{<:Base.Callable} = [maximum, minimum],
     modalreduce   :: Base.Callable           = mean,
-    tuning        :: NamedTuple              = ()
+    tuning        :: NamedTuple              = NamedTuple()
 )::AbstractDataSet
     # propagate user rng to every field that needs it
     rng = hasproperty(resample, :rng) ? resample.rng : TaskLocalRNG()
@@ -171,7 +171,7 @@ function _prepare_dataset(
 
     ttpairs, pinfo = partition(y; resample...)
 
-    isnothing(tuning) || begin
+    isempty(tuning) || begin
         if !(tuning.range isa MLJ.NominalRange)
             range = tuning.range isa Tuple{Vararg{<:Tuple}} ? tuning.range : (tuning.range,)
             range = collect(MLJ.range(model, r[1]; r[2:end]...) for r in range)
