@@ -31,9 +31,22 @@ const TunedModalDecisionTreeApply = Union{
 }
 
 # ---------------------------------------------------------------------------- #
-#                                  utilities                                   #
+#                              xgboost utilities                               #
 # ---------------------------------------------------------------------------- #
-get_base_score(m::MLJ.Machine) = hasproperty(m.setup.params, :base_score) ? m.setup.params.base_score : nothing
+get_base_score(m::MLJ.Machine) = hasproperty(m.model, :base_score) ? m.model.base_score : nothing
+get_encoding(classes_seen) = Dict(MLJ.int(c) => c for c in MLJ.classes(classes_seen))
+get_classlabels(encoding)  = [string(encoding[i]) for i in sort(keys(encoding) |> collect)]
+
+# function makewatchlist(ds::Dataset)
+#     isempty(ds.tt[1].valid) && throw(ArgumentError("No validation data provided, use preprocess valid_ratio parameter"))
+            
+#     y_coded_train = @. MLJ.levelcode(ds.y[ds.tt[1].train]) - 1 # convert to 0-based indexing
+#     y_coded_valid = @. MLJ.levelcode(ds.y[ds.tt[1].valid]) - 1 # convert to 0-based indexing
+#     dtrain        = XGBoost.DMatrix((ds.X[ds.tt[1].train, :], y_coded_train); feature_names=ds.info.vnames)
+#     dvalid        = XGBoost.DMatrix((ds.X[ds.tt[1].valid, :], y_coded_valid); feature_names=ds.info.vnames)
+
+#     XGBoost.OrderedDict(["train" => dtrain, "eval" => dvalid])
+# end
 
 # ---------------------------------------------------------------------------- #
 #                             DecisionTree package                             #
@@ -161,7 +174,7 @@ function apply(
     X      :: AbstractDataFrame,
     y      :: AbstractVector
 )
-    trees        = XGB.trees(model.mach.fitresult[1])
+    trees        = XGBoost.trees(model.mach.fitresult[1])
     encoding     = get_encoding(model.mach.fitresult[2])
     classlabels  = string.(get_classlabels(encoding))
     featurenames = model.mach.report.vals[1].features
@@ -175,7 +188,7 @@ function apply(
     X      :: AbstractDataFrame,
     y      :: AbstractVector
 )
-    trees        = XGB.trees(model.mach.fitresult.fitresult[1])
+    trees        = XGBoost.trees(model.mach.fitresult.fitresult[1])
     encoding     = get_encoding(model.mach.fitresult.fitresult[2])
     classlabels  = string.(get_classlabels(encoding))
     featurenames = model.mach.fitresult.report.vals[1].features
@@ -187,16 +200,15 @@ end
 function apply(
     model   :: PropositionalDataSet{XGBoostRegressor},
     X       :: AbstractDataFrame,
-    y       :: AbstractVector,
-    bs      :: AbstractFloat
+    y       :: AbstractVector
 )
-    base_score = get_base_score(model) == -Inf ? mean(ds.y[train]) : 0.5
+    base_score = get_base_score(model.mach) == -Inf ? mean(ds.y[train]) : 0.5
     model.mach.model.base_score = base_score
 
-    trees        = XGB.trees(model.mach.fitresult[1])
+    trees        = XGBoost.trees(model.mach.fitresult[1])
     featurenames = model.mach.report.vals[1].features
     solem        = solemodel(trees, Matrix(X), y; featurenames)
-    apply!(solem, mapcols(col -> Float32.(col), X), y; base_score=bs)
+    apply!(solem, mapcols(col -> Float32.(col), X), y; base_score)
     return solem
 end
 
@@ -209,7 +221,7 @@ function apply(
     base_score = get_base_score(model) == -Inf ? mean(ds.y[train]) : 0.5
     model.mach.model.model.base_score = base_score
 
-    trees        = XGB.trees(model.mach.fitresult.fitresult[1])
+    trees        = XGBoost.trees(model.mach.fitresult.fitresult[1])
     featurenames = model.mach.fitresult.report.vals[1].features
     solem        = solemodel(trees, Matrix(X), y; featurenames)
     apply!(solem, mapcols(col -> Float32.(col), X), y; base_score=bs)

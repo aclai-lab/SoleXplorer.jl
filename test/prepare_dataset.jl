@@ -56,19 +56,19 @@ modelts = prepare_dataset(
     Xts, yts;
     model=ModalDecisionTree()
 )
-@test modelc isa SX.ModalDataSet{ModalDecisionTree}
+@test modelts isa SX.ModalDataSet{ModalDecisionTree}
 
 modelts = prepare_dataset(
     Xts, yts;
     model=ModalRandomForest()
 )
-@test modelc isa SX.ModalDataSet{ModalRandomForest}
+@test modelts isa SX.ModalDataSet{ModalRandomForest}
 
 modelts = prepare_dataset(
     Xts, yts;
     model=ModalAdaBoost()
 )
-@test modelc isa SX.ModalDataSet{ModalAdaBoost}
+@test modelts isa SX.ModalDataSet{ModalAdaBoost}
 
 modelc = prepare_dataset(
     Xc, yc;
@@ -148,6 +148,17 @@ modelc = prepare_dataset(
 @test modelc isa SX.PropositionalDataSet{DecisionTreeClassifier}
 @test modelc.mach.model.rng isa Xoshiro
 @test modelc.pinfo.rng isa Xoshiro
+
+range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
+
+modelc = prepare_dataset(
+    Xc, yc;
+    model=DecisionTreeClassifier(),
+    resample=(type=CV(nfolds=5, shuffle=true), rng=Xoshiro(1)),
+    tuning=(;tuning=Grid(resolution=10), resampling=CV(nfolds=3), range, measure=accuracy, repeats=2)
+)
+@test modelc.mach.model.tuning.rng isa Xoshiro
+@test modelc.mach.model.resampling.rng isa Xoshiro
 
 # ---------------------------------------------------------------------------- #
 #                            validate modelsetup                               #

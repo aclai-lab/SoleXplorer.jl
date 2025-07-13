@@ -33,68 +33,133 @@ modelr = train_test(datar)
 # ---------------------------------------------------------------------------- #
 #                                     models                                   #
 # ---------------------------------------------------------------------------- #
-modelc = prepare_dataset(
+modelc = train_test(
     Xc, yc;
     model=DecisionTreeClassifier()
 )
-@test modelc isa SX.PropositionalDataSet{DecisionTreeClassifier}
+@test modelc isa SX.ModelSet{SX.PropositionalDataSet{DecisionTreeClassifier}}
 
-modelc = prepare_dataset(
+modelc = train_test(
     Xc, yc;
     model=RandomForestClassifier()
 )
-@test modelc isa SX.PropositionalDataSet{RandomForestClassifier}
+@test modelc isa SX.ModelSet{SX.PropositionalDataSet{RandomForestClassifier}}
 
-modelc = prepare_dataset(
+modelc = train_test(
     Xc, yc;
     model=AdaBoostStumpClassifier()
 )
-@test modelc isa SX.PropositionalDataSet{AdaBoostStumpClassifier}
+@test modelc isa SX.ModelSet{SX.PropositionalDataSet{AdaBoostStumpClassifier}}
 
-modelr = prepare_dataset(
+modelr = train_test(
     Xr, yr;
     model=DecisionTreeRegressor()
 )
-@test modelr isa SX.PropositionalDataSet{DecisionTreeRegressor}
+@test modelr isa SX.ModelSet{SX.PropositionalDataSet{DecisionTreeRegressor}}
 
-modelr = prepare_dataset(
+modelr = train_test(
     Xr, yr;
     model=RandomForestRegressor()
 )
-@test modelr isa SX.PropositionalDataSet{RandomForestRegressor}
+@test modelr isa SX.ModelSet{SX.PropositionalDataSet{RandomForestRegressor}}
 
-modelts = prepare_dataset(
+modelts = train_test(
     Xts, yts;
     model=ModalDecisionTree()
 )
-@test modelc isa SX.ModalDataSet{ModalDecisionTree}
+@test modelts isa SX.ModelSet{SX.ModalDataSet{ModalDecisionTree}}
 
-modelts = prepare_dataset(
+modelts = train_test(
     Xts, yts;
     model=ModalRandomForest()
 )
-@test modelc isa SX.ModalDataSet{ModalRandomForest}
+@test modelts isa SX.ModelSet{SX.ModalDataSet{ModalRandomForest}}
 
-modelts = prepare_dataset(
+modelts = train_test(
     Xts, yts;
     model=ModalAdaBoost()
 )
-@test modelc isa SX.ModalDataSet{ModalAdaBoost}
+@test modelts isa SX.ModelSet{SX.ModalDataSet{ModalAdaBoost}}
 
-modelc = prepare_dataset(
+modelc = train_test(
     Xc, yc;
     model=XGBoostClassifier()
 )
-@test modelc isa SX.PropositionalDataSet{XGBoostClassifier}
+@test modelc isa SX.ModelSet{SX.PropositionalDataSet{XGBoostClassifier}}
 
-modelr = prepare_dataset(
+modelr = train_test(
     Xr, yr;
     model=XGBoostRegressor()
 )
-@test modelr isa SX.PropositionalDataSet{XGBoostRegressor}
+@test modelr isa SX.ModelSet{SX.PropositionalDataSet{XGBoostRegressor}}
 
 # ---------------------------------------------------------------------------- #
 #                                     tuning                                   #
+# ---------------------------------------------------------------------------- #
+range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
+
+modelc = train_test(
+    Xc, yc;
+    model=DecisionTreeClassifier(),
+    resample=(type=CV(nfolds=5, shuffle=true), rng=Xoshiro(1)),
+    tuning=(;tuning=Grid(resolution=10), resampling=CV(nfolds=3), range, measure=accuracy)
+)
+@test modelc isa SX.ModelSet{<:SX.PropositionalDataSet{<:MLJ.MLJTuning.ProbabilisticTunedModel{<:Any, <:DecisionTreeClassifier}}}
+
+modelc = train_test(
+    Xc, yc;
+    model=RandomForestClassifier()
+)
+@test modelc isa SX.ModelSet{SX.PropositionalDataSet{RandomForestClassifier}}
+
+modelc = train_test(
+    Xc, yc;
+    model=AdaBoostStumpClassifier()
+)
+@test modelc isa SX.ModelSet{SX.PropositionalDataSet{AdaBoostStumpClassifier}}
+
+modelr = train_test(
+    Xr, yr;
+    model=DecisionTreeRegressor()
+)
+@test modelr isa SX.ModelSet{SX.PropositionalDataSet{DecisionTreeRegressor}}
+
+modelr = train_test(
+    Xr, yr;
+    model=RandomForestRegressor()
+)
+@test modelr isa SX.ModelSet{SX.PropositionalDataSet{RandomForestRegressor}}
+
+modelts = train_test(
+    Xts, yts;
+    model=ModalDecisionTree()
+)
+@test modelts isa SX.ModelSet{SX.ModalDataSet{ModalDecisionTree}}
+
+modelts = train_test(
+    Xts, yts;
+    model=ModalRandomForest()
+)
+@test modelts isa SX.ModelSet{SX.ModalDataSet{ModalRandomForest}}
+
+modelts = train_test(
+    Xts, yts;
+    model=ModalAdaBoost()
+)
+@test modelts isa SX.ModelSet{SX.ModalDataSet{ModalAdaBoost}}
+
+modelc = train_test(
+    Xc, yc;
+    model=XGBoostClassifier()
+)
+@test modelc isa SX.ModelSet{SX.PropositionalDataSet{XGBoostClassifier}}
+
+modelr = train_test(
+    Xr, yr;
+    model=XGBoostRegressor()
+)
+@test modelr isa SX.ModelSet{SX.PropositionalDataSet{XGBoostRegressor}}
+
 # ---------------------------------------------------------------------------- #
 # model type specification
 modelc, _, _ = train_test(

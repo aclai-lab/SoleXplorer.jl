@@ -28,8 +28,18 @@ end
 # ---------------------------------------------------------------------------- #
 #                                 utilities                                    #
 # ---------------------------------------------------------------------------- #
+# function set_rng!(r::MLJ.ResamplingStrategy, rng::AbstractRNG)::MLJ.ResamplingStrategy
+#     typeof(r)(merge(MLJ.params(r), (rng=rng,))...)
+# end
+
 function set_rng!(m::MLJ.Model, rng::AbstractRNG)::MLJ.Model
     m.rng = rng
+    return m
+end
+
+function set_tuning_rng!(m::MLJ.Model, rng::AbstractRNG)::MLJ.Model
+    hasproperty(m.tuning, :rng) && (m.tuning.rng = rng)
+    hasproperty(m.resampling, :rng) && (m.resampling = set_rng!(m.resampling, rng))
     return m
 end
 
@@ -173,12 +183,16 @@ function _prepare_dataset(
 
     isempty(tuning) || begin
         if !(tuning.range isa MLJ.NominalRange)
+            # converti i SX.range in MLJ.range, ora che è disponibile il modello
             range = tuning.range isa Tuple{Vararg{<:Tuple}} ? tuning.range : (tuning.range,)
             range = collect(MLJ.range(model, r[1]; r[2:end]...) for r in range)
             tuning = merge(tuning, (range=range,))
         end
 
         model = MLJ.TunedModel(model; tuning...)
+
+        # set the model to use the same rng as the dataset
+        model = set_tuning_rng!(model, rng)
     end
 
     mach = MLJ.machine(model, X, y)
