@@ -4,8 +4,8 @@
 const Mach  = MLJ.Machine
 
 TunedMach(T) = Union{
-    PropositionalDataSet{<:MLJ.MLJTuning.ProbabilisticTunedModel{<:Any, <:T}},
-    PropositionalDataSet{<:MLJ.MLJTuning.DeterministicTunedModel{<:Any, <:T}}
+    PropositionalDataSet{<:MLJ.MLJTuning.EitherTunedModel{<:Any, <:T}},
+    ModalDataSet{<:MLJ.MLJTuning.EitherTunedModel{<:Any, <:T}},
 }
 
 const DecisionTreeApply = Union{
@@ -33,20 +33,15 @@ const TunedModalDecisionTreeApply = Union{
 # ---------------------------------------------------------------------------- #
 #                              xgboost utilities                               #
 # ---------------------------------------------------------------------------- #
-get_base_score(m::MLJ.Machine) = hasproperty(m.model, :base_score) ? m.model.base_score : nothing
+function get_base_score(m::MLJ.Machine)
+    if m.model isa MLJ.MLJTuning.EitherTunedModel
+        return hasproperty(m.model.model, :base_score) ? m.model.model.base_score : nothing
+    else
+        return hasproperty(m.model, :base_score) ? m.model.base_score : nothing
+    end
+end
 get_encoding(classes_seen) = Dict(MLJ.int(c) => c for c in MLJ.classes(classes_seen))
 get_classlabels(encoding)  = [string(encoding[i]) for i in sort(keys(encoding) |> collect)]
-
-# function makewatchlist(ds::Dataset)
-#     isempty(ds.tt[1].valid) && throw(ArgumentError("No validation data provided, use preprocess valid_ratio parameter"))
-            
-#     y_coded_train = @. MLJ.levelcode(ds.y[ds.tt[1].train]) - 1 # convert to 0-based indexing
-#     y_coded_valid = @. MLJ.levelcode(ds.y[ds.tt[1].valid]) - 1 # convert to 0-based indexing
-#     dtrain        = XGBoost.DMatrix((ds.X[ds.tt[1].train, :], y_coded_train); feature_names=ds.info.vnames)
-#     dvalid        = XGBoost.DMatrix((ds.X[ds.tt[1].valid, :], y_coded_valid); feature_names=ds.info.vnames)
-
-#     XGBoost.OrderedDict(["train" => dtrain, "eval" => dvalid])
-# end
 
 # ---------------------------------------------------------------------------- #
 #                             DecisionTree package                             #
@@ -216,14 +211,13 @@ function apply(
     model   :: TunedMach(XGBoostRegressor),
     X       :: AbstractDataFrame,
     y       :: AbstractVector,
-    bs      :: AbstractFloat
 )
-    base_score = get_base_score(model) == -Inf ? mean(ds.y[train]) : 0.5
+    base_score = get_base_score(model.mach) == -Inf ? mean(ds.y[train]) : 0.5
     model.mach.model.model.base_score = base_score
 
     trees        = XGBoost.trees(model.mach.fitresult.fitresult[1])
     featurenames = model.mach.fitresult.report.vals[1].features
     solem        = solemodel(trees, Matrix(X), y; featurenames)
-    apply!(solem, mapcols(col -> Float32.(col), X), y; base_score=bs)
+    apply!(solem, mapcols(col -> Float32.(col), X), y; base_score)
     return solem
 end

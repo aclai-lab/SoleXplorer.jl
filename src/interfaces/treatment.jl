@@ -124,7 +124,6 @@ function treatment(
     n_rows = nrow(X)
     _X = DataFrame()
 
-
     # run the windowing algo and set windows indexes
     intervals = win(length(X[1,1]))
     n_intervals = length(intervals)

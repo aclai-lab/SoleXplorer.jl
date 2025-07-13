@@ -153,10 +153,11 @@ range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
 
 modelc = prepare_dataset(
     Xc, yc;
-    model=DecisionTreeClassifier(),
+    model=ModalDecisionTree(),
     resample=(type=CV(nfolds=5, shuffle=true), rng=Xoshiro(1)),
     tuning=(;tuning=Grid(resolution=10), resampling=CV(nfolds=3), range, measure=accuracy, repeats=2)
 )
+@test modelc.mach.model.model.rng isa Xoshiro
 @test modelc.mach.model.tuning.rng isa Xoshiro
 @test modelc.mach.model.resampling.rng isa Xoshiro
 

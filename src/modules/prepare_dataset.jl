@@ -28,10 +28,6 @@ end
 # ---------------------------------------------------------------------------- #
 #                                 utilities                                    #
 # ---------------------------------------------------------------------------- #
-# function set_rng!(r::MLJ.ResamplingStrategy, rng::AbstractRNG)::MLJ.ResamplingStrategy
-#     typeof(r)(merge(MLJ.params(r), (rng=rng,))...)
-# end
-
 function set_rng!(m::MLJ.Model, rng::AbstractRNG)::MLJ.Model
     m.rng = rng
     return m
@@ -47,30 +43,6 @@ function set_conditions!(m::MLJ.Model, conditions::Vector{<:Base.Callable})::MLJ
     m.conditions = Function[conditions...]
     return m
 end
-
-# check_dataset_type(X::AbstractDataFrame) = all(col -> eltype(col) <: Union{Real,AbstractArray{<:Real}}, eachcol(X))
-# hasnans(X::AbstractDataFrame) = any(x -> x == 1, SoleData.hasnans.(eachcol(X)))
-
-# function check_row_consistency(X::AbstractMatrix) 
-#     for row in eachrow(X)
-#         # skip rows with only scalar values
-#         any(el -> el isa AbstractArray, row) || continue
-        
-#         # find first array element to use as reference
-#         ref_idx = findfirst(el -> el isa AbstractArray, row)
-#         ref_idx === nothing && continue
-        
-#         ref_size = size(row[ref_idx])
-        
-#         # check if any array element has different size (short-circuit)
-#         if any(row) do el
-#                 el isa AbstractArray && size(el) != ref_size
-#             end
-#             return false
-#         end
-#     end
-#     return true
-# end
 
 function code_dataset!(X::AbstractDataFrame)
     for (name, col) in pairs(eachcol(X))
@@ -93,25 +65,6 @@ function code_dataset!(y::AbstractVector)
 end
 
 code_dataset!(X::AbstractDataFrame, y::AbstractVector) = code_dataset!(X), code_dataset!(y)
-
-# function check_dimensions(X::AbstractMatrix)
-#     isempty(X) && return 0
-    
-#     # Get reference dimensions from first element
-#     first_col = first(eachcol(X))
-#     ref_dims = ndims(first(first_col))
-    
-#     # Early dimension check
-#     ref_dims > 1 && throw(ArgumentError("Elements more than 1D are not supported."))
-    
-#     # Check all columns maintain same dimensionality
-#     all(col -> all(x -> ndims(x) == ref_dims, col), eachcol(X)) ||
-#         throw(DimensionMismatch("Inconsistent dimensions across elements"))
-    
-#     return ref_dims
-# end
-
-# check_dimensions(df::DataFrame) = check_dimensions(Matrix(df))
 
 # wrapper per MLJ.range in tuning
 Base.range(field::Union{Symbol,Expr}; kwargs...) = field, kwargs...
