@@ -6,7 +6,8 @@ abstract type AbstractDataSet end
 # ---------------------------------------------------------------------------- #
 #                                   types                                      #
 # ---------------------------------------------------------------------------- #
-const Modal = Union{ModalDecisionTree, ModalRandomForest, ModalAdaBoost}
+const Modal  = Union{ModalDecisionTree, ModalRandomForest, ModalAdaBoost}
+const Tuning = Union{Nothing, MLJ.MLJTuning.TuningStrategy}
 
 # ---------------------------------------------------------------------------- #
 #                                  defaults                                    #
@@ -102,6 +103,9 @@ code_dataset!(X::AbstractDataFrame, y::AbstractVector) = code_dataset!(X), code_
 
 # check_dimensions(df::DataFrame) = check_dimensions(Matrix(df))
 
+# wrapper per MLJ.range in tuning
+Base.range(field::Union{Symbol,Expr}; kwargs...) = field, kwargs...
+
 # ---------------------------------------------------------------------------- #
 #                          multidimensional dataset                            #
 # ---------------------------------------------------------------------------- #
@@ -140,9 +144,7 @@ function _prepare_dataset(
     win           :: WinFunction             = AdaptiveWindow(nwindows=3, relative_overlap=0.1),
     features      :: Vector{<:Base.Callable} = [maximum, minimum],
     modalreduce   :: Base.Callable           = mean,
-    tuning        :: NamedTupleBool          = false,
-    # extract_rules :: NamedTupleBool = false,
-    measures      :: OptTuple                = nothing,
+    tuning        :: NamedTuple              = ()
 )::AbstractDataSet
     # propagate user rng to every field that needs it
     rng = hasproperty(resample, :rng) ? resample.rng : TaskLocalRNG()
@@ -167,8 +169,18 @@ function _prepare_dataset(
         tinfo = nothing
     end
 
-    mach = MLJ.machine(model, X, y)
     ttpairs, pinfo = partition(y; resample...)
+
+    isnothing(tuning) || begin
+        range = tuning.range isa Tuple{Vararg{<:Tuple}} ? tuning.range : (tuning.range,)
+        range = collect(MLJ.range(model, r[1]; r[2:end]...) for r in range)
+        tuning = merge(tuning, (range=range,))
+
+        model = MLJ.TunedModel(model; tuning...)
+    end
+
+    mach = MLJ.machine(model, X, y)
+    
 
     DataSet(mach, ttpairs, pinfo; tinfo)
 end
@@ -180,6 +192,6 @@ function prepare_dataset(
     X::AbstractDataFrame,
     y::Symbol;
     kwargs...
-)::Tuple{Modelset, Dataset}
+)::AbstractDataSet
     prepare_dataset(X[!, Not(y)], X[!, y]; kwargs...)
 end

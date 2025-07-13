@@ -63,15 +63,15 @@ include("interfaces/treatment.jl")
 export WinFunction, MovingWindow, WholeWindow, SplitWindow, AdaptiveWindow
 
 # @reexport using SoleBase: movingwindow, wholewindow, splitwindow, adaptivewindow
-include("interfaces/windowing_interface.jl")
+# include("interfaces/windowing_interface.jl")
 
-include("interfaces/dataset_interface.jl")
+# include("interfaces/dataset_interface.jl")
 # export Dataset, get_X, get_y, get_tt, get_info, get_Xtrain, get_Xvalid, get_Xtest, get_ytrain, get_yvalid, get_ytest
 
-@reexport using MLJ: Grid as grid, RandomSearch as randomsearch, LatinHypercube as latinhypercube
-@reexport using MLJParticleSwarmOptimization: ParticleSwarm as particleswarm, AdaptiveParticleSwarm as adaptiveparticleswarm
-include("interfaces/tuning_interface.jl")
-export range
+@reexport using MLJ: Grid, RandomSearch, LatinHypercube
+@reexport using MLJParticleSwarmOptimization: ParticleSwarm, AdaptiveParticleSwarm
+include("interfaces/tune.jl")
+export Tune
 
 include("interfaces/extractrules_interface.jl")
 
@@ -113,7 +113,7 @@ using XGBoost, MLJXGBoostInterface
 # export modaldecisiontree, modalrandomforest, modaladaboost
 # export xgboostclassifier, xgboostregressor
 
-include("validation/validate_modelsetup.jl")
+# include("validation/validate_modelsetup.jl")
 
 # include("interfaces/modelset_interface.jl")
 # export ModelSet, modelset

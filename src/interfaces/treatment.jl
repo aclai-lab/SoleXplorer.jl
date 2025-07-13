@@ -100,6 +100,14 @@ mutable struct TreatmentInfo <: AbstractTreatmentInfo
     modalreduce :: Base.Callable
 end
 
+function Base.show(io::IO, info::TreatmentInfo)
+    println(io, "TreatmentInfo:")
+    for field in fieldnames(TreatmentInfo)
+        value = getfield(info, field)
+        println(io, "  ", rpad(String(field) * ":", 15), value)
+    end
+end
+
 # ---------------------------------------------------------------------------- #
 #                                 constructors                                 #
 # ---------------------------------------------------------------------------- #

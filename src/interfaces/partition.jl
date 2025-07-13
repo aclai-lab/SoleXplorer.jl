@@ -45,17 +45,21 @@ end
 # ---------------------------------------------------------------------------- #
 #                             partition indexes                                #
 # ---------------------------------------------------------------------------- #
-struct PartitionIdxs{T<:Integer} <: AbstractPartitionIdxs
+struct PartitionIdxs{T<:Int} <: AbstractPartitionIdxs
     train :: Vector{T}
     valid :: Vector{T}
     test  :: Vector{T}
 
     function PartitionIdxs(
-        train :: Vector{T},
-        valid :: Vector{T},
-        test  :: Vector{T},
-    ) where T<:Integer
-    new{T}(train, valid, test)
+        train :: Union{Vector{T}, UnitRange{T}},
+        valid :: Union{Vector{T}, UnitRange{T}},
+        test  :: Union{Vector{T}, UnitRange{T}},
+    ) where T<:Int
+    new{T}(
+        train isa UnitRange ? collect(train) : train, 
+        valid isa UnitRange ? collect(valid) : valid, 
+        test  isa UnitRange ? collect(test) : test
+    )
     end
 end
 
@@ -94,5 +98,5 @@ get_train(t::PartitionIdxs) = t.train
 get_valid(t::PartitionIdxs) = t.valid
 get_test(t::PartitionIdxs)  = t.test
 
-Base.show(io::IO, t::PartitionIdxs) = print(io, "PartitionIdxs(train=", t.train, ", validation=", t.valid, ", test=", t.test, ")")
+Base.show(io::IO, t::PartitionIdxs) = println(io, "PartitionIdxs(train=", t.train, ", validation=", t.valid, ", test=", t.test, ")")
 Base.length(t::PartitionIdxs) = length(t.train) + length(t.valid) + length(t.test)
