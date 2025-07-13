@@ -70,8 +70,8 @@ export WinFunction, MovingWindow, WholeWindow, SplitWindow, AdaptiveWindow
 
 @reexport using MLJ: Grid, RandomSearch, LatinHypercube
 @reexport using MLJParticleSwarmOptimization: ParticleSwarm, AdaptiveParticleSwarm
-include("interfaces/tune.jl")
-export Tune
+# include("interfaces/tune.jl")
+# export Tune
 
 include("interfaces/extractrules_interface.jl")
 
@@ -122,7 +122,7 @@ using XGBoost, MLJXGBoostInterface
 #                                   modules                                    #
 # ---------------------------------------------------------------------------- #
 include("modules/prepare_dataset.jl")
-export code_dataset
+export code_dataset, range
 export prepare_dataset
 
 # include("modules/train_test.jl")

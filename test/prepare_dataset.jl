@@ -178,10 +178,37 @@ modelc = prepare_dataset(
 # ---------------------------------------------------------------------------- #
 #                                    tuning                                    #
 # ---------------------------------------------------------------------------- #
-modelc = prepare_dataset(
+range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
+
+modelr = prepare_dataset(
     Xr, yr;
-    tuning=Grid(resolution=10)
+    model=DecisionTreeRegressor(),
+    resample=(;rng=Xoshiro(1234)),
+    tuning=(;tuning=Grid(resolution=10), resampling=CV(nfolds=3), range, measure=rms)
 )
+@test modelr isa SoleXplorer.PropositionalDataSet{<:MLJ.MLJTuning.DeterministicTunedModel}
+
+range = (SX.range(:min_purity_increase, lower=0.001, upper=1.0, scale=:log),
+     SX.range(:max_depth, lower=1, upper=10))
+
+modelc = prepare_dataset(
+    Xc, yc;
+    model=DecisionTreeClassifier(),
+    resample=(;rng=Xoshiro(1234)),
+    tuning=(;tuning=Grid(resolution=10), resampling=CV(nfolds=3), range, measure=rms)
+)
+@test modelc isa SoleXplorer.PropositionalDataSet{<:MLJ.MLJTuning.ProbabilisticTunedModel}
+
+selector = FeatureSelector()
+range = MLJ.range(selector, :features, values = [[:sepal_width,], [:sepal_length, :sepal_width]])
+
+modelc = prepare_dataset(
+    Xc, yc;
+    model=DecisionTreeClassifier(),
+    resample=(;rng=Xoshiro(1234)),
+    tuning=(;tuning=Grid(resolution=10),resampling=CV(nfolds=3),range,measure=rms)
+)
+@test modelc isa SoleXplorer.PropositionalDataSet{<:MLJ.MLJTuning.ProbabilisticTunedModel}    
 
 # # ---------------------------------------------------------------------------- #
 # #                                dataset info                                  #

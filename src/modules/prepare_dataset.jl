@@ -172,9 +172,11 @@ function _prepare_dataset(
     ttpairs, pinfo = partition(y; resample...)
 
     isnothing(tuning) || begin
-        range = tuning.range isa Tuple{Vararg{<:Tuple}} ? tuning.range : (tuning.range,)
-        range = collect(MLJ.range(model, r[1]; r[2:end]...) for r in range)
-        tuning = merge(tuning, (range=range,))
+        if !(tuning.range isa MLJ.NominalRange)
+            range = tuning.range isa Tuple{Vararg{<:Tuple}} ? tuning.range : (tuning.range,)
+            range = collect(MLJ.range(model, r[1]; r[2:end]...) for r in range)
+            tuning = merge(tuning, (range=range,))
+        end
 
         model = MLJ.TunedModel(model; tuning...)
     end
