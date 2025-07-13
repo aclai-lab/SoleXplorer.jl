@@ -125,8 +125,7 @@ include("modules/prepare_dataset.jl")
 export code_dataset, range
 export prepare_dataset
 
-# include("modules/train_test.jl")
-# export train_test
+
 
 # include("modules/symbolic_analysis.jl")
 # export compute_results!, symbolic_analysis
@@ -134,7 +133,11 @@ export prepare_dataset
 # # export get_accuracy
 
 # # import MLJ: predict, predict_mode, predict_mean
-# include("utils/apply.jl")
+# import SoleModels: apply
+include("utils/apply.jl")
 # # export get_predict
+
+include("modules/train_test.jl")
+export train_test
 
 end

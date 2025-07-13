@@ -17,78 +17,77 @@ Xts, yts = SoleData.load_arff_dataset("NATOPS")
 # ---------------------------------------------------------------------------- #
 # basic setup
 modelc = prepare_dataset(Xc, yc)
-@test modelc isa SoleXplorer.PropositionalDataSet{DecisionTreeClassifier}
+@test modelc isa SX.PropositionalDataSet{DecisionTreeClassifier}
 modelr = prepare_dataset(Xr, yr)
-@test modelr isa SoleXplorer.PropositionalDataSet{DecisionTreeRegressor}
-
+@test modelr isa SX.PropositionalDataSet{DecisionTreeRegressor}
 
 # model type specification
 modelc = prepare_dataset(
     Xc, yc;
     model=DecisionTreeClassifier()
 )
-@test modelc isa SoleXplorer.PropositionalDataSet{DecisionTreeClassifier}
+@test modelc isa SX.PropositionalDataSet{DecisionTreeClassifier}
 
 modelc = prepare_dataset(
     Xc, yc;
     model=RandomForestClassifier()
 )
-@test modelc isa SoleXplorer.PropositionalDataSet{RandomForestClassifier}
+@test modelc isa SX.PropositionalDataSet{RandomForestClassifier}
 
 modelc = prepare_dataset(
     Xc, yc;
     model=AdaBoostStumpClassifier()
 )
-@test modelc isa SoleXplorer.PropositionalDataSet{AdaBoostStumpClassifier}
+@test modelc isa SX.PropositionalDataSet{AdaBoostStumpClassifier}
 
 modelr = prepare_dataset(
     Xr, yr;
     model=DecisionTreeRegressor()
 )
-@test modelr isa SoleXplorer.PropositionalDataSet{DecisionTreeRegressor}
+@test modelr isa SX.PropositionalDataSet{DecisionTreeRegressor}
 
 modelr = prepare_dataset(
     Xr, yr;
     model=RandomForestRegressor()
 )
-@test modelr isa SoleXplorer.PropositionalDataSet{RandomForestRegressor}
+@test modelr isa SX.PropositionalDataSet{RandomForestRegressor}
 
-modelc = prepare_dataset(
+modelts = prepare_dataset(
     Xts, yts;
     model=ModalDecisionTree()
 )
-@test modelc isa SoleXplorer.ModalDataSet{ModalDecisionTree}
+@test modelc isa SX.ModalDataSet{ModalDecisionTree}
 
-modelc = prepare_dataset(
+modelts = prepare_dataset(
     Xts, yts;
     model=ModalRandomForest()
 )
-@test modelc isa SoleXplorer.ModalDataSet{ModalRandomForest}
+@test modelc isa SX.ModalDataSet{ModalRandomForest}
 
-modelc = prepare_dataset(
+modelts = prepare_dataset(
     Xts, yts;
     model=ModalAdaBoost()
 )
-@test modelc isa SoleXplorer.ModalDataSet{ModalAdaBoost}
+@test modelc isa SX.ModalDataSet{ModalAdaBoost}
 
 modelc = prepare_dataset(
     Xc, yc;
     model=XGBoostClassifier()
 )
-@test modelc isa SoleXplorer.PropositionalDataSet{XGBoostClassifier}
+@test modelc isa SX.PropositionalDataSet{XGBoostClassifier}
 
 modelr = prepare_dataset(
     Xr, yr;
     model=XGBoostRegressor()
 )
-@test modelr isa SoleXplorer.PropositionalDataSet{XGBoostRegressor}
+@test modelr isa SX.PropositionalDataSet{XGBoostRegressor}
 
 # ---------------------------------------------------------------------------- #
 #                covering various examples to complete codecov                 #
 # ---------------------------------------------------------------------------- #
 y_symbol = :petal_width
 modelc = prepare_dataset(Xc, y_symbol)
-@test modelc isa SoleXplorer.PropositionalDataSet{DecisionTreeRegressor}
+@test modelc isa SX.PropositionalDataSet{DecisionTreeRegressor}
 
 
 # dataset is composed also of non numeric columns
@@ -100,7 +99,7 @@ modelc = prepare_dataset(
     resample=(train_ratio=0.5,),
     modalreduce=maximum
 )
-@test modelc isa SoleXplorer.ModalDataSet{DecisionTreeClassifier}
+@test modelc isa SX.ModalDataSet{DecisionTreeClassifier}
 
 # ---------------------------------------------------------------------------- #
 #                                 resamplig                                    #
@@ -109,35 +108,35 @@ modelc = prepare_dataset(
     Xc, yc;
     resample=(;type=CV())
 )
-@test modelc isa SoleXplorer.PropositionalDataSet{DecisionTreeClassifier}
+@test modelc isa SX.PropositionalDataSet{DecisionTreeClassifier}
 @test modelc.pinfo.type isa MLJ.CV
 
 modelc = prepare_dataset(
     Xc, yc;(
     resample=(;type=Holdout()))
 )
-@test modelc isa SoleXplorer.PropositionalDataSet{DecisionTreeClassifier}
+@test modelc isa SX.PropositionalDataSet{DecisionTreeClassifier}
 @test modelc.pinfo.type isa MLJ.Holdout
 
 modelc = prepare_dataset(
     Xc, yc;
     resample=(;type=StratifiedCV())
 )
-@test modelc isa SoleXplorer.PropositionalDataSet{DecisionTreeClassifier}
+@test modelc isa SX.PropositionalDataSet{DecisionTreeClassifier}
 @test modelc.pinfo.type isa MLJ.StratifiedCV
 
 modelc = prepare_dataset(
     Xc, yc;
     resample=(;type=TimeSeriesCV())
 )
-@test modelc isa SoleXplorer.PropositionalDataSet{DecisionTreeClassifier}
+@test modelc isa SX.PropositionalDataSet{DecisionTreeClassifier}
 @test modelc.pinfo.type isa MLJ.TimeSeriesCV
 
 modelc = prepare_dataset(
     Xc, yc;
     resample=(;type=CV(nfolds=10, shuffle=true))
 )
-@test modelc isa SoleXplorer.PropositionalDataSet{DecisionTreeClassifier}
+@test modelc isa SX.PropositionalDataSet{DecisionTreeClassifier}
 
 # ---------------------------------------------------------------------------- #
 #                              rng propagation                                 #
@@ -146,7 +145,7 @@ modelc = prepare_dataset(
     Xc, yc;
     resample=(type=CV(nfolds=10, shuffle=true), rng=Xoshiro(1))
 )
-@test modelc isa SoleXplorer.PropositionalDataSet{DecisionTreeClassifier}
+@test modelc isa SX.PropositionalDataSet{DecisionTreeClassifier}
 @test modelc.mach.model.rng isa Xoshiro
 @test modelc.pinfo.rng isa Xoshiro
 
@@ -157,7 +156,7 @@ modelc = prepare_dataset(
     Xc, yc;
     model=DecisionTreeClassifier(;max_depth=5)
 )
-@test modelc isa SoleXplorer.PropositionalDataSet{DecisionTreeClassifier}
+@test modelc isa SX.PropositionalDataSet{DecisionTreeClassifier}
 @test modelc.mach.model.max_depth == 5
 
 @test_throws UndefVarError prepare_dataset(
@@ -186,7 +185,7 @@ modelr = prepare_dataset(
     resample=(;rng=Xoshiro(1234)),
     tuning=(;tuning=Grid(resolution=10), resampling=CV(nfolds=3), range, measure=rms)
 )
-@test modelr isa SoleXplorer.PropositionalDataSet{<:MLJ.MLJTuning.DeterministicTunedModel}
+@test modelr isa SX.PropositionalDataSet{<:MLJ.MLJTuning.DeterministicTunedModel}
 
 range = (SX.range(:min_purity_increase, lower=0.001, upper=1.0, scale=:log),
      SX.range(:max_depth, lower=1, upper=10))
@@ -197,7 +196,7 @@ modelc = prepare_dataset(
     resample=(;rng=Xoshiro(1234)),
     tuning=(;tuning=Grid(resolution=10), resampling=CV(nfolds=3), range, measure=rms)
 )
-@test modelc isa SoleXplorer.PropositionalDataSet{<:MLJ.MLJTuning.ProbabilisticTunedModel}
+@test modelc isa SX.PropositionalDataSet{<:MLJ.MLJTuning.ProbabilisticTunedModel}
 
 selector = FeatureSelector()
 range = MLJ.range(selector, :features, values = [[:sepal_width,], [:sepal_length, :sepal_width]])
@@ -208,7 +207,7 @@ modelc = prepare_dataset(
     resample=(;rng=Xoshiro(1234)),
     tuning=(;tuning=Grid(resolution=10),resampling=CV(nfolds=3),range,measure=rms)
 )
-@test modelc isa SoleXplorer.PropositionalDataSet{<:MLJ.MLJTuning.ProbabilisticTunedModel}    
+@test modelc isa SX.PropositionalDataSet{<:MLJ.MLJTuning.ProbabilisticTunedModel}    
 
 # # ---------------------------------------------------------------------------- #
 # #                                dataset info                                  #
@@ -267,5 +266,5 @@ modelc = prepare_dataset(
 #     Xts, yts;
 #     win=(type=adaptivewindow, params=(nwindows=3, relative_overlap=0.1))
 # )
-# @test modelts isa SoleXplorer.Modelset
-# @test dts    isa SoleXplorer.Dataset
+# @test modelts isa SX.Modelset
+# @test dts    isa SX.Dataset
