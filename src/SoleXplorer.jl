@@ -28,57 +28,37 @@ import MLJ: MLJType
 # ---------------------------------------------------------------------------- #
 #                                 show utils                                   #
 # ---------------------------------------------------------------------------- #
-# simplified string rep of an Type:
+# simplified string rep of a Type:
 simple_repr(T) = string(T.name.name)
 
 # ---------------------------------------------------------------------------- #
 #                                    utils                                     #
 # ---------------------------------------------------------------------------- #
 using  Catch22
-include("utils/featureset.jl")
+include("featureset.jl")
 export mode_5, mode_10, embedding_dist, acf_timescale, acf_first_min, ami2, trev, outlier_timing_pos
 export outlier_timing_neg, whiten_timescale, forecast_error, ami_timescale, high_fluctuation, stretch_decreasing
 export stretch_high, entropy_pairs, rs_range, dfa, low_freq_power, centroid_freq, transition_variance, periodicity
 export base_set, catch9, catch22_set, complete_set
 
 # utility from other packages
-# @reexport using SoleData: load_arff_dataset
-# @reexport using Random: seed!, Xoshiro, MersenneTwister
+@reexport using SoleData: load_arff_dataset
+@reexport using Random: seed!, Xoshiro, MersenneTwister
 
 # ---------------------------------------------------------------------------- #
 #                                 interfaces                                   #
 # ---------------------------------------------------------------------------- #
-include("interfaces/base_interface.jl")
-export modeltype
-
-# import MLJ: Source
-# include("interfaces/source.jl")
-# export TableSource, VectorSource, set_source
-
 @reexport using MLJ: Holdout, CV, StratifiedCV, TimeSeriesCV
-include("interfaces/partition.jl")
+include("partition.jl")
 export partition
 
-include("interfaces/treatment.jl")
+include("treatment.jl")
 export WinFunction, MovingWindow, WholeWindow, SplitWindow, AdaptiveWindow
-
-# @reexport using SoleBase: movingwindow, wholewindow, splitwindow, adaptivewindow
-# include("interfaces/windowing_interface.jl")
-
-# include("interfaces/dataset_interface.jl")
-# export Dataset, get_X, get_y, get_tt, get_info, get_Xtrain, get_Xvalid, get_Xtest, get_ytrain, get_yvalid, get_ytest
 
 @reexport using MLJ: Grid, RandomSearch, LatinHypercube
 @reexport using MLJParticleSwarmOptimization: ParticleSwarm, AdaptiveParticleSwarm
-# include("interfaces/tune.jl")
-# export Tune
 
 include("interfaces/extractrules_interface.jl")
-
-# include("interfaces/model_interface.jl")
-# export Modelset
-
-include("interfaces/measures_interface.jl")
 
 # ---------------------------------------------------------------------------- #
 #                                   models                                     #
@@ -97,47 +77,26 @@ using XGBoost, MLJXGBoostInterface
 @reexport using MLJXGBoostInterface: 
     XGBoostClassifier, XGBoostRegressor
 
-# import DecisionTree as DT
-# include("models/decisiontrees.jl")
-# const MDT = ModalDecisionTrees
-# include("models/modaldecisiontrees.jl")
-# const XGB = XGBoost
-# include("models/xgboost.jl")
-# export makewatchlist
-
-# import MLJ: params
-# include("interfaces/model.jl")
-# @reexport using MLJ: params
-# export decisiontreeclassifier, randomforestclassifier, adaboostclassifier
-# export decisiontreeregressor, randomforestregressor
-# export modaldecisiontree, modalrandomforest, modaladaboost
-# export xgboostclassifier, xgboostregressor
-
-# include("validation/validate_modelsetup.jl")
-
-# include("interfaces/modelset_interface.jl")
-# export ModelSet, modelset
-
 # ---------------------------------------------------------------------------- #
 #                                   modules                                    #
 # ---------------------------------------------------------------------------- #
-include("modules/prepare_dataset.jl")
+include("prepare_dataset.jl")
 export code_dataset, range
 export prepare_dataset
 
-
-
-# include("modules/symbolic_analysis.jl")
 # export compute_results!, symbolic_analysis
 # export get_algo, get_labels, get_predictions
 # # export get_accuracy
 
 # # import MLJ: predict, predict_mode, predict_mean
-# import SoleModels: apply
-include("utils/apply.jl")
+import SoleModels: apply
+include("apply.jl")
 # # export get_predict
 
-include("modules/train_test.jl")
+include("train_test.jl")
 export train_test
+
+include("symbolic_analysis.jl")
+export symbolic_analysis
 
 end
