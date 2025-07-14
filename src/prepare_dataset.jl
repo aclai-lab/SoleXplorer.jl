@@ -164,3 +164,12 @@ function prepare_dataset(
 )::AbstractDataSet
     prepare_dataset(X[!, Not(y)], X[!, y]; kwargs...)
 end
+
+const EitherDataSet = Union{PropositionalDataSet, ModalDataSet}
+
+Base.length(ds::EitherDataSet) = length(ds.pidxs)
+
+get_y_test(ds::EitherDataSet)::AbstractVector = 
+    [@views ds.mach.args[2].data[ds.pidxs[i].test] for i in 1:length(ds)]
+
+get_mach_model(ds::EitherDataSet)::MLJ.Model = ds.mach.model

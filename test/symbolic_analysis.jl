@@ -13,6 +13,69 @@ Xr = DataFrame(Xr)
 Xts, yts = SoleData.load_arff_dataset("NATOPS")
 
 # ---------------------------------------------------------------------------- #
+#       analysis using prepare_dataset > train_test > symbolic_analysis        #
+# ---------------------------------------------------------------------------- #
+range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
+modelc = prepare_dataset(
+    Xc, yc;
+    model=DecisionTreeClassifier(),
+    resample=(type=CV(nfolds=5, shuffle=true), rng=Xoshiro(1)),
+    tuning=(tuning=Grid(resolution=10), resampling=CV(nfolds=3), range, measure=accuracy, repeats=2)    
+)
+solemc = train_test(modelc)
+resultsc = symbolic_analysis(
+    modelc, solemc;
+    # extract_rules=(),
+    # measures=(confusion_matrix,)
+    measures=(accuracy, log_loss, confusion_matrix, kappa)
+)
+
+@btime begin
+range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
+modelr = prepare_dataset(
+    Xr, yr;
+    model=DecisionTreeRegressor(),
+    resample=(type=CV(nfolds=5, shuffle=true), rng=Xoshiro(1)),
+    tuning=(tuning=Grid(resolution=10), resampling=CV(nfolds=3), range, measure=rms, repeats=2)    
+)
+solemr = train_test(modelr)
+resultsr = symbolic_analysis(
+    modelr, solemr;
+    # extract_rules=(),
+    # measures=(confusion_matrix,)
+    measures=(rms, l1, l2, mae, mav)
+)
+end
+# 223.920 μs (8836 allocations: 602.77 KiB)
+
+@btime begin
+modelc = symbolic_analysis(
+    Xc, yc;
+    model=DecisionTreeClassifier(),
+    resample=(;type=CV(shuffle=true)),
+    measures=(log_loss, accuracy)
+);
+end
+# 3.492 ms (36427 allocations: 2.05 MiB)
+
+@btime begin
+Tree = @load DecisionTreeClassifier pkg=DecisionTree
+tree = Tree()
+e1t = evaluate(
+    tree, Xc, yc;
+    resampling=CV(shuffle=true),
+    measures=[log_loss, accuracy],
+    per_observation=true,
+    verbosity=0
+);
+end
+# 1.780 ms (10705 allocations: 658.06 KiB)
+
+
+modelr = prepare_dataset(Xr, yr)
+@test modelr isa SX.ModelSet{SX.PropositionalDataSet{DecisionTreeRegressor}}
+
+# ---------------------------------------------------------------------------- #
 #                           propositional time series                          #
 # ---------------------------------------------------------------------------- #
 modelts, _, _ = symbolic_analysis(

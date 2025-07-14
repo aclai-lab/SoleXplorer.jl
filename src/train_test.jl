@@ -78,7 +78,7 @@ end
 # ---------------------------------------------------------------------------- #
 #                                  train_test                                  #
 # ---------------------------------------------------------------------------- #
-function _train_test(model::AbstractDataSet)
+function _train_test(model::EitherDataSet)::ModelSet
     n_folds     = length(model.pidxs)
     solemodel = Vector{AbstractModel}(undef, n_folds)
 
@@ -96,9 +96,9 @@ function _train_test(model::AbstractDataSet)
     return ModelSet(model, solemodel)
 end
 
-function train_test(args...; kwargs...)
+function train_test(args...; kwargs...)::ModelSet
     model = _prepare_dataset(args...; kwargs...)
     _train_test(model)
 end
 
-train_test(model::AbstractDataSet) = _train_test(model)
+train_test(model::AbstractDataSet)::ModelSet = _train_test(model)
