@@ -152,7 +152,7 @@ modelts = train_test(
     resample=(type=CV(nfolds=5, shuffle=true), rng=Xoshiro(1)),
     tuning=(;tuning=Grid(resolution=10), resampling=CV(nfolds=3), range, measure=accuracy, repeats=2)
 )
-@test modelts isa SX.ModelSet{SX.ModalDataSet{<:MLJ.MLJTuning.ProbabilisticTunedModel{<:Any, <:ModalDecisionTree}}}
+@test modelts isa SX.ModelSet{<:SX.ModalDataSet{<:MLJ.MLJTuning.ProbabilisticTunedModel{<:Any, <:ModalDecisionTree}}}
 
 range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
 modelts = train_test(
@@ -216,5 +216,4 @@ modelr = train_test(
 # @test SX.XGBoostRegressorModel(modelc.setup) isa SX.ModelSetup
 
 # @test_nowarn sprint(show, modelc)
-
 

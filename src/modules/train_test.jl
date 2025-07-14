@@ -6,10 +6,7 @@ abstract type AbstractModelSet end
 # ---------------------------------------------------------------------------- #
 #                                   types                                      #
 # ---------------------------------------------------------------------------- #
-# const DataSetType = Union{
-#     PropositionalDataSet{<:MLJ.Model},
-#     ModalDataSet{<:Modal},
-# }
+const XGBoostModel = Union{XGBoostClassifier, XGBoostRegressor}
 
 # ---------------------------------------------------------------------------- #
 #                                  utilities                                   #
@@ -17,9 +14,26 @@ abstract type AbstractModelSet end
 get_X(model::AbstractDataSet)::DataFrame = model.mach.args[1].data
 get_y(model::AbstractDataSet)::Vector = model.mach.args[2].data
 
-function makewatchlist(model::AbstractDataSet, train::Vector{Int}, valid::Vector{Int})
+has_xgboost_model(model::AbstractDataSet) = has_xgboost_model(model.mach.model)
+has_xgboost_model(model::MLJ.MLJTuning.EitherTunedModel) = has_xgboost_model(model.model)
+has_xgboost_model(::XGBoostModel) = true
+has_xgboost_model(::Any) = false
+
+is_tuned_model(model::AbstractDataSet) = is_tuned_model(model.mach.model)
+is_tuned_model(::MLJ.MLJTuning.EitherTunedModel) = true
+is_tuned_model(::Any) = false
+
+function get_early_stopping_rounds(model::AbstractDataSet)
+    if is_tuned_model(model)
+        return model.mach.model.model.early_stopping_rounds
+    else
+        return model.mach.model.early_stopping_rounds
+    end
+end
+
+function makewatchlist!(model::AbstractDataSet, train::Vector{Int}, valid::Vector{Int})
     isempty(valid) && throw(ArgumentError("No validation data provided, use preprocess valid_ratio parameter"))
-            
+
     X = get_X(model)
     y = get_y(model)
     y_train = @views y[train]
@@ -32,7 +46,22 @@ function makewatchlist(model::AbstractDataSet, train::Vector{Int}, valid::Vector
     dtrain        = XGBoost.DMatrix((@views X[train, :], y_train); feature_names)
     dvalid        = XGBoost.DMatrix((@views X[valid, :], y_valid); feature_names)
 
-    XGBoost.OrderedDict(["train" => dtrain, "eval" => dvalid])
+    watchlist = XGBoost.OrderedDict(["train" => dtrain, "eval" => dvalid])
+
+    if is_tuned_model(model)
+        model.mach.model.model.watchlist = watchlist
+    else
+        model.mach.model.watchlist = watchlist
+    end
+end
+
+function set_watchlist!(model::AbstractDataSet, i::Int)
+    # xgboost ha la funzione di earlystopping. per farla funzionare occorre passargli una makewatchlist e la valid_ratio
+    if get_early_stopping_rounds(model) > 0
+        train = get_train(model.pidxs[i])
+        valid = get_valid(model.pidxs[i])
+        makewatchlist!(model, train, valid)
+    end
 end
 
 # ---------------------------------------------------------------------------- #
@@ -58,19 +87,7 @@ function _train_test(model::AbstractDataSet)
         train, test = get_train(model.pidxs[i]), get_test(model.pidxs[i])
         X_test, y_test = get_X(model)[test, :], get_y(model)[test]
 
-        # xgboost ha la funzione di earlystopping. per farla funzionare occorre passargli una makewatchlist e la valid_ratio
-        # TODO sposta tutto in una funzione a parte
-        if model.mach.model isa MLJ.MLJTuning.EitherTunedModel
-            model.mach.model.model.early_stopping_rounds > 0 && begin
-                valid = get_valid(model.pidxs[i])
-                model.mach.model.model.watchlist = makewatchlist(model, train, valid)
-            end
-        else
-            model.mach.model.early_stopping_rounds > 0 && begin
-                valid = get_valid(model.pidxs[i])
-                model.mach.model.watchlist = makewatchlist(model, train, valid)
-            end
-        end
+        has_xgboost_model(model) && set_watchlist!(model, i)
 
         MLJ.fit!(model.mach, rows=train, verbosity=0)
         solemodel[i] = apply(model, X_test, y_test)
