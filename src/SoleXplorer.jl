@@ -9,8 +9,9 @@ using  SoleModels
 using  SoleModels: AbstractModel, DecisionList, DecisionForest, DecisionEnsemble, DecisionSet
 using  SoleModels: RuleExtractor
 using  SolePostHoc
-@reexport using SolePostHoc: InTreesRuleExtractor, LumenRuleExtractor
-# @reexport using SolePostHoc: BATreesRuleExtractor, REFNERuleExtractor, RULECOSIPLUSRuleExtractor     
+@reexport using SolePostHoc: InTreesRuleExtractor
+# @reexport using SolePostHoc: 
+#     LumenRuleExtractor, BATreesRuleExtractor, REFNERuleExtractor, RULECOSIPLUSRuleExtractor     
 
 import MultiData.hasnans
 

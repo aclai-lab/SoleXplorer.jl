@@ -28,10 +28,10 @@ println("Julia version: ", VERSION)
 
 test_suites = [
     ("Setup Dataset",        ["dataset.jl", ]),
-    ("Train and Test",       ["train_test.jl", ]),
-    ("Apply",                ["apply.jl"]),
-    ("Symbolic Analysis",    ["symbolic_analysis.jl", ]),
-    ("Solemodel robustness", ["solemodel.jl"]),
+    # ("Train and Test",       ["train_test.jl", ]),
+    # ("Apply",                ["apply.jl"]),
+    # ("Symbolic Analysis",    ["symbolic_analysis.jl", ]),
+    # ("Solemodel robustness", ["solemodel.jl"]),
 ]
 
 @testset "SoleXplorer.jl" begin

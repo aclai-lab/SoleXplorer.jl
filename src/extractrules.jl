@@ -6,7 +6,7 @@ const RulesTypes = DecisionSet
 # ---------------------------------------------------------------------------- #
 #                          multidimensional dataset                            #
 # ---------------------------------------------------------------------------- #
-struct Rules{R} <: AbstractDataSet where R <: RulesTypes
+struct Rules{R} <: AbstractDataSet
     extracted :: R
 
     function Rules(extracted::R) where R <: RulesTypes
@@ -14,13 +14,15 @@ struct Rules{R} <: AbstractDataSet where R <: RulesTypes
     end
 end
 
+# get_rawmodel(ds::EitherDataSet) = ds.mach.fitresult[1]
+
 # ---------------------------------------------------------------------------- #
 #                             InTreesRuleExtractor                             #
 # ---------------------------------------------------------------------------- #
 function extractrules(
-    extractor  :: InTreesRuleExtractor,
-    ds :: EitherDataSet,
-    solem :: ModelSet
+    extractor :: InTreesRuleExtractor,
+    ds        :: EitherDataSet,
+    solem     :: ModelSet
 )::Rules
     extracted = reduce(vcat, map(enumerate(solemodels(solem))) do (i, model)
         test = get_test(ds.pidxs[i])
@@ -31,22 +33,26 @@ function extractrules(
     return Rules(extracted)
 end
 
+# ---------------------------------------------------------------------------- #
+#                              LumenRuleExtractor                              #
+# ---------------------------------------------------------------------------- #
+function extractrules(
+    extractor :: LumenRuleExtractor,
+    ds        :: EitherDataSet,
+    solem     :: ModelSet
+)::Rules
+    extracted = reduce(vcat, map(enumerate(solemodels(solem))) do (i, model)
+        RuleExtraction.modalextractrules(extractor, model)
+    end)
+
+    return Rules(extracted)
+end
+
+
+
 # # ---------------------------------------------------------------------------- #
 # #                              Rules extraction                                #
 # # ---------------------------------------------------------------------------- #
-# const RULES_PARAMS = Dict{Symbol,NamedTuple}(
-#     :intrees      => (
-#         prune_rules             = true,
-#         pruning_s               = nothing,
-#         pruning_decay_threshold = nothing,
-#         rule_selection_method   = :CBC,
-#         rule_complexity_metric  = :natoms,
-#         max_rules               = -1,
-#         min_coverage            = nothing,
-#         silent                  = true,
-#         rng                     = TaskLocalRNG(),
-#         return_info             = false
-#     ),
 
 #     :refne        => (
 #         L                       = 10,
@@ -86,20 +92,6 @@ end
 #         # metric_filter_callback  = nothing
 #     ),
 
-#     :lumen        => (
-#         # minimization_scheme     = :mitespresso,
-#         # vertical                = 1.0,
-#         # horizontal              = 1.0,
-#         # ott_mode                = false,
-#         # controllo               = false,
-#         # start_time              = time(),
-#         # minimization_kwargs     = (;),
-#         # filteralphabetcallback  = identity,
-#         # silent                  = true,
-#         # return_info             = false,
-#         # vetImportance           = []
-#     )
-# )
 
 # const EXTRACT_RULES = Dict{Symbol, Function}(
 #     :intrees => (m, ds, _) -> begin
