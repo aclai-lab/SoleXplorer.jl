@@ -7,7 +7,10 @@ using  SoleData
 using  SoleData: PatchedFunction, nanpatchedfunction
 using  SoleModels
 using  SoleModels: AbstractModel, DecisionList, DecisionForest, DecisionEnsemble, DecisionSet
+using  SoleModels: RuleExtractor
 using  SolePostHoc
+@reexport using SolePostHoc: InTreesRuleExtractor, LumenRuleExtractor
+# @reexport using SolePostHoc: BATreesRuleExtractor, REFNERuleExtractor, RULECOSIPLUSRuleExtractor     
 
 import MultiData.hasnans
 
@@ -58,8 +61,6 @@ export WinFunction, MovingWindow, WholeWindow, SplitWindow, AdaptiveWindow
 @reexport using MLJ: Grid, RandomSearch, LatinHypercube
 @reexport using MLJParticleSwarmOptimization: ParticleSwarm, AdaptiveParticleSwarm
 
-include("interfaces/extractrules_interface.jl")
-
 # ---------------------------------------------------------------------------- #
 #                                   models                                     #
 # ---------------------------------------------------------------------------- #
@@ -91,11 +92,10 @@ export setup_dataset
 # # import MLJ: predict, predict_mode, predict_mean
 import SoleModels: apply
 include("apply.jl")
-# # export get_predict
-
 include("train_test.jl")
 export train_test
 
+include("extractrules.jl")
 include("symbolic_analysis.jl")
 export symbolic_analysis
 

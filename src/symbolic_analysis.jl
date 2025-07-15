@@ -13,7 +13,7 @@ const FussyMeasure = MLJ.StatisticalMeasures.StatisticalMeasuresBase.FussyMeasur
 # ---------------------------------------------------------------------------- #
 #                                  measures                                    #
 # ---------------------------------------------------------------------------- #
-mutable struct Measures <: AbstractMeasures
+struct Measures <: AbstractMeasures
     per_fold        :: Vector{Vector{Float64}}
     measures        :: Vector{RobustMeasure}
     measures_values :: Vector{Float64}
@@ -26,20 +26,15 @@ mutable struct Measures <: AbstractMeasures
     # end
 end
 
+# ---------------------------------------------------------------------------- #
+#                                   types                                      #
+# ---------------------------------------------------------------------------- #
+const Optional{T} = Union{T, Nothing}
+const OptRules    = Optional{Rules}
+const OptMeasures = Optional{Measures}
 
 # ---------------------------------------------------------------------------- #
 #                                 utilities                                    #
-# ---------------------------------------------------------------------------- #
-
-# # ---------------------------------------------------------------------------- #
-# #                              rules extraction                                #
-# # ---------------------------------------------------------------------------- #
-# function rules_extraction!(model::Modelset, ds::Dataset, mach::MLJ.Machine)
-#     model.rules = EXTRACT_RULES[model.setup.rulesparams.type](model, ds, mach)
-# end
-
-# ---------------------------------------------------------------------------- #
-#                             get sole predictions                             #
 # ---------------------------------------------------------------------------- #
 supporting_predictions(solem::AbstractModel) = solem.info.supporting_predictions
 
@@ -106,15 +101,15 @@ end
 #                                eval measures                                 #
 # ---------------------------------------------------------------------------- #
 function eval_measures(
-    model::EitherDataSet,
+    ds::EitherDataSet,
     solem::ModelSet,
     measures::Tuple{Vararg{FussyMeasure}},
     y_test::Vector{<:AbstractVector{<:Label}}
 )::Measures
-    measures        = MLJBase._actual_measures([measures...], solem)
-    operations      = get_operations(measures, MLJBase.prediction_type(get_mach_model(model)))
+    measures        = MLJBase._actual_measures([measures...], solemodels(solem))
+    operations      = get_operations(measures, MLJBase.prediction_type(get_mach_model(ds)))
 
-    nfolds          = length(model)
+    nfolds          = length(ds)
     test_fold_sizes = [length(y_test[k]) for k in 1:nfolds]
     nmeasures       = length(measures)
 
@@ -124,7 +119,7 @@ function eval_measures(
     fold_weights(::MLJBase.StatisticalMeasuresBase.Sum) = nothing
     
     measurements_vector = mapreduce(vcat, 1:nfolds) do k
-        yhat_given_operation = Dict(op=>op(solem.sole[k], y_test[k]) for op in unique(operations))
+        yhat_given_operation = Dict(op=>op(solemodels(solem)[k], y_test[k]) for op in unique(operations))
 
         # costretto a convertirlo a stringa in quanto certe misure di statistical measures non accettano
         # categorical array, tipo confusion matrix e kappa
@@ -167,25 +162,23 @@ end
 #                              symbolic_analysis                               #
 # ---------------------------------------------------------------------------- #
 function _symbolic_analysis(
-    model::EitherDataSet,
+    ds::EitherDataSet,
     solem::ModelSet;
-    # extract_rules=true,
+    rules::Union{Nothing,RuleExtractor}=nothing,
     measures::Tuple{Vararg{FussyMeasure}}=(),
-)::Measures
-    if !isempty(measures)
-        y_test = get_y_test(model)
-        eval_measures(model, solem, measures, y_test)
-    else
-        thow(ArgumentError("No measures provided for symbolic analysis."))
-    end
+)::Tuple{OptRules,OptMeasures}
+    r = isnothing(rules)  ? nothing : extractrules(rules, ds, solem)
+    m = isempty(measures) ? nothing : eval_measures(ds, solem, measures, get_y_test(ds))
+
+    return (r, m)
 end
 
 function symbolic_analysis(
-    model::EitherDataSet,
+    ds::EitherDataSet,
     solem::ModelSet;
     kwargs...
-)::Measures
-    _symbolic_analysis(model, solem; kwargs...)
+)::Tuple{OptRules,OptMeasures}
+    _symbolic_analysis(ds, solem; kwargs...)
 end
 
 function symbolic_analysis(
@@ -193,8 +186,8 @@ function symbolic_analysis(
     y::AbstractVector;
     measures::Tuple{Vararg{FussyMeasure}}=(),
     kwargs...
-)::Measures
-    model = _prepare_dataset(X, y; kwargs...)
-    solem = _train_test(model)
-    _symbolic_analysis(model, solem; measures)
+)::Tuple{OptRules,OptMeasures}
+    ds = _prepare_dataset(X, y; kwargs...)
+    solem = _train_test(ds)
+    _symbolic_analysis(ds, solem; measures)
 end
