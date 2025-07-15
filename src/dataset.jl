@@ -7,7 +7,7 @@ abstract type AbstractDataSet end
 #                                   types                                      #
 # ---------------------------------------------------------------------------- #
 const Modal  = Union{ModalDecisionTree, ModalRandomForest, ModalAdaBoost}
-const Tuning = Union{Nothing, MLJ.MLJTuning.TuningStrategy}
+const Tuning = Union{Nothing, MLJTuning.TuningStrategy}
 
 # ---------------------------------------------------------------------------- #
 #                                  defaults                                    #

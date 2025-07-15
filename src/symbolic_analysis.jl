@@ -7,30 +7,29 @@ abstract type AbstractMeasures end
 # ---------------------------------------------------------------------------- #
 #                                   types                                      #
 # ---------------------------------------------------------------------------- #
-const RobustMeasure = MLJ.StatisticalMeasures.StatisticalMeasuresBase.RobustMeasure
-const FussyMeasure = MLJ.StatisticalMeasures.StatisticalMeasuresBase.FussyMeasure
+const RobustMeasure = StatisticalMeasures.StatisticalMeasuresBase.RobustMeasure
+const FussyMeasure  = StatisticalMeasures.StatisticalMeasuresBase.FussyMeasure
+
+const ValidMeasures = Union{
+        Float64, 
+        StatisticalMeasures.ConfusionMatrices.ConfusionMatrix
+    }
 
 # ---------------------------------------------------------------------------- #
 #                                  measures                                    #
 # ---------------------------------------------------------------------------- #
 struct Measures <: AbstractMeasures
-    per_fold        :: Vector{Vector{Float64}}
+    per_fold        :: Vector{Vector{ValidMeasures}}
     measures        :: Vector{RobustMeasure}
-    measures_values :: Vector{Float64}
+    measures_values :: Vector{ValidMeasures}
     operations      :: AbstractVector
-
-    # function Measures(
-    #     yhat      :: AbstractVector,
-    # )::Measures
-    #     new(yhat, nothing, nothing, nothing, nothing)
-    # end
 end
 
 # ---------------------------------------------------------------------------- #
 #                                   types                                      #
 # ---------------------------------------------------------------------------- #
 const Optional{T} = Union{T, Nothing}
-const OptRules    = Optional{Rules}
+const OptRules    = Optional{DecisionSet}
 const OptMeasures = Optional{Measures}
 
 # ---------------------------------------------------------------------------- #
@@ -40,7 +39,7 @@ supporting_predictions(solem::AbstractModel) = solem.info.supporting_predictions
 
 function sole_predict(solem::AbstractModel, y_test::AbstractVector{<:Label})
     preds = supporting_predictions(solem)
-    eltype(preds) <: SoleModels.CLabel ?
+    eltype(preds) <: CLabel ?
         begin
             classes_seen = unique(y_test)
             preds = categorical(preds, levels=levels(classes_seen))
@@ -164,11 +163,18 @@ end
 function _symbolic_analysis(
     ds::EitherDataSet,
     solem::ModelSet;
-    rules::Union{Nothing,RuleExtractor}=nothing,
+    extractor::Union{Nothing,RuleExtractor}=nothing,
     measures::Tuple{Vararg{FussyMeasure}}=(),
 )::Tuple{OptRules,OptMeasures}
-    r = isnothing(rules)  ? nothing : extractrules(rules, ds, solem)
-    m = isempty(measures) ? nothing : eval_measures(ds, solem, measures, get_y_test(ds))
+    r = isnothing(extractor)  ? nothing : begin
+        # TODO propaga rng, dovrai fare intrees mutable struct
+        extractrules(extractor, ds, solem)
+    end
+
+    m = isempty(measures) ? nothing : begin
+        y_test = get_y_test(ds)
+        eval_measures(ds, solem, measures, y_test)
+    end
 
     return (r, m)
 end
@@ -184,10 +190,11 @@ end
 function symbolic_analysis(
     X::AbstractDataFrame,
     y::AbstractVector;
+    extractor::Union{Nothing,RuleExtractor}=nothing,
     measures::Tuple{Vararg{FussyMeasure}}=(),
     kwargs...
 )::Tuple{OptRules,OptMeasures}
     ds = _prepare_dataset(X, y; kwargs...)
     solem = _train_test(ds)
-    _symbolic_analysis(ds, solem; measures)
+    _symbolic_analysis(ds, solem; extractor, measures)
 end

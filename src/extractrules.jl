@@ -1,36 +1,20 @@
 # ---------------------------------------------------------------------------- #
-#                                     types                                    #
-# ---------------------------------------------------------------------------- #
-const RulesTypes = DecisionSet
-
-# ---------------------------------------------------------------------------- #
-#                          multidimensional dataset                            #
-# ---------------------------------------------------------------------------- #
-struct Rules{R} <: AbstractDataSet
-    extracted :: R
-
-    function Rules(extracted::R) where R <: RulesTypes
-        return new{R}(extracted)
-    end
-end
-
-# get_rawmodel(ds::EitherDataSet) = ds.mach.fitresult[1]
-
-# ---------------------------------------------------------------------------- #
 #                             InTreesRuleExtractor                             #
 # ---------------------------------------------------------------------------- #
 function extractrules(
     extractor :: InTreesRuleExtractor,
     ds        :: EitherDataSet,
     solem     :: ModelSet
-)::Rules
+)::DecisionSet
     extracted = reduce(vcat, map(enumerate(solemodels(solem))) do (i, model)
         test = get_test(ds.pidxs[i])
         X_test, y_test = get_X(ds)[test, :], get_y(ds)[test]
-        RuleExtraction.modalextractrules(extractor, model, X_test, y_test)
+        decision_set = RuleExtraction.modalextractrules(extractor, model, X_test, y_test)
+        # TODO modifica l'output di posthoc
+        decision_set.rules
     end)
 
-    return Rules(extracted)
+    return DecisionSet(extracted)
 end
 
 # ---------------------------------------------------------------------------- #
@@ -42,10 +26,12 @@ function extractrules(
     solem     :: ModelSet
 )::Rules
     extracted = reduce(vcat, map(enumerate(solemodels(solem))) do (i, model)
-        RuleExtraction.modalextractrules(extractor, model)
+        decision_set = RuleExtraction.modalextractrules(extractor, model)
+        # TODO modifica l'output di posthoc
+        decision_set.rules
     end)
 
-    return Rules(extracted)
+    return DecisionSet(extracted)
 end
 
 

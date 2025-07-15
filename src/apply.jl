@@ -4,8 +4,8 @@
 const Mach  = MLJ.Machine
 
 TunedMach(T) = Union{
-    PropositionalDataSet{<:MLJ.MLJTuning.EitherTunedModel{<:Any, <:T}},
-    ModalDataSet{<:MLJ.MLJTuning.EitherTunedModel{<:Any, <:T}},
+    PropositionalDataSet{<:MLJTuning.EitherTunedModel{<:Any, <:T}},
+    ModalDataSet{<:MLJTuning.EitherTunedModel{<:Any, <:T}},
 }
 
 const DecisionTreeApply = Union{
@@ -34,7 +34,7 @@ const TunedModalDecisionTreeApply = Union{
 #                              xgboost utilities                               #
 # ---------------------------------------------------------------------------- #
 function get_base_score(m::MLJ.Machine)
-    if m.model isa MLJ.MLJTuning.EitherTunedModel
+    if m.model isa MLJTuning.EitherTunedModel
         return hasproperty(m.model.model, :base_score) ? m.model.model.base_score : nothing
     else
         return hasproperty(m.model, :base_score) ? m.model.base_score : nothing

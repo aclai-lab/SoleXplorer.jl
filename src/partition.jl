@@ -71,7 +71,7 @@ end
 function partition end
 
 function partition(
-    y           :: AbstractVector{<:SoleModels.Label};
+    y           :: AbstractVector{<:Label};
     type        :: MLJ.ResamplingStrategy=Holdout(shuffle=true),
     train_ratio :: Real=0.7,
     valid_ratio :: Real=0.0,
@@ -81,7 +81,7 @@ function partition(
 
     pinfo = PartitionInfo(type, train_ratio, valid_ratio, rng)
 
-    ttpairs = MLJ.MLJBase.train_test_pairs(type, 1:length(y), y)
+    ttpairs = MLJBase.train_test_pairs(type, 1:length(y), y)
 
     if valid_ratio == 0.0
         return ([PartitionIdxs(train, eltype(train)[], test) for (train, test) in ttpairs], pinfo)

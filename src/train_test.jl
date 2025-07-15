@@ -15,12 +15,12 @@ get_X(model::AbstractDataSet)::DataFrame = model.mach.args[1].data
 get_y(model::AbstractDataSet)::Vector = model.mach.args[2].data
 
 has_xgboost_model(model::AbstractDataSet) = has_xgboost_model(model.mach.model)
-has_xgboost_model(model::MLJ.MLJTuning.EitherTunedModel) = has_xgboost_model(model.model)
+has_xgboost_model(model::MLJTuning.EitherTunedModel) = has_xgboost_model(model.model)
 has_xgboost_model(::XGBoostModel) = true
 has_xgboost_model(::Any) = false
 
 is_tuned_model(model::AbstractDataSet) = is_tuned_model(model.mach.model)
-is_tuned_model(::MLJ.MLJTuning.EitherTunedModel) = true
+is_tuned_model(::MLJTuning.EitherTunedModel) = true
 is_tuned_model(::Any) = false
 
 function get_early_stopping_rounds(model::AbstractDataSet)
