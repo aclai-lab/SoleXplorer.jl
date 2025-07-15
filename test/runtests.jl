@@ -27,7 +27,7 @@ end
 println("Julia version: ", VERSION)
 
 test_suites = [
-    ("Prepare Dataset",      ["prepare_dataset.jl", ]),
+    ("Setup Dataset",        ["dataset.jl", ]),
     ("Train and Test",       ["train_test.jl", ]),
     ("Apply",                ["apply.jl"]),
     ("Symbolic Analysis",    ["symbolic_analysis.jl", ]),

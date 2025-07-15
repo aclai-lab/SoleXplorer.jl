@@ -80,9 +80,9 @@ using XGBoost, MLJXGBoostInterface
 # ---------------------------------------------------------------------------- #
 #                                   modules                                    #
 # ---------------------------------------------------------------------------- #
-include("prepare_dataset.jl")
+include("dataset.jl")
 export code_dataset, range
-export prepare_dataset
+export setup_dataset
 
 # export compute_results!, symbolic_analysis
 # export get_algo, get_labels, get_predictions

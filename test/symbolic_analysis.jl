@@ -13,10 +13,10 @@ Xr = DataFrame(Xr)
 Xts, yts = SoleData.load_arff_dataset("NATOPS")
 
 # ---------------------------------------------------------------------------- #
-#       analysis using prepare_dataset > train_test > symbolic_analysis        #
+#       analysis using setup_dataset > train_test > symbolic_analysis        #
 # ---------------------------------------------------------------------------- #
 range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
-modelc = prepare_dataset(
+modelc = setup_dataset(
     Xc, yc;
     model=DecisionTreeClassifier(),
     resample=(type=CV(nfolds=5, shuffle=true), rng=Xoshiro(1)),
@@ -32,7 +32,7 @@ resultsc = symbolic_analysis(
 
 @btime begin
 range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
-modelr = prepare_dataset(
+modelr = setup_dataset(
     Xr, yr;
     model=DecisionTreeRegressor(),
     resample=(type=CV(nfolds=5, shuffle=true), rng=Xoshiro(1)),
@@ -72,7 +72,7 @@ end
 # 1.780 ms (10705 allocations: 658.06 KiB)
 
 
-modelr = prepare_dataset(Xr, yr)
+modelr = setup_dataset(Xr, yr)
 @test modelr isa SX.ModelSet{SX.PropositionalDataSet{DecisionTreeRegressor}}
 
 # ---------------------------------------------------------------------------- #

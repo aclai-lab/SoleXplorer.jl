@@ -21,10 +21,10 @@ modelc = train_test(Xc, yc)
 modelr = train_test(Xr, yr)
 @test modelr isa SX.ModelSet{SX.PropositionalDataSet{DecisionTreeRegressor}}
 
-datac  = prepare_dataset(Xc, yc)
+datac  = setup_dataset(Xc, yc)
 modelc = train_test(datac)
 @test modelc isa SX.ModelSet{SX.PropositionalDataSet{DecisionTreeClassifier}}
-datar  = prepare_dataset(Xr, yr)
+datar  = setup_dataset(Xr, yr)
 modelr = train_test(datar)
 @test modelr isa SX.ModelSet{SX.PropositionalDataSet{DecisionTreeRegressor}}
 

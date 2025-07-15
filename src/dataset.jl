@@ -154,15 +154,15 @@ function _prepare_dataset(
     DataSet(mach, ttpairs, pinfo; tinfo)
 end
 
-prepare_dataset(args...; kwargs...) = _prepare_dataset(args...; kwargs...)
+setup_dataset(args...; kwargs...) = _prepare_dataset(args...; kwargs...)
 
 # y is not a vector, but a symbol that identifies a column in X
-function prepare_dataset(
+function setup_dataset(
     X::AbstractDataFrame,
     y::Symbol;
     kwargs...
 )::AbstractDataSet
-    prepare_dataset(X[!, Not(y)], X[!, y]; kwargs...)
+    setup_dataset(X[!, Not(y)], X[!, y]; kwargs...)
 end
 
 const EitherDataSet = Union{PropositionalDataSet, ModalDataSet}
