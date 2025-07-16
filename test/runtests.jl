@@ -2,16 +2,10 @@ using Distributed
 addprocs(2)
 
 @everywhere begin
-    using SoleXplorer
     using Test
-    using Random
+    using SoleXplorer
     using MLJ
-    using DataFrames
-    using SoleData
-    # using MLJDecisionTreeInterface
-    # using SoleModels
-    # using StatsBase
-    # using Catch22
+    using DataFrames, Random
 end
 
 const SX = SoleXplorer

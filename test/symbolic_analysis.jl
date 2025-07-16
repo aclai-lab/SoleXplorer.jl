@@ -1,7 +1,7 @@
 using Test
-using MLJ, SoleXplorer
+using SoleXplorer
+using MLJ
 using DataFrames, Random
-using SoleData
 const SX = SoleXplorer
 
 Xc, yc = @load_iris

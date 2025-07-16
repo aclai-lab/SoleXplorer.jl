@@ -1,7 +1,7 @@
 using Test
-using MLJ, SoleXplorer
+using SoleXplorer
+using MLJ
 using DataFrames, Random
-using SoleData
 const SX = SoleXplorer
 
 Xc, yc = @load_iris
@@ -10,166 +10,166 @@ Xc = DataFrame(Xc)
 Xr, yr = @load_boston
 Xr = DataFrame(Xr)
 
-Xts, yts = SoleData.load_arff_dataset("NATOPS")
+Xts, yts = load_arff_dataset("NATOPS")
 
 # ---------------------------------------------------------------------------- #
 #                        prepare dataset usage examples                        #
 # ---------------------------------------------------------------------------- #
 # basic setup
-modelc = setup_dataset(Xc, yc)
-@test modelc isa SX.PropositionalDataSet{DecisionTreeClassifier}
-modelr = setup_dataset(Xr, yr)
-@test modelr isa SX.PropositionalDataSet{DecisionTreeRegressor}
+dsc = setup_dataset(Xc, yc)
+@test dsc isa SX.PropositionalDataSet{DecisionTreeClassifier}
+dsr = setup_dataset(Xr, yr)
+@test dsr isa SX.PropositionalDataSet{DecisionTreeRegressor}
 
 # model type specification
-modelc = setup_dataset(
+dsc = setup_dataset(
     Xc, yc;
     model=DecisionTreeClassifier()
 )
-@test modelc isa SX.PropositionalDataSet{DecisionTreeClassifier}
+@test dsc isa SX.PropositionalDataSet{DecisionTreeClassifier}
 
-modelc = setup_dataset(
+dsc = setup_dataset(
     Xc, yc;
     model=RandomForestClassifier()
 )
-@test modelc isa SX.PropositionalDataSet{RandomForestClassifier}
+@test dsc isa SX.PropositionalDataSet{RandomForestClassifier}
 
-modelc = setup_dataset(
+dsc = setup_dataset(
     Xc, yc;
     model=AdaBoostStumpClassifier()
 )
-@test modelc isa SX.PropositionalDataSet{AdaBoostStumpClassifier}
+@test dsc isa SX.PropositionalDataSet{AdaBoostStumpClassifier}
 
-modelr = setup_dataset(
+dsr = setup_dataset(
     Xr, yr;
     model=DecisionTreeRegressor()
 )
-@test modelr isa SX.PropositionalDataSet{DecisionTreeRegressor}
+@test dsr isa SX.PropositionalDataSet{DecisionTreeRegressor}
 
-modelr = setup_dataset(
+dsr = setup_dataset(
     Xr, yr;
     model=RandomForestRegressor()
 )
-@test modelr isa SX.PropositionalDataSet{RandomForestRegressor}
+@test dsr isa SX.PropositionalDataSet{RandomForestRegressor}
 
-modelts = setup_dataset(
+dsts = setup_dataset(
     Xts, yts;
     model=ModalDecisionTree()
 )
-@test modelts isa SX.ModalDataSet{ModalDecisionTree}
+@test dsts isa SX.ModalDataSet{ModalDecisionTree}
 
-modelts = setup_dataset(
+dsts = setup_dataset(
     Xts, yts;
     model=ModalRandomForest()
 )
-@test modelts isa SX.ModalDataSet{ModalRandomForest}
+@test dsts isa SX.ModalDataSet{ModalRandomForest}
 
-modelts = setup_dataset(
+dsts = setup_dataset(
     Xts, yts;
     model=ModalAdaBoost()
 )
-@test modelts isa SX.ModalDataSet{ModalAdaBoost}
+@test dsts isa SX.ModalDataSet{ModalAdaBoost}
 
-modelc = setup_dataset(
+dsc = setup_dataset(
     Xc, yc;
     model=XGBoostClassifier()
 )
-@test modelc isa SX.PropositionalDataSet{XGBoostClassifier}
+@test dsc isa SX.PropositionalDataSet{XGBoostClassifier}
 
-modelr = setup_dataset(
+dsr = setup_dataset(
     Xr, yr;
     model=XGBoostRegressor()
 )
-@test modelr isa SX.PropositionalDataSet{XGBoostRegressor}
+@test dsr isa SX.PropositionalDataSet{XGBoostRegressor}
 
 # ---------------------------------------------------------------------------- #
 #                covering various examples to complete codecov                 #
 # ---------------------------------------------------------------------------- #
 y_symbol = :petal_width
-modelc = setup_dataset(Xc, y_symbol)
-@test modelc isa SX.PropositionalDataSet{DecisionTreeRegressor}
+dsc = setup_dataset(Xc, y_symbol)
+@test dsc isa SX.PropositionalDataSet{DecisionTreeRegressor}
 
 
 # dataset is composed also of non numeric columns
 Xnn = hcat(Xc, DataFrame(target = yc))
 @test_nowarn SX.code_dataset!(Xnn)
 
-modelc = setup_dataset(
+dsc = setup_dataset(
     Xts, yts;
     resample=(train_ratio=0.5,),
     modalreduce=maximum
 )
-@test modelc isa SX.ModalDataSet{DecisionTreeClassifier}
+@test dsc isa SX.ModalDataSet{DecisionTreeClassifier}
 
 # ---------------------------------------------------------------------------- #
 #                                 resamplig                                    #
 # ---------------------------------------------------------------------------- #
-modelc = setup_dataset(
+dsc = setup_dataset(
     Xc, yc;
     resample=(;type=CV())
 )
-@test modelc isa SX.PropositionalDataSet{DecisionTreeClassifier}
-@test modelc.pinfo.type isa MLJ.CV
+@test dsc isa SX.PropositionalDataSet{DecisionTreeClassifier}
+@test dsc.pinfo.type isa MLJ.CV
 
-modelc = setup_dataset(
+dsc = setup_dataset(
     Xc, yc;(
     resample=(;type=Holdout()))
 )
-@test modelc isa SX.PropositionalDataSet{DecisionTreeClassifier}
-@test modelc.pinfo.type isa MLJ.Holdout
+@test dsc isa SX.PropositionalDataSet{DecisionTreeClassifier}
+@test dsc.pinfo.type isa MLJ.Holdout
 
-modelc = setup_dataset(
+dsc = setup_dataset(
     Xc, yc;
     resample=(;type=StratifiedCV())
 )
-@test modelc isa SX.PropositionalDataSet{DecisionTreeClassifier}
-@test modelc.pinfo.type isa MLJ.StratifiedCV
+@test dsc isa SX.PropositionalDataSet{DecisionTreeClassifier}
+@test dsc.pinfo.type isa MLJ.StratifiedCV
 
-modelc = setup_dataset(
+dsc = setup_dataset(
     Xc, yc;
     resample=(;type=TimeSeriesCV())
 )
-@test modelc isa SX.PropositionalDataSet{DecisionTreeClassifier}
-@test modelc.pinfo.type isa MLJ.TimeSeriesCV
+@test dsc isa SX.PropositionalDataSet{DecisionTreeClassifier}
+@test dsc.pinfo.type isa MLJ.TimeSeriesCV
 
-modelc = setup_dataset(
+dsc = setup_dataset(
     Xc, yc;
     resample=(;type=CV(nfolds=10, shuffle=true))
 )
-@test modelc isa SX.PropositionalDataSet{DecisionTreeClassifier}
+@test dsc isa SX.PropositionalDataSet{DecisionTreeClassifier}
 
 # ---------------------------------------------------------------------------- #
 #                              rng propagation                                 #
 # ---------------------------------------------------------------------------- #
-modelc = setup_dataset(
+dsc = setup_dataset(
     Xc, yc;
     resample=(type=CV(nfolds=10, shuffle=true), rng=Xoshiro(1))
 )
-@test modelc isa SX.PropositionalDataSet{DecisionTreeClassifier}
-@test modelc.mach.model.rng isa Xoshiro
-@test modelc.pinfo.rng isa Xoshiro
+@test dsc isa SX.PropositionalDataSet{DecisionTreeClassifier}
+@test dsc.mach.model.rng isa Xoshiro
+@test dsc.pinfo.rng isa Xoshiro
 
 range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
 
-modelc = setup_dataset(
+dsc = setup_dataset(
     Xc, yc;
     model=ModalDecisionTree(),
     resample=(type=CV(nfolds=5, shuffle=true), rng=Xoshiro(1)),
     tuning=(;tuning=Grid(resolution=10), resampling=CV(nfolds=3), range, measure=accuracy, repeats=2)
 )
-@test modelc.mach.model.model.rng isa Xoshiro
-@test modelc.mach.model.tuning.rng isa Xoshiro
-@test modelc.mach.model.resampling.rng isa Xoshiro
+@test dsc.mach.model.model.rng isa Xoshiro
+@test dsc.mach.model.tuning.rng isa Xoshiro
+@test dsc.mach.model.resampling.rng isa Xoshiro
 
 # ---------------------------------------------------------------------------- #
 #                            validate modelsetup                               #
 # ---------------------------------------------------------------------------- #
-modelc = setup_dataset(
+dsc = setup_dataset(
     Xc, yc;
     model=DecisionTreeClassifier(;max_depth=5)
 )
-@test modelc isa SX.PropositionalDataSet{DecisionTreeClassifier}
-@test modelc.mach.model.max_depth == 5
+@test dsc isa SX.PropositionalDataSet{DecisionTreeClassifier}
+@test dsc.mach.model.max_depth == 5
 
 @test_throws UndefVarError setup_dataset(
     Xc, yc;
@@ -191,40 +191,40 @@ modelc = setup_dataset(
 # ---------------------------------------------------------------------------- #
 range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
 
-modelr = setup_dataset(
+dsr = setup_dataset(
     Xr, yr;
     model=DecisionTreeRegressor(),
     resample=(;rng=Xoshiro(1234)),
     tuning=(;tuning=Grid(resolution=10), resampling=CV(nfolds=3), range, measure=rms)
 )
-@test modelr isa SX.PropositionalDataSet{<:MLJ.MLJTuning.DeterministicTunedModel}
+@test dsr isa SX.PropositionalDataSet{<:MLJ.MLJTuning.DeterministicTunedModel}
 
 range = (SX.range(:min_purity_increase, lower=0.001, upper=1.0, scale=:log),
      SX.range(:max_depth, lower=1, upper=10))
 
-modelc = setup_dataset(
+dsc = setup_dataset(
     Xc, yc;
     model=DecisionTreeClassifier(),
     resample=(;rng=Xoshiro(1234)),
     tuning=(;tuning=Grid(resolution=10), resampling=CV(nfolds=3), range, measure=rms)
 )
-@test modelc isa SX.PropositionalDataSet{<:MLJ.MLJTuning.ProbabilisticTunedModel}
+@test dsc isa SX.PropositionalDataSet{<:MLJ.MLJTuning.ProbabilisticTunedModel}
 
 selector = FeatureSelector()
 range = MLJ.range(selector, :features, values = [[:sepal_width,], [:sepal_length, :sepal_width]])
 
-modelc = setup_dataset(
+dsc = setup_dataset(
     Xc, yc;
     model=DecisionTreeClassifier(),
     resample=(;rng=Xoshiro(1234)),
     tuning=(;tuning=Grid(resolution=10),resampling=CV(nfolds=3),range,measure=rms)
 )
-@test modelc isa SX.PropositionalDataSet{<:MLJ.MLJTuning.ProbabilisticTunedModel}    
+@test dsc isa SX.PropositionalDataSet{<:MLJ.MLJTuning.ProbabilisticTunedModel}    
 
 # # ---------------------------------------------------------------------------- #
 # #                                dataset info                                  #
 # # ---------------------------------------------------------------------------- #
-# modelc = setup_dataset(Xc, yc)
+# dsc = setup_dataset(Xc, yc)
 
 # @test SX.get_treatment(dsc.info) == :aggregate
 # @test SX.get_modalreduce(dsc.info) == mean
@@ -261,11 +261,11 @@ modelc = setup_dataset(
 # #                         check vnames and modalreduce                         #
 # # ---------------------------------------------------------------------------- #
 # vnames=[:p1, :p2, :p3, :p4]
-# modelc, _ = setup_dataset(
+# dsc, _ = setup_dataset(
 #     Xc, yc;
 #     preprocess=(;vnames)
 # )
-# @test modelc.setup.preprocess.vnames == vnames
+# @test dsc.setup.preprocess.vnames == vnames
 
 # _, dsmin = setup_dataset(Xts, yts; model=(;type=:modaldecisiontree), preprocess=(;modalreduce=minimum))
 # _, dsmax = setup_dataset(Xts, yts; model=(;type=:modaldecisiontree), preprocess=(;modalreduce=maximum))
@@ -274,9 +274,9 @@ modelc = setup_dataset(
 # # ---------------------------------------------------------------------------- #
 # #                                  windowing                                   #
 # # ---------------------------------------------------------------------------- #
-# modelts, dts = setup_dataset(
+# dsts, dts = setup_dataset(
 #     Xts, yts;
 #     win=(type=adaptivewindow, params=(nwindows=3, relative_overlap=0.1))
 # )
-# @test modelts isa SX.Modelset
+# @test dsts isa SX.Modelset
 # @test dts    isa SX.Dataset
