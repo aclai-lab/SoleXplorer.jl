@@ -20,16 +20,15 @@ Xts, yts = SoleData.load_arff_dataset("NATOPS")
         for seed in 1:5:40
             for sampling_fraction in 0.7:0.1:0.9
                 for n_trees in 10:10:100
-                    model, mach, ds = symbolic_analysis(
+                    model = symbolic_analysis(
                         Xc, yc;
-                        model=(;type=:randomforest, params=(;n_trees, sampling_fraction)),
-                        resample = (type=Holdout, params=(;shuffle=true)),
-                        preprocess=(;train_ratio, rng=Xoshiro(seed)),
-                        measures=(accuracy,),
+                        model=RandomForestClassifier(;n_trees, sampling_fraction),
+                        resample=(type=Holdout(shuffle=true), train_ratio, rng=Xoshiro(seed)),
+                        measures=(accuracy,)
                     )
                     sx_acc = model.measures.measures_values[1]
-                    yhat = MLJ.predict_mode(mach, MLJ.table(ds.X[ds.tt[1].test, :]))
-                    mlj_acc = accuracy(yhat, ds.y[ds.tt[1].test])
+                    yhat = MLJ.predict_mode(model.ds.mach, model.ds.mach.args[1].data[model.ds.pidxs[1].test, :])
+                    mlj_acc = accuracy(yhat, model.ds.mach.args[2].data[model.ds.pidxs[1].test])
 
                     @test sx_acc == mlj_acc
                 end
@@ -46,16 +45,15 @@ end
         for seed in 1:5:40
             for sampling_fraction in 0.7:0.1:0.9
                 for n_trees in 10:10:100
-                    model, mach, ds = symbolic_analysis(
+                    model = symbolic_analysis(
                         Xr, yr;
-                        model=(;type=:randomforest, params=(;n_trees, sampling_fraction)),
-                        resample = (type=Holdout, params=(;shuffle=true)),
-                        preprocess=(;train_ratio, rng=Xoshiro(seed)),
-                        measures=(rms,),
+                        model=RandomForestRegressor(;n_trees, sampling_fraction),
+                        resample=(type=Holdout(shuffle=true), train_ratio, rng=Xoshiro(seed)),
+                        measures=(rms,)
                     )
                     sx_rms = model.measures.measures_values[1]
-                    yhat = MLJ.predict_mode(mach, MLJ.table(ds.X[ds.tt[1].test, :]))
-                    mlj_rms = rms(yhat, ds.y[ds.tt[1].test])
+                    yhat = MLJ.predict_mode(model.ds.mach, model.ds.mach.args[1].data[model.ds.pidxs[1].test, :])
+                    mlj_rms = rms(yhat, model.ds.mach.args[2].data[model.ds.pidxs[1].test])
 
                     @test sx_rms == mlj_rms
                 end
@@ -72,16 +70,15 @@ end
         for seed in 1:40
             for feature_importance in [:impurity, :split]
                 for n_iter in 1:5:100
-                    model, mach, ds = symbolic_analysis(
+                    model = symbolic_analysis(
                         Xc, yc;
-                        model=(type=:adaboost, params=(;n_iter, feature_importance)),
-                        resample = (type=Holdout, params=(shuffle=true, rng=Xoshiro(seed))),
-                        preprocess=(;train_ratio, rng=Xoshiro(seed)),
-                        measures=(accuracy, confusion_matrix),
+                        model=AdaBoostStumpClassifier(;n_iter, feature_importance),
+                        resample=(type=Holdout(shuffle=true), train_ratio, rng=Xoshiro(seed)),
+                        measures=(accuracy,)
                     )
                     sx_acc = model.measures.measures_values[1]
-                    yhat = MLJ.predict_mode(mach, MLJ.table(ds.X[ds.tt[1].test, :]))
-                    mlj_acc = accuracy(yhat, ds.y[ds.tt[1].test])
+                    yhat = MLJ.predict_mode(model.ds.mach, model.ds.mach.args[1].data[model.ds.pidxs[1].test, :])
+                    mlj_acc = accuracy(yhat, model.ds.mach.args[2].data[model.ds.pidxs[1].test])
 
                     @test sx_acc == mlj_acc
                 end
@@ -98,16 +95,15 @@ end
         for seed in 1:5:40
             for num_round in 10:5:50
                 for eta in 0.1:0.1:0.4
-                    model, mach, ds = symbolic_analysis(
+                    model = symbolic_analysis(
                         Xc, yc;
-                        model=(;type=:xgboost, params=(;eta, num_round)),
-                        resample = (type=Holdout, params=(;shuffle=true)),
-                        preprocess=(;train_ratio, rng=Xoshiro(seed)),
-                        measures=(accuracy,),
+                        model=XGBoostClassifier(;eta, num_round),
+                        resample=(type=Holdout(shuffle=true), train_ratio, rng=Xoshiro(seed)),
+                        measures=(accuracy,)
                     )
                     sx_acc = model.measures.measures_values[1]
-                    yhat = MLJ.predict_mode(mach, MLJ.table(ds.X[ds.tt[1].test, :]))
-                    mlj_acc = accuracy(yhat, ds.y[ds.tt[1].test])
+                    yhat = MLJ.predict_mode(model.ds.mach, model.ds.mach.args[1].data[model.ds.pidxs[1].test, :])
+                    mlj_acc = accuracy(yhat, model.ds.mach.args[2].data[model.ds.pidxs[1].test])
 
                     @test sx_acc == mlj_acc
                 end
@@ -124,17 +120,16 @@ end
         for seed in 1:5:40
             for num_round in 10:5:50
                 for eta in 0.1:0.1:0.4
-                    model, mach, ds = symbolic_analysis(
+                    model = symbolic_analysis(
                         Xr, yr;
-                        model=(;type=:xgboost, params=(;eta, num_round)),
-                        resample = (type=Holdout, params=(;shuffle=true)),
-                        preprocess=(;train_ratio, rng=Xoshiro(seed)),
-                        measures=(rms,),
+                        model=XGBoostRegressor(;eta, num_round),
+                        resample=(type=Holdout(shuffle=true), train_ratio, rng=Xoshiro(seed)),
+                        measures=(rms,)
                     )
-                    sxhat = model.model[1].info.supporting_predictions
-                    yhat = MLJ.predict_mode(mach, MLJ.table(ds.X[ds.tt[1].test, :]))
+                    sxhat = model.sole.sole[1].info.supporting_predictions
+                    yhat = MLJ.predict_mode(model.ds.mach, model.ds.mach.args[1].data[model.ds.pidxs[1].test, :])
                     sx_rms = model.measures.measures_values[1]
-                    mlj_rms = rms(yhat, ds.y[ds.tt[1].test])
+                    mlj_rms = rms(yhat, model.ds.mach.args[2].data[model.ds.pidxs[1].test])
 
                     @test isapprox(sxhat, yhat; rtol=1e-6)
                     @test isapprox(sx_rms, mlj_rms; rtol=1e-6)
