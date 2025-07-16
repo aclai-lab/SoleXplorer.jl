@@ -99,7 +99,7 @@ dsc = setup_dataset(
     resample=(train_ratio=0.5,),
     modalreduce=maximum
 )
-@test dsc isa SX.ModalDataSet{DecisionTreeClassifier}
+@test dsc isa SX.PropositionalDataSet{DecisionTreeClassifier}
 
 # ---------------------------------------------------------------------------- #
 #                                 resamplig                                    #
