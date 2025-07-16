@@ -221,62 +221,17 @@ dsc = setup_dataset(
 )
 @test dsc isa SX.PropositionalDataSet{<:MLJ.MLJTuning.ProbabilisticTunedModel}    
 
-# # ---------------------------------------------------------------------------- #
-# #                                dataset info                                  #
-# # ---------------------------------------------------------------------------- #
-# dsc = setup_dataset(Xc, yc)
+# ---------------------------------------------------------------------------- #
+#                               various cases                                  #
+# ---------------------------------------------------------------------------- #
+y_invalid = fill(nothing, length(yc)) 
+@test_throws ArgumentError setup_dataset(Xc, y_invalid)
 
-# @test SX.get_treatment(dsc.info) == :aggregate
-# @test SX.get_modalreduce(dsc.info) == mean
-# @test SX.get_train_ratio(dsc.info) == 0.7
-# @test SX.get_valid_ratio(dsc.info) == 0.0
-# @test SX.get_rng(dsc.info) == TaskLocalRNG()
-# @test SX.get_vnames(dsc.info) isa Vector{String}
-# @test_nowarn sprint(show, dsc.info)
+@test SX.code_dataset!(yc) isa Vector{Int64}
+@test SX.code_dataset!(Xc, yc) isa Tuple{DataFrame, Vector{Int64}}
 
-# output = sprint(show, dsc.info)
-# @test occursin("DatasetInfo:", output)
-# @test occursin("treatment:", output)
-# @test occursin("aggregate", output)
+dsc = setup_dataset(Xc, yc)
+@test length(dsc) == length(dsc.pidxs)
 
-# # ---------------------------------------------------------------------------- #
-# #                                     tt                                       #
-# # ---------------------------------------------------------------------------- #
-# @test SX.get_train(dsc.tt[1]) isa Vector{Int64}
-# @test isempty(SX.get_valid(dsc.tt[1]))
-# @test SX.get_test(dsc.tt[1]) isa Vector{Int64}
-# @test length(dsc.tt[1]) == 150
-# @test_nowarn sprint(show, dsc.tt[1])
-
-# # ---------------------------------------------------------------------------- #
-# #                                   dataset                                    #
-# # ---------------------------------------------------------------------------- #
-# @test SX.get_X(dsc) isa Matrix
-# @test SX.get_y(dsc) isa AbstractVector
-# @test SX.get_tt(dsc) isa AbstractVector
-# @test SX.get_info(dsc) isa SX.DatasetInfo
-# @test_nowarn sprint(show, dsc)
-
-# # ---------------------------------------------------------------------------- #
-# #                         check vnames and modalreduce                         #
-# # ---------------------------------------------------------------------------- #
-# vnames=[:p1, :p2, :p3, :p4]
-# dsc, _ = setup_dataset(
-#     Xc, yc;
-#     preprocess=(;vnames)
-# )
-# @test dsc.setup.preprocess.vnames == vnames
-
-# _, dsmin = setup_dataset(Xts, yts; model=(;type=:modaldecisiontree), preprocess=(;modalreduce=minimum))
-# _, dsmax = setup_dataset(Xts, yts; model=(;type=:modaldecisiontree), preprocess=(;modalreduce=maximum))
-# @test all(dsmin.X .<= dsmax.X)
-
-# # ---------------------------------------------------------------------------- #
-# #                                  windowing                                   #
-# # ---------------------------------------------------------------------------- #
-# dsts, dts = setup_dataset(
-#     Xts, yts;
-#     win=(type=adaptivewindow, params=(nwindows=3, relative_overlap=0.1))
-# )
-# @test dsts isa SX.Modelset
-# @test dts    isa SX.Dataset
+@test SX.get_y_test(dsc) isa Vector{<:AbstractVector{<:SX.CLabel}}
+@test SX.get_mach_model(dsc) isa DecisionTreeClassifier
