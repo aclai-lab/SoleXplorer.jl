@@ -2,7 +2,7 @@
 #                               abstract types                                 #
 # ---------------------------------------------------------------------------- #
 abstract type AbstractMeasures end
-# abstract type AbstractSolePrediction end
+abstract type AbstractModelSet end
 
 # ---------------------------------------------------------------------------- #
 #                                   types                                      #
@@ -31,6 +31,26 @@ end
 const Optional{T} = Union{T, Nothing}
 const OptRules    = Optional{DecisionSet}
 const OptMeasures = Optional{Measures}
+
+# ---------------------------------------------------------------------------- #
+#                                  modelset                                    #
+# ---------------------------------------------------------------------------- #
+# per ora i tipi di rules e measures non hanno {} ma valuta in futuro se propagare
+mutable struct ModelSet{S} <: AbstractModelSet
+    ds       :: EitherDataSet
+    sole     :: SoleModel{S}
+    rules    :: OptRules
+    measures :: OptMeasures
+
+    function ModelSet(
+        ds       :: EitherDataSet,
+        sole     :: SoleModel{S};
+        rules    :: OptRules = nothing,
+        measures :: OptMeasures = nothing
+    ) where S
+        new{S}(ds, sole, rules, measures)
+    end
+end
 
 # ---------------------------------------------------------------------------- #
 #                                 utilities                                    #
@@ -101,7 +121,7 @@ end
 # ---------------------------------------------------------------------------- #
 function eval_measures(
     ds::EitherDataSet,
-    solem::ModelSet,
+    solem::SoleModel,
     measures::Tuple{Vararg{FussyMeasure}},
     y_test::Vector{<:AbstractVector{<:Label}}
 )::Measures
@@ -162,28 +182,29 @@ end
 # ---------------------------------------------------------------------------- #
 function _symbolic_analysis(
     ds::EitherDataSet,
-    solem::ModelSet;
+    solem::SoleModel;
     extractor::Union{Nothing,RuleExtractor}=nothing,
     measures::Tuple{Vararg{FussyMeasure}}=(),
-)::Tuple{OptRules,OptMeasures}
-    r = isnothing(extractor)  ? nothing : begin
+)::ModelSet
+    rules = isnothing(extractor)  ? nothing : begin
         # TODO propaga rng, dovrai fare intrees mutable struct
         extractrules(extractor, ds, solem)
     end
 
-    m = isempty(measures) ? nothing : begin
+    measures = isempty(measures) ? nothing : begin
         y_test = get_y_test(ds)
+        # all_classes = unique(Iterators.flatten(y_test))
         eval_measures(ds, solem, measures, y_test)
     end
 
-    return (r, m)
+    return ModelSet(ds, solem; rules, measures)
 end
 
 function symbolic_analysis(
     ds::EitherDataSet,
-    solem::ModelSet;
+    solem::SoleModel;
     kwargs...
-)::Tuple{OptRules,OptMeasures}
+)::ModelSet
     _symbolic_analysis(ds, solem; kwargs...)
 end
 
@@ -193,7 +214,7 @@ function symbolic_analysis(
     extractor::Union{Nothing,RuleExtractor}=nothing,
     measures::Tuple{Vararg{FussyMeasure}}=(),
     kwargs...
-)::Tuple{OptRules,OptMeasures}
+)::ModelSet
     ds = _prepare_dataset(X, y; kwargs...)
     solem = _train_test(ds)
     _symbolic_analysis(ds, solem; extractor, measures)

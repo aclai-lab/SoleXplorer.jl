@@ -1,7 +1,7 @@
 # ---------------------------------------------------------------------------- #
 #                               abstract types                                 #
 # ---------------------------------------------------------------------------- #
-abstract type AbstractModelSet end
+abstract type AbstractSoleModel end
 
 # ---------------------------------------------------------------------------- #
 #                                   types                                      #
@@ -65,12 +65,12 @@ function set_watchlist!(model::AbstractDataSet, i::Int)
 end
 
 # ---------------------------------------------------------------------------- #
-#                                   modelset                                   #
+#                                  solemodel                                   #
 # ---------------------------------------------------------------------------- #
-mutable struct ModelSet{D} <: AbstractModelSet
+mutable struct SoleModel{D} <: AbstractSoleModel
     sole   :: Vector{AbstractModel}
 
-    function ModelSet(::D, sole::Vector{AbstractModel}) where D<:AbstractDataSet
+    function SoleModel(::D, sole::Vector{AbstractModel}) where D<:AbstractDataSet
         new{D}(sole)
     end
 end
@@ -78,13 +78,13 @@ end
 # ---------------------------------------------------------------------------- #
 #                                 constructors                                 #
 # ---------------------------------------------------------------------------- #
-solemodels(solem::ModelSet) = solem.sole
+solemodels(solem::SoleModel) = solem.sole
 
 # ---------------------------------------------------------------------------- #
 #                                  train_test                                  #
 # ---------------------------------------------------------------------------- #
-function _train_test(model::EitherDataSet)::ModelSet
-    n_folds     = length(model.pidxs)
+function _train_test(model::EitherDataSet)::SoleModel
+    n_folds   = length(model.pidxs)
     solemodel = Vector{AbstractModel}(undef, n_folds)
 
     # TODO this can be parallelizable
@@ -98,12 +98,12 @@ function _train_test(model::EitherDataSet)::ModelSet
         solemodel[i] = apply(model, X_test, y_test)
     end
 
-    return ModelSet(model, solemodel)
+    return SoleModel(model, solemodel)
 end
 
-function train_test(args...; kwargs...)::ModelSet
+function train_test(args...; kwargs...)::SoleModel
     model = _prepare_dataset(args...; kwargs...)
     _train_test(model)
 end
 
-train_test(model::AbstractDataSet)::ModelSet = _train_test(model)
+train_test(model::AbstractDataSet)::SoleModel = _train_test(model)

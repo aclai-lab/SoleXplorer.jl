@@ -1,11 +1,17 @@
 # ---------------------------------------------------------------------------- #
+#                                   types                                      #
+# ---------------------------------------------------------------------------- #
+# dovrà essere sicuramente ampliato con un union
+const Rules = DecisionSet
+
+# ---------------------------------------------------------------------------- #
 #                             InTreesRuleExtractor                             #
 # ---------------------------------------------------------------------------- #
 function extractrules(
     extractor :: InTreesRuleExtractor,
     ds        :: EitherDataSet,
-    solem     :: ModelSet
-)::DecisionSet
+    solem     :: SoleModel
+)::Rules
     extracted = reduce(vcat, map(enumerate(solemodels(solem))) do (i, model)
         test = get_test(ds.pidxs[i])
         X_test, y_test = get_X(ds)[test, :], get_y(ds)[test]
@@ -20,19 +26,19 @@ end
 # ---------------------------------------------------------------------------- #
 #                              LumenRuleExtractor                              #
 # ---------------------------------------------------------------------------- #
-function extractrules(
-    extractor :: LumenRuleExtractor,
-    ds        :: EitherDataSet,
-    solem     :: ModelSet
-)::Rules
-    extracted = reduce(vcat, map(enumerate(solemodels(solem))) do (i, model)
-        decision_set = RuleExtraction.modalextractrules(extractor, model)
-        # TODO modifica l'output di posthoc
-        decision_set.rules
-    end)
+# function extractrules(
+#     extractor :: LumenRuleExtractor,
+#     ds        :: EitherDataSet,
+#     solem     :: SoleModel
+# )
+#     extracted = reduce(vcat, map(enumerate(solemodels(solem))) do (i, model)
+#         decision_set = RuleExtraction.modalextractrules(extractor, model)
+#         # TODO modifica l'output di posthoc
+#         decision_set.rules
+#     end)
 
-    return DecisionSet(extracted)
-end
+#     return DecisionSet(extracted)
+# end
 
 
 

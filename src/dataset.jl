@@ -44,6 +44,12 @@ function set_conditions!(m::MLJ.Model, conditions::Vector{<:Base.Callable})::MLJ
     return m
 end
 
+function set_fraction_train!(r::NamedTuple)::NamedTuple
+    train_ratio = r.train_ratio
+    type = Holdout(merge(MLJ.params(r.type), (fraction_train=train_ratio,))...)
+    merge(r, (type=type,))
+end
+
 function code_dataset!(X::AbstractDataFrame)
     for (name, col) in pairs(eachcol(X))
         if !(eltype(col) <: Number)
@@ -92,9 +98,16 @@ function DataSet(
     tinfo   :: Union{TreatmentInfo, Nothing} = nothing
 ) where {M<:MLJ.Model}
     isnothing(tinfo) ?
-        PropositionalDataSet{M}(mach, pidxs, pinfo) :
-        ModalDataSet{M}(mach, pidxs, pinfo, tinfo)
+        PropositionalDataSet{M}(mach, pidxs, pinfo) : begin
+            if tinfo.treatment == :reducesize
+                ModalDataSet{M}(mach, pidxs, pinfo, tinfo)
+            else
+                PropositionalDataSet{M}(mach, pidxs, pinfo)
+            end
+        end
 end
+
+const EitherDataSet = Union{PropositionalDataSet, ModalDataSet}
 
 # ---------------------------------------------------------------------------- #
 #                                 constructors                                 #
@@ -103,7 +116,7 @@ function _prepare_dataset(
     X             :: AbstractDataFrame,
     y             :: AbstractVector;
     model         :: MLJ.Model               = _DefaultModel(y),
-    resample      :: NamedTuple              = (type=Holdout(shuffle=true), train_ratio=0.7, rng=TaskLocalRNG()),
+    resample      :: NamedTuple              = NamedTuple(),
     win           :: WinFunction             = AdaptiveWindow(nwindows=3, relative_overlap=0.1),
     features      :: Vector{<:Base.Callable} = [maximum, minimum],
     modalreduce   :: Base.Callable           = mean,
@@ -115,6 +128,10 @@ function _prepare_dataset(
     hasproperty(model, :rng) && (model = set_rng!(model, rng))
     # ModalDecisionTrees package needs features to be passed in model params
     hasproperty(model, :features) && (model = set_conditions!(model, features))
+    # Holdout resampling needs to setup fraction_train parameters
+    default_resample = (type=Holdout(shuffle=true), train_ratio=0.7, rng=TaskLocalRNG())
+    resample = merge(default_resample, resample)
+    resample.type isa Holdout && (resample = set_fraction_train!(resample))
 
     # questo if è relativo a dataset multidimensionali.
     # qui si decide come trattare tali dataset:
@@ -150,7 +167,6 @@ function _prepare_dataset(
 
     mach = MLJ.machine(model, X, y)
     
-
     DataSet(mach, ttpairs, pinfo; tinfo)
 end
 
@@ -164,8 +180,6 @@ function setup_dataset(
 )::AbstractDataSet
     setup_dataset(X[!, Not(y)], X[!, y]; kwargs...)
 end
-
-const EitherDataSet = Union{PropositionalDataSet, ModalDataSet}
 
 Base.length(ds::EitherDataSet) = length(ds.pidxs)
 
