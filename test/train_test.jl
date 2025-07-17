@@ -193,3 +193,8 @@ solemr = train_test(
     tuning=(;tuning=Grid(resolution=10), resampling=CV(nfolds=3), range, measure=rms, repeats=2)
 )
 @test solemr isa SX.SoleModel{<:SX.PropositionalDataSet{<:MLJ.MLJTuning.DeterministicTunedModel{<:Any, <:XGBoostRegressor}}}
+
+# ---------------------------------------------------------------------------- #
+#                                    various                                   #
+# ---------------------------------------------------------------------------- #
+@test SX.TunedMach(DecisionTreeClassifier) <: Union{SX.PropositionalDataSet, SX.ModalDataSet}

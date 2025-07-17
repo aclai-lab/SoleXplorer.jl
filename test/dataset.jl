@@ -235,3 +235,8 @@ dsc = setup_dataset(Xc, yc)
 
 @test SX.get_y_test(dsc) isa Vector{<:AbstractVector{<:SX.CLabel}}
 @test SX.get_mach_model(dsc) isa DecisionTreeClassifier
+
+@test_nowarn dsc.pinfo
+@test_nowarn dsc.pidxs
+
+@test length(dsc.pidxs) == length(dsc)
