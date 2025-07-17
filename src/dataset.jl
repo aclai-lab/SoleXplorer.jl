@@ -10,6 +10,7 @@ const Modal  = Union{ModalDecisionTree, ModalRandomForest, ModalAdaBoost}
 const Tuning = Union{Nothing, MLJTuning.TuningStrategy}
 
 const OptAggregationInfo = Optional{AggregationInfo}
+const OptVector = Optional{AbstractVector}
 
 # ---------------------------------------------------------------------------- #
 #                                  defaults                                    #
@@ -35,21 +36,23 @@ function set_rng!(m::MLJ.Model, rng::AbstractRNG)::MLJ.Model
     return m
 end
 
+function set_rng!(r::MLJ.ResamplingStrategy, rng::AbstractRNG)::ResamplingStrategy
+    typeof(r)(merge(MLJ.params(r), (rng=rng,))...)
+end
+
 function set_tuning_rng!(m::MLJ.Model, rng::AbstractRNG)::MLJ.Model
     hasproperty(m.tuning, :rng) && (m.tuning.rng = rng)
     hasproperty(m.resampling, :rng) && (m.resampling = set_rng!(m.resampling, rng))
     return m
 end
 
+function set_fraction_train!(r::ResamplingStrategy, train_ratio::Real)::ResamplingStrategy
+    typeof(r)(merge(MLJ.params(r), (fraction_train=train_ratio,))...)
+end
+
 function set_conditions!(m::MLJ.Model, conditions::Tuple{Vararg{<:Base.Callable}})::MLJ.Model
     m.conditions = Function[conditions...]
     return m
-end
-
-function set_fraction_train!(r::NamedTuple)::NamedTuple
-    train_ratio = r.train_ratio
-    type = Holdout(merge(MLJ.params(r.type), (fraction_train=train_ratio,))...)
-    merge(r, (type=type,))
 end
 
 function code_dataset!(X::AbstractDataFrame)
@@ -121,24 +124,27 @@ const EitherDataSet = Union{PropositionalDataSet, ModalDataSet}
 # ---------------------------------------------------------------------------- #
 function _prepare_dataset(
     X             :: AbstractDataFrame,
-    y             :: AbstractVector;
+    y             :: AbstractVector,
+    w             :: OptVector               = nothing;
     model         :: MLJ.Model               = _DefaultModel(y),
-    resample      :: NamedTuple              = NamedTuple(),
+    resample      :: ResamplingStrategy      = Holdout(shuffle=true),
+    train_ratio   :: Real                    = 0.7,
+    valid_ratio   :: Real                    = 0.0,
+    rng           :: AbstractRNG             = TaskLocalRNG(),
     win           :: WinFunction             = AdaptiveWindow(nwindows=3, relative_overlap=0.1),
     features      :: Tuple{Vararg{<:Base.Callable}} = (maximum, minimum),
     modalreduce   :: Base.Callable           = mean,
     tuning        :: NamedTuple              = NamedTuple()
 )::AbstractDataSet
     # propagate user rng to every field that needs it
-    rng = hasproperty(resample, :rng) ? resample.rng : TaskLocalRNG()
-    # set rng if the model supports it
-    hasproperty(model, :rng) && (model = set_rng!(model, rng))
+    # model
+    hasproperty(model,    :rng) && (model    = set_rng!(model,    rng))
+    hasproperty(resample, :rng) && (resample = set_rng!(resample, rng))
+
     # ModalDecisionTrees package needs features to be passed in model params
     hasproperty(model, :features) && (model = set_conditions!(model, features))
     # Holdout resampling needs to setup fraction_train parameters
-    default_resample = (type=Holdout(shuffle=true), train_ratio=0.7, rng=TaskLocalRNG())
-    resample = merge(default_resample, resample)
-    resample.type isa Holdout && (resample = set_fraction_train!(resample))
+    resample isa Holdout && (resample = set_fraction_train!(resample, train_ratio))
 
     # questo if è relativo a dataset multidimensionali.
     # qui si decide come trattare tali dataset:
@@ -156,7 +162,7 @@ function _prepare_dataset(
         tinfo = nothing
     end
 
-    ttpairs, pinfo = partition(y; resample...)
+    ttpairs, pinfo = partition(y; resample, train_ratio, valid_ratio, rng)
 
     isempty(tuning) || begin
         if !(tuning.range isa MLJ.NominalRange)
@@ -172,7 +178,7 @@ function _prepare_dataset(
         model = set_tuning_rng!(model, rng)
     end
 
-    mach = MLJ.machine(model, X, y)
+    mach = isnothing(w) ? MLJ.machine(model, X, y) : MLJ.machine(model, X, y, w)
     
     DataSet(mach, ttpairs, pinfo; tinfo)
 end

@@ -209,12 +209,13 @@ end
 
 function symbolic_analysis(
     X::AbstractDataFrame,
-    y::AbstractVector;
+    y::AbstractVector,
+    w::OptVector = nothing;
     extractor::Union{Nothing,RuleExtractor}=nothing,
     measures::Tuple{Vararg{FussyMeasure}}=(),
     kwargs...
 )::ModelSet
-    ds = _prepare_dataset(X, y; kwargs...)
+    ds = _prepare_dataset(X, y, w; kwargs...)
     solem = _train_test(ds)
     _symbolic_analysis(ds, solem; extractor, measures)
 end

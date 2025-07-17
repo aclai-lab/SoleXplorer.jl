@@ -96,7 +96,7 @@ Xnn = hcat(Xc, DataFrame(target = yc))
 
 dsc = setup_dataset(
     Xts, yts;
-    resample=(train_ratio=0.5,),
+    train_ratio=0.5,
     modalreduce=maximum
 )
 @test dsc isa SX.PropositionalDataSet{DecisionTreeClassifier}
@@ -106,35 +106,35 @@ dsc = setup_dataset(
 # ---------------------------------------------------------------------------- #
 dsc = setup_dataset(
     Xc, yc;
-    resample=(;type=CV())
+    resample=CV(),
 )
 @test dsc isa SX.PropositionalDataSet{DecisionTreeClassifier}
 @test dsc.pinfo.type isa MLJ.CV
 
 dsc = setup_dataset(
-    Xc, yc;(
-    resample=(;type=Holdout()))
+    Xc, yc;
+    resample=Holdout(),
 )
 @test dsc isa SX.PropositionalDataSet{DecisionTreeClassifier}
 @test dsc.pinfo.type isa MLJ.Holdout
 
 dsc = setup_dataset(
     Xc, yc;
-    resample=(;type=StratifiedCV())
+    resample=StratifiedCV(),
 )
 @test dsc isa SX.PropositionalDataSet{DecisionTreeClassifier}
 @test dsc.pinfo.type isa MLJ.StratifiedCV
 
 dsc = setup_dataset(
     Xc, yc;
-    resample=(;type=TimeSeriesCV())
+    resample=TimeSeriesCV(),
 )
 @test dsc isa SX.PropositionalDataSet{DecisionTreeClassifier}
 @test dsc.pinfo.type isa MLJ.TimeSeriesCV
 
 dsc = setup_dataset(
     Xc, yc;
-    resample=(;type=CV(nfolds=10, shuffle=true))
+    resample=CV(nfolds=10, shuffle=true),
 )
 @test dsc isa SX.PropositionalDataSet{DecisionTreeClassifier}
 
@@ -143,7 +143,8 @@ dsc = setup_dataset(
 # ---------------------------------------------------------------------------- #
 dsc = setup_dataset(
     Xc, yc;
-    resample=(type=CV(nfolds=10, shuffle=true), rng=Xoshiro(1))
+    resample=CV(nfolds=10, shuffle=true),
+    rng=Xoshiro(1)
 )
 @test dsc isa SX.PropositionalDataSet{DecisionTreeClassifier}
 @test dsc.mach.model.rng isa Xoshiro
@@ -154,7 +155,8 @@ range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
 dsc = setup_dataset(
     Xc, yc;
     model=ModalDecisionTree(),
-    resample=(type=CV(nfolds=5, shuffle=true), rng=Xoshiro(1)),
+    resample=CV(nfolds=5, shuffle=true),
+    rng=Xoshiro(1),
     tuning=(;tuning=Grid(resolution=10), resampling=CV(nfolds=3), range, measure=accuracy, repeats=2)
 )
 @test dsc.mach.model.model.rng isa Xoshiro
@@ -183,7 +185,8 @@ dsc = setup_dataset(
 
 @test_throws MethodError setup_dataset(
     Xc, yc;
-    resample=(train_ratio=0.5, invalid=maximum)
+    train_ratio=0.5,
+    invalid=maximum
 )
 
 # ---------------------------------------------------------------------------- #
@@ -194,7 +197,7 @@ range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
 dsr = setup_dataset(
     Xr, yr;
     model=DecisionTreeRegressor(),
-    resample=(;rng=Xoshiro(1234)),
+    rng=Xoshiro(1234),
     tuning=(;tuning=Grid(resolution=10), resampling=CV(nfolds=3), range, measure=rms)
 )
 @test dsr isa SX.PropositionalDataSet{<:MLJ.MLJTuning.DeterministicTunedModel}
@@ -205,7 +208,7 @@ range = (SX.range(:min_purity_increase, lower=0.001, upper=1.0, scale=:log),
 dsc = setup_dataset(
     Xc, yc;
     model=DecisionTreeClassifier(),
-    resample=(;rng=Xoshiro(1234)),
+    rng=Xoshiro(1234),
     tuning=(;tuning=Grid(resolution=10), resampling=CV(nfolds=3), range, measure=rms)
 )
 @test dsc isa SX.PropositionalDataSet{<:MLJ.MLJTuning.ProbabilisticTunedModel}
@@ -216,7 +219,7 @@ range = MLJ.range(selector, :features, values = [[:sepal_width,], [:sepal_length
 dsc = setup_dataset(
     Xc, yc;
     model=DecisionTreeClassifier(),
-    resample=(;rng=Xoshiro(1234)),
+    rng=Xoshiro(1234),
     tuning=(;tuning=Grid(resolution=10),resampling=CV(nfolds=3),range,measure=rms)
 )
 @test dsc isa SX.PropositionalDataSet{<:MLJ.MLJTuning.ProbabilisticTunedModel}    

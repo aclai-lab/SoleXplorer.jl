@@ -5,13 +5,6 @@ abstract type AbstractPartitionInfo end
 abstract type AbstractPartitionIdxs end
 
 # ---------------------------------------------------------------------------- #
-#                                 utilities                                    #
-# ---------------------------------------------------------------------------- #
-function set_rng!(r::MLJ.ResamplingStrategy, rng::AbstractRNG)::MLJ.ResamplingStrategy
-    typeof(r)(merge(MLJ.params(r), (rng=rng,))...)
-end
-
-# ---------------------------------------------------------------------------- #
 #                                 dataset info                                 #
 # ---------------------------------------------------------------------------- #
 struct PartitionInfo{T} <: AbstractPartitionInfo
@@ -72,16 +65,14 @@ function partition end
 
 function partition(
     y           :: AbstractVector{<:Label};
-    type        :: MLJ.ResamplingStrategy=Holdout(shuffle=true),
-    train_ratio :: Real=0.7,
-    valid_ratio :: Real=0.0,
-    rng         :: AbstractRNG=TaskLocalRNG()
+    resample    :: MLJ.ResamplingStrategy,
+    train_ratio :: Real,
+    valid_ratio :: Real,
+    rng         :: AbstractRNG
 )::Tuple{Vector{PartitionIdxs}, PartitionInfo}
-    hasproperty(type, :rng) && (type = set_rng!(type, rng))
+    pinfo = PartitionInfo(resample, train_ratio, valid_ratio, rng)
 
-    pinfo = PartitionInfo(type, train_ratio, valid_ratio, rng)
-
-    ttpairs = MLJBase.train_test_pairs(type, 1:length(y), y)
+    ttpairs = MLJBase.train_test_pairs(resample, 1:length(y), y)
 
     if valid_ratio == 0.0
         return ([PartitionIdxs(train, eltype(train)[], test) for (train, test) in ttpairs], pinfo)
