@@ -94,14 +94,14 @@ end
 #                          multidimensional dataset                            #
 # ---------------------------------------------------------------------------- #
 struct TreatmentInfo <: AbstractTreatmentInfo
-    features    :: Tuple{Vararg{<:Base.Callable}}
+    features    :: Tuple{Vararg{Base.Callable}}
     winparams   :: WinFunction
     treatment   :: Symbol
     modalreduce :: Base.Callable
 end
 
 struct AggregationInfo <: AbstractTreatmentInfo
-    features    :: Tuple{Vararg{<:Base.Callable}}
+    features    :: Tuple{Vararg{Base.Callable}}
     winparams   :: WinFunction
 end
 
@@ -130,7 +130,7 @@ function treatment(
     X           :: AbstractDataFrame;
     treat       :: Symbol,
     win         :: WinFunction=AdaptiveWindow(nwindows=3, relative_overlap=0.1),
-    features    :: Tuple{Vararg{<:Base.Callable}}=[maximum, minimum],
+    features    :: Tuple{Vararg{Base.Callable}}=[maximum, minimum],
     modalreduce :: Base.Callable=mean
 )
     vnames = propertynames(X)

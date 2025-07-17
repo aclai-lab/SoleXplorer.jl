@@ -50,7 +50,7 @@ function set_fraction_train!(r::ResamplingStrategy, train_ratio::Real)::Resampli
     typeof(r)(merge(MLJ.params(r), (fraction_train=train_ratio,))...)
 end
 
-function set_conditions!(m::MLJ.Model, conditions::Tuple{Vararg{<:Base.Callable}})::MLJ.Model
+function set_conditions!(m::MLJ.Model, conditions::Tuple{Vararg{Base.Callable}})::MLJ.Model
     m.conditions = Function[conditions...]
     return m
 end
@@ -132,7 +132,7 @@ function _prepare_dataset(
     valid_ratio   :: Real                    = 0.0,
     rng           :: AbstractRNG             = TaskLocalRNG(),
     win           :: WinFunction             = AdaptiveWindow(nwindows=3, relative_overlap=0.1),
-    features      :: Tuple{Vararg{<:Base.Callable}} = (maximum, minimum),
+    features      :: Tuple{Vararg{Base.Callable}} = (maximum, minimum),
     modalreduce   :: Base.Callable           = mean,
     tuning        :: NamedTuple              = NamedTuple()
 )::AbstractDataSet
@@ -167,7 +167,7 @@ function _prepare_dataset(
     isempty(tuning) || begin
         if !(tuning.range isa MLJ.NominalRange)
             # converti i SX.range in MLJ.range, ora che è disponibile il modello
-            range = tuning.range isa Tuple{Vararg{<:Tuple}} ? tuning.range : (tuning.range,)
+            range = tuning.range isa Tuple{Vararg{Tuple}} ? tuning.range : (tuning.range,)
             range = collect(MLJ.range(model, r[1]; r[2:end]...) for r in range)
             tuning = merge(tuning, (range=range,))
         end
