@@ -23,7 +23,9 @@ Xts, yts = SoleData.load_arff_dataset("NATOPS")
                     model = symbolic_analysis(
                         Xc, yc;
                         model=RandomForestClassifier(;n_trees, sampling_fraction),
-                        resample=(type=Holdout(shuffle=true), train_ratio, rng=Xoshiro(seed)),
+                        resample=Holdout(shuffle=true),
+                        train_ratio,
+                        rng=Xoshiro(seed),
                         measures=(accuracy,)
                     )
                     sx_acc = model.measures.measures_values[1]
@@ -48,7 +50,9 @@ end
                     model = symbolic_analysis(
                         Xr, yr;
                         model=RandomForestRegressor(;n_trees, sampling_fraction),
-                        resample=(type=Holdout(shuffle=true), train_ratio, rng=Xoshiro(seed)),
+                        resample=Holdout(shuffle=true),
+                        train_ratio,
+                        rng=Xoshiro(seed),
                         measures=(rms,)
                     )
                     sx_rms = model.measures.measures_values[1]
@@ -73,7 +77,9 @@ end
                     model = symbolic_analysis(
                         Xc, yc;
                         model=AdaBoostStumpClassifier(;n_iter, feature_importance),
-                        resample=(type=Holdout(shuffle=true), train_ratio, rng=Xoshiro(seed)),
+                        resample=Holdout(shuffle=true),
+                        train_ratio,
+                        rng=Xoshiro(seed),
                         measures=(accuracy,)
                     )
                     sx_acc = model.measures.measures_values[1]
@@ -98,7 +104,9 @@ end
                     model = symbolic_analysis(
                         Xc, yc;
                         model=XGBoostClassifier(;eta, num_round),
-                        resample=(type=Holdout(shuffle=true), train_ratio, rng=Xoshiro(seed)),
+                        resample=Holdout(shuffle=true),
+                        train_ratio,
+                        rng=Xoshiro(seed),
                         measures=(accuracy,)
                     )
                     sx_acc = model.measures.measures_values[1]
@@ -123,7 +131,9 @@ end
                     model = symbolic_analysis(
                         Xr, yr;
                         model=XGBoostRegressor(;eta, num_round),
-                        resample=(type=Holdout(shuffle=true), train_ratio, rng=Xoshiro(seed)),
+                        resample=Holdout(shuffle=true),
+                        train_ratio,
+                        rng=Xoshiro(seed),
                         measures=(rms,)
                     )
                     sxhat = model.sole.sole[1].info.supporting_predictions

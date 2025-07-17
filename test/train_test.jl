@@ -98,7 +98,8 @@ range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
 solemc = train_test(
     Xc, yc;
     model=DecisionTreeClassifier(),
-    resample=(type=CV(nfolds=5, shuffle=true), rng=Xoshiro(1)),
+    resample=CV(nfolds=5, shuffle=true),
+    rng=Xoshiro(1),
     tuning=(;tuning=Grid(resolution=10), resampling=CV(nfolds=3), range, measure=accuracy, repeats=2)
 )
 @test solemc isa SX.SoleModel{<:SX.PropositionalDataSet{<:MLJ.MLJTuning.ProbabilisticTunedModel{<:Any, <:DecisionTreeClassifier}}}
@@ -110,7 +111,8 @@ range = (
 solemc = train_test(
     Xc, yc;
     model=RandomForestClassifier(),
-    resample=(type=CV(nfolds=5, shuffle=true), rng=Xoshiro(1)),
+    resample=CV(nfolds=5, shuffle=true),
+    rng=Xoshiro(1),
     tuning=(;tuning=Grid(resolution=10), resampling=CV(nfolds=3), range, measure=accuracy, repeats=2)
 )
 @test solemc isa SX.SoleModel{<:SX.PropositionalDataSet{<:MLJ.MLJTuning.ProbabilisticTunedModel{<:Any, <:RandomForestClassifier}}}
@@ -119,7 +121,8 @@ range = SX.range(:n_iter; lower=10, unit=10, upper=100)
 solemc = train_test(
     Xc, yc;
     model=AdaBoostStumpClassifier(),
-    resample=(type=CV(nfolds=5, shuffle=true), rng=Xoshiro(1)),
+    resample=CV(nfolds=5, shuffle=true),
+    rng=Xoshiro(1),
     tuning=(;tuning=Grid(resolution=10), resampling=CV(nfolds=3), range, measure=accuracy, repeats=2)
 )
 @test solemc isa SX.SoleModel{<:SX.PropositionalDataSet{<:MLJ.MLJTuning.ProbabilisticTunedModel{<:Any, <:AdaBoostStumpClassifier}}}
@@ -128,7 +131,8 @@ range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
 solemr = train_test(
     Xr, yr;
     model=DecisionTreeRegressor(),
-    resample=(type=CV(nfolds=5, shuffle=true), rng=Xoshiro(1)),
+    resample=CV(nfolds=5, shuffle=true),
+    rng=Xoshiro(1),
     tuning=(;tuning=Grid(resolution=10), resampling=CV(nfolds=3), range, measure=rms, repeats=2)
 )
 @test solemr isa SX.SoleModel{<:SX.PropositionalDataSet{<:MLJ.MLJTuning.DeterministicTunedModel{<:Any, <:DecisionTreeRegressor}}}
@@ -140,7 +144,8 @@ range = (
 solemr = train_test(
     Xr, yr;
     model=RandomForestRegressor(),
-    resample=(type=CV(nfolds=5, shuffle=true), rng=Xoshiro(1)),
+    resample=CV(nfolds=5, shuffle=true),
+    rng=Xoshiro(1),
     tuning=(;tuning=Grid(resolution=10), resampling=CV(nfolds=3), range, measure=rms, repeats=2)
 )
 @test solemr isa SX.SoleModel{<:SX.PropositionalDataSet{<:MLJ.MLJTuning.DeterministicTunedModel{<:Any, <:RandomForestRegressor}}}
@@ -149,7 +154,8 @@ range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
 solemts = train_test(
     Xts, yts;
     model=ModalDecisionTree(),
-    resample=(type=CV(nfolds=5, shuffle=true), rng=Xoshiro(1)),
+    resample=CV(nfolds=5, shuffle=true),
+    rng=Xoshiro(1),
     tuning=(;tuning=Grid(resolution=10), resampling=CV(nfolds=3), range, measure=accuracy, repeats=2)
 )
 @test solemts isa SX.SoleModel{<:SX.ModalDataSet{<:MLJ.MLJTuning.ProbabilisticTunedModel{<:Any, <:ModalDecisionTree}}}
@@ -158,7 +164,8 @@ range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
 solemts = train_test(
     Xts, yts;
     model=ModalRandomForest(),
-    resample=(type=CV(nfolds=5, shuffle=true), rng=Xoshiro(1)),
+    resample=CV(nfolds=5, shuffle=true),
+    rng=Xoshiro(1),
     tuning=(;tuning=Grid(resolution=10), resampling=CV(nfolds=3), range, measure=accuracy, repeats=2)
 )
 @test solemts isa SX.SoleModel{<:SX.ModalDataSet{<:MLJ.MLJTuning.ProbabilisticTunedModel{<:Any, <:ModalRandomForest}}}
@@ -167,7 +174,8 @@ range = SX.range(:n_iter; lower=2, unit=10, upper=10)
 solemts = train_test(
     Xts, yts;
     model=ModalAdaBoost(),
-    resample=(type=CV(nfolds=5, shuffle=true), rng=Xoshiro(1)),
+    resample=CV(nfolds=5, shuffle=true),
+    rng=Xoshiro(1),
     tuning=(;tuning=Grid(resolution=10), resampling=CV(nfolds=3), range, measure=accuracy, repeats=2)
 )
 @test solemts isa SX.SoleModel{<:SX.ModalDataSet{<:MLJ.MLJTuning.ProbabilisticTunedModel{<:Any, <:ModalAdaBoost}}}
@@ -178,7 +186,9 @@ solemc = train_test(
     model=XGBoostClassifier(
         early_stopping_rounds=20,
     ),
-    resample=(type=CV(nfolds=5, shuffle=true), valid_ratio=0.2, rng=Xoshiro(1)),
+    resample=CV(nfolds=5, shuffle=true),
+    valid_ratio=0.2,
+    rng=Xoshiro(1),
     tuning=(;tuning=Grid(resolution=10), resampling=CV(nfolds=3), range, measure=accuracy, repeats=2)
 )
 @test solemc isa SX.SoleModel{<:SX.PropositionalDataSet{<:MLJ.MLJTuning.ProbabilisticTunedModel{<:Any, <:XGBoostClassifier}}}
@@ -189,7 +199,9 @@ solemr = train_test(
     model=XGBoostRegressor(
         early_stopping_rounds=20,
     ),
-    resample=(type=CV(nfolds=5, shuffle=true), valid_ratio=0.2, rng=Xoshiro(1)),
+    resample=CV(nfolds=5, shuffle=true),
+    valid_ratio=0.2,
+    rng=Xoshiro(1),
     tuning=(;tuning=Grid(resolution=10), resampling=CV(nfolds=3), range, measure=rms, repeats=2)
 )
 @test solemr isa SX.SoleModel{<:SX.PropositionalDataSet{<:MLJ.MLJTuning.DeterministicTunedModel{<:Any, <:XGBoostRegressor}}}
