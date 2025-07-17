@@ -2,16 +2,10 @@ using Distributed
 addprocs(2)
 
 @everywhere begin
-    using SoleXplorer
     using Test
-    using Random
+    using SoleXplorer
     using MLJ
-    using DataFrames
-    using SoleData
-    # using MLJDecisionTreeInterface
-    # using SoleModels
-    # using StatsBase
-    # using Catch22
+    using DataFrames, Random
 end
 
 const SX = SoleXplorer
@@ -27,11 +21,10 @@ end
 println("Julia version: ", VERSION)
 
 test_suites = [
-    ("Prepare Dataset",      ["prepare_dataset.jl", ]),
-    ("Train and Test",       ["train_test.jl", ]),
-    ("Apply",                ["apply.jl"]),
+    ("Setup Dataset",        ["dataset.jl",           ]),
+    ("Train and Test",       ["train_test.jl",        ]),
     ("Symbolic Analysis",    ["symbolic_analysis.jl", ]),
-    ("Solemodel robustness", ["solemodel.jl"]),
+    ("Solemodel robustness", ["robustness.jl"          ]),
 ]
 
 @testset "SoleXplorer.jl" begin

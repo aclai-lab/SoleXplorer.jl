@@ -1,7 +1,7 @@
 using Test
-using MLJ, SoleXplorer
+using SoleXplorer
+using MLJ
 using DataFrames, Random
-using SoleData
 const SX = SoleXplorer
 
 Xc, yc = @load_iris
@@ -10,73 +10,200 @@ Xc = DataFrame(Xc)
 Xr, yr = @load_boston
 Xr = DataFrame(Xr)
 
-Xts, yts = SoleData.load_arff_dataset("NATOPS")
+Xts, yts = load_arff_dataset("NATOPS")
+
+# I'm easy like sunday morning
+modelc = symbolic_analysis(Xc, yc)
+@test modelc isa SX.ModelSet
 
 # ---------------------------------------------------------------------------- #
-#                           propositional time series                          #
+#                               usage example #1                               #
 # ---------------------------------------------------------------------------- #
-modelts, _, _ = symbolic_analysis(
-    Xts, yts;
-    model=(;type=:xgboost),
-    preprocess=(;rng=Xoshiro(1)),
-    measures=(log_loss, accuracy, confusion_matrix, kappa)
+range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
+dsc = setup_dataset(
+    Xc, yc;
+    model=DecisionTreeClassifier(),
+    resample=CV(nfolds=5, shuffle=true),
+    rng=Xoshiro(1),
+    tuning=(tuning=Grid(resolution=10), resampling=CV(nfolds=3), range, measure=accuracy, repeats=2)    
 )
-@test modelts isa SoleXplorer.Modelset
-@test modelts.measures.measures isa Vector
-
-modelts, _, _ = symbolic_analysis(
-    Xts, yts;
-    model=(type=:decisiontree, params=(;max_depth=5, modalreduce=maximum)),
+solemc = train_test(dsc)
+modelc = symbolic_analysis(
+    dsc, solemc;
+    extractor=InTreesRuleExtractor(),
+    measures=(accuracy, log_loss, confusion_matrix, kappa)
 )
-@test modelts isa SoleXplorer.Modelset
+@test modelc isa SX.ModelSet
+
+range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
+dsr = setup_dataset(
+    Xr, yr;
+    model=DecisionTreeRegressor(),
+    resample=CV(nfolds=5, shuffle=true),
+    rng=Xoshiro(1),
+    tuning=(tuning=Grid(resolution=10), resampling=CV(nfolds=3), range, measure=rms, repeats=2)    
+)
+solemr = train_test(dsr)
+modelr = symbolic_analysis(
+    dsr, solemr;
+    measures=(rms, l1, l2, mae, mav)
+)
+@test modelr isa SX.ModelSet
 
 # ---------------------------------------------------------------------------- #
-#                               modal time series                              #
+#                               usage example #2                               #
 # ---------------------------------------------------------------------------- #
-modelts, _, _ = symbolic_analysis(
-    Xts, yts;
-    model=(;type=:modaldecisiontree)
+range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
+modelc = symbolic_analysis(
+    Xc, yc;
+    model=DecisionTreeClassifier(),
+    resample=CV(nfolds=5, shuffle=true),
+    rng=Xoshiro(1),
+    tuning=(tuning=Grid(resolution=10), resampling=CV(nfolds=3), range, measure=accuracy, repeats=2),
+    # extractor=InTreesRuleExtractor(),
+    measures=(accuracy, log_loss, confusion_matrix, kappa)      
 )
-@test modelts isa SoleXplorer.Modelset
+@test modelc isa SX.ModelSet
 
-modelts, _, _ = symbolic_analysis(
+range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
+modelr = symbolic_analysis(
+    Xr, yr;
+    model=DecisionTreeRegressor(),
+    resample=CV(nfolds=5, shuffle=true),
+    rng=Xoshiro(1),
+    tuning=(tuning=Grid(resolution=10), resampling=CV(nfolds=3), range, measure=rms, repeats=2),
+    measures=(rms, l1, l2, mae, mav)
+)
+@test modelr isa SX.ModelSet
+
+# ---------------------------------------------------------------------------- #
+#                         resamples in numeric datasets                        #
+# ---------------------------------------------------------------------------- #
+modelc = symbolic_analysis(
+    Xc, yc;
+    model=DecisionTreeClassifier(),
+    resample=Holdout(shuffle=true),
+    train_ratio=0.75,
+    rng=Xoshiro(1),
+    measures=(accuracy, log_loss, confusion_matrix, kappa)      
+)
+@test modelc isa SX.ModelSet
+
+modelr = symbolic_analysis(
+    Xr, yr;
+    model=RandomForestRegressor(),
+    resample=CV(nfolds=5, shuffle=true),
+    rng=Xoshiro(1),
+    measures=(rms, l1, l2, mae, mav)      
+)
+@test modelr isa SX.ModelSet
+
+modelc = symbolic_analysis(
+    Xc, yc;
+    model=AdaBoostStumpClassifier(),
+    resample=StratifiedCV(nfolds=5, shuffle=true),
+    rng=Xoshiro(1),
+    measures=(accuracy, log_loss, confusion_matrix, kappa)      
+)
+@test modelc isa SX.ModelSet
+
+# ---------------------------------------------------------------------------- #
+#              resamples in propositional translated time series               #
+# ---------------------------------------------------------------------------- #
+modelts = symbolic_analysis(
     Xts, yts;
-    model=(;type=:modaldecisiontree),
-    preprocess=(;rng=Xoshiro(1)),
-    features=(minimum, maximum),
+    model=DecisionTreeClassifier(),
+    resample=Holdout(shuffle=true),
+    train_ratio=0.5,
+    rng=Xoshiro(1),
+    win=AdaptiveWindow(nwindows=3, relative_overlap=0.3),
+    modalreduce=mean,
+    features=(maximum, minimum),
+    measures=(accuracy, log_loss, confusion_matrix, kappa)      
+)
+@test modelts isa SX.ModelSet
+
+modelts = symbolic_analysis(
+    Xts, yts;
+    model=RandomForestClassifier(),
+    resample=CV(nfolds=5, shuffle=true),
+    rng=Xoshiro(1),
+    win=AdaptiveWindow(nwindows=3, relative_overlap=0.3),
+    modalreduce=mean,
+    features=(maximum, minimum),
+    measures=(accuracy, log_loss, confusion_matrix, kappa)      
+)
+@test modelts isa SX.ModelSet
+
+modelts = symbolic_analysis(
+    Xts, yts;
+    model=AdaBoostStumpClassifier(),
+    resample=StratifiedCV(nfolds=5, shuffle=true),
+    rng=Xoshiro(1),
+    win=AdaptiveWindow(nwindows=3, relative_overlap=0.3),
+    modalreduce=mean,
+    features=(maximum, minimum),
+    measures=(accuracy, log_loss, confusion_matrix, kappa)      
+)
+@test modelts isa SX.ModelSet
+
+# TODO known bug, see TODO.md 
+# modelts = symbolic_analysis(
+#     Xts, yts;
+#     model=XGBoostClassifier(),
+#     resample=(type=TimeSeriesCV(nfolds=5), rng=Xoshiro(1)),
+#     win=AdaptiveWindow(nwindows=3, relative_overlap=0.3),
+#     modalreduce=mean,
+#     features=(maximum, minimum),
+#     measures=(accuracy, log_loss, confusion_matrix, kappa)
+# )
+# @test modelts isa SX.ModelSet
+
+# ---------------------------------------------------------------------------- #
+#                        resample in modal time series                         #
+# ---------------------------------------------------------------------------- #
+modelts = symbolic_analysis(
+    Xts, yts;
+    model=ModalDecisionTree(),
+    resample=CV(;nfolds=4),
+    rng=Xoshiro(1),
     measures=(accuracy,)
 )
-@test modelts isa SoleXplorer.Modelset
+@test modelts isa SX.ModelSet
+
+modelts = symbolic_analysis(
+    Xts, yts;
+    model=ModalRandomForest(),
+    resample=Holdout(shuffle=true),
+    train_ratio=0.75,
+    rng=Xoshiro(1),
+    features=(minimum, maximum),
+    measures=(log_loss, accuracy, confusion_matrix, kappa)
+)
+@test modelts isa SX.ModelSet
 
 # ---------------------------------------------------------------------------- #
 #             xgboost makewatchlist for early stopping technique               #
 # ---------------------------------------------------------------------------- #
-early_stop , _, _ = symbolic_analysis(
-    Xc, yc; 
-    model=(
-        type=:xgboost_classifier,
-        params=(
-            num_round=100,
-            max_depth=6,
-            eta=0.1, 
-            objective="multi:softprob",
-            # early_stopping parameters
-            early_stopping_rounds=10,
-            watchlist=makewatchlist
-        )
-    ),
-    # with early stopping a validation set is required
-    preprocess=(valid_ratio = 0.3, rng=Xoshiro(1))
+range = SX.range(:num_round; lower=10, unit=10, upper=100)
+modelr = symbolic_analysis(
+    Xr, yr;
+    model=XGBoostRegressor(early_stopping_rounds=20),
+    resample=CV(nfolds=5, shuffle=true),
+    valid_ratio=0.2,
+    rng=Xoshiro(1),
+    tuning=(;tuning=Grid(resolution=10), resampling=CV(nfolds=3), range, measure=rms, repeats=2),
+    measures=(rms, l1, l2, mae, mav) 
 )
-@test early_stop isa SoleXplorer.Modelset
+@test modelr isa SX.ModelSet
 
 # ---------------------------------------------------------------------------- #
 #                              catch9 and catch22                              #
 # ---------------------------------------------------------------------------- #
-modelts, _, _ = symbolic_analysis(
+modelts = symbolic_analysis(
     Xts, yts;
-    model=(;type=:decisiontree),
-    preprocess=(;rng=Xoshiro(1)),
+    model=DecisionTreeClassifier(),
+    rng=Xoshiro(1),
     features=(
         mode_5,
         mode_10,
@@ -103,188 +230,143 @@ modelts, _, _ = symbolic_analysis(
     ),
     measures=(accuracy,)
 )
-@test modelts isa SoleXplorer.Modelset
+@test modelts isa SX.ModelSet
 
-modelts, _, _ = symbolic_analysis(
+modelts = symbolic_analysis(
     Xts, yts;
-    model=(;type=:decisiontree),
-    preprocess=(;rng=Xoshiro(1)),
+    model=DecisionTreeClassifier(),
+    rng=Xoshiro(1),
     features=(base_set...,),
     measures=(accuracy,)
 )
-@test modelts isa SoleXplorer.Modelset
+@test modelts isa SX.ModelSet
 
-modelts, _, _ = symbolic_analysis(
+modelts = symbolic_analysis(
     Xts, yts;
-    model=(;type=:decisiontree),
-    preprocess=(;rng=Xoshiro(1)),
+    model=DecisionTreeClassifier(),
+    rng=Xoshiro(1),
     features=(catch9...,),
     measures=(accuracy,)
 )
-@test modelts isa SoleXplorer.Modelset
+@test modelts isa SX.ModelSet
 
-modelts, _, _ = symbolic_analysis(
+modelts = symbolic_analysis(
     Xts, yts;
-    model=(;type=:decisiontree),
-    preprocess=(;rng=Xoshiro(1)),
+    model=DecisionTreeClassifier(),
+    rng=Xoshiro(1),
     features=(catch22_set...,),
     measures=(accuracy,)
 )
-@test modelts isa SoleXplorer.Modelset
+@test modelts isa SX.ModelSet
 
-modelts, _, _ = symbolic_analysis(
+modelts = symbolic_analysis(
     Xts, yts;
-    model=(;type=:decisiontree),
-    preprocess=(;rng=Xoshiro(1)),
+    model=DecisionTreeClassifier(),
+    rng=Xoshiro(1),
     features=(complete_set...,),
     measures=(accuracy,)
 )
-@test modelts isa SoleXplorer.Modelset
+@test modelts isa SX.ModelSet
 
 # ---------------------------------------------------------------------------- #
 #                                    tuning                                    #
 # ---------------------------------------------------------------------------- #
-modelc, mach, _ = symbolic_analysis(
+range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
+modelc = symbolic_analysis(
     Xc, yc;
-    tuning=true
+    model=DecisionTreeClassifier(),
+    tuning=(;tuning=Grid(resolution=10), resampling=CV(nfolds=3), range, measure=accuracy, repeats=2),
+    measures=(log_loss, accuracy, confusion_matrix, kappa)
 )
-@test modelts isa SoleXplorer.Modelset
+@test modelc isa SX.ModelSet
 
-modelc, _, _ = symbolic_analysis(
+range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
+modelc = symbolic_analysis(
     Xc, yc;
-    tuning=(
-        method=(type=grid, params=(;resolution=25)), 
-        params=(repeats=35, n=10),
-        ranges=(
-            SoleXplorer.range(:merge_purity_threshold, lower=0.1, upper=2.0),
-            SoleXplorer.range(:feature_importance, values=[:impurity, :split])
-        )
-    )
+    model=DecisionTreeClassifier(),
+    tuning=(;tuning=RandomSearch(), resampling=CV(nfolds=3), range, measure=accuracy, repeats=2),
+    measures=(log_loss, accuracy, confusion_matrix, kappa)
 )
-@test modelts isa SoleXplorer.Modelset
+@test modelc isa SX.ModelSet
 
-modelc, _, _ = symbolic_analysis(
+range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
+modelc = symbolic_analysis(
     Xc, yc;
-    tuning=(
-        method=(;type=randomsearch), 
-        params=(repeats=35, n=10),
-        ranges=(
-            SoleXplorer.range(:merge_purity_threshold, lower=0.1, upper=2.0),
-            SoleXplorer.range(:feature_importance, values=[:impurity, :split])
-        )
-    )
+    model=DecisionTreeClassifier(),
+    tuning=(;tuning=RandomSearch(), resampling=CV(nfolds=3), range, measure=accuracy, repeats=2),
+    measures=(log_loss, accuracy, confusion_matrix, kappa)
 )
-@test modelts isa SoleXplorer.Modelset
+@test modelc isa SX.ModelSet
 
-modelc, _, _ = symbolic_analysis(
+range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
+modelc = symbolic_analysis(
     Xc, yc;
-    tuning=(
-        method=(type=latinhypercube, params=(;popsize=80)), 
-        params=(repeats=35, n=10),
-        ranges=(
-            SoleXplorer.range(:merge_purity_threshold, lower=0.1, upper=2.0),
-            SoleXplorer.range(:feature_importance, values=[:impurity, :split])
-        )
-    )
+    model=DecisionTreeClassifier(),
+    tuning=(;tuning=ParticleSwarm(), resampling=CV(nfolds=3), range, measure=accuracy, repeats=2),
+    measures=(log_loss, accuracy, confusion_matrix, kappa)
 )
-@test modelts isa SoleXplorer.Modelset
+@test modelc isa SX.ModelSet
 
-modelc, _, _ = symbolic_analysis(
+range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
+modelc = symbolic_analysis(
     Xc, yc;
-    tuning=(
-        method=(type=particleswarm, params=(;n_particles=5)), 
-        params=(repeats=35, n=10),
-        ranges=(
-            SoleXplorer.range(:merge_purity_threshold, lower=0.1, upper=2.0),
-            SoleXplorer.range(:feature_importance, values=[:impurity, :split])
-        )
-    )
+    model=DecisionTreeClassifier(),
+    tuning=(;tuning=AdaptiveParticleSwarm(), resampling=CV(nfolds=3), range, measure=accuracy, repeats=2),
+    measures=(log_loss, accuracy, confusion_matrix, kappa)
 )
-@test modelts isa SoleXplorer.Modelset
+@test modelc isa SX.ModelSet
 
-modelc, _, _ = symbolic_analysis(
-    Xc, yc;
-    tuning=(
-        method=(;type=adaptiveparticleswarm), 
-        params=(repeats=35, n=10),
-        ranges=(
-            SoleXplorer.range(:merge_purity_threshold, lower=0.1, upper=2.0),
-            SoleXplorer.range(:feature_importance, values=[:impurity, :split])
-        )
-    )
-)
-@test modelts isa SoleXplorer.Modelset
+# selector = FeatureSelector()
+# range = MLJ.range(selector, :features, values = ((:sepal_length,), (:sepal_length, :sepal_width)))
+# iterator(r2)
 
 # ---------------------------------------------------------------------------- #
-#                              rules extraction                                #
+#                              instance weights                                #
 # ---------------------------------------------------------------------------- #
-modelc, _, _ = symbolic_analysis(
-    Xc, yc;
-    model=(;type=:randomforest),
-    preprocess=(;rng=Xoshiro(1)),
-    extract_rules=(;type=:intrees)
+wc = rand(length(yc))
+modelw = symbolic_analysis(
+    Xc, yc, wc;
+    model=XGBoostClassifier(),
+    rng=Xoshiro(1),
+    measures=(accuracy,)
 )
-@test modelc isa SoleXplorer.Modelset
-
-modelc, _, _ = symbolic_analysis(
-    Xc, yc;
-    model=(;type=:randomforest),
-    preprocess=(;rng=Xoshiro(1)),
-    extract_rules=(;type=:refne)
-)
-@test modelc isa SoleXplorer.Modelset
-
-modelc, _, _ = symbolic_analysis(
-    Xc, yc;
-    model=(;type=:randomforest),
-    preprocess=(;rng=Xoshiro(1)),
-    extract_rules=(;type=:trepan)
-)
-@test modelc isa SoleXplorer.Modelset
-
-# TODO: broken
-# modelc, _, _ = symbolic_analysis(
-#     Xc, yc;
-#     model=(;type=:randomforest),
-#     preprocess=(;rng=Xoshiro(1)),
-#     extract_rules=(;type=:batrees)
-# )
-# @test modelc isa SoleXplorer.Modelset
-
-modelc, _, _ = symbolic_analysis(
-    Xc, yc;
-    model=(;type=:randomforest),
-    preprocess=(;rng=Xoshiro(1)),
-    extract_rules=(;type=:rulecosi)
-)
-@test modelc isa SoleXplorer.Modelset
-
-# modelc, _, _ = symbolic_analysis(
-#     Xc, yc;
-#     model=(;type=:randomforest),
-#     preprocess=(;rng=Xoshiro(1)),
-#     extract_rules=(;type=:lumen)
-# )
-# @test modelc isa SoleXplorer.Modelset
+@test modelc isa SX.ModelSet
 
 # ---------------------------------------------------------------------------- #
-#                   check modal features correctly in model                    #
+#                                  windowing                                   #
 # ---------------------------------------------------------------------------- #
-modelts, mach, _ = symbolic_analysis(
+modelts = symbolic_analysis(
     Xts, yts;
-    model=(;type=:modaldecisiontree),
-    features=(forecast_error, dfa)
+    model=DecisionTreeClassifier(),
+    rng=Xoshiro(1),
+    win=AdaptiveWindow(nwindows=3, relative_overlap=0.3),
+    measures=(accuracy, log_loss)      
 )
-@test mach.model.conditions == [forecast_error, dfa]
+@test modelts isa SX.ModelSet
 
-# ---------------------------------------------------------------------------- #
-#                       check statisticalmeasure Sum()                         #
-# ---------------------------------------------------------------------------- #
-modelr, _, _ = symbolic_analysis(
-    Xr, yr;
-    model=(;type=:decisiontree),
-    preprocess=(;rng=Xoshiro(1)),
-    measures=(rmse, l1, l1_sum,)
+modelts = symbolic_analysis(
+    Xts, yts;
+    model=DecisionTreeClassifier(),
+    rng=Xoshiro(1),
+    win=WholeWindow(),
+    measures=(accuracy, log_loss)      
 )
-@test modelr isa SoleXplorer.Modelset
-@test modelr.measures.measures isa Vector
+@test modelts isa SX.ModelSet
+
+modelts = symbolic_analysis(
+    Xts, yts;
+    model=DecisionTreeClassifier(),
+    rng=Xoshiro(1),
+    win=SplitWindow(nwindows=2),
+    measures=(accuracy, log_loss)      
+)
+@test modelts isa SX.ModelSet
+
+modelts = symbolic_analysis(
+    Xts, yts;
+    model=DecisionTreeClassifier(),
+    rng=Xoshiro(1),
+    win=MovingWindow(window_size=20, window_step=5),
+    measures=(accuracy, log_loss)      
+)
+@test modelts isa SX.ModelSet
