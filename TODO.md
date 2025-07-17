@@ -40,12 +40,6 @@ matrici di dimensione differente.
 Andrebbe risolto, situazione abbastanza grave.
 
 # ---------------------------------------------------------------------------- #
-#                        features vettore anzichè tupla                        #
-# ---------------------------------------------------------------------------- #
-tutti i parametri sono tra (), tranne features, tra []
-non è carino
-
-# ---------------------------------------------------------------------------- #
 #                                 bug di MLJ #2                                #
 # ---------------------------------------------------------------------------- #
 latinhypercube al momento attuale non va: la chiamata al metodo è sbagliata.
@@ -80,3 +74,26 @@ da fare entro la laurea
 # ---------------------------------------------------------------------------- #
 sarebbe bello averla impostata entro ottobre, ma ha priorità minore.
 Da parlarne col Balbo
+
+# ---------------------------------------------------------------------------- #
+#                               ribilanciamento                                #
+# ---------------------------------------------------------------------------- #
+Guarda su MLJ se esiste
+
+# ---------------------------------------------------------------------------- #
+#                              peso delle istanze                              #
+# ---------------------------------------------------------------------------- #
+in MLJ si usa X, y, w. da implementare? verifica come funziona, magari viene messo da MLJ
+direttamente dalla mach. Però bisogna implementarlo in setup_dataset e symbolic_analysis.
+Vedi anche se MLJ oppure i modelli (Decision Tree...) usano un default nei pesi.
+Prova con dei pesi a caso a vedere se cambia qualcosa.
+Prova a guardare anche se c'è il modo di settare il peso sulle classi (tipo class rebalance, che se hai sbilanciate,
+le rebilancia coi pesi, per non buttare via istanze).
+
+# ---------------------------------------------------------------------------- #
+#                                       rng                                    #
+# ---------------------------------------------------------------------------- #
+Propagalo anche a PostHoc
+
+
+PER GIO, music information retrival

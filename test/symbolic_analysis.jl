@@ -12,12 +12,22 @@ Xr = DataFrame(Xr)
 
 Xts, yts = load_arff_dataset("NATOPS")
 
+modelts = symbolic_analysis(
+    Xts, yts;
+    model=ModalDecisionTree(),
+    resample=(type=Holdout(shuffle=true), train_ratio=0.5, rng=Xoshiro(1)),
+    win=AdaptiveWindow(nwindows=3, relative_overlap=0.3),
+    modalreduce=mean,
+    features=(maximum, minimum),
+    measures=(accuracy, log_loss, confusion_matrix, kappa)      
+)
+
 # I'm easy like sunday morning
 modelc = symbolic_analysis(Xc, yc)
 @test modelc isa SX.ModelSet
 
 # ---------------------------------------------------------------------------- #
-#                               usage exampe #1                                #
+#                               usage example #1                               #
 # ---------------------------------------------------------------------------- #
 range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
 dsc = setup_dataset(
@@ -49,7 +59,7 @@ modelr = symbolic_analysis(
 @test modelr isa SX.ModelSet
 
 # ---------------------------------------------------------------------------- #
-#                               usage exampe #2                                #
+#                               usage example #2                               #
 # ---------------------------------------------------------------------------- #
 range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
 modelc = symbolic_analysis(
@@ -108,7 +118,7 @@ modelts = symbolic_analysis(
     resample=(type=Holdout(shuffle=true), train_ratio=0.5, rng=Xoshiro(1)),
     win=AdaptiveWindow(nwindows=3, relative_overlap=0.3),
     modalreduce=mean,
-    features=[maximum, minimum],
+    features=(maximum, minimum),
     measures=(accuracy, log_loss, confusion_matrix, kappa)      
 )
 @test modelts isa SX.ModelSet
@@ -119,7 +129,7 @@ modelts = symbolic_analysis(
     resample=(type=CV(nfolds=5, shuffle=true), rng=Xoshiro(1)),
     win=AdaptiveWindow(nwindows=3, relative_overlap=0.3),
     modalreduce=mean,
-    features=[maximum, minimum],
+    features=(maximum, minimum),
     measures=(accuracy, log_loss, confusion_matrix, kappa)      
 )
 @test modelts isa SX.ModelSet
@@ -130,7 +140,7 @@ modelts = symbolic_analysis(
     resample=(type=StratifiedCV(nfolds=5, shuffle=true), rng=Xoshiro(1)),
     win=AdaptiveWindow(nwindows=3, relative_overlap=0.3),
     modalreduce=mean,
-    features=[maximum, minimum],
+    features=(maximum, minimum),
     measures=(accuracy, log_loss, confusion_matrix, kappa)      
 )
 @test modelts isa SX.ModelSet
@@ -142,7 +152,7 @@ modelts = symbolic_analysis(
 #     resample=(type=TimeSeriesCV(nfolds=5), rng=Xoshiro(1)),
 #     win=AdaptiveWindow(nwindows=3, relative_overlap=0.3),
 #     modalreduce=mean,
-#     features=[maximum, minimum],
+#     features=(maximum, minimum),
 #     measures=(accuracy, log_loss, confusion_matrix, kappa)
 # )
 # @test modelts isa SX.ModelSet
@@ -162,7 +172,7 @@ modelts = symbolic_analysis(
     Xts, yts;
     model=ModalRandomForest(),
     resample=(type=Holdout(shuffle=true), train_ratio=0.75, rng=Xoshiro(1)),
-    features=[minimum, maximum],
+    features=(minimum, maximum),
     measures=(log_loss, accuracy, confusion_matrix, kappa)
 )
 @test modelts isa SX.ModelSet
@@ -189,7 +199,7 @@ modelts = symbolic_analysis(
     Xts, yts;
     model=DecisionTreeClassifier(),
     resample=(;rng=Xoshiro(1)),
-    features=[
+    features=(
         mode_5,
         mode_10,
         embedding_dist,
@@ -212,7 +222,7 @@ modelts = symbolic_analysis(
         centroid_freq,
         transition_variance,
         periodicity
-    ],
+    ),
     measures=(accuracy,)
 )
 @test modelts isa SX.ModelSet
@@ -221,7 +231,7 @@ modelts = symbolic_analysis(
     Xts, yts;
     model=DecisionTreeClassifier(),
     resample=(;rng=Xoshiro(1)),
-    features=[base_set...,],
+    features=(base_set...,),
     measures=(accuracy,)
 )
 @test modelts isa SX.ModelSet
@@ -230,7 +240,7 @@ modelts = symbolic_analysis(
     Xts, yts;
     model=DecisionTreeClassifier(),
     resample=(;rng=Xoshiro(1)),
-    features=[catch9...,],
+    features=(catch9...,),
     measures=(accuracy,)
 )
 @test modelts isa SX.ModelSet
@@ -239,7 +249,7 @@ modelts = symbolic_analysis(
     Xts, yts;
     model=DecisionTreeClassifier(),
     resample=(;rng=Xoshiro(1)),
-    features=[catch22_set...,],
+    features=(catch22_set...,),
     measures=(accuracy,)
 )
 @test modelts isa SX.ModelSet
@@ -248,7 +258,7 @@ modelts = symbolic_analysis(
     Xts, yts;
     model=DecisionTreeClassifier(),
     resample=(;rng=Xoshiro(1)),
-    features=[complete_set...,],
+    features=(complete_set...,),
     measures=(accuracy,)
 )
 @test modelts isa SX.ModelSet
@@ -302,5 +312,5 @@ modelts = symbolic_analysis(
 @test modelts isa SX.ModelSet
 
 # selector = FeatureSelector()
-# range = MLJ.range(selector, :features, values = [[:sepal_length,], [:sepal_length, :sepal_width]])
+# range = MLJ.range(selector, :features, values = ((:sepal_length,), (:sepal_length, :sepal_width)))
 # iterator(r2)

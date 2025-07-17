@@ -28,7 +28,6 @@ end
 # ---------------------------------------------------------------------------- #
 #                                   types                                      #
 # ---------------------------------------------------------------------------- #
-const Optional{T} = Union{T, Nothing}
 const OptRules    = Optional{DecisionSet}
 const OptMeasures = Optional{Measures}
 

@@ -9,6 +9,8 @@ abstract type AbstractDataSet end
 const Modal  = Union{ModalDecisionTree, ModalRandomForest, ModalAdaBoost}
 const Tuning = Union{Nothing, MLJTuning.TuningStrategy}
 
+const OptAggregationInfo = Optional{AggregationInfo}
+
 # ---------------------------------------------------------------------------- #
 #                                  defaults                                    #
 # ---------------------------------------------------------------------------- #
@@ -39,7 +41,7 @@ function set_tuning_rng!(m::MLJ.Model, rng::AbstractRNG)::MLJ.Model
     return m
 end
 
-function set_conditions!(m::MLJ.Model, conditions::Vector{<:Base.Callable})::MLJ.Model
+function set_conditions!(m::MLJ.Model, conditions::Tuple{Vararg{<:Base.Callable}})::MLJ.Model
     m.conditions = Function[conditions...]
     return m
 end
@@ -75,6 +77,9 @@ code_dataset!(X::AbstractDataFrame, y::AbstractVector) = code_dataset!(X), code_
 # wrapper per MLJ.range in tuning
 Base.range(field::Union{Symbol,Expr}; kwargs...) = field, kwargs...
 
+treat2aggr(t::TreatmentInfo)::AggregationInfo = 
+    AggregationInfo(t.features, t.winparams)
+
 # ---------------------------------------------------------------------------- #
 #                          multidimensional dataset                            #
 # ---------------------------------------------------------------------------- #
@@ -82,6 +87,7 @@ mutable struct PropositionalDataSet{M} <: AbstractDataSet
     mach    :: MLJ.Machine
     pidxs   :: Vector{PartitionIdxs}
     pinfo   :: PartitionInfo
+    ainfo   :: OptAggregationInfo
 end
 
 mutable struct ModalDataSet{M} <: AbstractDataSet
@@ -95,14 +101,15 @@ function DataSet(
     mach    :: MLJ.Machine{M},
     pidxs   :: Vector{PartitionIdxs},
     pinfo   :: PartitionInfo;
-    tinfo   :: Union{TreatmentInfo, Nothing} = nothing
+    tinfo   :: Union{TreatmentInfo, Nothing}=nothing
 ) where {M<:MLJ.Model}
     isnothing(tinfo) ?
-        PropositionalDataSet{M}(mach, pidxs, pinfo) : begin
+        PropositionalDataSet{M}(mach, pidxs, pinfo, nothing) : begin
             if tinfo.treatment == :reducesize
                 ModalDataSet{M}(mach, pidxs, pinfo, tinfo)
             else
-                PropositionalDataSet{M}(mach, pidxs, pinfo)
+                ainfo = treat2aggr(tinfo)
+                PropositionalDataSet{M}(mach, pidxs, pinfo, ainfo)
             end
         end
 end
@@ -118,7 +125,7 @@ function _prepare_dataset(
     model         :: MLJ.Model               = _DefaultModel(y),
     resample      :: NamedTuple              = NamedTuple(),
     win           :: WinFunction             = AdaptiveWindow(nwindows=3, relative_overlap=0.1),
-    features      :: Vector{<:Base.Callable} = [maximum, minimum],
+    features      :: Tuple{Vararg{<:Base.Callable}} = (maximum, minimum),
     modalreduce   :: Base.Callable           = mean,
     tuning        :: NamedTuple              = NamedTuple()
 )::AbstractDataSet
