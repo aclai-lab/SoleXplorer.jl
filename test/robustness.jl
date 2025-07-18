@@ -1,7 +1,6 @@
 using Test
-using MLJ, SoleXplorer
-using DataFrames, Random
-using SoleData
+using SoleXplorer
+using MLJ, DataFrames, Random
 const SX = SoleXplorer
 
 Xc, yc = @load_iris
@@ -10,7 +9,61 @@ Xc = DataFrame(Xc)
 Xr, yr = @load_boston
 Xr = DataFrame(Xr)
 
-Xts, yts = SoleData.load_arff_dataset("NATOPS")
+Xts, yts = load_arff_dataset("NATOPS")
+
+# ---------------------------------------------------------------------------- #
+#                    decisiontree classification robustness                    #
+# ---------------------------------------------------------------------------- #
+@testset "decisiontree classification data validation" begin
+    for train_ratio in 0.5:0.1:0.9
+        for seed in 1:5:40
+            for min_purity_increase in 0.0:0.1:0.3
+                for max_depth in 1:10
+                    model = symbolic_analysis(
+                        Xc, yc;
+                        model=DecisionTreeClassifier(;max_depth, min_purity_increase),
+                        resample=Holdout(shuffle=true),
+                        train_ratio,
+                        rng=Xoshiro(seed),
+                        measures=(accuracy,)
+                    )
+                    sx_acc = model.measures.measures_values[1]
+                    yhat = MLJ.predict_mode(model.ds.mach, model.ds.mach.args[1].data[model.ds.pidxs[1].test, :])
+                    mlj_acc = accuracy(yhat, model.ds.mach.args[2].data[model.ds.pidxs[1].test])
+
+                    @test sx_acc == mlj_acc
+                end
+            end
+        end
+    end
+end
+
+# ---------------------------------------------------------------------------- #
+#                      decisiontree regression robustness                      #
+# ---------------------------------------------------------------------------- #
+@testset "decisiontree regression data validation" begin
+    for train_ratio in 0.5:0.1:0.9
+        for seed in 1:5:40
+            for min_purity_increase in 0.0:0.1:0.3
+                for max_depth in 1:10
+                    model = symbolic_analysis(
+                        Xr, yr;
+                        model=DecisionTreeRegressor(;max_depth, min_purity_increase),
+                        resample=Holdout(shuffle=true),
+                        train_ratio,
+                        rng=Xoshiro(seed),
+                        measures=(rms,)
+                    )
+                    sx_rms = model.measures.measures_values[1]
+                    yhat = MLJ.predict_mode(model.ds.mach, model.ds.mach.args[1].data[model.ds.pidxs[1].test, :])
+                    mlj_rms = rms(yhat, model.ds.mach.args[2].data[model.ds.pidxs[1].test])
+
+                    @test sx_rms == mlj_rms
+                end
+            end
+        end
+    end
+end
 
 # ---------------------------------------------------------------------------- #
 #                    randomforest classification robustness                    #
