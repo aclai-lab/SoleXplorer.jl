@@ -3,6 +3,8 @@ using  Reexport
 
 using  SoleBase: Label, CLabel, RLabel, XGLabel
 using  SoleBase: movingwindow, wholewindow, splitwindow, adaptivewindow
+using  SoleModels: Branch, ConstantModel
+using  SoleModels: DecisionEnsemble, DecisionTree
 using  SoleModels: AbstractModel, solemodel, apply!
 using  SoleModels: RuleExtractor, DecisionSet
 using  SolePostHoc
@@ -83,6 +85,7 @@ export code_dataset, range
 export setup_dataset
 
 import SoleModels: apply
+include("propositional_apply.jl")
 include("apply.jl")
 include("train_test.jl")
 export train_test

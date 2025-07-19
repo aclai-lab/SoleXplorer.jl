@@ -21,7 +21,7 @@ Xts, yts = load_arff_dataset("NATOPS")
                 for max_depth in 1:10
                     model = symbolic_analysis(
                         Xc, yc;
-                        model=DecisionTreeClassifier(;max_depth, min_purity_increase),
+                        model=SX.DecisionTreeClassifier(;max_depth, min_purity_increase),
                         resample=Holdout(shuffle=true),
                         train_ratio,
                         rng=Xoshiro(seed),

@@ -124,8 +124,9 @@ function eval_measures(
     measures::Tuple{Vararg{FussyMeasure}},
     y_test::Vector{<:AbstractVector{<:Label}}
 )::Measures
-    measures        = MLJBase._actual_measures([measures...], solemodels(solem))
-    operations      = get_operations(measures, MLJBase.prediction_type(get_mach_model(ds)))
+    mach_model = get_mach_model(ds)
+    measures        = MLJBase._actual_measures([measures...], mach_model)
+    operations      = get_operations(measures, MLJBase.prediction_type(mach_model))
 
     nfolds          = length(ds)
     test_fold_sizes = [length(y_test[k]) for k in 1:nfolds]
