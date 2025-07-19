@@ -9,7 +9,7 @@ function set_predictions(
     info::NamedTuple,
     preds::Vector{T},
     y::AbstractVector{S}
-)::NamedTuple where {T,S<: CLabel}
+)::NamedTuple where {T,S<:Label}
     typeof(info)(merge(MLJ.params(info), (supporting_predictions=preds, supporting_labels=y)))
 end
 
@@ -23,7 +23,17 @@ function propositional_apply!(
     X::AbstractDataFrame,
     y::AbstractVector{S}
 )::Nothing where {T, S<:CLabel}
-    predictions = String[propositional_apply!(solem.root, x) for x in eachrow(X)]
+    predictions = CLabel[propositional_apply!(solem.root, x) for x in eachrow(X)]
+    solem.info = set_predictions(solem.info, predictions, y)
+    return nothing
+end
+
+function propositional_apply!(
+    solem::DecisionTree{T},
+    X::AbstractDataFrame,
+    y::AbstractVector{S}
+)::Nothing where {T, S<:RLabel}
+    predictions = RLabel[propositional_apply!(solem.root, x) for x in eachrow(X)]
     solem.info = set_predictions(solem.info, predictions, y)
     return nothing
 end
