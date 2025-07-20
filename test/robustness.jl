@@ -122,7 +122,7 @@ end
 # ---------------------------------------------------------------------------- #
 #                              adaboost robustness                             #
 # ---------------------------------------------------------------------------- #
-@testset "data validation" begin
+@testset "adaboost classification data validation" begin
     for train_ratio in 0.5:0.1:0.9
         for seed in 1:40
             for feature_importance in [:impurity, :split]
