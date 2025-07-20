@@ -6,6 +6,7 @@ using  SoleBase: movingwindow, wholewindow, splitwindow, adaptivewindow
 using  SoleModels: Branch, ConstantModel
 using  SoleModels: DecisionEnsemble, DecisionTree
 using  SoleModels: AbstractModel, solemodel, weighted_aggregation, apply!
+using  SoleModels: propositional_solemodel
 using  SoleModels: RuleExtractor, DecisionSet
 using  SolePostHoc
 @reexport using SolePostHoc: InTreesRuleExtractor

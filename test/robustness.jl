@@ -68,7 +68,7 @@ end
 # ---------------------------------------------------------------------------- #
 #                    randomforest classification robustness                    #
 # ---------------------------------------------------------------------------- #
-@testset "randomforest data validation" begin
+@testset "randomforest classification data validation" begin
     for train_ratio in 0.5:0.1:0.9
         for seed in 1:5:40
             for sampling_fraction in 0.7:0.1:0.9
@@ -95,7 +95,7 @@ end
 # ---------------------------------------------------------------------------- #
 #                      randomforest regression robustness                      #
 # ---------------------------------------------------------------------------- #
-@testset "randomforest data validation" begin
+@testset "randomforest regression data validation" begin
     for train_ratio in 0.5:0.1:0.9
         for seed in 1:5:40
             for sampling_fraction in 0.7:0.1:0.9

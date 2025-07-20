@@ -51,7 +51,8 @@ function apply(
     X  :: AbstractDataFrame,
     y  :: AbstractVector
 )
-    solem = solemodel(MLJ.fitted_params(ds.mach).tree)
+    featurenames = MLJ.report(ds.mach).features
+    solem = propositional_solemodel(MLJ.fitted_params(ds.mach).tree; featurenames)
     propositional_apply!(solem, X, y)
     return solem
 end
@@ -61,7 +62,8 @@ function apply(
     X  :: AbstractDataFrame,
     y  :: AbstractVector
 )
-    solem = solemodel(MLJ.fitted_params(ds.mach).best_fitted_params.tree)
+    featurenames = MLJ.report(ds.mach).features
+    solem = propositional_solemodel(MLJ.fitted_params(ds.mach).best_fitted_params.tree; featurenames)
     propositional_apply!(solem, X, y)
     return solem
 end
@@ -74,7 +76,7 @@ function apply(
 )
     classlabels  = string.(ds.mach.fitresult[2][sortperm((ds.mach).fitresult[3])])
     featurenames = MLJ.report(ds.mach).features
-    solem        = solemodel(MLJ.fitted_params(ds.mach).forest; classlabels, featurenames)
+    solem        = propositional_solemodel(MLJ.fitted_params(ds.mach).forest; classlabels, featurenames)
     propositional_apply!(solem, X, y)
     return solem
 end
@@ -86,7 +88,7 @@ function apply(
 )
     classlabels  = string.(ds.mach.fitresult.fitresult[2][sortperm((ds.mach).fitresult.fitresult[3])])
     featurenames = MLJ.report(ds.mach).best_report.features
-    solem        = solemodel(MLJ.fitted_params(ds.mach).best_fitted_params.forest; classlabels, featurenames)
+    solem        = propositional_solemodel(MLJ.fitted_params(ds.mach).best_fitted_params.forest; classlabels, featurenames)
     propositional_apply!(solem, X, y)
     return solem
 end
@@ -97,7 +99,7 @@ function apply(
     y  :: AbstractVector
 )
     featurenames = MLJ.report(ds.mach).features
-    solem        = solemodel(MLJ.fitted_params(ds.mach).forest; featurenames)
+    solem        = propositional_solemodel(MLJ.fitted_params(ds.mach).forest; featurenames)
     propositional_apply!(solem, X, y)
     return solem
 end
@@ -108,7 +110,7 @@ function apply(
     y  :: AbstractVector
 )
     featurenames = MLJ.report(ds.mach).best_report.features
-    solem        = solemodel(MLJ.fitted_params(ds.mach).best_fitted_params.forest; featurenames)
+    solem        = propositional_solemodel(MLJ.fitted_params(ds.mach).best_fitted_params.forest; featurenames)
     propositional_apply!(solem, X, y)
     return solem
 end
@@ -122,7 +124,7 @@ function apply(
     weights      = ds.mach.fitresult[2]
     classlabels  = sort(string.(ds.mach.fitresult[3]))
     featurenames = MLJ.report(ds.mach).features
-    solem        = solemodel(MLJ.fitted_params(ds.mach).stumps; weights, classlabels, featurenames)
+    solem        = propositional_solemodel(MLJ.fitted_params(ds.mach).stumps; weights, classlabels, featurenames)
     propositional_apply!(solem, X, y)
     return solem
 end
@@ -135,7 +137,7 @@ function apply(
     weights      = ds.mach.fitresult.fitresult[2]
     classlabels  = sort(string.(ds.mach.fitresult.fitresult[3]))
     featurenames = MLJ.report(ds.mach).best_report.features
-    solem        = solemodel(MLJ.fitted_params(ds.mach).best_fitted_params.stumps; weights, classlabels, featurenames)
+    solem        = propositional_solemodel(MLJ.fitted_params(ds.mach).best_fitted_params.stumps; weights, classlabels, featurenames)
     propositional_apply!(solem, X, y)
     return solem
 end
