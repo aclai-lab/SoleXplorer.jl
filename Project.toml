@@ -21,7 +21,6 @@ XGBoost = "009559a3-9522-5dbb-924b-0b6ed2b22bb9"
 
 [sources]
 ModalDecisionTrees = {rev = "64-modaladaboost", url = "https://github.com/aclai-lab/ModalDecisionTrees.jl"}
-SoleBase = {rev = "10-compatibility-with-decisiontree-package", url = "https://github.com/aclai-lab/SoleBase.jl"}
 SoleModels = {rev = "55-xgboost-regression", url = "https://github.com/aclai-lab/SoleModels.jl"}
 SolePostHoc = {rev = "devPaso", url = "https://github.com/aclai-lab/SolePostHoc.jl"}
 
