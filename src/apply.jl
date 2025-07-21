@@ -175,7 +175,7 @@ function apply(
     encoding     = get_encoding(ds.mach.fitresult[2])
     classlabels  = string.(get_classlabels(encoding))
     featurenames = ds.mach.report.vals[1].features
-    solem        = solemodel(trees, Matrix(X), y; classlabels, featurenames)
+    solem        = solemodel(trees, X, y; classlabels, featurenames)
     propositional_apply!(solem, mapcols(col -> Float32.(col), X), y)
     return solem
 end
@@ -189,7 +189,7 @@ function apply(
     encoding     = get_encoding(ds.mach.fitresult.fitresult[2])
     classlabels  = string.(get_classlabels(encoding))
     featurenames = ds.mach.fitresult.report.vals[1].features
-    solem        = solemodel(trees, Matrix(X), y; classlabels, featurenames)
+    solem        = solemodel(trees, X, y; classlabels, featurenames)
     propositional_apply!(solem, mapcols(col -> Float32.(col), X), y)
     return solem
 end
@@ -200,11 +200,11 @@ function apply(
     y  :: AbstractVector
 )
     base_score = get_base_score(ds.mach) == -Inf ? mean(ds.y[train]) : 0.5
-    ds.mach.ds.base_score = base_score
+    ds.mach.model.base_score = base_score
 
     trees        = XGBoost.trees(ds.mach.fitresult[1])
     featurenames = ds.mach.report.vals[1].features
-    solem        = solemodel(trees, Matrix(X), y; featurenames)
+    solem        = solemodel(trees, X, y; featurenames)
     propositional_apply!(solem, mapcols(col -> Float32.(col), X), y; base_score)
     return solem
 end
@@ -215,11 +215,11 @@ function apply(
     y  :: AbstractVector,
 )
     base_score = get_base_score(ds.mach) == -Inf ? mean(ds.y[train]) : 0.5
-    ds.mach.ds.model.base_score = base_score
+    ds.mach.model.model.base_score = base_score
 
     trees        = XGBoost.trees(ds.mach.fitresult.fitresult[1])
     featurenames = ds.mach.fitresult.report.vals[1].features
-    solem        = solemodel(trees, Matrix(X), y; featurenames)
+    solem        = solemodel(trees, X, y; featurenames)
     propositional_apply!(solem, mapcols(col -> Float32.(col), X), y; base_score)
     return solem
 end

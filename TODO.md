@@ -94,6 +94,3 @@ le rebilancia coi pesi, per non buttare via istanze).
 #                                       rng                                    #
 # ---------------------------------------------------------------------------- #
 Propagalo anche a PostHoc
-
-
-PER GIO, music information retrival
