@@ -30,7 +30,7 @@ dsc = setup_dataset(
 solemc = train_test(dsc)
 modelc = symbolic_analysis(
     dsc, solemc;
-    extractor=InTreesRuleExtractor(),
+    # extractor=InTreesRuleExtractor(),
     measures=(accuracy, log_loss, confusion_matrix, kappa)
 )
 @test modelc isa SX.ModelSet
