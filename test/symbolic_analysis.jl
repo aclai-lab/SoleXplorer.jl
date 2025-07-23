@@ -77,6 +77,17 @@ modelr = symbolic_analysis(
 @test modelr isa SX.ModelSet
 
 # ---------------------------------------------------------------------------- #
+#                    time series dataset with no windowing                     #
+# ---------------------------------------------------------------------------- #
+dsts = setup_dataset(
+    Xts, yts;
+    model=ModalDecisionTree(),
+    resample=Holdout(shuffle=true),
+    train_ratio=0.7,
+    rng=Xoshiro(1),
+    features=()  
+)
+# ---------------------------------------------------------------------------- #
 #                         resamples in numeric datasets                        #
 # ---------------------------------------------------------------------------- #
 modelc = symbolic_analysis(

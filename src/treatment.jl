@@ -130,7 +130,7 @@ function treatment(
     X           :: AbstractDataFrame;
     treat       :: Symbol,
     win         :: WinFunction=AdaptiveWindow(nwindows=3, relative_overlap=0.1),
-    features    :: Tuple{Vararg{Base.Callable}}=[maximum, minimum],
+    features    :: Tuple{Vararg{Base.Callable}}=(maximum, minimum),
     modalreduce :: Base.Callable=mean
 )
     vnames = propertynames(X)
@@ -143,6 +143,8 @@ function treatment(
 
     # define column names and prepare data structure based on treatment type
     # propositional
+    isempty(features) && (treat = :none)
+
     if treat == :aggregate
         if n_intervals == 1
             # apply feature to whole time-series
@@ -169,7 +171,9 @@ function treatment(
         for v in vnames
             apply_vectorized!(_X, X[!, v], modalreduce, v, intervals, n_rows, n_intervals)
         end
-
+    
+    elseif treat == :none
+        _X = X
     else
         error("Unknown treatment type: $treat")
     end
