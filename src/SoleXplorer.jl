@@ -3,6 +3,7 @@ using  Reexport
 
 using  SoleBase: Label, CLabel, RLabel, XGLabel
 using  SoleBase: movingwindow, wholewindow, splitwindow, adaptivewindow
+using  SoleData: scalarlogiset
 using  SoleModels: Branch, ConstantModel
 using  SoleModels: DecisionEnsemble, DecisionTree
 using  SoleModels: AbstractModel, solemodel, weighted_aggregation, apply!

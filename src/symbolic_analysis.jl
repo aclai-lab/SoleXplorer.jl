@@ -61,7 +61,8 @@ function sole_predict(solem::AbstractModel, y_test::AbstractVector{<:Label})
     eltype(preds) <: CLabel ?
         begin
             classes_seen = unique(y_test)
-            preds = categorical(preds, levels=levels(classes_seen))
+            eltype(preds) <: MLJ.CategoricalValue ||
+                (preds = categorical(preds, levels=levels(classes_seen)))
             [UnivariateFinite([p], [1.0]) for p in preds]
         end :
         preds

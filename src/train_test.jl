@@ -115,7 +115,7 @@ end
 
 function train_test(args...; kwargs...)::SoleModel
     ds = _prepare_dataset(args...; kwargs...)
-    _train_test(model)
+    _train_test(ds)
 end
 
 train_test(ds::AbstractDataSet)::SoleModel = _train_test(ds)
