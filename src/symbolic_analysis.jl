@@ -61,7 +61,8 @@ function sole_predict(solem::AbstractModel, y_test::AbstractVector{<:Label})
     eltype(preds) <: CLabel ?
         begin
             classes_seen = unique(y_test)
-            preds = categorical(preds, levels=levels(classes_seen))
+            eltype(preds) <: MLJ.CategoricalValue ||
+                (preds = categorical(preds, levels=levels(classes_seen)))
             [UnivariateFinite([p], [1.0]) for p in preds]
         end :
         preds
@@ -124,8 +125,9 @@ function eval_measures(
     measures::Tuple{Vararg{FussyMeasure}},
     y_test::Vector{<:AbstractVector{<:Label}}
 )::Measures
-    measures        = MLJBase._actual_measures([measures...], solemodels(solem))
-    operations      = get_operations(measures, MLJBase.prediction_type(get_mach_model(ds)))
+    mach_model = get_mach_model(ds)
+    measures        = MLJBase._actual_measures([measures...], mach_model)
+    operations      = get_operations(measures, MLJBase.prediction_type(mach_model))
 
     nfolds          = length(ds)
     test_fold_sizes = [length(y_test[k]) for k in 1:nfolds]

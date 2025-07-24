@@ -3,7 +3,10 @@ using  Reexport
 
 using  SoleBase: Label, CLabel, RLabel, XGLabel
 using  SoleBase: movingwindow, wholewindow, splitwindow, adaptivewindow
-using  SoleModels: AbstractModel, solemodel, apply!
+using  SoleData: scalarlogiset
+using  SoleModels: Branch, ConstantModel
+using  SoleModels: DecisionEnsemble, DecisionTree
+using  SoleModels: AbstractModel, solemodel, weighted_aggregation, apply!
 using  SoleModels: RuleExtractor, DecisionSet
 using  SolePostHoc
 @reexport using SolePostHoc: InTreesRuleExtractor
@@ -15,7 +18,6 @@ using  SolePostHoc
 # ---------------------------------------------------------------------------- #
 using  MLJ
 using  MLJ: MLJBase, MLJTuning
-# import MLJ: MLJType
 
 # classification measures
 @reexport using MLJ: accuracy, confusion_matrix, kappa, log_loss
@@ -82,7 +84,6 @@ include("dataset.jl")
 export code_dataset, range
 export setup_dataset
 
-import SoleModels: apply
 include("apply.jl")
 include("train_test.jl")
 export train_test

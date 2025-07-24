@@ -60,7 +60,7 @@ modelc = symbolic_analysis(
     resample=CV(nfolds=5, shuffle=true),
     rng=Xoshiro(1),
     tuning=(tuning=Grid(resolution=10), resampling=CV(nfolds=3), range, measure=accuracy, repeats=2),
-    # extractor=InTreesRuleExtractor(),
+    extractor=InTreesRuleExtractor(),
     measures=(accuracy, log_loss, confusion_matrix, kappa)      
 )
 @test modelc isa SX.ModelSet
@@ -76,6 +76,17 @@ modelr = symbolic_analysis(
 )
 @test modelr isa SX.ModelSet
 
+# ---------------------------------------------------------------------------- #
+#                    time series dataset with no windowing                     #
+# ---------------------------------------------------------------------------- #
+dsts = setup_dataset(
+    Xts, yts;
+    model=ModalDecisionTree(),
+    resample=Holdout(shuffle=true),
+    train_ratio=0.7,
+    rng=Xoshiro(1),
+    features=()  
+)
 # ---------------------------------------------------------------------------- #
 #                         resamples in numeric datasets                        #
 # ---------------------------------------------------------------------------- #
@@ -185,6 +196,16 @@ modelts = symbolic_analysis(
 # ---------------------------------------------------------------------------- #
 #             xgboost makewatchlist for early stopping technique               #
 # ---------------------------------------------------------------------------- #
+modelc = symbolic_analysis(
+    Xc, yc;
+    model=XGBoostClassifier(early_stopping_rounds=20),
+    resample=CV(nfolds=5, shuffle=true),
+    valid_ratio=0.2,
+    rng=Xoshiro(1),
+    measures=(confusion_matrix,) 
+)
+@test modelc isa SX.ModelSet
+
 range = SX.range(:num_round; lower=10, unit=10, upper=100)
 modelr = symbolic_analysis(
     Xr, yr;

@@ -1,7 +1,7 @@
 name = "SoleXplorer"
 uuid = "5816ab97-8dbe-4a0a-b2fb-0334bd9876ed"
 authors = ["Lorenzo BALBONI", "Giovanni PAGLIARINI", "Riccardo PASINI"]
-version = "0.2.0"
+version = "0.2.1"
 
 [deps]
 Catch22 = "acdeb78f-3d39-4310-8fdf-6d75c17c6d5a"
@@ -13,31 +13,15 @@ MLJXGBoostInterface = "54119dfa-1dab-4055-a167-80440f4f7a91"
 ModalDecisionTrees = "e54bda2e-c571-11ec-9d64-0242ac120002"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
-ScikitLearn = "3646fa90-6ef7-5e7e-9f22-8aca16db6324"
 SoleBase = "4475fa32-7023-44a0-aa70-4813b230e492"
 SoleData = "123f1ae1-6307-4526-ab5b-aab3a92a2b8c"
 SoleModels = "4249d9c7-3290-4ddd-961c-e1d3ec2467f8"
 SolePostHoc = "cf1aa0c3-12c9-4ebe-9bdc-bd6c2ca79b72"
 XGBoost = "009559a3-9522-5dbb-924b-0b6ed2b22bb9"
 
-[sources.ModalDecisionTrees]
-rev = "64-modaladaboost"
-url = "https://github.com/aclai-lab/ModalDecisionTrees.jl"
-
-[sources.ScikitLearn]
-url = "https://github.com/PasoStudio73/ScikitLearn.jl"
-
-[sources.SoleBase]
-rev = "10-compatibility-with-decisiontree-package"
-url = "https://github.com/aclai-lab/SoleBase.jl"
-
-[sources.SoleModels]
-rev = "55-xgboost-regression"
-url = "https://github.com/aclai-lab/SoleModels.jl"
-
-[sources.SolePostHoc]
-rev = "devPaso"
-url = "https://github.com/aclai-lab/SolePostHoc.jl"
+[sources]
+ModalDecisionTrees = {rev = "64-modaladaboost", url = "https://github.com/aclai-lab/ModalDecisionTrees.jl"}
+SolePostHoc = {rev = "devPaso", url = "https://github.com/aclai-lab/SolePostHoc.jl"}
 
 [compat]
 Catch22 = "0.4 - 0.7"
@@ -49,9 +33,8 @@ MLJXGBoostInterface = "0.3"
 ModalDecisionTrees = "0.5.2, 0.5"
 Random = "1"
 Reexport = "1.2"
-ScikitLearn = "0.7.1, 0.7"
 SoleBase = "0.13.2, 0.13"
-SoleData = "0.16.2, 0.16"
+SoleData = "0.16.3, 0.16"
 SoleModels = "0.10.2, 0.10"
 SolePostHoc = "0.2"
 XGBoost = "2.5"
