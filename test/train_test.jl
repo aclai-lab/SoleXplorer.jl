@@ -210,3 +210,81 @@ solemr = train_test(
 #                                    various                                   #
 # ---------------------------------------------------------------------------- #
 @test SX.TunedMach(DecisionTreeClassifier) <: Union{SX.PropositionalDataSet, SX.ModalDataSet}
+
+@testset "Base.show tests for train_test.jl" begin
+    rng = Xoshiro(42)
+    
+    @testset "SoleModel show methods" begin
+        # Create a dataset and train models
+        ds = setup_dataset(
+            Xc, yc,
+            model = DecisionTreeClassifier(),
+            resample = CV(nfolds=3, shuffle=true),
+            train_ratio = 0.7,
+            rng = rng
+        )
+        
+        # Create SoleModel with trained models
+        solem = train_test(ds)
+        
+        # Test Base.show(io::IO, solem::SoleModel{D})
+        io = IOBuffer()
+        show(io, solem)
+        output = String(take!(io))
+        
+        @test occursin("SoleModel{", output)
+        @test occursin("Number of models: 3", output)  # 3 folds
+        @test occursin("DataSet", output)  # Should show dataset type
+        
+        # Test Base.show(io::IO, ::MIME"text/plain", solem::SoleModel{D})
+        io = IOBuffer()
+        show(io, MIME("text/plain"), solem)
+        plain_output = String(take!(io))
+        
+        @test plain_output == output  # Should be identical
+        
+        # Test with different number of folds
+        ds_5fold = setup_dataset(
+            Xc, yc,
+            model = DecisionTreeClassifier(),
+            resample = CV(nfolds=5),
+            train_ratio = 0.8,
+            rng = rng
+        )
+        
+        solem_5fold = train_test(ds_5fold)
+        
+        io = IOBuffer()
+        show(io, solem_5fold)
+        output_5fold = String(take!(io))
+        
+        @test occursin("Number of models: 5", output_5fold)
+    end
+    
+    @testset "SoleModel show with different dataset types" begin
+        # Test with regression dataset
+        X_reg = DataFrame(
+            x1 = randn(rng, 10),
+            x2 = randn(rng, 10)
+        )
+        y_reg = randn(rng, 10)
+        
+        ds_reg = setup_dataset(
+            X_reg, y_reg,
+            model = DecisionTreeRegressor(),
+            resample = CV(nfolds=2),
+            train_ratio = 0.7,
+            rng = rng
+        )
+        
+        solem_reg = train_test(ds_reg)
+        
+        io = IOBuffer()
+        show(io, solem_reg)
+        output_reg = String(take!(io))
+        
+        @test occursin("SoleModel{", output_reg)
+        @test occursin("Number of models: 2", output_reg)
+        @test occursin("DataSet", output_reg)
+    end
+end
