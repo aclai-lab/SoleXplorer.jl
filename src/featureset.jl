@@ -1,3 +1,9 @@
+# References
+# The Catch22 features are based on the CAnonical Time-series CHaracteristics from:
+# - Repository: https://github.com/DynamicsAndNeuralSystems/catch22
+# - Article:    https://doi.org/10.1007/s10618-019-00647-x
+# - Author: Carl H. Lubba et al
+
 # ---------------------------------------------------------------------------- #
 #                        catch22 pretty named functions                        #
 # ---------------------------------------------------------------------------- #
@@ -49,17 +55,121 @@ periodicity(x)         = Catch22.PD_PeriodicityWang_th0_01((x));
 # ---------------------------------------------------------------------------- #
 #                                  featuresets                                 #
 # ---------------------------------------------------------------------------- #
+"""
+    base_set
+
+A minimal feature set containing only basic statistical measures for time series analysis.
+
+# Features
+- `maximum`: Maximum value in the time series
+- `minimum`: Minimum value in the time series  
+- `mean`   : Arithmetic mean of the time series
+- `std`    : Standard deviation of the time series
+
+"""
 base_set     = (maximum, minimum, MLJ.mean, MLJ.std)
 
+"""
+    catch9
+
+A curated subset of 9 features combining basic statistics with Symbolic Catch22 measures,
+
+# Features
+- Basic statistics: `maximum`, `minimum`, `mean`, `median`, `std`
+- Symbolic Catch22 features:
+  - `stretch_high`       : Measures persistence of high values
+  - `stretch_decreasing` : Captures decreasing trend patterns
+  - `entropy_pairs`      : Quantifies local pattern complexity
+  - `transition_variance`: Measures state transition variability
+
+# References
+The Catch22 features are based on the CAnonical Time-series CHaracteristics from:
+- Repository: https://github.com/DynamicsAndNeuralSystems/catch22
+- Article:    https://doi.org/10.1007/s10618-019-00647-x
+- Author: Carl H. Lubba et al
+
+"""
 catch9       = (maximum, minimum, MLJ.mean, MLJ.median, MLJ.std,
                 stretch_high, stretch_decreasing, entropy_pairs, transition_variance)
 
+                """
+    catch22_set
+
+The complete Catch22 feature set.
+Each feature captures different aspects of time series dynamics including
+correlation structure, distribution properties and temporal patterns.
+
+# Feature Categories
+- **Distribution shape**: 
+  `mode_5`, `mode_10`
+- **Extreme event timing**:
+  `outlier_timing_pos`, `outlier_timing_neg`
+- **Linear autocorrelation**:
+  `acf_timescale`, `acf_first_min`, `low_freq_power`, `centroid_freq`
+- **Simple forecasting**:
+  `forecast_error`
+- **Incremental differences**:
+  `whiten_timescale`, `high_fluctuation`
+- **Symbolic**
+  `stretch_high`, `stretch_decreasing`, `entropy_pairs`, `transition_variance`
+- **Nonlinear autocorrelation**:
+  `ami2`, `trev`
+- **Linear autocorrelation structure**:
+  `ami_timescale`, `periodicity`
+- **Self-affine scaling**:
+  `rs_range`, `dfa`
+- **Other**:
+  `embedding_dist`
+
+# References
+The Catch22 features are based on the CAnonical Time-series CHaracteristics from:
+- Repository: https://github.com/DynamicsAndNeuralSystems/catch22
+- Article:    https://doi.org/10.1007/s10618-019-00647-x
+- Author: Carl H. Lubba et al
+
+"""
 catch22_set  = (mode_5, mode_10, embedding_dist, acf_timescale, acf_first_min, ami2,
                 trev, outlier_timing_pos, outlier_timing_neg, whiten_timescale, 
                 forecast_error, ami_timescale, high_fluctuation, stretch_decreasing,
                 stretch_high, entropy_pairs, rs_range, dfa, low_freq_power, 
                 centroid_freq, transition_variance, periodicity)
 
+"""
+    complete_set
+
+The most comprehensive feature set combining basic statistical measures, covariance
+analysis, and the full Catch22 suite.
+
+# Features
+- **Basic statistics**:
+  `maximum`, `minimum`, `mean`, `median`, `std`, `cov`
+- **Distribution shape**: 
+  `mode_5`, `mode_10`
+- **Extreme event timing**:
+  `outlier_timing_pos`, `outlier_timing_neg`
+- **Linear autocorrelation**:
+  `acf_timescale`, `acf_first_min`, `low_freq_power`, `centroid_freq`
+- **Simple forecasting**:
+  `forecast_error`
+- **Incremental differences**:
+  `whiten_timescale`, `high_fluctuation`
+- **Symbolic**
+  `stretch_high`, `stretch_decreasing`, `entropy_pairs`, `transition_variance`
+- **Nonlinear autocorrelation**:
+  `ami2`, `trev`
+- **Linear autocorrelation structure**:
+  `ami_timescale`, `periodicity`
+- **Self-affine scaling**:
+  `rs_range`, `dfa`
+- **Other**:
+  `embedding_dist`
+
+# References
+The Catch22 features are based on the CAnonical Time-series CHaracteristics from:
+- Repository: https://github.com/DynamicsAndNeuralSystems/catch22
+- Article:    https://doi.org/10.1007/s10618-019-00647-x
+- Author: Carl H. Lubba et al
+"""
 complete_set = (maximum, minimum, MLJ.mean, MLJ.median, MLJ.std,
                 MLJ.StatsBase.cov, mode_5, mode_10, embedding_dist, acf_timescale,
                 acf_first_min, ami2, trev, outlier_timing_pos, outlier_timing_neg,
