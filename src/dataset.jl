@@ -122,7 +122,7 @@ const EitherDataSet = Union{PropositionalDataSet, ModalDataSet}
 # ---------------------------------------------------------------------------- #
 #                                 constructors                                 #
 # ---------------------------------------------------------------------------- #
-function _prepare_dataset(
+function _setup_dataset(
     X             :: AbstractDataFrame,
     y             :: AbstractVector,
     w             :: OptVector               = nothing;
@@ -183,7 +183,7 @@ function _prepare_dataset(
     DataSet(mach, ttpairs, pinfo; tinfo)
 end
 
-setup_dataset(args...; kwargs...) = _prepare_dataset(args...; kwargs...)
+setup_dataset(args...; kwargs...) = _setup_dataset(args...; kwargs...)
 
 # y is not a vector, but a symbol that identifies a column in X
 function setup_dataset(
