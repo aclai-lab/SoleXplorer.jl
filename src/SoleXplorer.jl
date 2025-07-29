@@ -71,7 +71,17 @@ using  SoleModels: RuleExtractor, DecisionSet
 using  SolePostHoc
 @reexport using SolePostHoc: InTreesRuleExtractor
 # @reexport using SolePostHoc: 
-#     LumenRuleExtractor, BATreesRuleExtractor, REFNERuleExtractor, RULECOSIPLUSRuleExtractor     
+#     LumenRuleExtractor, BATreesRuleExtractor, REFNERuleExtractor, RULECOSIPLUSRuleExtractor
+
+# ---------------------------------------------------------------------------- #
+#                                   types                                      #
+# ---------------------------------------------------------------------------- #
+"""
+    Optional{T}
+
+Type alias for `Union{T, Nothing}`.
+"""
+const Optional{T} = Union{T, Nothing}
 
 # ---------------------------------------------------------------------------- #
 #                                     MLJ                                      #
@@ -93,16 +103,6 @@ using  Random
 @reexport using SoleData: load_arff_dataset
 
 # ---------------------------------------------------------------------------- #
-#                                   types                                      #
-# ---------------------------------------------------------------------------- #
-"""
-    Optional{T}
-
-Type alias for `Union{T, Nothing}`.
-"""
-const Optional{T} = Union{T, Nothing}
-
-# ---------------------------------------------------------------------------- #
 #                                    utils                                     #
 # ---------------------------------------------------------------------------- #
 # feature extraction via Catch22
@@ -121,6 +121,7 @@ export base_set, catch9, catch22_set, complete_set
 @reexport using MLJ: Holdout, CV, StratifiedCV, TimeSeriesCV
 include("partition.jl")
 export partition
+export get_X, get_y, get_test 
 
 include("treatment.jl")
 export WinFunction, MovingWindow, WholeWindow, SplitWindow, AdaptiveWindow
