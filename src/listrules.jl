@@ -1,19 +1,65 @@
 # ---------------------------------------------------------------------------- #
-#                                      debug                                   #
+#                                  prefazione                                  #
 # ---------------------------------------------------------------------------- #
-using SoleModels: RuleExtractor
-const Optional{T}   = Union{T, Nothing}
-const OptFloat64 = Optional{Float64}
-using SolePostHoc.RuleExtraction: intrees
-using SoleLogics
+# Sole è una suite di machine learning come, che io sappia, nulla di simile.
+# Capace di utilizzare logica simbolica, e di poter estrarre le regole dal modello.
+# Sarebbe quindi logico aspettarsi prestazioni leggermente peggiori rispetto alla concorrenza,
+# e soprattutto al diretto rivale, MLJ, di cui oltretutto utilizza molto codice.
+# Ma vediamo insieme qual'è il punto di partenza, a livello di prestazioni,
+# eseguendo lo stesso task sia in MLJ che in Sole.
+# NB: il task proposto è proposizionale: MLJ non lavora in modale, quella è una peculiarietà
+# di Sole e quindi non esistono comparazioni.
 
+# ---------------------------------------------------------------------------- #
+#                          preparazione esperimento                            #
+# ---------------------------------------------------------------------------- #
 using SoleXplorer
+using SoleModels
 using MLJ
 using DataFrames, Random
-const SX = SoleXplorer
 
-using SoleModels: _listrules
-using SoleModels: listrules
+# L'esperimento è eseguito sul classico dataset Iris, caricato tramite la macro offerta da MLJ.
+Xc, yc = @load_iris
+Xc = DataFrame(Xc)
+
+@btime begin
+    symbolic_analysis(
+        Xc, yc,
+        model=DecisionTreeClassifier(),
+        resample=Holdout(shuffle=true),
+        train_ratio=0.7,
+        rng=Xoshiro(1),
+        measures=(accuracy, kappa)
+    )
+end
+
+@btime begin
+    Tree = @load DecisionTreeClassifier pkg=DecisionTree verbosity=0
+    tree = Tree()
+    evaluate(
+        tree, Xc, yc;
+        resampling=Holdout(shuffle=true),
+        measures=[accuracy, kappa],
+        per_observation=true,
+        verbosity=0
+    )
+end
+
+
+
+# using SoleModels: RuleExtractor
+# const Optional{T}   = Union{T, Nothing}
+# const OptFloat64 = Optional{Float64}
+# using SolePostHoc.RuleExtraction: intrees
+# using SoleLogics
+
+# using SoleXplorer
+# using MLJ
+# using DataFrames, Random
+# const SX = SoleXplorer
+
+# using SoleModels: _listrules
+# using SoleModels: listrules
 
 Xc, yc = @load_iris
 Xc = DataFrame(Xc)
