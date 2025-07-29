@@ -17,11 +17,14 @@ using SoleXplorer
 using SoleModels
 using MLJ
 using DataFrames, Random
+using Test, BenchmarkTools
+import DecisionTree as DT
 
 # L'esperimento è eseguito sul classico dataset Iris, caricato tramite la macro offerta da MLJ.
 Xc, yc = @load_iris
 Xc = DataFrame(Xc)
 
+# Esperimento condotto con Sole
 @btime begin
     symbolic_analysis(
         Xc, yc,
@@ -32,7 +35,9 @@ Xc = DataFrame(Xc)
         measures=(accuracy, kappa)
     )
 end
+# 444.172 μs (3370 allocations: 247.12 KiB)
 
+# Esperimento condotto con MLJ tramite la funzione evaluate, che meglio rappresenta l'antagonismo con Sole
 @btime begin
     Tree = @load DecisionTreeClassifier pkg=DecisionTree verbosity=0
     tree = Tree()
@@ -44,59 +49,206 @@ end
         verbosity=0
     )
 end
+# 369.499 μs (1900 allocations: 118.90 KiB)
 
-
-
-# using SoleModels: RuleExtractor
-# const Optional{T}   = Union{T, Nothing}
-# const OptFloat64 = Optional{Float64}
-# using SolePostHoc.RuleExtraction: intrees
-# using SoleLogics
-
-# using SoleXplorer
-# using MLJ
-# using DataFrames, Random
-# const SX = SoleXplorer
-
-# using SoleModels: _listrules
-# using SoleModels: listrules
-
-Xc, yc = @load_iris
-Xc = DataFrame(Xc)
-
-for s in 1:50
-    dsc = setup_dataset(
-        Xc, yc;
-        model=DecisionTreeClassifier(),
-        resample=Holdout(;shuffle=true),
-        rng=Xoshiro(s),
+# Notiamo che il divario tra Sole e Mlj è abbastanza esiguo, anzi: assolutamente trascurabile
+# se teniamo conto delle potenzialità aggiuntive di Sole rispetto a MLJ.
+# Ma andiamo oltre e proviamo una RandomForest di 100 alberi:
+@btime begin
+    symbolic_analysis(
+        Xc, yc,
+        model=RandomForestClassifier(;n_trees=100),
+        resample=Holdout(shuffle=true),
+        train_ratio=0.7,
+        rng=Xoshiro(1),
+        measures=(accuracy, kappa)
     )
-    solemc = train_test(dsc)
+end
+# 14.890 ms (183395 allocations: 9.30 MiB)
 
-    model = solemc.sole[1]
-    i = 1
-    test = get_test(dsc.pidxs[i])
-    X, y = get_X(dsc)[test, :], get_y(dsc)[test]
-    rmodel = root(model)
-    iii = SoleModels.info(rmodel)
-    test_original = _listrules(rmodel)
-    test_paso = _pasolistrules(rmodel, iii)
+@btime begin
+    Forest = @load RandomForestClassifier pkg=DecisionTree verbosity=0
+    forest = Forest(;n_trees=100)
+    evaluate(
+        forest, Xc, yc;
+        resampling=Holdout(shuffle=true),
+        measures=[accuracy, kappa],
+        per_observation=true,
+        verbosity=0
+    )
+end
+# 2.557 ms (12502 allocations: 1.28 MiB)
 
-    @test length(test_original) == length(test_paso)
-    for i in 1:length(test_paso)
-        @test test_original[i].antecedent.grandchildren == test_paso[i].antecedent.grandchildren
-        @test test_original[i].consequent.outcome == test_paso[i].consequent.outcome
+# Come potete notare, qui la forbice di prestazioni aumenta considerevolmente.
+# E stiamo verificando solamente un esperimento giocattolo; 
+# cosa potrebbe succedere nel caso di un utilizzo reale?
+# Il problema è già stato evidenziato da Balbo, quindi ho ragionato su una soluzione.
+
+# ---------------------------------------------------------------------------- #
+#                          considerazioni iniziali                             #
+# ---------------------------------------------------------------------------- #
+# da tempo, con Giovanni, Fede, Marco e forse anche altri di voi, ho espresso i miei dubbi sull'utilizzo
+# LIMITATAMENTE agli esperimenti proposizionali, del wrapper logiset.
+# Si tratta di una struttura fondamentale per la logica modale,
+# ma forse è un elefante in un negozio di cristalli per la logica proposizionale?
+# Giovanni aveva espresso dubbi sulle mie iniziali considerazioni, e come sempre aveva ragione.
+# La risposta è quindi NO: l'utilizzo del logiset non rappresenta un collo di bottiglia,
+# ecco la prova, provata.
+
+@btime SoleData.scalarlogiset(Xc; silent=true, allow_propositional=true)
+# 375.088 μs (3032 allocations: 990.48 KiB)
+
+# Come potete vedere, le risorse richieste per la creazione di un logiset non sono il punto cardine
+# del nostro disavanzo, ne in termini di velocità e nemmeno in termini di consumo memoria:
+# assolutamente trascurabili.
+
+# ---------------------------------------------------------------------------- #
+#                              collo di bottiglia                              #
+# ---------------------------------------------------------------------------- #
+# Ho iniziato ad eseguire test su strutture dati alternative e ho trovato il collo di bottiglia.
+# Prendiamo un albero Sole:
+
+test = symbolic_analysis(
+    Xc, yc,
+    model=DecisionTreeClassifier(),
+    resample=Holdout(shuffle=true),
+    train_ratio=0.7,
+    rng=Xoshiro(1),
+    measures=(accuracy, kappa)
+)
+soletree = test.sole.sole[1] 
+
+# julia> soletree.
+# info
+# root
+
+# Vediamo che la struttura root dell'albero è composta da info e root, dove root è l'albero.
+# La struttura info è sicuramente interessante, guardiamola:
+
+# julia> soletree.info
+# (featurenames = [:sepal_length, :sepal_width, :petal_length, :petal_width],
+#  supporting_predictions = ["versicolor", "versicolor" … "virginica", "setosa"],
+#  supporting_labels = ["versicolor", "versicolor" … "virginica", "setosa"],)
+
+# Geniale: info contiene le label originale e le previsioni, nonchè il nome delle features!
+
+# Il problema è che questo si ripete per ogni singolo nodo dell'albero,
+# e per di più tutti gli info sono differenti, sia in risultati sia in lunghezza.
+
+# julia> test.sole.sole[1].root.info
+# (supporting_predictions = ["versicolor", "versicolor" … "versicolor", "setosa"],
+#  supporting_labels = ["versicolor", "versicolor" … "versicolor", "setosa"],)
+
+# julia> test.sole.sole[1].root.posconsequent.info
+# (supporting_predictions = ["setosa", "setosa" … "setosa", "setosa"],
+#  supporting_labels = ["setosa", "setosa" … "setosa", "setosa"],)
+
+# julia> test.sole.sole[1].root.negconsequent.negconsequent.info
+# (supporting_predictions = ["virginica", "virginica" … "virginica", "virginica"],
+#  supporting_labels = ["virginica", "virginica" … "virginica", "virginica"],)
+
+# Sicuramente questo è il collo di bottiglia: immaginiamoci, per 100 alberi, segnare per ogni nodo
+# 2 vettori stringa. Beh è facile immaginarsi un aumento considerevole della memoria.
+
+# Ora la mia domanda, da ignorante, è questa: non è che c'è un pò di ridondanza?
+# Che questo sia IL METODO per lavorare con logica modale e magari il banale logica proposizionale
+# abbiamo trovato l'elefante nel negozio di cristalli?
+
+# Andiamo avanti: a che servono tutti questi 'info'?
+# a estrarre le regole tramite SoleModels.listrule().
+# Solo a quello? Non lo so, se lo sapessi non sarei qui a tediarvi.
+
+# ---------------------------------------------------------------------------- #
+#                            listrules alternativo                             #
+# ---------------------------------------------------------------------------- #
+# La domanda che mi pongo è questa: ma davvero 'listrules' ha bisogno di ogni singolo info, in ogni nodo?
+# Mi viene da sospettare che magari basta passargli l'info in root, cioè quello finale e definitivo.
+# NB: questo sempre limitatamente alla logica proposizionale, la logica modale la affronteremo più avanti.
+
+# Quindi l'idea potrebbe essere quella di riscrivere listrule, propagando, nell'algoritmo ricorsivo,
+# l'info di root, bypassando le strutture info "locali".
+
+# Ecco come lo riscriverei:
+# Quello che troverete qui sotto è esattamente l'algoritmo che trovate in rule-extraction.jl di SoleModels
+# ho cancellato le parti commentate presenti nell'algoritmo originale per non creare confusione,
+# e troverete commentate le mie proposte di modifica, una sorta di git diff manuale.
+# NB: per praticità, e per poter comparare i due algoritmi, ho rinominato
+# listrule in pasorules, viva l'autostima.
+
+function pasorules(
+    m;
+    compute_metrics::Union{Nothing,Bool} = false,
+    metrics_kwargs::NamedTuple = (;),
+    use_shortforms::Bool = true,
+    use_leftmostlinearform::Union{Nothing,Bool} = nothing,
+    normalize::Bool = false,
+    normalize_kwargs::NamedTuple = (; allow_atom_flipping = true, rotate_commutatives = false, ),
+    scalar_simplification::Union{Bool,NamedTuple} = normalize ? (; allow_scalar_range_conditions = true) : false,
+    force_syntaxtree::Bool = false,
+    min_coverage::Union{Nothing,Number} = nothing,
+    min_ncovered::Union{Nothing,Number} = nothing,
+    min_ninstances::Union{Nothing,Number} = nothing,
+    min_confidence::Union{Nothing,Number} = nothing,
+    min_lift::Union{Nothing,Number} = nothing,
+    metric_filter_callback::Union{Nothing,Base.Callable} = nothing,
+    kwargs...,
+)
+    subkwargs = (;
+        use_shortforms = use_shortforms,
+        use_leftmostlinearform = use_leftmostlinearform,
+        normalize = normalize,
+        normalize_kwargs = normalize_kwargs,
+        scalar_simplification = scalar_simplification,
+        force_syntaxtree = force_syntaxtree,
+        metrics_kwargs = metrics_kwargs,
+        min_ninstances = min_ninstances,
+        min_coverage = min_coverage,
+        min_ncovered = min_ncovered,
+        min_confidence = min_confidence,
+        min_lift = min_lift,
+        metric_filter_callback = metric_filter_callback,
+        kwargs...)
+
+    @assert compute_metrics in [false] "TODO implement"
+    @assert SoleModels.issymbolicmodel(m) "Model m is not symbolic. Please provide method issymbolicmodel(::$(typeof(m)))."
+
+    # inizio a propagare info root
+    # questa è l'unica modifica fatta alla funzione listrules
+    rules = _pasorules(m, m.info; subkwargs...)
+
+    if compute_metrics || !isnothing(min_confidence) || !isnothing(min_coverage) || !isnothing(min_ncovered) || !isnothing(min_ninstances) || !isnothing(min_lift)
+        rules = Iterators.filter(r->begin
+            ms = readmetrics(r; metrics_kwargs...)
+            compute_metrics && (info!(r, ms))
+            return (isnothing(min_ninstances) || (ms.ninstances >= min_ninstances)) &&
+            (isnothing(min_coverage) || (ms.coverage >= min_coverage)) &&
+            (isnothing(min_ncovered) || (ms.ncovered >= min_ncovered)) &&
+            (isnothing(min_confidence) || (ms.confidence >= min_confidence)) &&
+            (isnothing(min_lift) || (ms.lift >= min_lift)) &&
+            (isnothing(metric_filter_callback) || metric_filter_callback(ms))
+        end, rules)
     end
+
+    rules = collect(rules) # TODO remove in the future?
+
+    return rules
 end
 
-# ---------------------------------------------------------------------------- #
-#                                   listrules                                  #
-# ---------------------------------------------------------------------------- #
-_pasolistrules(m::LeafModel{O}, iii; kwargs...) where {O} = [Rule{O}(⊤, m, iii)]
+# aggiunto arg i = info root
+function _pasorules(m::AbstractModel, i::NamedTuple; kwargs...)
+    error("Please, provide method _pasorules(::$(typeof(m))) ($(typeof(m)) is a symbolic model).")
+end
 
-function _pasolistrules(
+# aggiunto arg i, root.info
+# ATTENZIONE! qui, in origine, veniva passata l'info relativa alla subrule.
+# ora invece si passa l'info presente in root dell'albero
+# _pasorules(m::LeafModel{O}, i::NamedTuple; kwargs...) where {O} = [Rule{O}(⊤, m, SoleModels.info(m))]
+_pasorules(m::LeafModel{O}, i::NamedTuple; kwargs...) where {O} = [Rule{O}(⊤, m, i)]
+
+function _pasorules(
     m::Rule{O},
-    iii;
+    # aggiunto arg i, root.info
+    i::NamedTuple;
     use_leftmostlinearform::Union{Nothing,Bool} = nothing,
     force_syntaxtree::Bool = false,
     kwargs...
@@ -104,13 +256,17 @@ function _pasolistrules(
     use_leftmostlinearform = !isnothing(use_leftmostlinearform) ? use_leftmostlinearform : false
     [begin
         φ = combine_antecedents(antecedent(m), antecedent(subrule), use_leftmostlinearform, force_syntaxtree)
-        Rule{O}(φ, consequent(subrule), iii)
-    end for subrule in _pasolistrules(consequent(m), iii; force_syntaxtree = force_syntaxtree, use_leftmostlinearform = use_leftmostlinearform, kwargs...)]
+        # ATTENZIONE! qui, in origine, veniva passata l'info relativa alla subrule.
+        # ora invece si passa l'info presente in root dell'albero
+        # Rule{O}(φ, consequent(subrule), SoleModels.info(subrule))
+        Rule{O}(φ, consequent(subrule), i)
+    end for subrule in _pasorules(consequent(m), i; force_syntaxtree = force_syntaxtree, use_leftmostlinearform = use_leftmostlinearform, kwargs...)]
 end
 
-function _pasolistrules(
+function _pasorules(
     m::Branch{O},
-    iii;
+    # aggiunto arg i, root.info
+    i::NamedTuple;
     use_shortforms::Bool = true,
     use_leftmostlinearform::Union{Nothing,Bool} = nothing,
     normalize::Bool = false,
@@ -128,7 +284,6 @@ function _pasolistrules(
     subkwargs = (;
         use_shortforms = use_shortforms,
         use_leftmostlinearform = use_leftmostlinearform,
-        # normalize = false, TODO?
         normalize = normalize,
         normalize_kwargs = normalize_kwargs,
         scalar_simplification = false,
@@ -137,85 +292,72 @@ function _pasolistrules(
         min_coverage = min_coverage,
         min_ninstances = min_ninstances,
         kwargs...)
-    # @show normalize, normalize_kwargs
     _subrules = []
-    if isnothing(min_ninstances) || (haskey(iii, :supporting_labels) && length(info(m, :supporting_labels)) >= min_ninstances)
-    # if (haskey(iii, :supporting_labels) && length(info(m, :supporting_labels)) >= min_ninstances) &&
-    #     (haskey(iii, :supporting_labels) && length(info(m, :supporting_labels))/ntotinstances >= min_coverage)
-        append!(_subrules, [(true,  r) for r in _pasolistrules(posconsequent(m), iii; subkwargs...)])
-        append!(_subrules, [(false, r) for r in _pasolistrules(negconsequent(m), iii; subkwargs...)])
+    # tutti i SoleModels.info(m), che si riferiscono agli info locali,
+    # vengono sostituiti con il parametro in ingresso 'i'
+    # che rappresenta l'info della root dell'albero
+    # if isnothing(min_ninstances) || (haskey(SoleModels.info(m), :supporting_labels) && length(SoleModels.info(m, :supporting_labels)) >= min_ninstances)
+    if isnothing(min_ninstances) || (haskey(i, :supporting_labels) && length(i[:supporting_labels]) >= min_ninstances)
+        append!(_subrules, [(true,  r) for r in _pasorules(posconsequent(m), i; subkwargs...)])
+        append!(_subrules, [(false, r) for r in _pasorules(negconsequent(m), i; subkwargs...)])
     end
 
     rules = map(((flag, subrule),)->begin
-            # @show iii
             known_infokeys = [:supporting_labels, :supporting_predictions, :shortform, :this, :multipathformula]
-            ks = setdiff(keys(iii), known_infokeys)
+            # ks = setdiff(keys(SoleModels.info(m)), known_infokeys)
+            ks = setdiff(keys(i), known_infokeys)
             if length(ks) > 0
                 @warn "Dropping info keys: $(join(repr.(ks), ", "))"
             end
 
             _info = (;)
-            if haskey(iii, :supporting_labels) && haskey(iii, :supporting_predictions)
+            # if haskey(SoleModels.info(m), :supporting_labels) && haskey(SoleModels.info(m), :supporting_predictions)
+            if haskey(i, :supporting_labels) && haskey(i, :supporting_predictions)
                 _info = merge((;), (;
-                    supporting_labels = iii.supporting_labels,
-                # ))
-            # end
-            # if haskey(iii, :supporting_predictions)
-                # _info = merge((;), (;
-                    supporting_predictions = iii.supporting_predictions,
+                    # supporting_labels = SoleModels.info(m).supporting_labels,
+                    # supporting_predictions = SoleModels.info(m).supporting_predictions,
+                    supporting_labels = i.supporting_labels,
+                    supporting_predictions = i.supporting_predictions,
                 ))
-            elseif (haskey(iii, :supporting_labels) != haskey(iii, :supporting_predictions))
+            # elseif (haskey(SoleModels.info(m), :supporting_labels) != haskey(SoleModels.info(m), :supporting_predictions))
+            elseif (haskey(i, :supporting_labels) != haskey(i, :supporting_predictions))
                 @warn "List rules encountered an unexpected case. Both " *
                     " supporting_labels and supporting_predictions are necessary for correctly computing performance metrics. "
             end
 
             antformula, using_shortform = begin
-                if (use_shortforms && haskey(iii, :shortform))
-                    iii[:shortform], true
+                # if (use_shortforms && haskey(SoleModels.info(subrule), :shortform))
+                #     SoleModels.info(subrule)[:shortform], true
+                if (use_shortforms && haskey(i, :shortform))
+                    i[:shortform], true
                 else
-                    # Automatic flip.
                     smart_neg(f) = (f isa Atom && flip_atoms && SoleLogics.hasdual(f) ? SoleLogics.dual(f) : ¬f)
                     _antd = antecedent(m)
                     (flag ? _antd : smart_neg(_antd)), false
                 end
             end
             antformula = force_syntaxtree ? tree(antformula) : antformula
-            # @show using_shortform
-            # @show antformula
-            # @show typeof(subrule)
 
             if subrule isa LeafModel
                 ant = antformula
                 normalize && (ant = SoleLogics.normalize(ant; normalize_kwargs...))
-                ant = _scalar_simplification(ant, scalar_simplification)
+                ant = SoleModels._scalar_simplification(ant, scalar_simplification)
                 subi = (;)
-                # if use_shortforms
-                #     subi = merge((;), (;
-                #         shortform = ant
-                #     ))
-                # end
-                Rule(ant, subrule, merge(iii, subi, _info))
+                # Rule(ant, subrule, merge(SoleModels.info(subrule), subi, _info))
+                Rule(ant, subrule, merge(i, subi, _info))
             elseif subrule isa Rule
                 ant = begin
                     if using_shortform
                         antformula
                     else
-                        # Combine antecedents
                         φ = SoleModels.combine_antecedents(antformula, antecedent(subrule), use_leftmostlinearform, force_syntaxtree)
-                        # @show 3
-                        # @show φ
                         φ
                     end
                 end
-                # @show normalize, normalize_kwargs
                 normalize && (ant = SoleLogics.normalize(ant; normalize_kwargs...))
-                # @show 1
-                # @show ant
                 ant = SoleModels._scalar_simplification(ant, scalar_simplification)
-                # @show 2
-                # @show ant
-                # readline()
-                Rule(ant, consequent(subrule), merge(iii, _info))
+                # Rule(ant, consequent(subrule), merge(SoleModels.info(subrule), _info))
+                Rule(ant, consequent(subrule), merge(i, _info))
             else
                 error("Unexpected rule type: $(typeof(subrule)).")
             end
@@ -223,3 +365,514 @@ function _pasolistrules(
 
     return rules
 end
+
+function _pasorules(
+    m::DecisionList,
+    # aggiunto arg i, root.info
+    i::NamedTuple;
+    normalize::Bool = false,
+    normalize_kwargs::NamedTuple = (; allow_atom_flipping = true, ),
+    scalar_simplification::Union{Bool,NamedTuple} = normalize ? (; allow_scalar_range_conditions = true) : false,
+    force_syntaxtree::Bool = false,
+    kwargs...
+)
+    rules = listimmediaterules(m;
+        normalize = normalize,
+        scalar_simplification = scalar_simplification,
+        normalize_kwargs = normalize_kwargs,
+        force_syntaxtree = force_syntaxtree,
+    )
+    return rules
+end
+
+# aggiunto arg i, root.info
+_pasorules(m::DecisionTree, i::NamedTuple; kwargs...) = _pasorules(root(m), i; kwargs...)
+
+function _pasorules(
+    m::Paso,
+    # aggiunto arg i, root.info
+    i::NamedTuple;
+    suppress_parity_warning = true,
+    kwargs...
+)
+    modelrules = [_pasorules(subm, i; kwargs...) for subm in SoleModels.models(m)]
+    @assert all(r->consequent(r) isa ConstantModel, Iterators.flatten(modelrules))
+
+    SoleModels.IterTools.imap(rulecombination->begin
+        rulecombination = collect(rulecombination)
+        ant = SoleModels.join_antecedents(antecedent.(rulecombination))
+        o_cons = SoleModels.bestguess(outcome.(consequent.(rulecombination)), m.weights; suppress_parity_warning)
+        i_cons = merge(SoleModels.info.(consequent.(rulecombination))...)
+        cons = ConstantModel(o_cons, i_cons)
+        infos = merge(SoleModels.info.(rulecombination)...)
+        Rule(ant, cons, infos)
+        end, Iterators.product(modelrules...)
+    )
+end
+
+# aggiunto arg i, root.info
+_pasorules(m::MixedModel, i::NamedTuple; kwargs...) = _pasorules(root(m), i; kwargs...)
+
+# ---------------------------------------------------------------------------- #
+#                               test comparativi                               #
+# ---------------------------------------------------------------------------- #
+# Ora conviene verificare se le regole estratte da pasorules coincidono con le regole estratte da listrule.
+# Per farlo eseguo una batteria di test, sempre su Iris, ma con dataset differenti grazie all'utilizzo
+# di differenti semi random.
+
+# Partiamo con DecisionTreeClassifier
+for seed in 1:200
+    ds = setup_dataset(
+        Xc, yc;
+        model=DecisionTreeClassifier(),
+        resample=Holdout(;shuffle=true),
+        rng=Xoshiro(seed),
+    )
+    solem = train_test(ds)
+
+    model = solem.sole[1]
+    test = get_test(ds.pidxs[1])
+    X, y = get_X(ds)[test, :], get_y(ds)[test]
+    test_original = listrules(model)
+    test_paso = pasorules(model)
+
+    @test length(test_original) == length(test_paso)
+    for i in 1:length(test_paso)
+        @test test_original[i].antecedent.grandchildren == test_paso[i].antecedent.grandchildren
+        @test test_original[i].consequent.outcome == test_paso[i].consequent.outcome
+    end
+end
+
+# Esempio signolo giusto per sincerarci
+ds = setup_dataset(
+    Xc, yc;
+    model=DecisionTreeClassifier(),
+    resample=Holdout(;shuffle=true),
+    rng=Xoshiro(11),
+)
+solem = train_test(ds)
+model = solem.sole[1]
+
+test_original = listrules(model)
+test_paso = pasorules(model)
+
+# proviamo anche con RandomForest
+for seed in 1:50
+    ds = setup_dataset(
+        Xc, yc;
+        # con 100 alberi si rompe julia!
+        model=RandomForestClassifier(n_trees=5),
+        resample=Holdout(;shuffle=true),
+        rng=Xoshiro(seed),
+    )
+    solem = train_test(ds)
+
+    model = solem.sole[1]
+    test = get_test(ds.pidxs[1])
+    X, y = get_X(ds)[test, :], get_y(ds)[test]
+    test_original = listrules(model)
+    test_paso = pasorules(model)
+
+    @test length(test_original) == length(test_paso)
+    for i in 1:length(test_paso)
+        @test test_original[i].antecedent.grandchildren == test_paso[i].antecedent.grandchildren
+        @test test_original[i].consequent.outcome == test_paso[i].consequent.outcome
+    end
+end
+
+# Esempio singolo di debug
+ds = setup_dataset(
+    Xc, yc;
+    model=RandomForestClassifier(n_trees=5),
+    resample=Holdout(;shuffle=true),
+    rng=Xoshiro(11),
+)
+solem = train_test(ds)
+model = solem.sole[1]
+
+test_original = listrules(model)
+test_paso = pasorules(model)
+
+# Sembrerebbe che listrules funziona anche se utilizza l'info di root, bypassando tutti gli info salvati sui vari nodi.
+# questo potrebbe essere un bel risparmio di memoria.
+# Si potrebbe pensare ad una struttura che non colleziona i vari info, ma crea l'info, con le label e le predizioni,
+# solo in fase di test (utilizzando il gergo di Sole, solo eseguendo l'apply!)
+# Vediamo come potrebbe essere:
+
+# ---------------------------------------------------------------------------- #
+#                           solemodel senza info?                              #
+# ---------------------------------------------------------------------------- #
+# Ora arriva la parte più complessa: rivedere completamente il metodo con cui si costruisce
+# l'albero Sole, e il relativo apply.
+# Tenterò di essere il meno possibile invasivo, soprattutto perchè
+# si potrebbe trovare una soluzione molto elegante, a partire dalle strutture dati,
+# ma questo, con molta probabilità, romperebbe molti test
+# e francamente, con Parigi alle porte, non ce lo possiamo permettere.
+# Quindi quello che vorrei proporre è una hackerata.
+# Ricordando il fine ultimo: verificare se possiamo rendere Sole più performante.
+# E ricordando anche che le modifiche che propongo potrebbero essere fallimentari,
+# quindi procederei per piccoli passi; il giusto che basta per non costruire strutture 'info'
+# ad ogni nodo.
+
+# ---------------------------------------------------------------------------- #
+#                       nuova struttura DecisionTree                           #
+# ---------------------------------------------------------------------------- #
+# Per prima cosa servirebbe modificare le strutture DecisionTree e DecisionEnsemble.
+# Semplicemente cambiandole da 'struct' a 'mutable struct'
+# La motivazione:
+# dovremo scrivere la root info, solo dopo aver fatto il test del modello tramite apply.
+# prendendo spunto da MLJ ho notato che non si fanno grossi problemi in tal senso,
+# per esempio: una struttura importante come la mach, è in realtà una mutable struct.
+# quindi viste le premesse mi permetterei di fare questa modifica.
+
+mutable struct PasoDecisionEnsemble{O,T<:AbstractModel,A<:Base.Callable,W<:Union{Nothing,AbstractVector}} <: SoleModels.AbstractDecisionEnsemble{O}
+    models::Vector{T}
+    aggregation::A
+    weights::W
+    info::NamedTuple
+
+    function PasoDecisionEnsemble{O}(
+        models::AbstractVector{T},
+        aggregation::Union{Nothing,Base.Callable},
+        weights::Union{Nothing,AbstractVector},
+        info::NamedTuple = (;);
+        suppress_parity_warning=false,
+        parity_func=x->argmax(x)
+    ) where {O,T<:AbstractModel}
+        @assert length(models) > 0 "Cannot instantiate empty ensemble!"
+        models = wrap.(models)
+        if isnothing(aggregation)
+            # if a suppress_parity_warning parameter is provided, then the aggregation's suppress_parity_warning defaults to it;
+            #  otherwise, it defaults to bestguess's suppress_parity_warning
+            # if isnothing(suppress_parity_warning)
+            #     aggregation = function (args...; kwargs...) bestguess(args...; suppress_parity_warning, parity_func, kwargs...) end
+            # else
+                aggregation = function (args...; suppress_parity_warning, kwargs...) bestguess(args...; suppress_parity_warning, parity_func, kwargs...) end
+            # end
+        else
+            !suppress_parity_warning || @warn "Unexpected value for suppress_parity_warning: $(suppress_parity_warning)."
+        end
+        # T = typeof(models)
+        W = typeof(weights)
+        A = typeof(aggregation)
+        new{O,T,A,W}(collect(models), aggregation, weights, info)
+    end
+    
+    function PasoDecisionEnsemble{O}(
+        models::AbstractVector;
+        kwargs...
+    ) where {O}
+        info = (;)
+        PasoDecisionEnsemble{O}(models, nothing, nothing, info; kwargs...)
+    end
+
+    function PasoDecisionEnsemble{O}(
+        models::AbstractVector,
+        info::NamedTuple;
+        kwargs...
+    ) where {O}
+        PasoDecisionEnsemble{O}(models, nothing, nothing, info; kwargs...)
+    end
+
+    function PasoDecisionEnsemble{O}(
+        models::AbstractVector,
+        aggregation::Union{Nothing,Base.Callable},
+        info::NamedTuple = (;);
+        kwargs...
+    ) where {O}
+        PasoDecisionEnsemble{O}(models, aggregation, nothing, info; kwargs...)
+    end
+
+    function PasoDecisionEnsemble{O}(
+        models::AbstractVector,
+        weights::AbstractVector,
+        info::NamedTuple = (;);
+        kwargs...
+    ) where {O}
+        PasoDecisionEnsemble{O}(models, nothing, weights, info; kwargs...)
+    end
+
+    function PasoDecisionEnsemble(
+        models::AbstractVector,
+        args...; kwargs...
+    )
+        @assert length(models) > 0 "Cannot instantiate empty ensemble!"
+        models = wrap.(models)
+        O = Union{outcometype.(models)...}
+        PasoDecisionEnsemble{O}(models, args...; kwargs...)
+    end
+end
+
+mutable struct PasoDecisionTree{O} <: AbstractModel{O}
+    root::M where {M<:Union{LeafModel{O},Branch{O}}}
+    info::NamedTuple
+
+    function PasoDecisionTree(
+        root::Union{LeafModel{O},Branch{O}},
+        info::NamedTuple = (;),
+    ) where {O}
+        new{O}(root, info)
+    end
+
+    function PasoDecisionTree(
+        root::Any,
+        info::NamedTuple = (;),
+    )
+        root = wrap(root)
+        M = typeof(root)
+        O = outcometype(root)
+        @assert M <: Union{LeafModel{O},Branch{O}} "" *
+            "Cannot instantiate PasoDecisionTree{$(O)}(...) with root of " *
+            "type $(typeof(root)). Note that the should be either a LeafModel or a " *
+            "Branch. " *
+            "$(M) <: $(Union{LeafModel,Branch{<:O}}) should hold."
+        new{O}(root, info)
+    end
+
+    function PasoDecisionTree(
+        antecedent::Formula,
+        posconsequent::Any,
+        negconsequent::Any,
+        info::NamedTuple = (;),
+    )
+        posconsequent isa PasoDecisionTree && (posconsequent = root(posconsequent))
+        negconsequent isa PasoDecisionTree && (negconsequent = root(negconsequent))
+        return PasoDecisionTree(Branch(antecedent, posconsequent, negconsequent, info))
+    end
+end
+
+# ---------------------------------------------------------------------------- #
+#                          nuova funzione solemodel                            #
+# ---------------------------------------------------------------------------- #
+# Ora potremmo immaginare una funzione solemodel che evita di costruire le varie strutture 'info'
+# ma si limita a costruire l'albero
+
+function get_featurenames(tree::Union{DT.Ensemble, DT.InfoNode})
+    if !hasproperty(tree, :info)
+        throw(ArgumentError("Please provide featurenames."))
+    end
+    return tree.info.featurenames
+end
+get_classlabels(tree::Union{DT.Ensemble, DT.InfoNode})::Vector{<:SoleModels.Label} = tree.info.classlabels
+
+function get_condition(featid, featval, featurenames)
+    test_operator = (<)
+    feature = isnothing(featurenames) ? VariableValue(featid) : VariableValue(featid, featurenames[featid])
+    return ScalarCondition(feature, test_operator, featval)
+end
+
+function pasomodel(
+    model          :: DT.Ensemble{T,O};
+    featurenames   :: Vector{Symbol}=Symbol[],
+    weights        :: Vector{<:Number}=Number[],
+    classlabels    :: AbstractVector{<:SoleModels.Label}=SoleModels.Label[],
+    keep_condensed :: Bool=false,
+    parity_func    :: Base.Callable=x->first(sort(collect(keys(x))))
+)::DecisionEnsemble where {T,O}
+    isempty(featurenames) && (featurenames = get_featurenames(model))
+    # evito di costruire l'info
+    # if keep_condensed && !isempty(classlabels)
+    #     info = (;
+    #         apply_preprocess=(y->O(findfirst(x -> x == y, classlabels))),
+    #         apply_postprocess=(y->classlabels[y]),
+    #     )
+    #     keep_condensed = !keep_condensed
+    # else
+        info = (;)
+    # end
+
+    trees = map(t -> pasomodel(t, featurenames; classlabels), model.trees)
+    # anche qui: l'idea è di costruire l'info solo in apply!
+    # info = merge(info, (;
+    #         featurenames=featurenames, 
+    #         supporting_predictions=vcat([t.info[:supporting_predictions] for t in trees]...),
+    #         supporting_labels=vcat([t.info[:supporting_labels] for t in trees]...),
+    #     )
+    # )
+
+    isnothing(weights) ?
+        DecisionEnsemble{O}(trees, info; parity_func) :
+        DecisionEnsemble{O}(trees, weights, info; parity_func)
+end
+
+function pasomodel(
+    tree           :: DT.InfoNode{T,O};
+    featurenames   :: Vector{Symbol}=Symbol[],
+    keep_condensed :: Bool=false,
+)::PasoDecisionTree where {T,O}
+    isempty(featurenames) && (featurenames = get_featurenames(tree))
+    classlabels  = hasproperty(tree.info, :classlabels) ? get_classlabels(tree) : SoleModels.Label[]
+
+    root, info = begin
+        if keep_condensed
+            root = pasomodel(tree.node, featurenames; classlabels)
+            # anche qui: niente info
+            # info = (;
+            #     apply_preprocess=(y -> UInt32(findfirst(x -> x == y, classlabels))),
+            #     apply_postprocess=(y -> classlabels[y]),
+            # )
+            info = (;)
+            root, info
+        else
+            root = pasomodel(tree.node, featurenames; classlabels)
+            info = (;)
+            root, info
+        end
+    end
+
+    # info = merge(info, (;
+    #         featurenames=featurenames,
+    #         supporting_predictions=root.info[:supporting_predictions],
+    #         supporting_labels=root.info[:supporting_labels],
+    #     )
+    # )
+
+    PasoDecisionTree(root; info)
+end
+
+function pasomodel(
+    tree         :: DT.Node,
+    featurenames :: Vector{Symbol};
+    classlabels  :: AbstractVector{<:SoleModels.Label}=SoleModels.Label[],
+)::Branch
+    cond = get_condition(tree.featid, tree.featval, featurenames)
+    antecedent = Atom(cond)
+    lefttree  = pasomodel(tree.left, featurenames; classlabels )
+    righttree = pasomodel(tree.right, featurenames; classlabels )
+
+    # a costo di ripetermi...
+    # info = (;
+    #     supporting_predictions = [lefttree.info[:supporting_predictions]..., righttree.info[:supporting_predictions]...],
+    #     supporting_labels = [lefttree.info[:supporting_labels]..., righttree.info[:supporting_labels]...],
+    # )
+    info = (;)
+
+    return Branch(antecedent, lefttree, righttree, info)
+end
+
+function pasomodel(
+    tree         :: DT.Leaf,
+                 :: Vector{Symbol};
+    classlabels  :: AbstractVector{<:SoleModels.Label}=SoleModels.Label[]
+)::ConstantModel
+    prediction, labels = isempty(classlabels) ? 
+        (tree.majority, tree.values) : 
+        (classlabels[tree.majority], classlabels[tree.values])
+
+    # ci siamo capiti
+    # info = (;
+    #     supporting_predictions = fill(prediction, length(labels)),
+    #     supporting_labels = labels,
+    # )
+    info = (;)
+
+    SoleModels.ConstantModel(prediction, info)
+end
+
+# ---------------------------------------------------------------------------- #
+#                     DecisionTree apply from DataFrame X                      #
+# ---------------------------------------------------------------------------- #
+get_featid(s::Branch) = s.antecedent.value.metacond.feature.i_variable
+get_cond(s::Branch)   = s.antecedent.value.metacond.test_operator
+get_thr(s::Branch)    = s.antecedent.value.threshold
+
+function set_predictions(
+    info  :: NamedTuple,
+    preds :: Vector{T},
+    y     :: AbstractVector{S}
+)::NamedTuple where {T,S<:SoleModels.Label}
+    merge(info, (supporting_predictions=preds, supporting_labels=y))
+end
+
+function pasoapply!(
+    solem :: PasoDecisionEnsemble{O,T,A,W},
+    X     :: AbstractDataFrame,
+    y     :: AbstractVector;
+    suppress_parity_warning::Bool=false
+)::Nothing where {O,T,A,W}
+    predictions = permutedims(hcat([pasoapply(s, X, y) for s in get_models(solem)]...))
+    predictions = aggregate(solem, predictions, suppress_parity_warning)
+    solem.info  = set_predictions(solem.info, predictions, y)
+    return nothing
+end
+
+function pasoapply!(
+    solem :: PasoDecisionTree{T},
+    X     :: AbstractDataFrame,
+    y     :: AbstractVector{S}
+)::Nothing where {T, S<:SoleModels.Label}
+    predictions = [pasoapply(solem.root, x) for x in eachrow(X)]
+    solem.info  = set_predictions(solem.info, predictions, y)
+    return nothing
+end
+
+function pasoapply(
+    solebranch :: Branch{T},
+    X          :: AbstractDataFrame,
+    y          :: AbstractVector{S}
+) where {T, S<:SoleModels.Label}
+    predictions     = SoleModels.Label[pasoapply(solebranch, x) for x in eachrow(X)]
+    solebranch.info = set_predictions(solebranch.info, predictions, y)
+    return predictions
+end
+
+function pasoapply(
+    solebranch :: Branch{T},
+    x          :: DataFrameRow
+)::T where T
+    featid, cond, thr = get_featid(solebranch), get_cond(solebranch), get_thr(solebranch)
+    feature_value     = x[featid]
+    condition_result  = cond(feature_value, thr)
+    
+    return condition_result ?
+        pasoapply(solebranch.posconsequent, x) :
+        pasoapply(solebranch.negconsequent, x)
+end
+
+function pasoapply(leaf::ConstantModel{T}, ::DataFrameRow)::T where T
+    leaf.outcome
+end
+
+# D'ora in poi non sarà più possibile usare SoleXplorer, ma dovrò smontare le sue funzioni per includere il codice modificato
+ds = setup_dataset(
+    Xc, yc,
+    model=DecisionTreeClassifier(),
+    resample=Holdout(shuffle=true),
+    train_ratio=0.7,
+    rng=Xoshiro(1)
+)
+# ora dovrei fare il train_test, ma devo esploderlo
+# function _train_test(ds::EitherDataSet)::SoleModel
+#     n_folds   = length(ds.pidxs)
+#     solemodel = Vector{AbstractModel}(undef, n_folds)
+
+#     # TODO this can be parallelizable
+#     @inbounds @views for i in 1:n_folds
+#         train, test = get_train(ds.pidxs[i]), get_test(ds.pidxs[i])
+#         X_test, y_test = get_X(ds)[test, :], get_y(ds)[test]
+
+#         has_xgboost_model(ds) && set_watchlist!(ds, i)
+
+#         MLJ.fit!(ds.mach, rows=train, verbosity=0)
+#         solemodel[i] = apply(ds, X_test, y_test)
+#     end
+
+#     return SoleModel(ds, solemodel)
+# end
+
+# non serve fare un ciclo for: abbiamo, in questo test, un solo albero:
+# non abbiamo usato resamplig strategy
+i = 1
+train, test = get_train(ds.pidxs[i]), get_test(ds.pidxs[i])
+X_test, y_test = get_X(ds)[test, :], get_y(ds)[test]
+MLJ.fit!(ds.mach, rows=train, verbosity=0)
+# solemodel[i] = apply(ds, X_test, y_test)
+featurenames = MLJ.report(ds.mach).features
+solem        = pasomodel(MLJ.fitted_params(ds.mach).tree; featurenames)
+# Attenzione! ora il modello Sole ha la struttura info vuota pure in root,
+# quindi il printmodel ad esso associato da errore
+# lo reputo un problema secondario, andiamo avanti con l'analisi
+pasoapply!(solem, X_test, y_test)
+# logiset      = scalarlogiset(X, allow_propositional = true)
+# pasoapply!(solem, logiset, y)
+# Attenzione 2! printmodel continua a non funzionare!
