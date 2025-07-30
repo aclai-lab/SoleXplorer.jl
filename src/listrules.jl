@@ -389,7 +389,7 @@ end
 _pasorules(m::DecisionTree, i::NamedTuple; kwargs...) = _pasorules(root(m), i; kwargs...)
 
 function _pasorules(
-    m::Paso,
+    m::DecisionEnsemble,
     # aggiunto arg i, root.info
     i::NamedTuple;
     suppress_parity_warning = true,
@@ -505,14 +505,11 @@ test_paso = pasorules(model)
 # Ora arriva la parte più complessa: rivedere completamente il metodo con cui si costruisce
 # l'albero Sole, e il relativo apply.
 # Tenterò di essere il meno possibile invasivo, soprattutto perchè
-# si potrebbe trovare una soluzione molto elegante, a partire dalle strutture dati,
-# ma questo, con molta probabilità, romperebbe molti test
-# e francamente, con Parigi alle porte, non ce lo possiamo permettere.
-# Quindi quello che vorrei proporre è una hackerata.
-# Ricordando il fine ultimo: verificare se possiamo rendere Sole più performante.
-# E ricordando anche che le modifiche che propongo potrebbero essere fallimentari,
-# quindi procederei per piccoli passi; il giusto che basta per non costruire strutture 'info'
-# ad ogni nodo.
+# si potrebbe trovare una soluzione più elegante, a partire dalle strutture dati,
+# ma questo, con molta probabilità, romperebbe diversi test
+# e francamente, con Parigi alle porte, mi viene da pensare che non ce lo possiamo permettere.
+# magari, se questa mia proposta verrà avvallata dalla commissione,
+# ne parleremo ad una prossima Sole Reunion
 
 # ---------------------------------------------------------------------------- #
 #                       nuova struttura DecisionTree                           #
@@ -645,7 +642,9 @@ end
 #                          nuova funzione solemodel                            #
 # ---------------------------------------------------------------------------- #
 # Ora potremmo immaginare una funzione solemodel che evita di costruire le varie strutture 'info'
-# ma si limita a costruire l'albero
+# e si limita a costruire l'albero.
+# l'info root verrà creato successivamente dalla funzione 'apply!'
+# con le predizioni sul dataset di test
 
 function get_featurenames(tree::Union{DT.Ensemble, DT.InfoNode})
     if !hasproperty(tree, :info)
@@ -727,7 +726,7 @@ function pasomodel(
     #     )
     # )
 
-    PasoDecisionTree(root; info)
+    PasoDecisionTree(root, info)
 end
 
 function pasomodel(
@@ -770,109 +769,231 @@ function pasomodel(
 end
 
 # ---------------------------------------------------------------------------- #
-#                     DecisionTree apply from DataFrame X                      #
+#                           nuova funzione apply!                              #
 # ---------------------------------------------------------------------------- #
-get_featid(s::Branch) = s.antecedent.value.metacond.feature.i_variable
-get_cond(s::Branch)   = s.antecedent.value.metacond.test_operator
-get_thr(s::Branch)    = s.antecedent.value.threshold
+# ERROR: type NamedTuple has no field supporting_labels
+# bisogna modificare leggermente l'apply! esistente in modo che non vada a cercare
+# field che abbiamo volutamente lasciato vuoti
+# e che accetti, almeno per ora, PasoDecisionTree
+pasoroot(m::PasoDecisionTree) = m.root
 
-function set_predictions(
-    info  :: NamedTuple,
-    preds :: Vector{T},
-    y     :: AbstractVector{S}
-)::NamedTuple where {T,S<:SoleModels.Label}
-    merge(info, (supporting_predictions=preds, supporting_labels=y))
+function pasoapply!(
+    m::PasoDecisionTree,
+    d::SoleModels.AbstractInterpretationSet,
+    y::AbstractVector;
+    mode = :replace,
+    leavesonly = false,
+    kwargs...
+)
+    y = SoleModels.__apply_pre(m, d, y)
+    preds = pasoapply!(pasoroot(m), d, y;
+        mode = mode,
+        leavesonly = leavesonly,
+        kwargs...
+    )
+    return SoleModels.__apply!(m, mode, preds, y, leavesonly)
 end
 
 function pasoapply!(
-    solem :: PasoDecisionEnsemble{O,T,A,W},
-    X     :: AbstractDataFrame,
-    y     :: AbstractVector;
-    suppress_parity_warning::Bool=false
-)::Nothing where {O,T,A,W}
-    predictions = permutedims(hcat([pasoapply(s, X, y) for s in get_models(solem)]...))
-    predictions = aggregate(solem, predictions, suppress_parity_warning)
-    solem.info  = set_predictions(solem.info, predictions, y)
-    return nothing
+    m::Branch,
+    d::SoleModels.AbstractInterpretationSet,
+    y::AbstractVector;
+    check_args::Tuple = (),
+    check_kwargs::NamedTuple = (;),
+    mode = :replace,
+    leavesonly = false,
+    # show_progress = true,
+    kwargs...
+)
+    # @assert length(y) == ninstances(d) "$(length(y)) == $(ninstances(d))"
+    if mode == :replace
+        # non è più  necessario: si parte già con tutto vuoto
+        # SoleModels.recursivelyemptysupports!(m, leavesonly)
+        mode = :append
+    end
+    checkmask = SoleModels.checkantecedent(m, d, check_args...; check_kwargs...)
+    preds = Vector{outputtype(m)}(undef,length(checkmask))
+    @sync begin
+        if any(checkmask)
+            l = Threads.@spawn apply!(
+                posconsequent(m),
+                slicedataset(d, checkmask; return_view = true),
+                y[checkmask];
+                check_args = check_args,
+                check_kwargs = check_kwargs,
+                mode = mode,
+                leavesonly = leavesonly,
+                kwargs...
+            )
+        end
+        ncheckmask = (!).(checkmask)
+        if any(ncheckmask)
+            r = Threads.@spawn apply!(
+                negconsequent(m),
+                slicedataset(d, ncheckmask; return_view = true),
+                y[ncheckmask];
+                check_args = check_args,
+                check_kwargs = check_kwargs,
+                mode = mode,
+                leavesonly = leavesonly,
+                kwargs...
+            )
+        end
+        if any(checkmask)
+            preds[checkmask] .= fetch(l)
+        end
+        if any(ncheckmask)
+            preds[ncheckmask] .= fetch(r)
+        end
+    end
+    return SoleModels.__apply!(m, mode, preds, y, leavesonly)
 end
 
-function pasoapply!(
-    solem :: PasoDecisionTree{T},
-    X     :: AbstractDataFrame,
-    y     :: AbstractVector{S}
-)::Nothing where {T, S<:SoleModels.Label}
-    predictions = [pasoapply(solem.root, x) for x in eachrow(X)]
-    solem.info  = set_predictions(solem.info, predictions, y)
-    return nothing
+
+
+# ---------------------------------------------------------------------------- #
+#                        nuova SoleXplorer train_test                          #
+# ---------------------------------------------------------------------------- #
+# Per poter fare dei benchmark comparativi, preferirei scrivere una nuova funzione train_test
+# di Sole, che usa le nuove funzioni
+
+function xplorer_apply(
+    ds :: SoleXplorer.DecisionTreeApply,
+    X  :: AbstractDataFrame,
+    y  :: AbstractVector
+)
+    featurenames = MLJ.report(ds.mach).features
+    solem        = pasomodel(MLJ.fitted_params(ds.mach).tree; featurenames)
+    # logiset      = scalarlogiset(X, allow_propositional = true)
+    # apply!(solem, X, y)
+    return solem
 end
 
-function pasoapply(
-    solebranch :: Branch{T},
-    X          :: AbstractDataFrame,
-    y          :: AbstractVector{S}
-) where {T, S<:SoleModels.Label}
-    predictions     = SoleModels.Label[pasoapply(solebranch, x) for x in eachrow(X)]
-    solebranch.info = set_predictions(solebranch.info, predictions, y)
-    return predictions
+function _paso_test(ds::SoleXplorer.EitherDataSet)::SoleXplorer.SoleModel
+    n_folds   = length(ds.pidxs)
+    solemodel = Vector{AbstractModel}(undef, n_folds)
+
+    # TODO this can be parallelizable
+    @inbounds @views for i in 1:n_folds
+        train, test = get_train(ds.pidxs[i]), get_test(ds.pidxs[i])
+        X_test, y_test = get_X(ds)[test, :], get_y(ds)[test]
+
+        SoleXplorer.has_xgboost_model(ds) && SoleXplorer.set_watchlist!(ds, i)
+
+        MLJ.fit!(ds.mach, rows=train, verbosity=0)
+        solemodel[i] = xplorer_apply(ds, X_test, y_test)
+    end
+
+    return SoleXplorer.SoleModel(ds, solemodel)
 end
 
-function pasoapply(
-    solebranch :: Branch{T},
-    x          :: DataFrameRow
-)::T where T
-    featid, cond, thr = get_featid(solebranch), get_cond(solebranch), get_thr(solebranch)
-    feature_value     = x[featid]
-    condition_result  = cond(feature_value, thr)
-    
-    return condition_result ?
-        pasoapply(solebranch.posconsequent, x) :
-        pasoapply(solebranch.negconsequent, x)
+function paso_test(args...; kwargs...)::SoleXplorer.SoleModel
+    ds = SoleXplorer._setup_dataset(args...; kwargs...)
+    _paso_test(ds)
 end
 
-function pasoapply(leaf::ConstantModel{T}, ::DataFrameRow)::T where T
-    leaf.outcome
-end
+paso_test(ds::SoleXplorer.AbstractDataSet)::SoleXplorer.SoleModel = _paso_test(ds)
 
-# D'ora in poi non sarà più possibile usare SoleXplorer, ma dovrò smontare le sue funzioni per includere il codice modificato
-ds = setup_dataset(
-    Xc, yc,
+# per completare l'opera dobbiamo scrivere i metodi di apply! che accettano PasoDecisionTree e PasoEnsemble
+
+# Verifichiamo il corretto funzionamento
+dsc = setup_dataset(
+    Xc, yc;
     model=DecisionTreeClassifier(),
     resample=Holdout(shuffle=true),
-    train_ratio=0.7,
-    rng=Xoshiro(1)
+        train_ratio=0.7,
+        rng=Xoshiro(1),   
 )
-# ora dovrei fare il train_test, ma devo esploderlo
-# function _train_test(ds::EitherDataSet)::SoleModel
-#     n_folds   = length(ds.pidxs)
-#     solemodel = Vector{AbstractModel}(undef, n_folds)
+solemc = paso_test(dsc)
+modelc = symbolic_analysis(
+    dsc, solemc;
+    extractor=InTreesRuleExtractor(),
+    measures=(accuracy, log_loss, confusion_matrix, kappa)
+)
 
-#     # TODO this can be parallelizable
-#     @inbounds @views for i in 1:n_folds
-#         train, test = get_train(ds.pidxs[i]), get_test(ds.pidxs[i])
-#         X_test, y_test = get_X(ds)[test, :], get_y(ds)[test]
 
-#         has_xgboost_model(ds) && set_watchlist!(ds, i)
+train, test = get_train(ds.pidxs[1]), get_test(ds.pidxs[1])
+X_test, y_test = get_X(ds)[test, :], get_y(ds)[test]
+solemc = paso_test(dsc)
+s = solemc.sole[1]
+logiset      = scalarlogiset(X_test, allow_propositional = true)
 
-#         MLJ.fit!(ds.mach, rows=train, verbosity=0)
-#         solemodel[i] = apply(ds, X_test, y_test)
-#     end
+pasoapply!(s, logiset, y_test)
 
-#     return SoleModel(ds, solemodel)
+
+# Esperimento condotto con Sole
+@btime begin
+    symbolic_analysis(
+        Xc, yc,
+        model=DecisionTreeClassifier(),
+        resample=Holdout(shuffle=true),
+        train_ratio=0.7,
+        rng=Xoshiro(1),
+        measures=(accuracy, kappa)
+    )
+end
+# 444.172 μs (3370 allocations: 247.12 KiB)
+
+# ---------------------------------------------------------------------------- #
+#                     DecisionTree apply from DataFrame X                      #
+# ---------------------------------------------------------------------------- #
+# get_featid(s::Branch) = s.antecedent.value.metacond.feature.i_variable
+# get_cond(s::Branch)   = s.antecedent.value.metacond.test_operator
+# get_thr(s::Branch)    = s.antecedent.value.threshold
+
+# function set_predictions(
+#     info  :: NamedTuple,
+#     preds :: Vector{T},
+#     y     :: AbstractVector{S}
+# )::NamedTuple where {T,S<:SoleModels.Label}
+#     merge(info, (supporting_predictions=preds, supporting_labels=y))
 # end
 
-# non serve fare un ciclo for: abbiamo, in questo test, un solo albero:
-# non abbiamo usato resamplig strategy
-i = 1
-train, test = get_train(ds.pidxs[i]), get_test(ds.pidxs[i])
-X_test, y_test = get_X(ds)[test, :], get_y(ds)[test]
-MLJ.fit!(ds.mach, rows=train, verbosity=0)
-# solemodel[i] = apply(ds, X_test, y_test)
-featurenames = MLJ.report(ds.mach).features
-solem        = pasomodel(MLJ.fitted_params(ds.mach).tree; featurenames)
-# Attenzione! ora il modello Sole ha la struttura info vuota pure in root,
-# quindi il printmodel ad esso associato da errore
-# lo reputo un problema secondario, andiamo avanti con l'analisi
-pasoapply!(solem, X_test, y_test)
-# logiset      = scalarlogiset(X, allow_propositional = true)
-# pasoapply!(solem, logiset, y)
-# Attenzione 2! printmodel continua a non funzionare!
+# function pasoapply!(
+#     solem :: PasoDecisionEnsemble{O,T,A,W},
+#     X     :: AbstractDataFrame,
+#     y     :: AbstractVector;
+#     suppress_parity_warning::Bool=false
+# )::Nothing where {O,T,A,W}
+#     predictions = permutedims(hcat([pasoapply(s, X, y) for s in get_models(solem)]...))
+#     predictions = aggregate(solem, predictions, suppress_parity_warning)
+#     solem.info  = set_predictions(solem.info, predictions, y)
+#     return nothing
+# end
+
+# function pasoapply!(
+#     solem :: PasoDecisionTree{T},
+#     X     :: AbstractDataFrame,
+#     y     :: AbstractVector{S}
+# )::Nothing where {T, S<:SoleModels.Label}
+#     predictions = [pasoapply(solem.root, x) for x in eachrow(X)]
+#     solem.info  = set_predictions(solem.info, predictions, y)
+#     return nothing
+# end
+
+# function pasoapply(
+#     solebranch :: Branch{T},
+#     X          :: AbstractDataFrame,
+#     y          :: AbstractVector{S}
+# ) where {T, S<:SoleModels.Label}
+#     predictions     = SoleModels.Label[pasoapply(solebranch, x) for x in eachrow(X)]
+#     solebranch.info = set_predictions(solebranch.info, predictions, y)
+#     return predictions
+# end
+
+# function pasoapply(
+#     solebranch :: Branch{T},
+#     x          :: DataFrameRow
+# )::T where T
+#     featid, cond, thr = get_featid(solebranch), get_cond(solebranch), get_thr(solebranch)
+#     feature_value     = x[featid]
+#     condition_result  = cond(feature_value, thr)
+    
+#     return condition_result ?
+#         pasoapply(solebranch.posconsequent, x) :
+#         pasoapply(solebranch.negconsequent, x)
+# end
+
+# function pasoapply(leaf::ConstantModel{T}, ::DataFrameRow)::T where T
+#     leaf.outcome
+# end
