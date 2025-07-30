@@ -114,7 +114,7 @@ function _train_test(ds::EitherDataSet)::SoleModel
 end
 
 function train_test(args...; kwargs...)::SoleModel
-    ds = _prepare_dataset(args...; kwargs...)
+    ds = _setup_dataset(args...; kwargs...)
     _train_test(ds)
 end
 
