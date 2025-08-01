@@ -189,7 +189,7 @@ end
                         rng=Xoshiro(seed),
                         measures=(rms,)
                     )
-                    sxhat = model.sole.sole[1].info.supporting_predictions
+                    sxhat = solemodels(model)[1].info.supporting_predictions
                     yhat = MLJ.predict_mode(model.ds.mach, model.ds.mach.args[1].data[model.ds.pidxs[1].test, :])
                     sx_rms = model.measures.measures_values[1]
                     mlj_rms = rms(yhat, model.ds.mach.args[2].data[model.ds.pidxs[1].test])
