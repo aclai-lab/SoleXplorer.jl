@@ -37,7 +37,7 @@ const OptMeasures = Optional{Measures}
 # per ora i tipi di rules e measures non hanno {} ma valuta in futuro se propagare
 mutable struct ModelSet{S} <: AbstractModelSet
     ds       :: EitherDataSet
-    sole     :: SoleModel{S}
+    sole     :: Vector{AbstractModel}
     rules    :: OptRules
     measures :: OptMeasures
 
@@ -47,7 +47,7 @@ mutable struct ModelSet{S} <: AbstractModelSet
         rules    :: OptRules = nothing,
         measures :: OptMeasures = nothing
     ) where S
-        new{S}(ds, sole, rules, measures)
+        new{S}(ds, solemodels(sole), rules, measures)
     end
 end
 
@@ -221,3 +221,8 @@ function symbolic_analysis(
     solem = _train_test(ds)
     _symbolic_analysis(ds, solem; extractor, measures)
 end
+
+# ---------------------------------------------------------------------------- #
+#                                 constructors                                 #
+# ---------------------------------------------------------------------------- #
+solemodels(m::ModelSet) = m.sole
