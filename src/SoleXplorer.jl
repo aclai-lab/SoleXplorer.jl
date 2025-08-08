@@ -35,26 +35,18 @@ symbolic learning algorithms, rule extraction methods, and modal timeseries feat
 # Typical Workflow
 
 ```julia
-using SoleXplorer
+using SoleXplorer, MLJ
 
-# Load and prepare data
-dataset = load_arff_dataset("path/to/data.arff")
-X, y = setup_dataset(dataset)
-
-# Apply windowing for time series
-windowed_data = MovingWindow(window_size=10)(X)
-
-# Train a modal decision tree
-model = ModalDecisionTree()
-mach = machine(model, windowed_data, y)
-fit!(mach)
-
-# Extract rules for explainability
-extractor = InTreesRuleExtractor()
-rules = extractrules(mach, extractor)
-
-# Evaluate performance
-cv_results = evaluate!(mach, resampling=CV(nfolds=5), measure=accuracy)
+range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
+modelc = symbolic_analysis(
+    Xc, yc;
+    model=DecisionTreeClassifier(),
+    resample=CV(nfolds=5, shuffle=true),
+    rng=Xoshiro(1),
+    tuning=(tuning=Grid(resolution=10), resampling=CV(nfolds=3), range, measure=accuracy, repeats=2),
+    extractor=InTreesRuleExtractor(),
+    measures=(accuracy, log_loss, confusion_matrix, kappa)      
+)
 ```
 
 """
