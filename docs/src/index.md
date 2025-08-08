@@ -19,7 +19,7 @@ using SoleXplorer
 to load the package.
 
 ## Overview
-Per prima cosa carichiamo un dataset:
+First, let's load a dataset:
 ```julia
 using MLJ, DataFrames
 
@@ -27,14 +27,14 @@ Xc, yc = @load_iris
 Xc = DataFrame(Xc)
 ```
 
-SoleXplorer opera attraverso 3 funzioni ad alto livello, il cui utilizzo è pensato sequenziale:
+SoleXplorer operates through 3 high-level functions, designed to be used sequentially:
 
-setup_dataset(): prepara il dataset all'analisi, qui si settano i parametri necessari alla formattazione del dataset e della relativa macchina MLJ.
-- si sceglie il modello da utilizzare.
-- si decide la resample (o cross validation) strategia, con relativi valori di train, validation e test ratio.
-- si decide la strategia di tuning da applicare.
-- si setta il rng seed globale.
-- In caso di dataset di serie temporali è possibile settare features, finestre per il tipo di compressione adatta al modello scelto.
+**setup_dataset()**: prepares the dataset for analysis, where you set the parameters needed for dataset formatting and the related MLJ machine.
+- choose the model to use.
+- decide the resampling (or cross validation) strategy, with related train, validation and test ratio values.
+- decide the tuning strategy to apply.
+- set the global RNG seed.
+- For time series datasets, it's possible to set features, windows for the type of compression suitable for the chosen model.
 
 ```julia
 dsc = setup_dataset(
@@ -46,18 +46,18 @@ dsc = setup_dataset(
 )
 ```
 
-train_test(): è il motore di SoleXplorer, costruito sopra MLJ e Sole:
-- allena la macchina tramite MLJ
-- converte il risultato in una struttura Logica tramite SoleModels
-- testa il modello
+**train_test()**: is the engine of SoleXplorer, built on top of MLJ and Sole:
+- trains the machine through MLJ.
+- converts the result into a Logic structure through SoleModels.
+- tests the model.
 
 ```julia
 solemc = train_test(dsc)
 ```
 
-symbolic_analysis(): estrae le informazioni richieste
-- possiamo specificare il tipo e i relativi parametri di estrazione regole
-- possiamo richiedere le metriche standard di analisi (accuratezza, rms, ...)
+**symbolic_analysis()**: extracts the requested information
+- we can specify the type and related parameters for rule extraction
+- we can request standard analysis metrics (accuracy, rms, ...).
 
 ```julia
 modelc = symbolic_analysis(
@@ -67,7 +67,7 @@ modelc = symbolic_analysis(
 )
 ```
 
-Ma è anche possibile condensare i vari parametri in un unica chiamata a symbolic_analysis:
+But it's also possible to condense the various parameters into a single call to symbolic_analysis:
 
 ```julia
 range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
@@ -82,8 +82,8 @@ modelc = symbolic_analysis(
 )
 ```
 
-Una delle peculiarità di SoleXplorer è quello di essere il più possibile automatizzato, per renderlo facilmente utilizzabile anche ai neofiti del machine learning.
-Il modo più semplice per lanciare un analisi con SoleXplorer è:
+One of the peculiarities of SoleXplorer is being as automated as possible, to make it easily usable even for machine learning newcomers.
+The simplest way to launch an analysis with SoleXplorer is:
 
 ```julia
 modelc = symbolic_analysis(Xc, yc)
