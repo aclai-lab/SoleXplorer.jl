@@ -54,7 +54,13 @@ end
 # ---------------------------------------------------------------------------- #
 #                                 utilities                                    #
 # ---------------------------------------------------------------------------- #
-supporting_predictions(solem::AbstractModel) = solem.info.supporting_predictions
+# supporting_predictions(solem::AbstractModel) = solem.info.supporting_predictions
+
+function supporting_predictions(solem::AbstractModel)
+    return solem.info isa Base.RefValue ?
+        solem.info[].supporting_predictions :
+        solem.info.supporting_predictions
+end
 
 function sole_predict(solem::AbstractModel, y_test::AbstractVector{<:Label})
     preds = supporting_predictions(solem)
