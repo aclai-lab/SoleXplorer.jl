@@ -61,16 +61,6 @@ const OptVector = Optional{AbstractVector}
 
 Return a default model appropriate for the target variable type.
 
-# Arguments
-- `y::AbstractVector`: Target variable vector
-
-# Returns
-- `DecisionTreeClassifier()` if `eltype(y) <: CLabel` (classification)
-- `DecisionTreeRegressor()` if `eltype(y) <: RLabel` (regression)
-
-# Throws
-- `ArgumentError`: If the target type is not supported
-
 This function is used when no explicit model is provided to `setup_dataset`,
 automatically selecting between classification and regression.
 """
@@ -91,13 +81,6 @@ end
     set_rng!(m::MLJ.Model, rng::AbstractRNG)::MLJ.Model
 
 Set the random number generator for a model that supports it.
-
-# Arguments
-- `m::MLJ.Model`: The model to modify
-- `rng::AbstractRNG`: The random number generator to assign
-
-# Returns
-- The modified model with `rng` field set
 
 This function mutates the model's `rng` field if it exists, ensuring
 reproducible results across training sessions.
@@ -181,13 +164,6 @@ end
     code_dataset!(X::AbstractDataFrame, y::AbstractVector)
 
 Convenience method to encode both features and target simultaneously.
-
-# Arguments
-- `X::AbstractDataFrame`: The feature DataFrame to encode
-- `y::AbstractVector`: The target vector to encode
-
-# Returns
-- Tuple of (encoded_X, encoded_y)
 """
 code_dataset!(X::AbstractDataFrame, y::AbstractVector) = code_dataset!(X), code_dataset!(y)
 
@@ -244,7 +220,7 @@ end
 """
     ModalDataSet{M} <: AbstractDataSet
 
-Dataset for modal logic algorithms that work with temporal structures.
+Wrapper for modal logic algorithms that work with temporal structures.
 
 # Fields
 - `mach::MLJ.Machine`: The underlying MLJ machine
@@ -265,7 +241,7 @@ end
 """
     DataSet(mach, pidxs, pinfo; tinfo=nothing)
 
-Construct an appropriate dataset type based on treatment information.
+Construct an appropriate dataset wrapper based on treatment information.
 
 # Arguments
 - `mach::MLJ.Machine{M}`: The underlying MLJ machine
@@ -442,7 +418,6 @@ setup_dataset(args...; kwargs...) = _setup_dataset(args...; kwargs...)
 Convenience method when target variable is a column in the feature DataFrame.
 
 See [`_setup_dataset`](@ref) for detailed parameter descriptions.
-
 """
 function setup_dataset(
     X::AbstractDataFrame,
@@ -456,7 +431,6 @@ end
     length(ds::EitherDataSet)
 
 Return the number of samples in the dataset.
-
 """
 Base.length(ds::EitherDataSet) = length(ds.pidxs)
 
@@ -464,15 +438,13 @@ Base.length(ds::EitherDataSet) = length(ds.pidxs)
     get_y_test(ds::EitherDataSet)::AbstractVector
 
 Extract test target values for each partition in the dataset.
-
 """
 get_y_test(ds::EitherDataSet)::AbstractVector = 
     [@views ds.mach.args[2].data[ds.pidxs[i].test] for i in 1:length(ds)]
 
-    """
+"""
     get_mach_model(ds::EitherDataSet)::MLJ.Model
 
 Extract the model from the dataset's MLJ machine.
-
 """
 get_mach_model(ds::EitherDataSet)::MLJ.Model = ds.mach.model
