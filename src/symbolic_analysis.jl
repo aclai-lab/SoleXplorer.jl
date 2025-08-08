@@ -58,6 +58,24 @@ struct Measures <: AbstractMeasures
     operations      :: AbstractVector
 end
 
+function Base.show(io::IO, m::Measures)
+    print(io, "Measures(")
+    for (i, (measure, value)) in enumerate(zip(m.measures, m.measures_values))
+        if i > 1
+            print(io, ", ")
+        end
+        print(io, "$(measure) = $(value)")
+    end
+    print(io, ")")
+end
+
+function Base.show(io::IO, ::MIME"text/plain", m::Measures)
+    println(io, "Measures:")
+    for (measure, value) in zip(m.measures, m.measures_values)
+        println(io, "  $(measure) = $(value)")
+    end
+end
+
 # ---------------------------------------------------------------------------- #
 #                                   types                                      #
 # ---------------------------------------------------------------------------- #
@@ -91,6 +109,39 @@ mutable struct ModelSet{S} <: AbstractModelSet
         measures :: OptMeasures = nothing
     ) where S
         new{S}(ds, solemodels(sole), rules, measures)
+    end
+end
+
+function Base.show(io::IO, m::ModelSet{S}) where S
+    print(io, "ModelSet{$S}(")
+    print(io, "models=$(length(m.sole))")
+    if !isnothing(m.rules)
+        print(io, ", rules=$(length(m.rules.rules))")
+    end
+    if !isnothing(m.measures)
+        print(io, ", measures=$(length(m.measures.measures))")
+    end
+    print(io, ")")
+end
+
+function Base.show(io::IO, ::MIME"text/plain", m::ModelSet{S}) where S
+    println(io, "ModelSet{$S}:")
+    println(io, "  Dataset: $(typeof(m.ds))")
+    println(io, "  Models: $(length(m.sole)) symbolic models")
+    
+    if !isnothing(m.rules)
+        println(io, "  Rules: $(length(m.rules.rules)) extracted rules")
+    else
+        println(io, "  Rules: none")
+    end
+    
+    if !isnothing(m.measures)
+        println(io, "  Measures:")
+        for (measure, value) in zip(m.measures.measures, m.measures.measures_values)
+            println(io, "    $(measure) = $(value)")
+        end
+    else
+        println(io, "  Measures: none")
     end
 end
 
@@ -131,6 +182,18 @@ end
 Return deterministic predictions from symbolic model.
 """
 sole_predict_mode(solem::AbstractModel, y_test::AbstractVector{<:Label}) = supporting_predictions(solem)
+
+"""
+    _DefaultMeasures(y::AbstractVector)::Tuple{Vararg{FussyMeasure}}
+
+Return default measures appropriate for the target variable type.
+
+This function is used when no explicit measures are provided,
+automatically selecting between classification and regression.
+"""
+function _DefaultMeasures(y::AbstractVector)::Tuple{Vararg{FussyMeasure}}
+    return eltype(y) <: CLabel ? (accuracy, kappa) : (rms, l1, l2)
+end
 
 # ---------------------------------------------------------------------------- #
 #                               get operations                                 #
@@ -217,8 +280,8 @@ function eval_measures(
     measurements_vector = mapreduce(vcat, 1:nfolds) do k
         yhat_given_operation = Dict(op=>op(solemodels(solem)[k], y_test[k]) for op in unique(operations))
 
-        # costretto a convertirlo a stringa in quanto certe misure di statistical measures non accettano
-        # categorical array, tipo confusion matrix e kappa
+        # Forced to convert it to string as certain StatisticalMeasures measures don't accept
+        # categorical arrays, such as confusion matrix and kappa
         test = eltype(y_test[k]) <: CLabel ? String.(y_test[k]) : y_test[k]
 
         [map(measures, operations) do m, op
@@ -278,11 +341,10 @@ function _symbolic_analysis(
         extractrules(extractor, ds, solem)
     end
 
-    measures = isempty(measures) ? nothing : begin
-        y_test = get_y_test(ds)
-        # all_classes = unique(Iterators.flatten(y_test))
-        eval_measures(ds, solem, measures, y_test)
-    end
+    y_test = get_y_test(ds)
+    isempty(measures) && (measures = _DefaultMeasures(first(y_test)))
+    # all_classes = unique(Iterators.flatten(y_test))
+    measures = eval_measures(ds, solem, measures, y_test)
 
     return ModelSet(ds, solem; rules, measures)
 end
