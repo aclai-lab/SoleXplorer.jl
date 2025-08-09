@@ -50,6 +50,23 @@ function extractrules(
     return DecisionSet(extracted)
 end
 
+# ---------------------------------------------------------------------------- #
+#                             BATreesRuleExtractor                             #
+# ---------------------------------------------------------------------------- #
+function extractrules(
+    extractor :: BATreesRuleExtractor,
+    params    :: NamedTuple,
+    ds        :: EitherDataSet,
+    solem     :: SoleModel
+)::Rules
+    extracted = reduce(vcat, map(enumerate(solemodels(solem))) do (i, model)
+        lumen_result = RuleExtraction.modalextractrules(extractor, model; params...)
+        lumen_result.decision_set.rules
+    end)
+
+    return DecisionSet(extracted)
+end
+
 
 
 # # ---------------------------------------------------------------------------- #

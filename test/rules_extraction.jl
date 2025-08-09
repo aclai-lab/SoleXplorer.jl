@@ -54,6 +54,21 @@ modelc = symbolic_analysis(
     extractor=LumenRuleExtractor(invalid=true)
 )
 
+# ---------------------------------------------------------------------------- #
+#                          batrees rules extraction                            #
+# ---------------------------------------------------------------------------- #
+modelc = symbolic_analysis(
+    dsc, solemc;
+    extractor=BATreesRuleExtractor(dataset_name="Sole_Analysis")
+)
 
+modelc = symbolic_analysis(
+    dsc, solemc;
+    extractor=BATreesRuleExtractor(dataset_name="Sole_Analysis", num_trees=5)
+)
+@test rules(modelc) isa SX.DecisionSet
 
-julia> nt = to_namedtuple(a)
+@test_throws MethodError  symbolic_analysis(
+    dsc, solemc;
+    extractor=BATreesRuleExtractor(invalid=true)
+)
