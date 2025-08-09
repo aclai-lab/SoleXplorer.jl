@@ -56,7 +56,7 @@ solemc = train_test(dsc)
 ```
 
 **symbolic_analysis()**: extracts the requested information
-- we can specify the type and related parameters for rule extraction
+- we can specify the type and related parameters for rule extraction.
 - we can request standard analysis metrics (accuracy, rms, ...).
 
 ```julia
