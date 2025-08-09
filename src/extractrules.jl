@@ -42,12 +42,10 @@ function extractrules(
     ds        :: EitherDataSet,
     solem     :: SoleModel
 )::Rules
-    extracted = reduce(vcat, map(enumerate(solemodels(solem))) do (i, model)
+    reduce(vcat, map(enumerate(solemodels(solem))) do (i, model)
         lumen_result = RuleExtraction.modalextractrules(extractor, model; params...)
-        lumen_result.decision_set.rules
+        lumen_result.decision_set
     end)
-
-    return DecisionSet(extracted)
 end
 
 # ---------------------------------------------------------------------------- #
@@ -59,12 +57,25 @@ function extractrules(
     ds        :: EitherDataSet,
     solem     :: SoleModel
 )::Rules
-    extracted = reduce(vcat, map(enumerate(solemodels(solem))) do (i, model)
-        lumen_result = RuleExtraction.modalextractrules(extractor, model; params...)
-        lumen_result.decision_set.rules
+    reduce(vcat, map(enumerate(solemodels(solem))) do (i, model)
+        batrees_result = RuleExtraction.modalextractrules(extractor, model; params...)
     end)
+end
 
-    return DecisionSet(extracted)
+# ---------------------------------------------------------------------------- #
+#                          RULECOSIPLUSRuleExtractor                           #
+# ---------------------------------------------------------------------------- #
+function extractrules(
+    extractor :: RULECOSIPLUSRuleExtractor,
+    params    :: NamedTuple,
+    ds        :: EitherDataSet,
+    solem     :: SoleModel
+)::Rules
+    reduce(vcat, map(enumerate(solemodels(solem))) do (i, model)
+        test = get_test(ds.pidxs[i])
+        X_test, y_test = get_X(ds)[test, :], get_y(ds)[test]
+        rulecosi_result = RuleExtraction.modalextractrules(extractor, model, X_test, y_test; params...)
+    end)
 end
 
 

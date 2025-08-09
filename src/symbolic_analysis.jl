@@ -244,7 +244,8 @@ function _symbolic_analysis(
     solem::SoleModel;
     extractor::Union{Nothing,RuleExtractor,Tuple{RuleExtractor,NamedTuple}}=nothing,
     measures::Tuple{Vararg{FussyMeasure}}=(),
-)::ModelSet
+# )::ModelSet
+)
     rules = isnothing(extractor)  ? nothing : begin
         # TODO propaga rng, dovrai fare intrees mutable struct
         if extractor isa Tuple
@@ -261,14 +262,16 @@ function _symbolic_analysis(
     # all_classes = unique(Iterators.flatten(y_test))
     measures = eval_measures(ds, solem, measures, y_test)
 
-    return ModelSet(ds, solem; rules, measures)
+    # return ModelSet(ds, solem; rules, measures)
+    return rules
 end
 
 function symbolic_analysis(
     ds::EitherDataSet,
     solem::SoleModel;
     kwargs...
-)::ModelSet
+# )::ModelSet
+)
     _symbolic_analysis(ds, solem; kwargs...)
 end
 
