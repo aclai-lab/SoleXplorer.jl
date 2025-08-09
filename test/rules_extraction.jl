@@ -26,7 +26,7 @@ modelc = symbolic_analysis(
 
 modelc = symbolic_analysis(
     dsc, solemc;
-    extractor=InTreesRuleExtractor(;min_coverage=99.0)
+    extractor=InTreesRuleExtractor(min_coverage=1.0)
 )
 @test rules(modelc) isa SX.DecisionSet
 
@@ -45,6 +45,15 @@ modelc = symbolic_analysis(
 
 modelc = symbolic_analysis(
     dsc, solemc;
-    extractor=LumenRuleExtractor(;minimization_scheme=:mitespresso)
+    extractor=LumenRuleExtractor(minimization_scheme=:mitespresso)
 )
 @test rules(modelc) isa SX.DecisionSet
+
+@test_throws MethodError  symbolic_analysis(
+    dsc, solemc;
+    extractor=LumenRuleExtractor(invalid=true)
+)
+
+
+
+julia> nt = to_namedtuple(a)

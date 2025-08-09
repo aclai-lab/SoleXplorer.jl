@@ -11,6 +11,8 @@ function (RE::Type{<:RuleExtractor})(;kwargs...)
     return (RE(), (;kwargs...))
 end
 
+to_namedtuple(x) = NamedTuple{fieldnames(typeof(x))}(ntuple(i -> getfield(x, i), fieldcount(typeof(x))))
+
 # ---------------------------------------------------------------------------- #
 #                             InTreesRuleExtractor                             #
 # ---------------------------------------------------------------------------- #
@@ -20,7 +22,7 @@ function extractrules(
     ds        :: EitherDataSet,
     solem     :: SoleModel
 )::Rules
-@show params
+    params = to_namedtuple(extractor)
     extracted = reduce(vcat, map(enumerate(solemodels(solem))) do (i, model)
         test = get_test(ds.pidxs[i])
         X_test, y_test = get_X(ds)[test, :], get_y(ds)[test]
