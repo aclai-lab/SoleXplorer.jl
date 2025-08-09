@@ -26,11 +26,25 @@ modelc = symbolic_analysis(
 
 modelc = symbolic_analysis(
     dsc, solemc;
-    extractor=InTreesRuleExtractor(min_coverage=0.25)
+    extractor=InTreesRuleExtractor(;min_coverage=99.0)
 )
 @test rules(modelc) isa SX.DecisionSet
 
 @test_throws MethodError  symbolic_analysis(
     dsc, solemc;
-    extractor=InTreesRuleExtractor(invalid=true)
+    extractor=InTreesRuleExtractor(;invalid=true)
 )
+
+# ---------------------------------------------------------------------------- #
+#                           lumen rules extraction                             #
+# ---------------------------------------------------------------------------- #
+modelc = symbolic_analysis(
+    dsc, solemc;
+    extractor=LumenRuleExtractor()
+)
+
+modelc = symbolic_analysis(
+    dsc, solemc;
+    extractor=LumenRuleExtractor(;minimization_scheme=:mitespresso)
+)
+@test rules(modelc) isa SX.DecisionSet
