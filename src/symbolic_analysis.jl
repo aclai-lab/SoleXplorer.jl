@@ -283,3 +283,4 @@ end
 #                                 constructors                                 #
 # ---------------------------------------------------------------------------- #
 solemodels(m::ModelSet) = m.sole
+rules(m::ModelSet) = m.rules
