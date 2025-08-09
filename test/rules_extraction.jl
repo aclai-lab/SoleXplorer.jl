@@ -137,3 +137,47 @@ modelc = symbolic_analysis(
     dsc, solemc;
     extractor=RULECOSIPLUSRuleExtractor(invalid=true)
 )
+
+# ---------------------------------------------------------------------------- #
+#                           refne rules extraction                             #
+# ---------------------------------------------------------------------------- #
+dsc = setup_dataset(
+    Xc, yc;
+    model=RandomForestClassifier(n_trees=2),
+    resample=Holdout(;shuffle=true),
+    rng=Xoshiro(1),   
+)
+solemc = train_test(dsc)
+
+modelc = symbolic_analysis(
+    dsc, solemc;
+    extractor=REFNERuleExtractor(L=2)
+)
+@test rules(modelc) isa SX.DecisionSet
+
+@test_throws MethodError  symbolic_analysis(
+    dsc, solemc;
+    extractor=REFNERuleExtractor(invalid=true)
+)
+
+# ---------------------------------------------------------------------------- #
+#                          trepan rules extraction                             #
+# ---------------------------------------------------------------------------- #
+dsc = setup_dataset(
+    Xc, yc;
+    model=RandomForestClassifier(n_trees=2),
+    resample=Holdout(;shuffle=true),
+    rng=Xoshiro(1),   
+)
+solemc = train_test(dsc)
+
+modelc = symbolic_analysis(
+    dsc, solemc;
+    extractor=TREPANRuleExtractor()
+)
+@test rules(modelc) isa SX.DecisionSet
+
+@test_throws MethodError  symbolic_analysis(
+    dsc, solemc;
+    extractor=TREPANRuleExtractor(invalid=true)
+)
