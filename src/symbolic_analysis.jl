@@ -405,3 +405,10 @@ end
 Extract the vector of symbolic models from a ModelSet.
 """
 solemodels(m::ModelSet) = m.sole
+
+"""
+    rules(m::ModelSet) -> DecisionSet
+
+Extract the vector of rules from a ModelSet.
+"""
+rules(m::ModelSet) = m.rules

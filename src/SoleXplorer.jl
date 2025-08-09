@@ -152,6 +152,6 @@ export train_test
 include("extractrules.jl")
 include("symbolic_analysis.jl")
 export symbolic_analysis
-export solemodels
+export solemodels, rules
 
 end
