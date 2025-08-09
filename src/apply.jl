@@ -8,16 +8,6 @@ TunedMach(T) = Union{
     ModalDataSet{<:MLJTuning.EitherTunedModel{<:Any, <:T}},
 }
 
-const DecisionTreeApply = Union{
-    PropositionalDataSet{DecisionTreeClassifier}, 
-    PropositionalDataSet{DecisionTreeRegressor},
-}
-
-const TunedDecisionTreeApply = Union{
-    TunedMach(DecisionTreeClassifier),
-    TunedMach(DecisionTreeRegressor)
-}
-
 const ModalDecisionTreeApply = Union{
     ModalDataSet{ModalDecisionTree},
     ModalDataSet{ModalRandomForest},
@@ -47,24 +37,26 @@ get_classlabels(encoding)  = [string(encoding[i]) for i in sort(keys(encoding) |
 #                             DecisionTree package                             #
 # ---------------------------------------------------------------------------- #
 function apply(
-    ds :: DecisionTreeApply,
+    ds :: PropositionalDataSet{DecisionTreeClassifier},
     X  :: AbstractDataFrame,
     y  :: AbstractVector
 )
     featurenames = MLJ.report(ds.mach).features
-    solem        = solemodel(MLJ.fitted_params(ds.mach).tree; featurenames)
+    classlabels  = sort(MLJ.report(ds.mach).classes_seen)
+    solem        = solemodel(MLJ.fitted_params(ds.mach).tree; featurenames, classlabels)
     logiset      = scalarlogiset(X, allow_propositional = true)
     apply!(solem, logiset, y)
     return solem
 end
 
 function apply(
-    ds :: TunedDecisionTreeApply,
+    ds :: TunedMach(DecisionTreeClassifier),
     X  :: AbstractDataFrame,
     y  :: AbstractVector
 )
     featurenames = MLJ.report(ds.mach).best_report.features
-    solem = solemodel(MLJ.fitted_params(ds.mach).best_fitted_params.tree; featurenames)
+    classlabels  = sort(MLJ.report(ds.mach).best_report.classes_seen)
+    solem        = solemodel(MLJ.fitted_params(ds.mach).best_fitted_params.tree; featurenames, classlabels)
     logiset      = scalarlogiset(X, allow_propositional = true)
     apply!(solem, logiset, y)
     return solem
@@ -76,9 +68,9 @@ function apply(
     X  :: AbstractDataFrame,
     y  :: AbstractVector
 )
-    classlabels  = ds.mach.fitresult[2][sortperm((ds.mach).fitresult[3])]
     featurenames = MLJ.report(ds.mach).features
-    solem        = solemodel(MLJ.fitted_params(ds.mach).forest; classlabels, featurenames)
+    classlabels  = ds.mach.fitresult[2][sortperm((ds.mach).fitresult[3])]
+    solem        = solemodel(MLJ.fitted_params(ds.mach).forest; featurenames, classlabels)
     logiset      = scalarlogiset(X, allow_propositional = true)
     apply!(solem, logiset, y)
     return solem
@@ -89,9 +81,33 @@ function apply(
     X  :: AbstractDataFrame,
     y  :: AbstractVector
 )
-    classlabels  = ds.mach.fitresult.fitresult[2][sortperm((ds.mach).fitresult.fitresult[3])]
     featurenames = MLJ.report(ds.mach).best_report.features
-    solem        = solemodel(MLJ.fitted_params(ds.mach).best_fitted_params.forest; classlabels, featurenames)
+    classlabels  = ds.mach.fitresult.fitresult[2][sortperm((ds.mach).fitresult.fitresult[3])]
+    solem        = solemodel(MLJ.fitted_params(ds.mach).best_fitted_params.forest; featurenames, classlabels)
+    logiset      = scalarlogiset(X, allow_propositional = true)
+    apply!(solem, logiset, y)
+    return solem
+end
+
+function apply(
+    ds :: PropositionalDataSet{DecisionTreeRegressor},
+    X  :: AbstractDataFrame,
+    y  :: AbstractVector
+)
+    featurenames = MLJ.report(ds.mach).features
+    solem        = solemodel(MLJ.fitted_params(ds.mach).tree; featurenames)
+    logiset      = scalarlogiset(X, allow_propositional = true)
+    apply!(solem, logiset, y)
+    return solem
+end
+
+function apply(
+    ds :: TunedMach(DecisionTreeRegressor),
+    X  :: AbstractDataFrame,
+    y  :: AbstractVector
+)
+    featurenames = MLJ.report(ds.mach).best_report.features
+    solem        = solemodel(MLJ.fitted_params(ds.mach).best_fitted_params.tree; featurenames)
     logiset      = scalarlogiset(X, allow_propositional = true)
     apply!(solem, logiset, y)
     return solem
@@ -127,10 +143,10 @@ function apply(
     X  :: AbstractDataFrame,
     y  :: AbstractVector
 )
-    weights      = ds.mach.fitresult[2]
-    classlabels  = sort(string.(ds.mach.fitresult[3]))
     featurenames = MLJ.report(ds.mach).features
-    solem        = solemodel(MLJ.fitted_params(ds.mach).stumps; weights, classlabels, featurenames)
+    classlabels  = sort(string.(ds.mach.fitresult[3]))
+    weights      = ds.mach.fitresult[2]
+    solem        = solemodel(MLJ.fitted_params(ds.mach).stumps; featurenames, classlabels, weights)
     logiset      = scalarlogiset(X, allow_propositional = true)
     apply!(solem, logiset, y)
     return solem
@@ -141,10 +157,10 @@ function apply(
     X  :: AbstractDataFrame,
     y  :: AbstractVector
 )
-    weights      = ds.mach.fitresult.fitresult[2]
-    classlabels  = sort(ds.mach.fitresult.fitresult[3])
     featurenames = MLJ.report(ds.mach).best_report.features
-    solem        = solemodel(MLJ.fitted_params(ds.mach).best_fitted_params.stumps; weights, classlabels, featurenames)
+    classlabels  = sort(ds.mach.fitresult.fitresult[3])
+    weights      = ds.mach.fitresult.fitresult[2]
+    solem        = solemodel(MLJ.fitted_params(ds.mach).best_fitted_params.stumps; featurenames, classlabels, weights)
     logiset      = scalarlogiset(X, allow_propositional = true)
     apply!(solem, logiset, y)
     return solem
@@ -181,9 +197,9 @@ function apply(
 )
     trees        = XGBoost.trees(ds.mach.fitresult[1])
     encoding     = get_encoding(ds.mach.fitresult[2])
-    classlabels  = get_classlabels(encoding)
     featurenames = ds.mach.report.vals[1].features
-    solem        = solemodel(trees, Matrix(X), y; classlabels, featurenames)
+    classlabels  = get_classlabels(encoding)
+    solem        = solemodel(trees, Matrix(X), y; featurenames, classlabels)
     logiset      = scalarlogiset(mapcols(col -> Float32.(col), X), allow_propositional = true)
     apply!(solem, logiset, y)
     return solem
@@ -196,9 +212,9 @@ function apply(
 )
     trees        = XGBoost.trees(ds.mach.fitresult.fitresult[1])
     encoding     = get_encoding(ds.mach.fitresult.fitresult[2])
-    classlabels  = get_classlabels(encoding)
     featurenames = ds.mach.fitresult.report.vals[1].features
-    solem        = solemodel(trees, Matrix(X), y; classlabels, featurenames)
+    classlabels  = get_classlabels(encoding)
+    solem        = solemodel(trees, Matrix(X), y; featurenames, classlabels)
     logiset      = scalarlogiset(mapcols(col -> Float32.(col), X), allow_propositional = true)
     apply!(solem, logiset, y)
     return solem
