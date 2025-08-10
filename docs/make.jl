@@ -16,7 +16,11 @@ makedocs(;
         assets = String[],
     ),
     pages = [
-        "Home" => "index.md",
+        "Home"              => "index.md",
+        "Setup dataset"     => "setup_dataset.md",
+        "train_test"        => "train_test.md",
+        "symbolic_analysis" => "symbolic_analysis.md",
+        "Modal logic"       => "modal.md"
     ],
     # NOTE: warning
     warnonly = :true,

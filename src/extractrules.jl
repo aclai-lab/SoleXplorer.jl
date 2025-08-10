@@ -98,7 +98,7 @@ function extractrules(
 )::DecisionSet
     reduce(vcat, map(enumerate(solemodels(solem))) do (i, model)
         test = get_test(ds.pidxs[i])
-        X_test, preds = get_X(ds)[test, :], model.info.supporting_predictions
-        RuleExtraction.modalextractrules(extractor, model, X_test, preds; params...)
+        X_test = get_X(ds)[test, :]
+        RuleExtraction.modalextractrules(extractor, model, X_test; params...)
     end)
 end
