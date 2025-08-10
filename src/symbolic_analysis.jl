@@ -280,8 +280,8 @@ function eval_measures(
     measurements_vector = mapreduce(vcat, 1:nfolds) do k
         yhat_given_operation = Dict(op=>op(solemodels(solem)[k], y_test[k]) for op in unique(operations))
 
-        # Forced to convert it to string as certain StatisticalMeasures measures don't accept
-        # categorical arrays, such as confusion matrix and kappa
+        # costretto a convertirlo a stringa in quanto certe misure di statistical measures non accettano
+        # categorical array, tipo confusion matrix e kappa
         test = eltype(y_test[k]) <: CLabel ? String.(y_test[k]) : y_test[k]
 
         [map(measures, operations) do m, op
@@ -333,12 +333,18 @@ Internal function performing symbolic analysis on trained models.
 function _symbolic_analysis(
     ds::EitherDataSet,
     solem::SoleModel;
-    extractor::Union{Nothing,RuleExtractor}=nothing,
+    extractor::Union{Nothing,RuleExtractor,Tuple{RuleExtractor,NamedTuple}}=nothing,
     measures::Tuple{Vararg{FussyMeasure}}=(),
 )::ModelSet
     rules = isnothing(extractor)  ? nothing : begin
         # TODO propaga rng, dovrai fare intrees mutable struct
-        extractrules(extractor, ds, solem)
+        if extractor isa Tuple
+            params = last(extractor)
+            extractor = first(extractor)
+        else
+            params = NamedTuple(;)
+        end
+        extractrules(extractor, params, ds, solem)
     end
 
     y_test = get_y_test(ds)

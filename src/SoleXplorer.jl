@@ -61,9 +61,8 @@ using  SoleModels: DecisionEnsemble, DecisionTree
 using  SoleModels: AbstractModel, solemodel, weighted_aggregation, apply!
 using  SoleModels: RuleExtractor, DecisionSet
 using  SolePostHoc
-@reexport using SolePostHoc: InTreesRuleExtractor
-# @reexport using SolePostHoc: 
-#     LumenRuleExtractor, BATreesRuleExtractor, REFNERuleExtractor, RULECOSIPLUSRuleExtractor     
+@reexport using SolePostHoc: InTreesRuleExtractor, LumenRuleExtractor, BATreesRuleExtractor
+@reexport using SolePostHoc: RULECOSIPLUSRuleExtractor, REFNERuleExtractor, TREPANRuleExtractor  
 
 # ---------------------------------------------------------------------------- #
 #                                     MLJ                                      #
