@@ -391,3 +391,38 @@ modelts = symbolic_analysis(
     measures=(accuracy, log_loss)      
 )
 @test modelts isa SX.ModelSet
+
+# ---------------------------------------------------------------------------- #
+#                                   base.show                                  #
+# ---------------------------------------------------------------------------- #
+@testset "Base.show methods" begin
+    modelc = symbolic_analysis(Xc, yc)
+    # Test Measures show methods
+    @testset "Measures show" begin
+
+        output = string(modelc.measures)
+        @test contains(output, "Measures(")
+        @test contains(output, "Accuracy")
+        @test contains(output, "Kappa")
+
+        # Test pretty show
+        io = IOBuffer()
+        show(io, MIME"text/plain"(), modelc.measures)
+        output = String(take!(io))
+        @test contains(output, "Measures:")
+    end
+    
+    @testset "ModelSet show" begin        
+        # Test basic output
+        output = string(modelc)
+        @test contains(output, "ModelSet")
+        @test contains(output, "models=")
+        
+        # Test pretty show
+        io = IOBuffer()
+        show(io, MIME"text/plain"(), modelc)
+        output = String(take!(io))
+        @test contains(output, "Dataset:")
+        @test contains(output, "Models:")
+    end
+end
