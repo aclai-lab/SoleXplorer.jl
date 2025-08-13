@@ -17,11 +17,14 @@ function extractrules(
     solem     :: SoleModel
 )::DecisionSet
     params = to_namedtuple(extractor)
-    reduce(vcat, map(enumerate(solemodels(solem))) do (i, model)
+    rules = reduce(vcat, map(enumerate(solemodels(solem))) do (i, model)
         test = get_test(ds.pidxs[i])
         X_test, y_test = get_X(ds)[test, :], get_y(ds)[test]
-        RuleExtraction.modalextractrules(extractor, model, X_test, y_test; params...)
+        extracted_rules = RuleExtraction.modalextractrules(extractor, model, X_test, y_test; params...)
+        extracted_rules.rules  
     end)
+
+    return DecisionSet(rules)
 end
 
 # ---------------------------------------------------------------------------- #
@@ -33,10 +36,12 @@ function extractrules(
     ds        :: EitherDataSet,
     solem     :: SoleModel
 )::DecisionSet
-    reduce(vcat, map(enumerate(solemodels(solem))) do (i, model)
-        lumen_result = RuleExtraction.modalextractrules(extractor, model; params...)
-        lumen_result.decision_set
+    rules = reduce(vcat, map(enumerate(solemodels(solem))) do (i, model)
+        extracted_rules = RuleExtraction.modalextractrules(extractor, model; params...)
+        extracted_rules.decision_set.rules
     end)
+
+    return DecisionSet(rules)
 end
 
 # ---------------------------------------------------------------------------- #
@@ -48,9 +53,12 @@ function extractrules(
     ds        :: EitherDataSet,
     solem     :: SoleModel
 )::DecisionSet
-    reduce(vcat, map(enumerate(solemodels(solem))) do (i, model)
-        RuleExtraction.modalextractrules(extractor, model; params...)
+    rules = reduce(vcat, map(enumerate(solemodels(solem))) do (i, model)
+        extracted_rules = RuleExtraction.modalextractrules(extractor, model; params...)
+        extracted_rules.rules 
     end)
+
+    return DecisionSet(rules)
 end
 
 # ---------------------------------------------------------------------------- #
@@ -62,11 +70,14 @@ function extractrules(
     ds        :: EitherDataSet,
     solem     :: SoleModel
 )::DecisionSet
-    reduce(vcat, map(enumerate(solemodels(solem))) do (i, model)
+    rules = reduce(vcat, map(enumerate(solemodels(solem))) do (i, model)
         test = get_test(ds.pidxs[i])
         X_test, y_test = get_X(ds)[test, :], get_y(ds)[test]
-        RuleExtraction.modalextractrules(extractor, model, X_test, y_test; params...)
+        extracted_rules = RuleExtraction.modalextractrules(extractor, model, X_test, y_test; params...)
+        extracted_rules.rules 
     end)
+
+    return DecisionSet(rules)
 end
 
 # ---------------------------------------------------------------------------- #
@@ -78,13 +89,16 @@ function extractrules(
     ds        :: EitherDataSet,
     solem     :: SoleModel
 )::DecisionSet
-    reduce(vcat, map(enumerate(solemodels(solem))) do (i, model)
+    rules = reduce(vcat, map(enumerate(solemodels(solem))) do (i, model)
         test = get_test(ds.pidxs[i])
         X_test = get_X(ds)[test, :]
         Xmin = map(minimum, eachcol(X_test))
         Xmax = map(maximum, eachcol(X_test))
-        RuleExtraction.modalextractrules(extractor, model, Xmin, Xmax; params...)
+        extracted_rules = RuleExtraction.modalextractrules(extractor, model, Xmin, Xmax; params...)
+        extracted_rules.rules 
     end)
+
+    return DecisionSet(rules)
 end
 
 # ---------------------------------------------------------------------------- #
@@ -96,9 +110,12 @@ function extractrules(
     ds        :: EitherDataSet,
     solem     :: SoleModel
 )::DecisionSet
-    reduce(vcat, map(enumerate(solemodels(solem))) do (i, model)
+    rules = reduce(vcat, map(enumerate(solemodels(solem))) do (i, model)
         test = get_test(ds.pidxs[i])
-        X_test, preds = get_X(ds)[test, :], model.info.supporting_predictions
-        RuleExtraction.modalextractrules(extractor, model, X_test, preds; params...)
+        X_test = get_X(ds)[test, :]
+        extracted_rules = RuleExtraction.modalextractrules(extractor, model, X_test; params...)
+        extracted_rules.rules 
     end)
+
+    return DecisionSet(rules)
 end
