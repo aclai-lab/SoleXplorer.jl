@@ -38,10 +38,12 @@ jobs:
       - uses: julia-actions/cache@v2
       - uses: julia-actions/julia-buildpkg@v1
         env:
-          PYTHON: ""
+          # PYTHON: ""      # Python executable from the local miniconda distribution
+          PYTHON: 'python'  # Python executable from setup-python action
       - uses: julia-actions/julia-runtest@v1
         env:
-          PYTHON: ""
+          # PYTHON: ""      # Python executable from the local miniconda distribution
+          PYTHON: 'python'  # Python executable from setup-python action
       - uses: julia-actions/julia-processcoverage@v1
       - uses: codecov/codecov-action@v5
         with:
