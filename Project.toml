@@ -22,7 +22,7 @@ XGBoost = "009559a3-9522-5dbb-924b-0b6ed2b22bb9"
 [sources]
 SoleData = {rev = "FromForeststoMinimalFormulasALogic-DrivenFrameworktoExplainEnsembleModels", url = "https://github.com/aclai-lab/SoleData.jl"}
 ModalDecisionTrees = {rev = "64-modaladaboost", url = "https://github.com/aclai-lab/ModalDecisionTrees.jl"}
-SolePostHoc = {rev = "dev", url = "https://github.com/aclai-lab/SolePostHoc.jl"}
+SolePostHoc = {rev = "lumen_paso", url = "https://github.com/aclai-lab/SolePostHoc.jl"}
 
 [compat]
 Catch22 = "0.4 - 0.7"
