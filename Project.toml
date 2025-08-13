@@ -25,7 +25,7 @@ ModalDecisionTrees = {rev = "64-modaladaboost", url = "https://github.com/aclai-
 SolePostHoc = {rev = "dev", url = "https://github.com/aclai-lab/SolePostHoc.jl"}
 
 [compat]
-Catch22 = "0.4 - 0.7" 
+Catch22 = "0.4 - 0.7"
 DataFrames = "1"
 MLJ = "0.20"
 MLJDecisionTreeInterface = "0.4"
