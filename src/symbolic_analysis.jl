@@ -242,12 +242,18 @@ end
 function _symbolic_analysis(
     ds::EitherDataSet,
     solem::SoleModel;
-    extractor::Union{Nothing,RuleExtractor}=nothing,
+    extractor::Union{Nothing,RuleExtractor,Tuple{RuleExtractor,NamedTuple}}=nothing,
     measures::Tuple{Vararg{FussyMeasure}}=(),
 )::ModelSet
     rules = isnothing(extractor)  ? nothing : begin
         # TODO propaga rng, dovrai fare intrees mutable struct
-        extractrules(extractor, ds, solem)
+        if extractor isa Tuple
+            params = last(extractor)
+            extractor = first(extractor)
+        else
+            params = NamedTuple(;)
+        end
+        extractrules(extractor, params, ds, solem)
     end
 
     y_test = get_y_test(ds)
@@ -283,3 +289,4 @@ end
 #                                 constructors                                 #
 # ---------------------------------------------------------------------------- #
 solemodels(m::ModelSet) = m.sole
+rules(m::ModelSet) = m.rules
