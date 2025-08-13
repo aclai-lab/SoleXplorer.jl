@@ -402,6 +402,8 @@ function symbolic_analysis(
     _symbolic_analysis(ds, solem; extractor, measures)
 end
 
+symbolic_analysis(X::Any, args...; kwargs...) = symbolic_analysis(DataFrame(X), args...; kwargs...)
+
 # ---------------------------------------------------------------------------- #
 #                                 constructors                                 #
 # ---------------------------------------------------------------------------- #

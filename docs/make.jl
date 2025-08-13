@@ -11,12 +11,13 @@ makedocs(;
     sitename = "SoleXplorer.jl",
     format = Documenter.HTML(;
         size_threshold = 4000000,
-        prettyurls = get(ENV, "CI", "false") == "true",
+        # prettyurls = get(ENV, "CI", "false") == "true",
+        prettyurls = true,
         canonical = "https://github.com/aclai-lab/SoleXplorer.jl",
         assets = String[],
     ),
     pages = [
-        "Home"              => "index.md",
+        "Introduction"      => "index.md",
         "Setup dataset"     => "setup_dataset.md",
         "train_test"        => "train_test.md",
         "symbolic_analysis" => "symbolic_analysis.md",

@@ -1,8 +1,29 @@
-# SoleXplorer.jl Documentation
+![header](https://raw.githubusercontent.com/aclai-lab/SoleXplorer.jl/refs/heads/main/logo.png)
 
-GitHub Repo: [https://github.com/aclai-lab/SoleXplorer.jl](https://github.com/aclai-lab/SoleXplorer.jl)
+A **library** for symbolic learning, timeseries analysis and rules extraction
 
-**SoleXplorer.jl** is an interactive interface for exploring symbolic machine learning models, built on top of the [Sole.jl](https://github.com/aclai-lab/Sole.jl) ecosystem. It provides tools for visualizing, inspecting, and interacting with models derived from (logic-based) symbolic learning algorithms.
+# Introduction
+
+**SoleXplorer** is an interactive interface for exploring symbolic machine learning models, built on top of the [Sole.jl](https://github.com/aclai-lab/Sole.jl) ecosystem. It provides tools for visualizing, inspecting, and interacting with models derived from (logic-based) symbolic learning algorithms.
+Built upon [MLJ framework](https://juliaai.github.io/MLJ.jl/stable/), extending its funcionality with tools like the ability of treat **time-series** analysis or the ability to retrieve what **rules** was used and how are interconnected.
+It also offers the user the ability to build a machine-learining pipeline using only a function call, as the following code snippet demonstrates.
+
+```julia
+using SoleXplorer, MLJ
+
+Xc, yc = @load_iris
+
+modelc = symbolic_analysis(
+    Xc, yc;
+    model=DecisionTreeClassifier(),
+    resample=CV(nfolds=5, shuffle=true),
+    rng=Xoshiro(1),
+    extractor=InTreesRuleExtractor(),
+    measures=(accuracy, log_loss, confusion_matrix, kappa)      
+)
+```
+
+## What is Symbolic Logic?
 
 ## Installation
 

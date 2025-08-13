@@ -2,7 +2,7 @@
 
 julia_version = "1.11.6"
 manifest_format = "2.0"
-project_hash = "30850f881e52a055b6216577181e4000ba4d9547"
+project_hash = "cc54c945f5b21d86559632752098acda7cd33291"
 
 [[deps.ANSIColoredPrinters]]
 git-tree-sha1 = "574baf8110975760d391c710b6341da1afa48d8c"
@@ -937,6 +937,12 @@ deps = ["Libdl", "OpenBLAS_jll", "libblastrampoline_jll"]
 uuid = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 version = "1.11.0"
 
+[[deps.LiveServer]]
+deps = ["HTTP", "LoggingExtras", "MIMEs", "Sockets", "Test"]
+git-tree-sha1 = "9f65b8a9989e6acb6e216785dd0c748d9569fc9b"
+uuid = "16fef848-5104-11e9-1b77-fb7a48bbb589"
+version = "1.5.0"
+
 [[deps.LogExpFunctions]]
 deps = ["DocStringExtensions", "IrrationalConstants", "LinearAlgebra"]
 git-tree-sha1 = "13ca9e2586b89836fd20cccf56e57e2b9ae7f38f"
@@ -968,6 +974,11 @@ deps = ["CodeTracking", "Compiler", "JuliaInterpreter"]
 git-tree-sha1 = "73b98709ad811a6f81d84e105f4f695c229385ba"
 uuid = "6f1432cf-f94c-5a45-995e-cdbf5db27b0b"
 version = "3.4.3"
+
+[[deps.MIMEs]]
+git-tree-sha1 = "65f28ad4b594aebe22157d6fac869786a255b7eb"
+uuid = "6c6e2e6c-3030-632d-7369-2d6c69616d65"
+version = "0.1.4"
 
 [[deps.MKL_jll]]
 deps = ["Artifacts", "IntelOpenMP_jll", "JLLWrappers", "LazyArtifacts", "Libdl", "oneTBB_jll"]
@@ -1576,7 +1587,7 @@ version = "0.2.1"
 deps = ["Catch22", "DataFrames", "MLJ", "MLJDecisionTreeInterface", "MLJParticleSwarmOptimization", "MLJXGBoostInterface", "ModalDecisionTrees", "Random", "Reexport", "SoleBase", "SoleData", "SoleModels", "SolePostHoc", "XGBoost"]
 path = "/home/paso/Documents/Aclai/Sole/SoleXplorer.jl"
 uuid = "5816ab97-8dbe-4a0a-b2fb-0334bd9876ed"
-version = "0.2.2"
+version = "0.2.3"
 
 [[deps.SortingAlgorithms]]
 deps = ["DataStructures"]
