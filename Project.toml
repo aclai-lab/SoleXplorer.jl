@@ -1,6 +1,6 @@
 name = "SoleXplorer"
 uuid = "5816ab97-8dbe-4a0a-b2fb-0334bd9876ed"
-authors = ["Lorenzo BALBONI", "Giovanni PAGLIARINI", "Riccardo PASINI"]
+authors = ["Lorenzo BALBONI", "Giovanni PAGLIARINI", "Riccardo PASINI", "Marco PERROTTA"]
 version = "0.2.3"
 
 [deps]
@@ -22,7 +22,7 @@ XGBoost = "009559a3-9522-5dbb-924b-0b6ed2b22bb9"
 [sources]
 SoleData = {rev = "FromForeststoMinimalFormulasALogic-DrivenFrameworktoExplainEnsembleModels", url = "https://github.com/aclai-lab/SoleData.jl"}
 ModalDecisionTrees = {rev = "64-modaladaboost", url = "https://github.com/aclai-lab/ModalDecisionTrees.jl"}
-SolePostHoc = {rev = "lumen_dirtyTest", url = "https://github.com/aclai-lab/SolePostHoc.jl"}
+SolePostHoc = {rev = "dev", url = "https://github.com/aclai-lab/SolePostHoc.jl"}
 
 [compat]
 Catch22 = "0.4 - 0.7"
@@ -35,7 +35,7 @@ ModalDecisionTrees = "0.5.2, 0.5"
 Random = "1"
 Reexport = "1.2"
 SoleBase = "0.13.2, 0.13"
-SoleData = "0.16.3, 0.16"
+SoleData = "0.16.2 - 0.16.3, 0.16"
 SoleModels = "0.10.2, 0.10"
 SolePostHoc = "0.2"
 XGBoost = "2.5"
