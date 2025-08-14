@@ -25,7 +25,7 @@ test_suites = [
     ("Train and Test",       ["train_test.jl",        ]),
     ("Symbolic Analysis",    ["symbolic_analysis.jl", ]),
     ("Solemodel robustness", ["robustness.jl"         ]),
-    ("Rules extraction",     ["rules_extraction.jl"   ]),
+    ("Rule extraction",      ["rule_extraction.jl"    ]),
 ]
 
 @testset "SoleXplorer.jl" begin
