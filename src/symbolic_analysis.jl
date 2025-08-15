@@ -1,7 +1,29 @@
+"""
+symbolic_analysis.jl — Unified Symbolic Model Analysis Interface
+
+This module provides the main entry point for complete symbolic model analysis workflows:
+
+1. Dataset setup and cross-validation training (via train_test.jl)
+2. Training and testing models (via train_test.jl)
+3. Rule extraction from symbolic models (via extractrules.jl) 
+4. Performance evaluation using MLJ measures
+"""
+
 # ---------------------------------------------------------------------------- #
 #                               abstract types                                 #
 # ---------------------------------------------------------------------------- #
+"""
+    AbstractMeasures
+
+Base type for performance measure containers.
+"""
 abstract type AbstractMeasures end
+
+"""
+    AbstractModelSet  
+
+Base type for comprehensive analysis result containers.
+"""
 abstract type AbstractModelSet end
 
 # ---------------------------------------------------------------------------- #
@@ -18,6 +40,17 @@ const ValidMeasures = Union{
 # ---------------------------------------------------------------------------- #
 #                                  measures                                    #
 # ---------------------------------------------------------------------------- #
+"""
+    Measures <: AbstractMeasures
+
+Container for performance evaluation results across CV folds.
+
+# Fields
+- `per_fold::Vector{Vector{ValidMeasures}}`: Measure values for each fold/measure combination
+- `measures::Vector{RobustMeasure}`: The measure functions used for evaluation  
+- `measures_values::Vector{ValidMeasures}`: Aggregated measure values across folds
+- `operations::AbstractVector`: Prediction operations used (predict, predict_mode, etc.)
+"""
 struct Measures <: AbstractMeasures
     per_fold        :: Vector{Vector{ValidMeasures}}
     measures        :: Vector{RobustMeasure}
@@ -52,6 +85,17 @@ const OptMeasures = Optional{Measures}
 # ---------------------------------------------------------------------------- #
 #                                  modelset                                    #
 # ---------------------------------------------------------------------------- #
+"""
+    ModelSet{S} <: AbstractModelSet
+
+Comprehensive container for symbolic model analysis results.
+
+# Fields
+- `ds::EitherDataSet`: Dataset wrapper used for training
+- `sole::Vector{AbstractModel}`: Symbolic models from each CV fold
+- `rules::OptRules`: Extracted decision rules (optional)
+- `measures::OptMeasures`: Performance evaluation results (optional)
+"""
 mutable struct ModelSet{S} <: AbstractModelSet
     ds       :: EitherDataSet
     sole     :: Vector{AbstractModel}
@@ -104,12 +148,22 @@ end
 # ---------------------------------------------------------------------------- #
 #                                 utilities                                    #
 # ---------------------------------------------------------------------------- #
+"""
+    supporting_predictions(solem::AbstractModel) -> Vector
+
+Extract supporting predictions from a symbolic model.
+"""
 function supporting_predictions(solem::AbstractModel)
     return solem.info isa Base.RefValue ?
         solem.info[].supporting_predictions :
         solem.info.supporting_predictions
 end
 
+"""
+    sole_predict(solem::AbstractModel, y_test::AbstractVector{<:Label}) -> Vector
+
+Convert symbolic model predictions to MLJ probabilistic format.
+"""
 function sole_predict(solem::AbstractModel, y_test::AbstractVector{<:Label})
     preds = supporting_predictions(solem)
     eltype(preds) <: CLabel ?
@@ -122,8 +176,21 @@ function sole_predict(solem::AbstractModel, y_test::AbstractVector{<:Label})
         preds
 end
 
+"""
+    sole_predict_mode(solem::AbstractModel, y_test::AbstractVector{<:Label}) -> Vector
+
+Return deterministic predictions from symbolic model.
+"""
 sole_predict_mode(solem::AbstractModel, y_test::AbstractVector{<:Label}) = supporting_predictions(solem)
 
+"""
+    _DefaultMeasures(y::AbstractVector)::Tuple{Vararg{FussyMeasure}}
+
+Return default measures appropriate for the target variable type.
+
+This function is used when no explicit measures are provided,
+automatically selecting between classification and regression.
+"""
 function _DefaultMeasures(y::AbstractVector)::Tuple{Vararg{FussyMeasure}}
     return eltype(y) <: CLabel ? (accuracy, kappa) : (rms, l1, l2)
 end
@@ -131,6 +198,12 @@ end
 # ---------------------------------------------------------------------------- #
 #                               get operations                                 #
 # ---------------------------------------------------------------------------- #
+"""
+    get_operations(measures::Vector, prediction::Symbol) -> Vector{Function}
+
+Adapted from MLJ's evaluate
+Determine appropriate prediction operations for each measure.
+"""
 function get_operations(
     measures   :: Vector,
     prediction :: Symbol,
@@ -177,6 +250,14 @@ end
 # ---------------------------------------------------------------------------- #
 #                                eval measures                                 #
 # ---------------------------------------------------------------------------- #
+"""
+    eval_measures(ds::EitherDataSet, solem::SoleModel, 
+                 measures::Tuple{Vararg{FussyMeasure}}, 
+                 y_test::Vector{<:AbstractVector{<:Label}}) -> Measures
+
+Adapted from MLJ's evaluate
+Evaluate symbolic models using MLJ measures across CV folds.
+"""
 function eval_measures(
     ds::EitherDataSet,
     solem::SoleModel,
@@ -199,8 +280,8 @@ function eval_measures(
     measurements_vector = mapreduce(vcat, 1:nfolds) do k
         yhat_given_operation = Dict(op=>op(solemodels(solem)[k], y_test[k]) for op in unique(operations))
 
-        # Forced to convert it to string as certain StatisticalMeasures measures don't accept
-        # categorical arrays, such as confusion matrix and kappa
+        # costretto a convertirlo a stringa in quanto certe misure di statistical measures non accettano
+        # categorical array, tipo confusion matrix e kappa
         test = eltype(y_test[k]) <: CLabel ? String.(y_test[k]) : y_test[k]
 
         [map(measures, operations) do m, op
@@ -239,6 +320,16 @@ end
 # ---------------------------------------------------------------------------- #
 #                              symbolic_analysis                               #
 # ---------------------------------------------------------------------------- #
+"""
+    _symbolic_analysis(ds::EitherDataSet, solem::SoleModel; 
+                      extractor=nothing, measures=()) -> ModelSet
+
+Internal function performing symbolic analysis on trained models.
+
+# Optional Components
+- **Rule Extraction**: If `extractor` provided, calls `extractrules(extractor, ds, solem)`
+- **Performance Evaluation**: If `measures` provided, calls `eval_measures(...)`
+"""
 function _symbolic_analysis(
     ds::EitherDataSet,
     solem::SoleModel;
@@ -264,6 +355,15 @@ function _symbolic_analysis(
     return ModelSet(ds, solem; rules, measures)
 end
 
+"""
+    symbolic_analysis(ds::EitherDataSet, solem::SoleModel; 
+                     extractor=nothing, measures=()) -> ModelSet
+
+Perform symbolic analysis on pre-trained models.
+
+Use when you already have trained symbolic models and want to add
+rule extraction and/or performance evaluation.
+"""
 function symbolic_analysis(
     ds::EitherDataSet,
     solem::SoleModel;
@@ -272,6 +372,23 @@ function symbolic_analysis(
     _symbolic_analysis(ds, solem; kwargs...)
 end
 
+"""
+    symbolic_analysis(X::AbstractDataFrame, y::AbstractVector, w=nothing;
+                     extractor=nothing, measures=(), kwargs...) -> ModelSet
+
+End-to-end symbolic analysis starting from raw data.
+
+# Workflow
+1. `_setup_dataset(X, y, w; kwargs...)` - Create dataset wrapper
+2. `_train_test(ds)` - Perform CV training and symbolic conversion
+3. `_symbolic_analysis(ds, solem; extractor, measures)` - Extract rules and evaluate
+
+# Arguments
+- `X, y, w`: Features, targets, and optional weights
+- `extractor`: Rule extraction strategy (ModalExtractor, etc.)
+- `measures`: Performance measures to evaluate (accuracy, auc, etc.)
+- `kwargs`: Passed to dataset setup (model, cv_folds, etc.)
+"""
 function symbolic_analysis(
     X::AbstractDataFrame,
     y::AbstractVector,
@@ -285,8 +402,21 @@ function symbolic_analysis(
     _symbolic_analysis(ds, solem; extractor, measures)
 end
 
+symbolic_analysis(X::Any, args...; kwargs...) = symbolic_analysis(DataFrame(X), args...; kwargs...)
+
 # ---------------------------------------------------------------------------- #
 #                                 constructors                                 #
 # ---------------------------------------------------------------------------- #
+"""
+    solemodels(m::ModelSet) -> Vector{AbstractModel}
+
+Extract the vector of symbolic models from a ModelSet.
+"""
 solemodels(m::ModelSet) = m.sole
+
+"""
+    rules(m::ModelSet) -> DecisionSet
+
+Extract the vector of rules from a ModelSet.
+"""
 rules(m::ModelSet) = m.rules

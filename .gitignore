@@ -1,3 +1,6 @@
+docs/build/
+docs/site/
+/docs/Manifest.toml
 /Manifest.toml
 abc.history
 forest.txt
