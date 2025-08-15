@@ -202,8 +202,9 @@ function _train_test(ds::EitherDataSet)::SoleModel
 
         has_xgboost_model(ds) && set_watchlist!(ds, i)
 
-        MLJ.fit!(ds.mach, rows=train, verbosity=0)
-        solemodel[i] = apply(ds, X_test, y_test)
+        mach = get_mach(ds)
+        MLJ.fit!(mach, rows=train, verbosity=0)
+        solemodel[i] = apply(mach, X_test, y_test)
     end
 
     return SoleModel(ds, solemodel)

@@ -443,6 +443,13 @@ get_y_test(ds::EitherDataSet)::AbstractVector =
     [@views ds.mach.args[2].data[ds.pidxs[i].test] for i in 1:length(ds)]
 
 """
+    get_mach(ds::EitherDataSet)::Machine
+
+Extract the MLJ machine from the dataset.
+"""
+get_mach(ds::EitherDataSet)::Machine = ds.mach
+
+"""
     get_mach_model(ds::EitherDataSet)::MLJ.Model
 
 Extract the model from the dataset's MLJ machine.
