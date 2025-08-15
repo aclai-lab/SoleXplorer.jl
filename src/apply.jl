@@ -92,7 +92,6 @@ function apply(
     return solem
 end
 
-# randomforest
 function apply(
     m :: Machine{RandomForestClassifier},
     X :: AbstractDataFrame,
@@ -167,7 +166,6 @@ function apply(
     return solem
 end
 
-# adaboost
 function apply(
     m :: Machine{AdaBoostStumpClassifier},
     X :: AbstractDataFrame,
