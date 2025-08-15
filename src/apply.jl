@@ -89,7 +89,6 @@ function apply(
     solem        = solemodel(MLJ.fitted_params(m).best_fitted_params.tree; featurenames, classlabels)
     logiset      = scalarlogiset(X, allow_propositional = true)
     apply!(solem, logiset, y)
-    @show typeof(solem)
     return solem
 end
 
