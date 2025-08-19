@@ -94,3 +94,8 @@ le rebilancia coi pesi, per non buttare via istanze).
 #                                       rng                                    #
 # ---------------------------------------------------------------------------- #
 Propagalo anche a PostHoc
+
+# ---------------------------------------------------------------------------- #
+#                             apply e extractrules                             #
+# ---------------------------------------------------------------------------- #
+Guarda Lumen per il dispatch più pulito e chiama Perry

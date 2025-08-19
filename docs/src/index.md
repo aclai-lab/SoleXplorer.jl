@@ -1,8 +1,31 @@
+```@meta
+CurrentModule = SoleXplorer
+```
+
+# SoleXplorer
 ![header](https://raw.githubusercontent.com/aclai-lab/SoleXplorer.jl/refs/heads/main/logo.png)
 
-A **library** for symbolic learning, timeseries analysis and rules extraction
+## Introduction
 
-# Introduction
+Welcome to the documentation for [SoleXplorer](https://github.com/aclai-lab/SoleXplorer.jl), a Julia package for symbolic learning, timeseries analysis and rule extraction and mining.
+
+## Installation
+
+To install SoleXplorer, simply launch:
+```julia
+using Pkg
+Pkg.add("SoleXplorer")
+```
+
+## [Feature Summary](@id feature-summary)
+
+<!-- * Provides tools for visualizing, inspecting, and interacting with models derived from (logic-based) symbolic learning algorithms.
+* Enhance the workflow 
+
+* Define atomic facts, called *items*, that can be true or false with respect to some instance data; for example, given a collection of signals `I=[[1,2,3], [4,5,6], [7,8,9]]`, an item `p` could encode the fact that `sum(I[2]) < 16`.
+* Enhance the expressivity of each item and combine them in sets, called *itemsets*, leveraging more-than-propositional logical formalisms; considering the instance data `I` above, for example, an item `q` could encode the fact that `mean(I[3]) = 8` and `q and after p` encodes the fact that `q` is true for the i-th dimension of the instance and `p` is true at the same time on the (i+1)-th dimension.
+* Extract the *association rules* hidden in data; for example, the rule `p => q` encodes the fact that, if `p` is true, then `q` is true too. The extraction process is easily configurable via a [`Miner`](@ref) object, and can be executed with the parallel implementation of state-of-the-art algorithms.
+* Analyze and recap the extract rules in a succinct manner. -->
 
 **SoleXplorer** is an interactive interface for exploring symbolic machine learning models, built on top of the [Sole.jl](https://github.com/aclai-lab/Sole.jl) ecosystem. It provides tools for visualizing, inspecting, and interacting with models derived from (logic-based) symbolic learning algorithms.
 Built upon [MLJ framework](https://juliaai.github.io/MLJ.jl/stable/), extending its funcionality with tools like the ability of treat **time-series** analysis or the ability to retrieve what **rules** was used and how are interconnected.

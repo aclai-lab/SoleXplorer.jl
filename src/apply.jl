@@ -74,7 +74,7 @@ function apply(
     featurenames = MLJ.report(m).features
     classlabels  = sort(MLJ.report(m).classes_seen)
     solem        = solemodel(MLJ.fitted_params(m).tree; featurenames, classlabels)
-    logiset      = scalarlogiset(X, allow_propositional = true)
+    logiset      = scalarlogiset(X, allow_propositional=true)
     apply!(solem, logiset, y)
     return solem
 end
@@ -87,7 +87,7 @@ function apply(
     featurenames = MLJ.report(m).best_report.features
     classlabels  = sort(MLJ.report(m).best_report.classes_seen)
     solem        = solemodel(MLJ.fitted_params(m).best_fitted_params.tree; featurenames, classlabels)
-    logiset      = scalarlogiset(X, allow_propositional = true)
+    logiset      = scalarlogiset(X, allow_propositional=true)
     apply!(solem, logiset, y)
     return solem
 end
@@ -100,7 +100,7 @@ function apply(
     featurenames = MLJ.report(m).features
     classlabels  = m.fitresult[2][sortperm((m).fitresult[3])]
     solem        = solemodel(MLJ.fitted_params(m).forest; featurenames, classlabels)
-    logiset      = scalarlogiset(X, allow_propositional = true)
+    logiset      = scalarlogiset(X, allow_propositional=true)
     apply!(solem, logiset, y)
     return solem
 end
@@ -113,7 +113,7 @@ function apply(
     featurenames = MLJ.report(m).best_report.features
     classlabels  = m.fitresult.fitresult[2][sortperm((m).fitresult.fitresult[3])]
     solem        = solemodel(MLJ.fitted_params(m).best_fitted_params.forest; featurenames, classlabels)
-    logiset      = scalarlogiset(X, allow_propositional = true)
+    logiset      = scalarlogiset(X, allow_propositional=true)
     apply!(solem, logiset, y)
     return solem
 end
@@ -125,7 +125,7 @@ function apply(
 )::DecisionTree
     featurenames = MLJ.report(m).features
     solem        = solemodel(MLJ.fitted_params(m).tree; featurenames)
-    logiset      = scalarlogiset(X, allow_propositional = true)
+    logiset      = scalarlogiset(X, allow_propositional=true)
     apply!(solem, logiset, y)
     return solem
 end
@@ -137,7 +137,7 @@ function apply(
 )::DecisionTree
     featurenames = MLJ.report(m).best_report.features
     solem        = solemodel(MLJ.fitted_params(m).best_fitted_params.tree; featurenames)
-    logiset      = scalarlogiset(X, allow_propositional = true)
+    logiset      = scalarlogiset(X, allow_propositional=true)
     apply!(solem, logiset, y)
     return solem
 end
@@ -149,7 +149,7 @@ function apply(
 )::DecisionEnsemble
     featurenames = MLJ.report(m).features
     solem        = solemodel(MLJ.fitted_params(m).forest; featurenames)
-    logiset      = scalarlogiset(X, allow_propositional = true)
+    logiset      = scalarlogiset(X, allow_propositional=true)
     apply!(solem, logiset, y)
     return solem
 end
@@ -161,7 +161,7 @@ function apply(
 )::DecisionEnsemble
     featurenames = MLJ.report(m).best_report.features
     solem        = solemodel(MLJ.fitted_params(m).best_fitted_params.forest; featurenames)
-    logiset      = scalarlogiset(X, allow_propositional = true)
+    logiset      = scalarlogiset(X, allow_propositional=true)
     apply!(solem, logiset, y)
     return solem
 end
@@ -175,7 +175,7 @@ function apply(
     classlabels  = sort(string.(m.fitresult[3]))
     weights      = m.fitresult[2]
     solem        = solemodel(MLJ.fitted_params(m).stumps; featurenames, classlabels, weights)
-    logiset      = scalarlogiset(X, allow_propositional = true)
+    logiset      = scalarlogiset(X, allow_propositional=true)
     apply!(solem, logiset, y)
     return solem
 end
@@ -189,7 +189,7 @@ function apply(
     classlabels  = sort(m.fitresult.fitresult[3])
     weights      = m.fitresult.fitresult[2]
     solem        = solemodel(MLJ.fitted_params(m).best_fitted_params.stumps; featurenames, classlabels, weights)
-    logiset      = scalarlogiset(X, allow_propositional = true)
+    logiset      = scalarlogiset(X, allow_propositional=true)
     apply!(solem, logiset, y)
     return solem
 end
@@ -228,7 +228,7 @@ function apply(
     featurenames = m.report.vals[1].features
     classlabels  = get_classlabels(encoding)
     solem        = solemodel(trees, Matrix(X), y; featurenames, classlabels)
-    logiset      = scalarlogiset(mapcols(col -> Float32.(col), X), allow_propositional = true)
+    logiset      = scalarlogiset(mapcols(col -> Float32.(col), X), allow_propositional=true)
     apply!(solem, logiset, y)
     return solem
 end
@@ -243,7 +243,7 @@ function apply(
     featurenames = m.fitresult.report.vals[1].features
     classlabels  = get_classlabels(encoding)
     solem        = solemodel(trees, Matrix(X), y; featurenames, classlabels)
-    logiset      = scalarlogiset(mapcols(col -> Float32.(col), X), allow_propositional = true)
+    logiset      = scalarlogiset(mapcols(col -> Float32.(col), X), allow_propositional=true)
     apply!(solem, logiset, y)
     return solem
 end
@@ -259,7 +259,7 @@ function apply(
     trees        = XGBoost.trees(m.fitresult[1])
     featurenames = m.report.vals[1].features
     solem        = solemodel(trees, Matrix(X), y; featurenames)
-    logiset      = scalarlogiset(mapcols(col -> Float32.(col), X), allow_propositional = true)
+    logiset      = scalarlogiset(mapcols(col -> Float32.(col), X), allow_propositional=true)
     apply!(solem, logiset, y; base_score)
     return solem
 end
@@ -275,7 +275,7 @@ function apply(
     trees        = XGBoost.trees(m.fitresult.fitresult[1])
     featurenames = m.fitresult.report.vals[1].features
     solem        = solemodel(trees, Matrix(X), y; featurenames)
-    logiset      = scalarlogiset(mapcols(col -> Float32.(col), X), allow_propositional = true)
+    logiset      = scalarlogiset(mapcols(col -> Float32.(col), X), allow_propositional=true)
     apply!(solem, logiset, y; base_score)
     return solem
 end
