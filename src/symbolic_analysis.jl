@@ -79,7 +79,7 @@ end
 # ---------------------------------------------------------------------------- #
 #                                   types                                      #
 # ---------------------------------------------------------------------------- #
-const OptRules    = Optional{DecisionSet}
+const OptRules    = Optional{Vector{DecisionSet}}
 const OptMeasures = Optional{Measures}
 
 # ---------------------------------------------------------------------------- #
@@ -130,7 +130,7 @@ function Base.show(io::IO, ::MIME"text/plain", m::ModelSet{S}) where S
     println(io, "  Models: $(length(m.sole)) symbolic models")
     
     if !isnothing(m.rules)
-        println(io, "  Rules: $(length(m.rules.rules)) extracted rules")
+        println(io, "  Rules: $(length(first(m.rules))) extracted rules per model")
     else
         println(io, "  Rules: none")
     end
