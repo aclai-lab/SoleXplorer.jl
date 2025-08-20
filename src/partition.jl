@@ -1,14 +1,3 @@
-"""
-partition.jl — Dataset Partitioning Utilities
-
-This module provides index-based data partitioning for machine learning workflows:
-
-1. Creates train/validation/test splits using MLJ resampling strategies
-2. Maintains index vectors for efficient data access without copying
-3. Supports cross-validation, holdout, and stratified sampling
-4. Preserves partition metadata for reproducibility
-"""
-
 # ---------------------------------------------------------------------------- #
 #                               abstract types                                 #
 # ---------------------------------------------------------------------------- #
