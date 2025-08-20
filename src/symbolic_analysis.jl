@@ -79,7 +79,8 @@ end
 # ---------------------------------------------------------------------------- #
 #                                   types                                      #
 # ---------------------------------------------------------------------------- #
-const MayRules    = Maybe{Vector{DecisionSet}}
+# const PostHocOut  = Union{Vector{DecisionSet, Vector{LumenResult}}}
+const MayRules    = Maybe{Union{Vector{DecisionSet}, Vector{LumenResult}}}
 const MayMeasures = Maybe{Measures}
 
 # ---------------------------------------------------------------------------- #

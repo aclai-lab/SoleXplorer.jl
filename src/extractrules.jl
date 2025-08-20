@@ -32,7 +32,7 @@ function extractrules(
     params    :: NamedTuple,
     ds        :: EitherDataSet,
     solem     :: SoleModel
-)::Vector{DecisionSet}
+)::Vector{LumenResult}
     map(enumerate(solemodels(solem))) do (i, model)
         RuleExtraction.modalextractrules(extractor, model; params...)
     end

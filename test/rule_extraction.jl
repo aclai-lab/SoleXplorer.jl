@@ -1,8 +1,8 @@
-# using Test
-# using SoleXplorer
-# using MLJ
-# using DataFrames, Random
-# const SX = SoleXplorer
+using Test
+using SoleXplorer
+using MLJ
+using DataFrames, Random
+const SX = SoleXplorer
 
 Xc, yc = @load_iris
 Xc = DataFrame(Xc)
@@ -50,13 +50,13 @@ modelc = symbolic_analysis(
     dsc, solemc;
     extractor=LumenRuleExtractor()
 )
-@test rules(modelc) isa Vector{SX.DecisionSet}
+@test rules(modelc) isa Vector{SX.LumenResult}
 
 modelc = symbolic_analysis(
     dsc, solemc;
     extractor=LumenRuleExtractor(minimization_scheme=:mitespresso)
 )
-@test rules(modelc) isa Vector{SX.DecisionSet}
+@test rules(modelc) isa Vector{SX.LumenResult}
 
 @test_throws MethodError  symbolic_analysis(
     dsc, solemc;
@@ -75,13 +75,13 @@ modelc = symbolic_analysis(
     dsc, solemc;
     extractor=LumenRuleExtractor()
 )
-@test rules(modelc) isa Vector{SX.DecisionSet}
+@test rules(modelc) isa Vector{SX.LumenResult}
 
 modelc = symbolic_analysis(
     dsc, solemc;
     extractor=LumenRuleExtractor(minimization_scheme=:mitespresso)
 )
-@test rules(modelc) isa Vector{SX.DecisionSet}
+@test rules(modelc) isa Vector{SX.LumenResult}
 
 @test_throws MethodError  symbolic_analysis(
     dsc, solemc;
