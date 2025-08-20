@@ -1,19 +1,19 @@
-"""
-apply.jl - Unified Model Prediction Interface
+# apply.jl - Unified Model Prediction Interface
 
-This module provides `apply(m, X, y)` methods that:
-1. Extract fitted models from MLJ machine wrappers
-2. Convert them to SoleModels symbolic representations
-3. Create logical datasets and apply symbolic models
-4. Return symbolic models ready for rule extraction and analysis
+# This methods provide `apply(m, X, y)` methods that:
+# 1. Extract fitted models from MLJ machine wrappers
+# 2. Convert them to SoleModels symbolic representations
+# 3. Create logical datasets and apply symbolic models
+# 4. Return symbolic models ready for rule extraction and analysis
 
-Supported ML packages:
-- DecisionTree.jl
-- ModalDecisionTrees.jl
-- XGBoost.jl
+# m = MLJ Machine
 
-All methods handle both regular and hyperparameter-tuned models.
-"""
+# Supported ML packages:
+# - DecisionTree.jl
+# - ModalDecisionTrees.jl
+# - XGBoost.jl
+
+# All methods handle both regular and hyperparameter-tuned models.
 
 # ---------------------------------------------------------------------------- #
 #                                   types                                      #
