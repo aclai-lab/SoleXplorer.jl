@@ -20,7 +20,7 @@ Pkg.add("https://github.com/aclai-lab/SoleXplorer.jl/")
 
 ## Quick Start
 
-## Decision tree
+### Decision tree
 
 ```julia
 using SoleXplorer
@@ -36,7 +36,7 @@ explorer = Explorer(model, dataset)
 run(explorer)
 ```
 
-## Temporal association rules
+### Temporal association rules
 
 ```julia
 using SoleXplorer
