@@ -94,3 +94,9 @@ le rebilancia coi pesi, per non buttare via istanze).
 #                                       rng                                    #
 # ---------------------------------------------------------------------------- #
 Propagalo anche a PostHoc
+
+# ---------------------------------------------------------------------------- #
+#                             apply e extractrules                             #
+# ---------------------------------------------------------------------------- #
+Bisogna pensare anche ai modelli non supervisionati: apply(m, X)
+Guarda Lumen per il dispatch più pulito e chiama Perry <- FATTO

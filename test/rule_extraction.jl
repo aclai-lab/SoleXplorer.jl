@@ -1,8 +1,8 @@
-# using Test
-# using SoleXplorer
-# using MLJ
-# using DataFrames, Random
-# const SX = SoleXplorer
+using Test
+using SoleXplorer
+using MLJ
+using DataFrames, Random
+const SX = SoleXplorer
 
 Xc, yc = @load_iris
 Xc = DataFrame(Xc)
@@ -22,13 +22,13 @@ modelc = symbolic_analysis(
     dsc, solemc;
     extractor=InTreesRuleExtractor()
 )
-@test rules(modelc) isa SX.DecisionSet
+@test rules(modelc) isa Vector{SX.DecisionSet}
 
 modelc = symbolic_analysis(
     dsc, solemc;
     extractor=InTreesRuleExtractor(min_coverage=1.0)
 )
-@test rules(modelc) isa SX.DecisionSet
+@test rules(modelc) isa Vector{SX.DecisionSet}
 
 @test_throws MethodError  symbolic_analysis(
     dsc, solemc;
@@ -50,13 +50,13 @@ modelc = symbolic_analysis(
     dsc, solemc;
     extractor=LumenRuleExtractor()
 )
-@test rules(modelc) isa SX.DecisionSet
+@test rules(modelc) isa Vector{SX.LumenResult}
 
 modelc = symbolic_analysis(
     dsc, solemc;
     extractor=LumenRuleExtractor(minimization_scheme=:mitespresso)
 )
-@test rules(modelc) isa SX.DecisionSet
+@test rules(modelc) isa Vector{SX.LumenResult}
 
 @test_throws MethodError  symbolic_analysis(
     dsc, solemc;
@@ -75,13 +75,13 @@ modelc = symbolic_analysis(
     dsc, solemc;
     extractor=LumenRuleExtractor()
 )
-@test rules(modelc) isa SX.DecisionSet
+@test rules(modelc) isa Vector{SX.LumenResult}
 
 modelc = symbolic_analysis(
     dsc, solemc;
     extractor=LumenRuleExtractor(minimization_scheme=:mitespresso)
 )
-@test rules(modelc) isa SX.DecisionSet
+@test rules(modelc) isa Vector{SX.LumenResult}
 
 @test_throws MethodError  symbolic_analysis(
     dsc, solemc;
@@ -103,13 +103,13 @@ modelc = symbolic_analysis(
     dsc, solemc;
     extractor=BATreesRuleExtractor(dataset_name="Sole_Analysis")
 )
-@test rules(modelc) isa SX.DecisionSet
+@test rules(modelc) isa Vector{SX.DecisionSet}
 
 modelc = symbolic_analysis(
     dsc, solemc;
     extractor=BATreesRuleExtractor(dataset_name="Sole_Analysis", num_trees=5)
 )
-@test rules(modelc) isa SX.DecisionSet
+@test rules(modelc) isa Vector{SX.DecisionSet}
 
 @test_throws MethodError  symbolic_analysis(
     dsc, solemc;
@@ -131,7 +131,7 @@ modelc = symbolic_analysis(
     dsc, solemc;
     extractor=RULECOSIPLUSRuleExtractor()
 )
-@test rules(modelc) isa SX.DecisionSet
+@test rules(modelc) isa Vector{SX.DecisionSet}
 
 @test_throws MethodError  symbolic_analysis(
     dsc, solemc;
@@ -153,7 +153,7 @@ modelc = symbolic_analysis(
     dsc, solemc;
     extractor=REFNERuleExtractor(L=2)
 )
-@test rules(modelc) isa SX.DecisionSet
+@test rules(modelc) isa Vector{SX.DecisionSet}
 
 @test_throws MethodError  symbolic_analysis(
     dsc, solemc;
@@ -175,7 +175,7 @@ modelc = symbolic_analysis(
     dsc, solemc;
     extractor=TREPANRuleExtractor()
 )
-@test rules(modelc) isa SX.DecisionSet
+@test rules(modelc) isa Vector{SX.DecisionSet}
 
 @test_throws MethodError  symbolic_analysis(
     dsc, solemc;

@@ -1,3 +1,55 @@
+"""
+   SoleXplorer
+
+[`SoleXplorer`](https://github.com/aclai-lab/SoleXplorer.jl) is a comprehensive toolbox for 
+symbolic machine learning and explainable AI in Julia.
+
+It brings together functionality from the Sole ecosystem components, providing 
+symbolic learning algorithms, rule extraction methods, and modal timeseries feature extraction.
+
+# Components
+
+- **SoleBase.jl**: Core types and windowing functions for symbolic learning, including 
+  `Label` types (`CLabel`, `RLabel`, `XGLabel`) and windowing strategies (`movingwindow`, 
+  `wholewindow`, `splitwindow`, `adaptivewindow`)
+
+- **SoleData.jl**: Data structures and utilities for symbolic datasets, including 
+  `scalarlogiset` and ARFF dataset loading capabilities
+
+- **SoleModels.jl**: Symbolic model implementations including `DecisionTree`, 
+  `DecisionEnsemble`, `DecisionSet`, and rule extraction via `RuleExtractor`
+
+- **SolePostHoc.jl**: Post-hoc explainability methods, featuring `InTreesRuleExtractor` 
+  and other rule extraction algorithms for model interpretation
+
+- **MLJ Ecosystem**: Full integration with MLJ for model evaluation, tuning, and 
+  performance assessment including classification measures (`accuracy`, `confusion_matrix`, 
+  `kappa`, `log_loss`) and regression measures (`rms`, `l1`, `l2`, `mae`, `mav`)
+
+- **Time Series Features**: Comprehensive feature extraction via Catch22 library with 
+  predefined feature sets (`base_set`, `catch9`, `catch22_set`, `complete_set`)
+
+- **External Models**: Integration with popular ML libraries including DecisionTree.jl, 
+  XGBoost.jl, and modal decision tree implementations
+
+# Typical Workflow
+
+```julia
+using SoleXplorer, MLJ
+
+range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
+modelc = symbolic_analysis(
+    Xc, yc;
+    model=DecisionTreeClassifier(),
+    resample=CV(nfolds=5, shuffle=true),
+    rng=Xoshiro(1),
+    tuning=(tuning=Grid(resolution=10), resampling=CV(nfolds=3), range, measure=accuracy, repeats=2),
+    extractor=InTreesRuleExtractor(),
+    measures=(accuracy, log_loss, confusion_matrix, kappa)      
+)
+```
+
+"""
 module SoleXplorer
 using  Reexport
 
@@ -5,7 +57,7 @@ using  SoleBase: Label, CLabel, RLabel, XGLabel
 using  SoleBase: movingwindow, wholewindow, splitwindow, adaptivewindow
 using  SoleData: scalarlogiset
 using  SoleModels: Branch, ConstantModel
-using  SoleModels: DecisionEnsemble, DecisionTree
+using  SoleModels: DecisionEnsemble, DecisionTree, DecisionXGBoost
 using  SoleModels: AbstractModel, solemodel, weighted_aggregation, apply!
 using  SoleModels: RuleExtractor, DecisionSet
 using  SolePostHoc
@@ -18,9 +70,9 @@ using  SolePostHoc
 using  MLJ
 using  MLJ: MLJBase, MLJTuning
 
-# classification measures
+# performance measures for classification
 @reexport using MLJ: accuracy, confusion_matrix, kappa, log_loss
-# regression measures
+# performance measures for regression 
 @reexport using MLJ: rms, l1, l2, mae, mav
 
 # ---------------------------------------------------------------------------- #
@@ -34,13 +86,21 @@ using  Random
 # ---------------------------------------------------------------------------- #
 #                                   types                                      #
 # ---------------------------------------------------------------------------- #
-const Optional{T} = Union{T, Nothing}
+"""
+    Maybe{T}
+
+Type alias for `Union{T, Nothing}`.
+"""
+const Maybe{T} = Union{T, Nothing}
 
 # ---------------------------------------------------------------------------- #
 #                                    utils                                     #
 # ---------------------------------------------------------------------------- #
+# feature extraction via Catch22
 using  Catch22
 include("featureset.jl")
+
+# export user friendly Catch22 nicknames
 export mode_5, mode_10, embedding_dist, acf_timescale, acf_first_min, ami2, trev, outlier_timing_pos
 export outlier_timing_neg, whiten_timescale, forecast_error, ami_timescale, high_fluctuation, stretch_decreasing
 export stretch_high, entropy_pairs, rs_range, dfa, low_freq_power, centroid_freq, transition_variance, periodicity

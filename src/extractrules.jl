@@ -15,16 +15,13 @@ function extractrules(
     params    :: NamedTuple,
     ds        :: EitherDataSet,
     solem     :: SoleModel
-)::DecisionSet
+)::Vector{DecisionSet}
     params = to_namedtuple(extractor)
-    rules = reduce(vcat, map(enumerate(solemodels(solem))) do (i, model)
+    map(enumerate(solemodels(solem))) do (i, model)
         test = get_test(ds.pidxs[i])
         X_test, y_test = get_X(ds)[test, :], get_y(ds)[test]
-        extracted_rules = RuleExtraction.modalextractrules(extractor, model, X_test, y_test; params...)
-        extracted_rules.rules  
-    end)
-
-    return DecisionSet(rules)
+        RuleExtraction.modalextractrules(extractor, model, X_test, y_test; params...)
+    end
 end
 
 # ---------------------------------------------------------------------------- #
@@ -35,13 +32,10 @@ function extractrules(
     params    :: NamedTuple,
     ds        :: EitherDataSet,
     solem     :: SoleModel
-)::DecisionSet
-    rules = reduce(vcat, map(enumerate(solemodels(solem))) do (i, model)
-        extracted_rules = RuleExtraction.modalextractrules(extractor, model; params...)
-        extracted_rules.decision_set.rules
-    end)
-
-    return DecisionSet(rules)
+)::Vector{LumenResult}
+    map(enumerate(solemodels(solem))) do (i, model)
+        RuleExtraction.modalextractrules(extractor, model; params...)
+    end
 end
 
 # ---------------------------------------------------------------------------- #
@@ -52,13 +46,10 @@ function extractrules(
     params    :: NamedTuple,
     ds        :: EitherDataSet,
     solem     :: SoleModel
-)::DecisionSet
-    rules = reduce(vcat, map(enumerate(solemodels(solem))) do (i, model)
-        extracted_rules = RuleExtraction.modalextractrules(extractor, model; params...)
-        extracted_rules.rules 
-    end)
-
-    return DecisionSet(rules)
+)::Vector{DecisionSet}
+    map(enumerate(solemodels(solem))) do (i, model)
+        RuleExtraction.modalextractrules(extractor, model; params...)
+    end
 end
 
 # ---------------------------------------------------------------------------- #
@@ -69,15 +60,12 @@ function extractrules(
     params    :: NamedTuple,
     ds        :: EitherDataSet,
     solem     :: SoleModel
-)::DecisionSet
-    rules = reduce(vcat, map(enumerate(solemodels(solem))) do (i, model)
+)::Vector{DecisionSet}
+    map(enumerate(solemodels(solem))) do (i, model)
         test = get_test(ds.pidxs[i])
         X_test, y_test = get_X(ds)[test, :], get_y(ds)[test]
-        extracted_rules = RuleExtraction.modalextractrules(extractor, model, X_test, y_test; params...)
-        extracted_rules.rules 
-    end)
-
-    return DecisionSet(rules)
+        RuleExtraction.modalextractrules(extractor, model, X_test, y_test; params...)
+    end
 end
 
 # ---------------------------------------------------------------------------- #
@@ -88,17 +76,14 @@ function extractrules(
     params    :: NamedTuple,
     ds        :: EitherDataSet,
     solem     :: SoleModel
-)::DecisionSet
-    rules = reduce(vcat, map(enumerate(solemodels(solem))) do (i, model)
+)::Vector{DecisionSet}
+    map(enumerate(solemodels(solem))) do (i, model)
         test = get_test(ds.pidxs[i])
         X_test = get_X(ds)[test, :]
         Xmin = map(minimum, eachcol(X_test))
         Xmax = map(maximum, eachcol(X_test))
-        extracted_rules = RuleExtraction.modalextractrules(extractor, model, Xmin, Xmax; params...)
-        extracted_rules.rules 
-    end)
-
-    return DecisionSet(rules)
+        RuleExtraction.modalextractrules(extractor, model, Xmin, Xmax; params...)
+    end
 end
 
 # ---------------------------------------------------------------------------- #
@@ -109,13 +94,10 @@ function extractrules(
     params    :: NamedTuple,
     ds        :: EitherDataSet,
     solem     :: SoleModel
-)::DecisionSet
-    rules = reduce(vcat, map(enumerate(solemodels(solem))) do (i, model)
+)::Vector{DecisionSet}
+    map(enumerate(solemodels(solem))) do (i, model)
         test = get_test(ds.pidxs[i])
         X_test = get_X(ds)[test, :]
-        extracted_rules = RuleExtraction.modalextractrules(extractor, model, X_test; params...)
-        extracted_rules.rules 
-    end)
-
-    return DecisionSet(rules)
+        RuleExtraction.modalextractrules(extractor, model, X_test; params...)
+    end
 end

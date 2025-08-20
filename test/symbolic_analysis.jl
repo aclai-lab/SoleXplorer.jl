@@ -16,6 +16,12 @@ Xts, yts = load_arff_dataset("NATOPS")
 modelc = symbolic_analysis(Xc, yc)
 @test modelc isa SX.ModelSet
 
+modelr = symbolic_analysis(Xr, yr)
+@test modelc isa SX.ModelSet
+
+modelts = symbolic_analysis(Xts, yts)
+@test modelc isa SX.ModelSet
+
 # ---------------------------------------------------------------------------- #
 #                               usage example #1                               #
 # ---------------------------------------------------------------------------- #
