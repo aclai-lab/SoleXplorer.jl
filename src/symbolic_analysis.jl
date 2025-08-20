@@ -368,11 +368,6 @@ end
 
 End-to-end symbolic analysis starting from raw data.
 
-# Workflow
-1. `_setup_dataset(X, y, w; kwargs...)` - Create dataset wrapper
-2. `_train_test(ds)` - Perform CV training and symbolic conversion
-3. `_symbolic_analysis(ds, solem; extractor, measures)` - Extract rules and evaluate
-
 # Arguments
 - `X, y, w`: Features, targets, and optional weights
 - `extractor`: Rule extraction strategy (ModalExtractor, etc.)
@@ -380,6 +375,13 @@ End-to-end symbolic analysis starting from raw data.
 - `kwargs`: Passed to dataset setup (model, cv_folds, etc.)
 
 See [`setup_dataset`](@ref) for dataset setup parameter descriptions.
+
+# Extended help
+
+## Workflow
+1. `_setup_dataset(X, y, w; kwargs...)` - Create dataset wrapper
+2. `_train_test(ds)` - Perform CV training and symbolic conversion
+3. `_symbolic_analysis(ds, solem; extractor, measures)` - Extract rules and evaluate
 """
 function symbolic_analysis(
     X::AbstractDataFrame,
