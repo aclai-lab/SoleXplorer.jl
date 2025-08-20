@@ -283,37 +283,36 @@ const EitherDataSet = Union{PropositionalDataSet, ModalDataSet}
 # ---------------------------------------------------------------------------- #
 #                                 constructors                                 #
 # ---------------------------------------------------------------------------- #
-"""
-    _setup_dataset(X, y, w=nothing; kwargs...)::AbstractDataSet
+#     _setup_dataset(X, y, w=nothing; kwargs...)::AbstractDataSet
 
-Internal function to prepare and construct a dataset warper.
+# Internal function to prepare and construct a dataset warper.
 
-# Arguments
-- `X::AbstractDataFrame`: Feature data
-- `y::AbstractVector`: Target variable
-- `w::MayVector=nothing`: Optional sample weights
+# # Arguments
+# - `X::AbstractDataFrame`: Feature data
+# - `y::AbstractVector`: Target variable
+# - `w::MayVector=nothing`: Optional sample weights
 
-# Keyword Arguments
-- `model::MLJ.Model=_DefaultModel(y)`: MLJ model to use
-- `resample::ResamplingStrategy=Holdout(shuffle=true)`: Resampling strategy
-- `train_ratio::Real=0.7`: Fraction of data for training
-- `valid_ratio::Real=0.0`: Fraction of data for validation
-- `rng::AbstractRNG=TaskLocalRNG()`: Random number generator
-- `win::WinFunction=AdaptiveWindow(nwindows=3, relative_overlap=0.1)`: Windowing function
-- `features::Tuple{Vararg{Base.Callable}}=(maximum, minimum)`: Feature extraction functions
-- `modalreduce::Base.Callable=mean`: Reduction function for modal algorithms
-- `tuning::NamedTuple=NamedTuple()`: Hyperparameter tuning specification
+# # Keyword Arguments
+# - `model::MLJ.Model=_DefaultModel(y)`: MLJ model to use
+# - `resample::ResamplingStrategy=Holdout(shuffle=true)`: Resampling strategy
+# - `train_ratio::Real=0.7`: Fraction of data for training
+# - `valid_ratio::Real=0.0`: Fraction of data for validation
+# - `rng::AbstractRNG=TaskLocalRNG()`: Random number generator
+# - `win::WinFunction=AdaptiveWindow(nwindows=3, relative_overlap=0.1)`: Windowing function
+# - `features::Tuple{Vararg{Base.Callable}}=(maximum, minimum)`: Feature extraction functions
+# - `modalreduce::Base.Callable=mean`: Reduction function for modal algorithms
+# - `tuning::NamedTuple=NamedTuple()`: Hyperparameter tuning specification
 
-# Returns
-- `AbstractDataSet`: Either `PropositionalDataSet` or `ModalDataSet`
+# # Returns
+# - `AbstractDataSet`: Either `PropositionalDataSet` or `ModalDataSet`
 
-This function handles the complete pipeline of dataset preparation including:
-1. Model configuration and RNG propagation
-2. Multidimensional data treatment (aggregation vs. modal reduction)
-3. Data partitioning and resampling setup
-4. Hyperparameter tuning configuration
-5. MLJ Machine construction
-"""
+# This function handles the complete pipeline of dataset preparation including:
+# 1. Model configuration and RNG propagation
+# 2. Multidimensional data treatment (aggregation vs. modal reduction)
+# 3. Data partitioning and resampling setup
+# 4. Hyperparameter tuning configuration
+# 5. MLJ Machine construction
+
 function _setup_dataset(
     X             :: AbstractDataFrame,
     y             :: AbstractVector,
@@ -371,15 +370,35 @@ function _setup_dataset(
 end
 
 """
-    setup_dataset(args...; kwargs...)
+    setup_dataset(X, y, w=nothing; kwargs...)::AbstractDataSet
 
-High-level interface for dataset creation with automatic preprocessing.
+Internal function to prepare and construct a dataset warper.
 
-This is the main entry point for creating datasets in SoleXplorer. It provides
-a convenient interface that handles all the complexity of preparing data for
-both standard and modal machine learning algorithms.
+# Arguments
+- `X::AbstractDataFrame`: Feature data
+- `y::AbstractVector`: Target variable
+- `w::MayVector=nothing`: Optional sample weights
 
-See [`_setup_dataset`](@ref) for detailed parameter descriptions.
+# Keyword Arguments
+- `model::MLJ.Model=_DefaultModel(y)`: MLJ model to use
+- `resample::ResamplingStrategy=Holdout(shuffle=true)`: Resampling strategy
+- `train_ratio::Real=0.7`: Fraction of data for training
+- `valid_ratio::Real=0.0`: Fraction of data for validation
+- `rng::AbstractRNG=TaskLocalRNG()`: Random number generator
+- `win::WinFunction=AdaptiveWindow(nwindows=3, relative_overlap=0.1)`: Windowing function
+- `features::Tuple{Vararg{Base.Callable}}=(maximum, minimum)`: Feature extraction functions
+- `modalreduce::Base.Callable=mean`: Reduction function for modal algorithms
+- `tuning::NamedTuple=NamedTuple()`: Hyperparameter tuning specification
+
+# Returns
+- `AbstractDataSet`: Either `PropositionalDataSet` or `ModalDataSet`
+
+This function handles the complete pipeline of dataset preparation including:
+1. Model configuration and RNG propagation
+2. Multidimensional data treatment (aggregation vs. modal reduction)
+3. Data partitioning and resampling setup
+4. Hyperparameter tuning configuration
+5. MLJ Machine construction
 
 # Example
 ```julia
@@ -417,7 +436,7 @@ setup_dataset(args...; kwargs...) = _setup_dataset(args...; kwargs...)
 
 Convenience method when target variable is a column in the feature DataFrame.
 
-See [`_setup_dataset`](@ref) for detailed parameter descriptions.
+See [`setup_dataset`](@ref) for detailed parameter descriptions.
 """
 function setup_dataset(
     X::AbstractDataFrame,

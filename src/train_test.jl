@@ -177,20 +177,6 @@ solemodels(solem::SoleModel) = solem.sole
 # ---------------------------------------------------------------------------- #
 #                                  train_test                                  #
 # ---------------------------------------------------------------------------- #
-"""
-    _train_test(ds::EitherDataSet) -> SoleModel
-
-Internal cross-validation training implementation.
-
-Workflow for each fold:
-1. Extract train/test indices and data
-2. Configure XGBoost watchlist if needed (early stopping)
-3. Fit MLJ machine on training data
-4. Apply trained model to test data (converts to symbolic model)
-5. Store symbolic model in results vector
-
-Returns SoleModel containing all fold models.
-"""
 function _train_test(ds::EitherDataSet)::SoleModel
     n_folds   = length(ds.pidxs)
     solemodel = Vector{AbstractModel}(undef, n_folds)
@@ -211,9 +197,20 @@ function _train_test(ds::EitherDataSet)::SoleModel
 end
 
 """
-    train_test(args...; kwargs...) -> SoleModel
+    _train_test(ds::EitherDataSet) -> SoleModel
 
-Main interface for cross-validation training and symbolic conversion.
+Internal cross-validation training implementation.
+
+Workflow for each fold:
+1. Extract train/test indices and data
+2. Configure XGBoost watchlist if needed (early stopping)
+3. Fit MLJ machine on training data
+4. Apply trained model to test data (converts to symbolic model)
+5. Store symbolic model in results vector
+
+Returns SoleModel containing all fold models.
+
+See [`setup_dataset`](@ref) for dataset setup parameter descriptions.
 """
 function train_test(args...; kwargs...)::SoleModel
     ds = _setup_dataset(args...; kwargs...)

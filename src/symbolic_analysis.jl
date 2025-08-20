@@ -320,16 +320,6 @@ end
 # ---------------------------------------------------------------------------- #
 #                              symbolic_analysis                               #
 # ---------------------------------------------------------------------------- #
-"""
-    _symbolic_analysis(ds::EitherDataSet, solem::SoleModel; 
-                      extractor=nothing, measures=()) -> ModelSet
-
-Internal function performing symbolic analysis on trained models.
-
-# Optional Components
-- **Rule Extraction**: If `extractor` provided, calls `extractrules(extractor, ds, solem)`
-- **Performance Evaluation**: If `measures` provided, calls `eval_measures(...)`
-"""
 function _symbolic_analysis(
     ds::EitherDataSet,
     solem::SoleModel;
@@ -388,6 +378,8 @@ End-to-end symbolic analysis starting from raw data.
 - `extractor`: Rule extraction strategy (ModalExtractor, etc.)
 - `measures`: Performance measures to evaluate (accuracy, auc, etc.)
 - `kwargs`: Passed to dataset setup (model, cv_folds, etc.)
+
+See [`setup_dataset`](@ref) for dataset setup parameter descriptions.
 """
 function symbolic_analysis(
     X::AbstractDataFrame,
