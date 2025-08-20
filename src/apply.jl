@@ -1,5 +1,5 @@
 """
-apply.jl - Unified Model Conversion Interface
+apply.jl - Unified Model Prediction Interface
 
 This module provides `apply(m, X, y)` methods that:
 1. Extract fitted models from MLJ machine wrappers
