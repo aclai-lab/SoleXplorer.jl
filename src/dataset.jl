@@ -40,18 +40,18 @@ Type alias for MLJ tuning strategy, allowing no tuning (`Nothing`).
 const Tuning = Union{Nothing, MLJTuning.TuningStrategy}
 
 """
-    OptAggregationInfo = Optional{AggregationInfo}
+    MayAggregationInfo = Maybe{AggregationInfo}
 
-Optional aggregation information for modal datasets.
+Type alias for optional aggregation information for modal datasets.
 """
-const OptAggregationInfo = Optional{AggregationInfo}
+const MayAggregationInfo = Maybe{AggregationInfo}
 
 """
-    OptVector = Optional{AbstractVector}
+    MayVector = Maybe{AbstractVector}
 
-Optional vector type, used for sample weights.
+Type alias for optional vector type, used for sample weights.
 """
-const OptVector = Optional{AbstractVector}
+const MayVector = Maybe{AbstractVector}
 
 # ---------------------------------------------------------------------------- #
 #                                  defaults                                    #
@@ -204,7 +204,7 @@ Wrapper for standard (propositional) machine learning algorithms.
 - `mach::MLJ.Machine`: The underlying MLJ machine
 - `pidxs::Vector{PartitionIdxs}`: Partition indices for train/validation/test splits
 - `pinfo::PartitionInfo`: Information about the partitioning strategy
-- `ainfo::OptAggregationInfo`: Optional aggregation information for feature extraction
+- `ainfo::MayAggregationInfo`: Optional aggregation information for feature extraction
 
 The `ainfo` field is used when a multidimensional dataset is aggregated using windowing 
 and feature extraction to convert temporal sequences into tabular format.
@@ -214,7 +214,7 @@ mutable struct PropositionalDataSet{M} <: AbstractDataSet
     mach    :: MLJ.Machine
     pidxs   :: Vector{PartitionIdxs}
     pinfo   :: PartitionInfo
-    ainfo   :: OptAggregationInfo
+    ainfo   :: MayAggregationInfo
 end
 
 """
@@ -291,7 +291,7 @@ Internal function to prepare and construct a dataset warper.
 # Arguments
 - `X::AbstractDataFrame`: Feature data
 - `y::AbstractVector`: Target variable
-- `w::OptVector=nothing`: Optional sample weights
+- `w::MayVector=nothing`: Optional sample weights
 
 # Keyword Arguments
 - `model::MLJ.Model=_DefaultModel(y)`: MLJ model to use
@@ -317,7 +317,7 @@ This function handles the complete pipeline of dataset preparation including:
 function _setup_dataset(
     X             :: AbstractDataFrame,
     y             :: AbstractVector,
-    w             :: OptVector               = nothing;
+    w             :: MayVector               = nothing;
     model         :: MLJ.Model               = _DefaultModel(y),
     resample      :: ResamplingStrategy      = Holdout(shuffle=true),
     train_ratio   :: Real                    = 0.7,

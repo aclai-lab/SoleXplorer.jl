@@ -87,11 +87,11 @@ using  Random
 #                                   types                                      #
 # ---------------------------------------------------------------------------- #
 """
-    Optional{T}
+    Maybe{T}
 
 Type alias for `Union{T, Nothing}`.
 """
-const Optional{T} = Union{T, Nothing}
+const Maybe{T} = Union{T, Nothing}
 
 # ---------------------------------------------------------------------------- #
 #                                    utils                                     #

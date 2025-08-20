@@ -79,8 +79,8 @@ end
 # ---------------------------------------------------------------------------- #
 #                                   types                                      #
 # ---------------------------------------------------------------------------- #
-const OptRules    = Optional{Vector{DecisionSet}}
-const OptMeasures = Optional{Measures}
+const MayRules    = Maybe{Vector{DecisionSet}}
+const MayMeasures = Maybe{Measures}
 
 # ---------------------------------------------------------------------------- #
 #                                  modelset                                    #
@@ -93,20 +93,20 @@ Comprehensive container for symbolic model analysis results.
 # Fields
 - `ds::EitherDataSet`: Dataset wrapper used for training
 - `sole::Vector{AbstractModel}`: Symbolic models from each CV fold
-- `rules::OptRules`: Extracted decision rules (optional)
-- `measures::OptMeasures`: Performance evaluation results (optional)
+- `rules::MayRules`: Extracted decision rules (optional)
+- `measures::MayMeasures`: Performance evaluation results (optional)
 """
 mutable struct ModelSet{S} <: AbstractModelSet
     ds       :: EitherDataSet
     sole     :: Vector{AbstractModel}
-    rules    :: OptRules
-    measures :: OptMeasures
+    rules    :: MayRules
+    measures :: MayMeasures
 
     function ModelSet(
         ds       :: EitherDataSet,
         sole     :: SoleModel{S};
-        rules    :: OptRules = nothing,
-        measures :: OptMeasures = nothing
+        rules    :: MayRules = nothing,
+        measures :: MayMeasures = nothing
     ) where S
         new{S}(ds, solemodels(sole), rules, measures)
     end
@@ -392,7 +392,7 @@ End-to-end symbolic analysis starting from raw data.
 function symbolic_analysis(
     X::AbstractDataFrame,
     y::AbstractVector,
-    w::OptVector = nothing;
+    w::MayVector = nothing;
     extractor::Union{Nothing,RuleExtractor}=nothing,
     measures::Tuple{Vararg{FussyMeasure}}=(),
     kwargs...
