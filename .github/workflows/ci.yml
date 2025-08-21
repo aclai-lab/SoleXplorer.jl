@@ -2,7 +2,7 @@ name: CI
 on:
   push:
     branches:
-      - 71-documentation
+      - 79-modal-association-rules
     tags: ['*']
   pull_request:
   workflow_dispatch:
