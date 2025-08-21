@@ -21,6 +21,7 @@ SolePostHoc = "cf1aa0c3-12c9-4ebe-9bdc-bd6c2ca79b72"
 XGBoost = "009559a3-9522-5dbb-924b-0b6ed2b22bb9"
 
 [sources]
+ModalAssociationRules = {rev = "main", url = "https://github.com/aclai-lab/ModalAssociationRules.jl"}
 ModalDecisionTrees = {rev = "64-modaladaboost", url = "https://github.com/aclai-lab/ModalDecisionTrees.jl"}
 SoleData = {rev = "dev", url = "https://github.com/aclai-lab/SoleData.jl"}
 SolePostHoc = {rev = "dev", url = "https://github.com/aclai-lab/SolePostHoc.jl"}
