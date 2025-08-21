@@ -48,21 +48,10 @@ e se non funziona aprire una PR in MLJ.
 Andrebbe risolto.
 
 # ---------------------------------------------------------------------------- #
-#                                    posthoc                                   #
-# ---------------------------------------------------------------------------- #
-bisognerebbe ridefinire i metodi con cui si chiamano gli estrattori, 
-per renderli uguali alle chiamate degli altri parametri di sole.
-Banalmente, uguali a comne si chiamano i modelli, cioè
-quando creo la struttura posso inserirne i parametri.
-Questo ad oggi non è possibile in PostHoc: i parametri vengono passati
-con la funzione modalextractrules.
-Si può fare, con poco, qualcosa di più idiomatico.
-Da parlarne con Marco.
-
-# ---------------------------------------------------------------------------- #
 #                            modal association rules                           #
 # ---------------------------------------------------------------------------- #
 da fare tassativamente entro ottobre
+IN LAVORAZIONE
 
 # ---------------------------------------------------------------------------- #
 #                               feature selection                              #
@@ -99,4 +88,3 @@ Propagalo anche a PostHoc
 #                             apply e extractrules                             #
 # ---------------------------------------------------------------------------- #
 Bisogna pensare anche ai modelli non supervisionati: apply(m, X)
-Guarda Lumen per il dispatch più pulito e chiama Perry <- FATTO
