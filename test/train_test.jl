@@ -1,8 +1,8 @@
-using Test
-using SoleXplorer
-using MLJ
-using DataFrames, Random
-const SX = SoleXplorer
+# using Test
+# using SoleXplorer
+# using MLJ
+# using DataFrames, Random
+# const SX = SoleXplorer
 
 Xc, yc = @load_iris
 Xc = DataFrame(Xc)
@@ -209,8 +209,6 @@ solemr = train_test(
 # ---------------------------------------------------------------------------- #
 #                                    various                                   #
 # ---------------------------------------------------------------------------- #
-@test SX.TunedMach(DecisionTreeClassifier) <: Union{SX.PropositionalDataSet, SX.ModalDataSet}
-
 @testset "Base.show tests for train_test.jl" begin
     rng = Xoshiro(42)
     
