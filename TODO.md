@@ -6,10 +6,16 @@ Serve un metodo preciso per buttarla giù.
 Albi sicuramente potrà essere d'aiuto, ma anche Marco.
 
 # ---------------------------------------------------------------------------- #
+#                                  load/save                                   #
+# ---------------------------------------------------------------------------- #
+Importante, vedi di farlo entro Parigi
+
+# ---------------------------------------------------------------------------- #
 #                                  XgBoost ext                                 #
 # ---------------------------------------------------------------------------- #
 Ha un probabile bug in regressione, quando incontra alberi composti da una sola foglia
 Bisogna testarlo e verificare come risolvere la questione.
+POTREBBE ANDARE BENE, VERIFICA I TEST
 
 # ---------------------------------------------------------------------------- #
 #                                 bug di MLJ #1                                #

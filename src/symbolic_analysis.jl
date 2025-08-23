@@ -79,9 +79,9 @@ end
 # ---------------------------------------------------------------------------- #
 #                                   types                                      #
 # ---------------------------------------------------------------------------- #
-# const PostHocOut  = Union{Vector{DecisionSet, Vector{LumenResult}}}
-const MayRules    = Maybe{Union{Vector{DecisionSet}, Vector{LumenResult}}}
-const MayMeasures = Maybe{Measures}
+const MayRules        = Maybe{Union{Vector{DecisionSet}, Vector{LumenResult}}}
+const MayMeasures     = Maybe{Measures}
+const MayAssociations = Maybe{Vector{ARule}}
 
 # ---------------------------------------------------------------------------- #
 #                                  modelset                                    #
@@ -98,18 +98,20 @@ Comprehensive container for symbolic model analysis results.
 - `measures::MayMeasures`: Performance evaluation results (optional)
 """
 mutable struct ModelSet{S} <: AbstractModelSet
-    ds       :: EitherDataSet
-    sole     :: Vector{AbstractModel}
-    rules    :: MayRules
-    measures :: MayMeasures
+    ds           :: EitherDataSet
+    sole         :: Vector{AbstractModel}
+    rules        :: MayRules
+    associations :: MayAssociations
+    measures     :: MayMeasures
 
     function ModelSet(
         ds       :: EitherDataSet,
         sole     :: SoleModel{S};
-        rules    :: MayRules = nothing,
-        measures :: MayMeasures = nothing
+        rules    :: MayRules=nothing,
+        miner    :: MayAssociations=nothing,
+        measures :: MayMeasures=nothing
     ) where S
-        new{S}(ds, solemodels(sole), rules, measures)
+        new{S}(ds, solemodels(sole), rules, miner, measures)
     end
 end
 
@@ -118,6 +120,9 @@ function Base.show(io::IO, m::ModelSet{S}) where S
     print(io, "models=$(length(m.sole))")
     if !isnothing(m.rules)
         print(io, ", rules=$(length(m.rules.rules))")
+    end
+        if !isnothing(m.associations)
+        print(io, ", associations=$(length(m.associations))")
     end
     if !isnothing(m.measures)
         print(io, ", measures=$(length(m.measures.measures))")
@@ -134,6 +139,12 @@ function Base.show(io::IO, ::MIME"text/plain", m::ModelSet{S}) where S
         println(io, "  Rules: $(length(first(m.rules))) extracted rules per model")
     else
         println(io, "  Rules: none")
+    end
+
+    if !isnothing(m.associations)
+        println(io, "  Associations: $(length(m.associations)) associated rules per model")
+    else
+        println(io, "  Associations: none")
     end
     
     if !isnothing(m.measures)
@@ -325,9 +336,10 @@ function _symbolic_analysis(
     ds::EitherDataSet,
     solem::SoleModel;
     extractor::Union{Nothing,RuleExtractor,Tuple{RuleExtractor,NamedTuple}}=nothing,
+    association::Union{Nothing,AbstractAssociationExtractor}=nothing,
     measures::Tuple{Vararg{FussyMeasure}}=(),
 )::ModelSet
-    rules = isnothing(extractor)  ? nothing : begin
+    rules = isnothing(extractor) ? nothing : begin
         # TODO propaga rng, dovrai fare intrees mutable struct
         if extractor isa Tuple
             params = last(extractor)
@@ -338,12 +350,21 @@ function _symbolic_analysis(
         extractrules(extractor, params, ds, solem)
     end
 
+    miner = isnothing(association) ? nothing : begin
+        X = scalarlogiset(get_X(ds))
+        algo = get_method(association)
+        masargs = get_mas_args(association)
+        maskwargs = get_mas_kwargs(association)
+
+        Miner(X |> deepcopy, algo, masargs...; maskwargs...) |> mine!
+    end
+
     y_test = get_y_test(ds)
     isempty(measures) && (measures = _DefaultMeasures(first(y_test)))
     # all_classes = unique(Iterators.flatten(y_test))
     measures = eval_measures(ds, solem, measures, y_test)
 
-    return ModelSet(ds, solem; rules, measures)
+    return ModelSet(ds, solem; rules, miner, measures)
 end
 
 """
@@ -389,12 +410,13 @@ function symbolic_analysis(
     y::AbstractVector,
     w::MayVector = nothing;
     extractor::Union{Nothing,RuleExtractor}=nothing,
+    association::Union{Nothing,AbstractAssociationExtractor}=nothing,
     measures::Tuple{Vararg{FussyMeasure}}=(),
     kwargs...
 )::ModelSet
     ds = _setup_dataset(X, y, w; kwargs...)
     solem = _train_test(ds)
-    _symbolic_analysis(ds, solem; extractor, measures)
+    _symbolic_analysis(ds, solem; extractor, association, measures)
 end
 
 symbolic_analysis(X::Any, args...; kwargs...) = symbolic_analysis(DataFrame(X), args...; kwargs...)

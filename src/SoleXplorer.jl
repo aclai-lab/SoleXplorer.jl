@@ -60,11 +60,15 @@ using  SoleModels: Branch, ConstantModel
 using  SoleModels: DecisionEnsemble, DecisionTree, DecisionXGBoost
 using  SoleModels: AbstractModel, solemodel, weighted_aggregation, apply!
 using  SoleModels: RuleExtractor, DecisionSet
+
 using  SolePostHoc
 @reexport using SolePostHoc: InTreesRuleExtractor, LumenRuleExtractor, BATreesRuleExtractor
 @reexport using SolePostHoc: RULECOSIPLUSRuleExtractor, REFNERuleExtractor, TREPANRuleExtractor
 
 using ModalAssociationRules
+@reexport using ModalAssociationRules: Item, Atom, ScalarCondition, VariableMin, VariableMax
+@reexport using ModalAssociationRules: IA_L, box, diamond
+@reexport using ModalAssociationRules: gsupport, gconfidence, glift, gconviction, gleverage
 
 # ---------------------------------------------------------------------------- #
 #                                     MLJ                                      #
@@ -151,6 +155,9 @@ include("train_test.jl")
 export train_test
 
 include("extractrules.jl")
+include("associationrules.jl")
+export Apriori, FPGrowth, Eclat
+
 include("symbolic_analysis.jl")
 export symbolic_analysis
 export solemodels, rules
