@@ -26,6 +26,7 @@ test_suites = [
     ("Symbolic Analysis",    ["symbolic_analysis.jl", ]),
     ("Solemodel robustness", ["robustness.jl"         ]),
     ("Rule extraction",      ["rule_extraction.jl"    ]),
+    ("Association Rules",    ["associationrules.jl"   ]),
 ]
 
 @testset "SoleXplorer.jl" begin
