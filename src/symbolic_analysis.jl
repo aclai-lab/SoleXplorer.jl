@@ -263,7 +263,7 @@ end
 #                                eval measures                                 #
 # ---------------------------------------------------------------------------- #
 """
-    eval_measures(ds::EitherDataSet, solem::SoleModel, 
+    eval_measures(ds::EitherDataSet, solem::Vector{AbstractModel}, 
                  measures::Tuple{Vararg{FussyMeasure}}, 
                  y_test::Vector{<:AbstractVector{<:Label}}) -> Measures
 
@@ -272,7 +272,7 @@ Evaluate symbolic models using MLJ measures across CV folds.
 """
 function eval_measures(
     ds::EitherDataSet,
-    solem::SoleModel,
+    solem::Vector{AbstractModel},
     measures::Tuple{Vararg{FussyMeasure}},
     y_test::Vector{<:AbstractVector{<:Label}}
 )::Measures
@@ -290,7 +290,7 @@ function eval_measures(
     fold_weights(::MLJBase.StatisticalMeasuresBase.Sum) = nothing
     
     measurements_vector = mapreduce(vcat, 1:nfolds) do k
-        yhat_given_operation = Dict(op=>op(solemodels(solem)[k], y_test[k]) for op in unique(operations))
+        yhat_given_operation = Dict(op=>op(solem[k], y_test[k]) for op in unique(operations))
 
         # costretto a convertirlo a stringa in quanto certe misure di statistical measures non accettano
         # categorical array, tipo confusion matrix e kappa
@@ -332,14 +332,16 @@ end
 # ---------------------------------------------------------------------------- #
 #                              symbolic_analysis                               #
 # ---------------------------------------------------------------------------- #
-function _symbolic_analysis(
-    ds::EitherDataSet,
-    solem::SoleModel;
+function _symbolic_analysis!(
+    modelset::ModelSet;
     extractor::Union{Nothing,RuleExtractor,Tuple{RuleExtractor,NamedTuple}}=nothing,
     association::Union{Nothing,AbstractAssociationExtractor}=nothing,
-    measures::Tuple{Vararg{FussyMeasure}}=(),
-)::ModelSet
-    rules = isnothing(extractor) ? nothing : begin
+    measures::Tuple{Vararg{FussyMeasure}}=()
+)::Nothing
+    ds = dsetup(modelset)
+    solem = solemodels(modelset)
+
+    modelset.rules = isnothing(extractor) ? nothing : begin
         # TODO propaga rng, dovrai fare intrees mutable struct
         if extractor isa Tuple
             params = last(extractor)
@@ -350,7 +352,7 @@ function _symbolic_analysis(
         extractrules(extractor, params, ds, solem)
     end
 
-    miner = isnothing(association) ? nothing : begin
+    modelset.associations = isnothing(association) ? nothing : begin
         X = scalarlogiset(get_X(ds))
         algo = get_method(association)
         masargs = get_mas_args(association)
@@ -362,9 +364,19 @@ function _symbolic_analysis(
     y_test = get_y_test(ds)
     isempty(measures) && (measures = _DefaultMeasures(first(y_test)))
     # all_classes = unique(Iterators.flatten(y_test))
-    measures = eval_measures(ds, solem, measures, y_test)
+    modelset.measures = eval_measures(ds, solem, measures, y_test)
 
-    return ModelSet(ds, solem; rules, miner, measures)
+    return nothing
+end
+
+function _symbolic_analysis(
+    ds::EitherDataSet,
+    solem::SoleModel;
+    kwargs...
+)::ModelSet
+    modelset = ModelSet(ds, solem)
+    _symbolic_analysis!(modelset; kwargs...)
+    return modelset
 end
 
 """
@@ -382,6 +394,14 @@ function symbolic_analysis(
     kwargs...
 )::ModelSet
     _symbolic_analysis(ds, solem; kwargs...)
+end
+
+function symbolic_analysis!(
+    modelset::ModelSet; 
+    kwargs...
+)::ModelSet
+    _symbolic_analysis!(modelset; kwargs...)
+    return modelset
 end
 
 """
@@ -425,6 +445,13 @@ symbolic_analysis(X::Any, args...; kwargs...) = symbolic_analysis(DataFrame(X), 
 #                                 constructors                                 #
 # ---------------------------------------------------------------------------- #
 """
+    dsetup(m::ModelSet) -> EitherDataSet
+
+Extract the dataset setup from a ModelSet.
+"""
+dsetup(m::ModelSet) = m.ds
+
+"""
     solemodels(m::ModelSet) -> Vector{AbstractModel}
 
 Extract the vector of symbolic models from a ModelSet.
@@ -437,3 +464,10 @@ solemodels(m::ModelSet) = m.sole
 Extract the vector of rules from a ModelSet.
 """
 rules(m::ModelSet) = m.rules
+
+"""
+    associations(m::ModelSet) -> Vector{ARule}
+
+Extract the vector of associations from a ModelSet.
+"""
+associations(m::ModelSet) = m.associations

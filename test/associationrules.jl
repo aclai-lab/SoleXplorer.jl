@@ -2,6 +2,7 @@ using Test
 using SoleXplorer
 using MLJ
 using DataFrames, Random
+using ModalAssociationRules
 const SX = SoleXplorer
 
 # ---------------------------------------------------------------------------- #
@@ -103,12 +104,74 @@ EXPERIMENTS = [
     for values in (EXPERIMENTVALUES)
 ];
 
-modelts = symbolic_analysis(
-    Xts, yts;
-    model=ModalDecisionTree(),
-    resample=Holdout(shuffle=true),
-    rng=Xoshiro(1),
-    association=Apriori(manual_items, [(gsupport, 0.5, 0.7)], [(gconfidence, 0.7, 0.7)]),
-    measures=(accuracy, log_loss, confusion_matrix, kappa)      
-)
+modelts = symbolic_analysis(Xts, yts; model=ModalDecisionTree())
 @test modelts isa SX.ModelSet
+
+X1 = scalarlogiset(get_X(dsetup(modelts)))
+
+# algorithms to be tested
+SX_ALGORITHMS = [Apriori, FPGrowth, Eclat]
+MAS_ALGORITHMS = [apriori, fpgrowth, eclat]
+ALGORITHMS = collect(zip(SX_ALGORITHMS, MAS_ALGORITHMS))
+
+printstyled("Testing: $([a |> string for a in ALGORITHMS])\n", color=:green)
+
+for (nth,exp) in enumerate(EXPERIMENTS)
+    for algo in ALGORITHMS
+        printstyled("Running experiment SoleXplorer $(nth), $(algo[2])\n", color=:green)
+        symbolic_analysis!(
+            modelts;
+            association=algo[1](
+            exp.items,
+            exp.itemsetmeasures,
+            exp.rulemeasures;
+            exp.expkwargs...
+            )
+        )
+        sx_associations = associations(modelts)
+
+        printstyled("Running experiment MAS $(nth), $(algo[2])\n", color=:green)
+        mas_associations = Miner(
+            X1 |> deepcopy,
+            algo[2],
+            exp.items,
+            exp.itemsetmeasures,
+            exp.rulemeasures;
+            exp.expkwargs...
+        )
+        mine!(mas_associations)
+
+        @test sx_associations == arules(mas_associations)
+    end
+end
+
+# Other, manual tests
+model_command = symbolic_analysis(X_have_command, y_have_command; model=ModalDecisionTree())
+@test modelts isa SX.ModelSet
+
+X2 = scalarlogiset(get_X(model_command.ds))
+
+_MANUALEXP = EXPERIMENTS[5]
+
+symbolic_analysis!(
+    model_command;
+    association=FPGrowth(
+    _MANUALEXP.items,
+    _MANUALEXP.itemsetmeasures,
+    _MANUALEXP.rulemeasures;
+    _MANUALEXP.expkwargs...)
+)
+sx_fpgrowth = associations(model_command)
+
+fpgrowth_miner = Miner(
+    X2 |> deepcopy,
+    fpgrowth,
+    _MANUALEXP.items,
+    _MANUALEXP.itemsetmeasures,
+    _MANUALEXP.rulemeasures;
+    _MANUALEXP.expkwargs...
+)
+mine!(fpgrowth_miner)
+mas_fpgrowth = arules(fpgrowth_miner)
+
+@test sx_fpgrowth == mas_fpgrowth

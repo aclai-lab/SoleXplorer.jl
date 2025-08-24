@@ -159,7 +159,7 @@ include("associationrules.jl")
 export Apriori, FPGrowth, Eclat
 
 include("symbolic_analysis.jl")
-export symbolic_analysis
-export solemodels, rules
+export symbolic_analysis, symbolic_analysis!
+export dsetup, solemodels, rules, associations
 
 end
