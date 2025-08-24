@@ -449,7 +449,7 @@ end
 """
     length(ds::EitherDataSet)
 
-Return the number of samples in the dataset.
+Return the number of partitions in the dataset.
 """
 Base.length(ds::EitherDataSet) = length(ds.pidxs)
 
@@ -460,6 +460,8 @@ Extract test target values for each partition in the dataset.
 """
 get_y_test(ds::EitherDataSet)::AbstractVector = 
     [@views ds.mach.args[2].data[ds.pidxs[i].test] for i in 1:length(ds)]
+
+
 
 """
     get_mach(ds::EitherDataSet)::Machine

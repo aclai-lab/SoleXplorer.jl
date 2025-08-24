@@ -352,15 +352,7 @@ function _symbolic_analysis!(
         extractrules(extractor, params, ds, solem)
     end
 
-    modelset.associations = isnothing(association) ? nothing : begin
-        # X = scalarlogiset(get_X(ds))
-        X = get_logiset(ds)
-        algo = get_method(association)
-        masargs = get_mas_args(association)
-        maskwargs = get_mas_kwargs(association)
-
-        Miner(X |> deepcopy, algo, masargs...; maskwargs...) |> mine!
-    end
+    modelset.associations = isnothing(association) ? nothing : mas_caller(ds, association)
 
     y_test = get_y_test(ds)
     isempty(measures) && (measures = _DefaultMeasures(first(y_test)))
