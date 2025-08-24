@@ -103,5 +103,4 @@ La struttura SoleModel potrebbe essere ridondante
 # ---------------------------------------------------------------------------- #
 #                                      MAS                                     #
 # ---------------------------------------------------------------------------- #
-Propaga la creazione del logiset per poterlo usare in MAS
 Spiega a Mauro la questione delle finestre, IMPORTANTE.
