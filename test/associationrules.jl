@@ -249,3 +249,27 @@ mine!(fpgrowth_miner)
 @test Set(associations(sx_apriori)) == Set(arules(apriori_miner))
 @test associations(sx_fpgrowth) == arules(fpgrowth_miner)
 
+# ---------------------------------------------------------------------------- #
+#                   example of a complete SoleXplorer call                     #
+# ---------------------------------------------------------------------------- #
+range = SX.range(:eta; lower=0.2, upper=0.7)
+_items = Vector{Item}(Atom.([
+    ScalarCondition(VariableMin(1), >=,  5)
+    ScalarCondition(VariableMin(2), <=,  4)
+    ScalarCondition(VariableMin(3), <=,  4)
+    ScalarCondition(VariableMin(4), <=,  2)
+]))
+_itemsetmeasures = [(gsupport, 0.9, 0.4)]
+_rulemeasures = [(gconfidence, 0.3, 0.5)]
+modelts = symbolic_analysis(
+    Xts, yts;
+    model=XGBoostClassifier(early_stopping_rounds=20),
+    resample=CV(nfolds=5, shuffle=true),
+    valid_ratio=0.2,
+    rng=Xoshiro(1),
+    tuning=(tuning=Grid(resolution=10), resampling=CV(nfolds=3), range, measure=accuracy, repeats=2),
+    extractor=InTreesRuleExtractor(),
+    association=FPGrowth(_items, _itemsetmeasures, _rulemeasures),
+    measures=(accuracy, log_loss, confusion_matrix, kappa)      
+)
+@test modelts isa SX.ModelSet
