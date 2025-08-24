@@ -353,7 +353,8 @@ function _symbolic_analysis!(
     end
 
     modelset.associations = isnothing(association) ? nothing : begin
-        X = scalarlogiset(get_X(ds))
+        # X = scalarlogiset(get_X(ds))
+        X = get_logiset(ds)
         algo = get_method(association)
         masargs = get_mas_args(association)
         maskwargs = get_mas_kwargs(association)

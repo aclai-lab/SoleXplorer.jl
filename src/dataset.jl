@@ -474,3 +474,10 @@ get_mach(ds::EitherDataSet)::Machine = ds.mach
 Extract the model from the dataset's MLJ machine.
 """
 get_mach_model(ds::EitherDataSet)::MLJ.Model = ds.mach.model
+
+"""
+    get_mach_model(ds::ModalDataSet)::SupportedLogiset
+
+Extract the logiset (if present) from the dataset's MLJ machine.
+"""
+get_logiset(ds::ModalDataSet)::SupportedLogiset = ds.mach.data[1].modalities[1]
