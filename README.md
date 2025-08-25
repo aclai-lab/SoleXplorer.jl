@@ -1,5 +1,3 @@
-<div align="center"><a href="https://github.com/aclai-lab/Sole.jl"><img src="logo.png" alt="" title="This package is part of Sole.jl" width="200"></a></div>
-
 # SoleXplorer - A symbolic journey through your datasets
 
 [![CI](https://github.com/aclai-lab/SoleXplorer.jl/actions/workflows/ci.yml/badge.svg)](https://github.com/aclai-lab/SoleXplorer.jl/actions/workflows/ci.yml)
@@ -70,7 +68,10 @@ In the exploration sessions, you can:
 4. **Post-hoc Analysis**
    Metrics and human-readable logic representations are obtained via rule extraction algorithms from [`SolePostHoc.jl`](https://github.com/aclai-lab/SolePostHoc.jl).
 
-5. **Exploration Interface**
+5. **Association Analysis**
+   Extract the association rules hidden in data via mining algorithms from [`ModalAssociationRules.jl`](https://github.com/aclai-lab/ModalAssociationRules.jl).
+
+6. **Exploration Interface**
    `SoleXplorer.jl` ties everything into an interactive exploration session, allowing you to inspect rules, formulas, and patterns from your symbolic datasets and models.
 
 ---

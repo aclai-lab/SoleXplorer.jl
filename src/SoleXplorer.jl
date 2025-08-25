@@ -19,8 +19,10 @@ symbolic learning algorithms, rule extraction methods, and modal timeseries feat
 - **SoleModels.jl**: Symbolic model implementations including `DecisionTree`, 
   `DecisionEnsemble`, `DecisionSet`, and rule extraction via `RuleExtractor`
 
-- **SolePostHoc.jl**: Post-hoc explainability methods, featuring `InTreesRuleExtractor` 
+- **SolePostHoc.jl**: Post-hoc explainability methods, featuring `LumenRuleExtractor` 
   and other rule extraction algorithms for model interpretation
+
+- **ModalAssociationRules.jl**: Extract the association rules hidden in data via mining algorithms
 
 - **MLJ Ecosystem**: Full integration with MLJ for model evaluation, tuning, and 
   performance assessment including classification measures (`accuracy`, `confusion_matrix`, 
