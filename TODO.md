@@ -104,3 +104,10 @@ La struttura SoleModel potrebbe essere ridondante
 #                                      MAS                                     #
 # ---------------------------------------------------------------------------- #
 Spiega a Mauro la questione delle finestre, IMPORTANTE.
+
+# ---------------------------------------------------------------------------- #
+#                                 Idea di Mauro                                #
+# ---------------------------------------------------------------------------- #
+@forward Apriori apriori
+dovrebbe essere nel pacchetto lazy.jl
+cerca in sole chi lo usa
