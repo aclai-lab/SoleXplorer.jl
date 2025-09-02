@@ -219,8 +219,8 @@ fpgrowth_miner = Miner(X, fpgrowth, _1_items, _1_itemsetmeasures, _1_rulemeasure
 mine!(apriori_miner)
 mine!(fpgrowth_miner)
 
-@test Set(associations(sx_apriori)) == Set(arules(apriori_miner))
 @test associations(sx_fpgrowth) == arules(fpgrowth_miner)
+@test Set(associations(sx_apriori)) == Set(arules(apriori_miner))
 
 # 2nd comparison
 _2_itemsetmeasures = [(gsupport, 0.9, 0.4)]
@@ -234,8 +234,8 @@ fpgrowth_miner = Miner(X, fpgrowth, _1_items, _2_itemsetmeasures, _2_rulemeasure
 mine!(apriori_miner)
 mine!(fpgrowth_miner)
 
-@test Set(associations(sx_apriori)) == Set(arules(apriori_miner))
 @test associations(sx_fpgrowth) == arules(fpgrowth_miner)
+@test Set(associations(sx_apriori)) == Set(arules(apriori_miner))
 
 # 3rd comparison
 _3_itemsetmeasures = [(gsupport, 0.1, 0.1)]
@@ -249,11 +249,11 @@ fpgrowth_miner = Miner(X, fpgrowth, _1_items, _3_itemsetmeasures, _3_rulemeasure
 mine!(apriori_miner)
 mine!(fpgrowth_miner)
 
-@test Set(associations(sx_apriori)) == Set(arules(apriori_miner))
 @test associations(sx_fpgrowth) == arules(fpgrowth_miner)
+@test Set(associations(sx_apriori)) == Set(arules(apriori_miner))
 
 # ---------------------------------------------------------------------------- #
-#                   example of a complete SoleXplorer call                     #
+#                   example of a complete symbolic analysis                    #
 # ---------------------------------------------------------------------------- #
 range = SX.range(:eta; lower=0.2, upper=0.7)
 _items = Vector{Item}(Atom.([
