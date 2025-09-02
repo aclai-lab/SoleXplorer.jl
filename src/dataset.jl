@@ -40,18 +40,18 @@ Type alias for MLJ tuning strategy, allowing no tuning (`Nothing`).
 const Tuning = Union{Nothing, MLJTuning.TuningStrategy}
 
 """
-    MayAggregationInfo = Maybe{AggregationInfo}
+    MaybeAggregationInfo = Maybe{AggregationInfo}
 
 Type alias for optional aggregation information for modal datasets.
 """
-const MayAggregationInfo = Maybe{AggregationInfo}
+const MaybeAggregationInfo = Maybe{AggregationInfo}
 
 """
-    MayVector = Maybe{AbstractVector}
+    MaybeVector = Maybe{AbstractVector}
 
 Type alias for optional vector type, used for sample weights.
 """
-const MayVector = Maybe{AbstractVector}
+const MaybeVector = Maybe{AbstractVector}
 
 # ---------------------------------------------------------------------------- #
 #                                  defaults                                    #
@@ -204,7 +204,7 @@ Wrapper for standard (propositional) machine learning algorithms.
 - `mach::MLJ.Machine`: The underlying MLJ machine
 - `pidxs::Vector{PartitionIdxs}`: Partition indices for train/validation/test splits
 - `pinfo::PartitionInfo`: Information about the partitioning strategy
-- `ainfo::MayAggregationInfo`: Optional aggregation information for feature extraction
+- `ainfo::MaybeAggregationInfo`: Optional aggregation information for feature extraction
 
 The `ainfo` field is used when a multidimensional dataset is aggregated using windowing 
 and feature extraction to convert temporal sequences into tabular format.
@@ -214,7 +214,7 @@ mutable struct PropositionalDataSet{M} <: AbstractDataSet
     mach    :: MLJ.Machine
     pidxs   :: Vector{PartitionIdxs}
     pinfo   :: PartitionInfo
-    ainfo   :: MayAggregationInfo
+    ainfo   :: MaybeAggregationInfo
 end
 
 """
@@ -290,7 +290,7 @@ const EitherDataSet = Union{PropositionalDataSet, ModalDataSet}
 # # Arguments
 # - `X::AbstractDataFrame`: Feature data
 # - `y::AbstractVector`: Target variable
-# - `w::MayVector=nothing`: Optional sample weights
+# - `w::MaybeVector=nothing`: Optional sample weights
 
 # # Keyword Arguments
 # - `model::MLJ.Model=_DefaultModel(y)`: MLJ model to use
@@ -316,7 +316,7 @@ const EitherDataSet = Union{PropositionalDataSet, ModalDataSet}
 function _setup_dataset(
     X             :: AbstractDataFrame,
     y             :: AbstractVector,
-    w             :: MayVector               = nothing;
+    w             :: MaybeVector               = nothing;
     model         :: MLJ.Model               = _DefaultModel(y),
     resample      :: ResamplingStrategy      = Holdout(shuffle=true),
     train_ratio   :: Real                    = 0.7,
@@ -377,7 +377,7 @@ Internal function to prepare and construct a dataset warper.
 # Arguments
 - `X::AbstractDataFrame`: Feature data
 - `y::AbstractVector`: Target variable
-- `w::MayVector=nothing`: Optional sample weights
+- `w::MaybeVector=nothing`: Optional sample weights
 
 # Keyword Arguments
 - `model::MLJ.Model=_DefaultModel(y)`: MLJ model to use

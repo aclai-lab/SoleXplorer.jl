@@ -79,9 +79,9 @@ end
 # ---------------------------------------------------------------------------- #
 #                                   types                                      #
 # ---------------------------------------------------------------------------- #
-const MayRules        = Maybe{Union{Vector{DecisionSet}, Vector{LumenResult}}}
-const MayMeasures     = Maybe{Measures}
-const MayAssociations = Maybe{Vector{ARule}}
+const MaybeRules        = Maybe{Union{Vector{DecisionSet}, Vector{LumenResult}}}
+const MaybeMeasures     = Maybe{Measures}
+const MaybeAssociations = Maybe{Vector{ARule}}
 
 # ---------------------------------------------------------------------------- #
 #                                  modelset                                    #
@@ -94,22 +94,22 @@ Comprehensive container for symbolic model analysis results.
 # Fields
 - `ds::EitherDataSet`: Dataset wrapper used for training
 - `sole::Vector{AbstractModel}`: Symbolic models from each CV fold
-- `rules::MayRules`: Extracted decision rules (optional)
-- `measures::MayMeasures`: Performance evaluation results (optional)
+- `rules::MaybeRules`: Extracted decision rules (optional)
+- `measures::MaybeMeasures`: Performance evaluation results (optional)
 """
 mutable struct ModelSet{S} <: AbstractModelSet
     ds           :: EitherDataSet
     sole         :: Vector{AbstractModel}
-    rules        :: MayRules
-    associations :: MayAssociations
-    measures     :: MayMeasures
+    rules        :: MaybeRules
+    associations :: MaybeAssociations
+    measures     :: MaybeMeasures
 
     function ModelSet(
         ds       :: EitherDataSet,
         sole     :: SoleModel{S};
-        rules    :: MayRules=nothing,
-        miner    :: MayAssociations=nothing,
-        measures :: MayMeasures=nothing
+        rules    :: MaybeRules=nothing,
+        miner    :: MaybeAssociations=nothing,
+        measures :: MaybeMeasures=nothing
     ) where S
         new{S}(ds, solemodels(sole), rules, miner, measures)
     end
@@ -421,7 +421,7 @@ See [`setup_dataset`](@ref) for dataset setup parameter descriptions.
 function symbolic_analysis(
     X::AbstractDataFrame,
     y::AbstractVector,
-    w::MayVector = nothing;
+    w::MaybeVector = nothing;
     extractor::Union{Nothing,RuleExtractor}=nothing,
     association::Union{Nothing,AbstractAssociationRuleExtractor}=nothing,
     measures::Tuple{Vararg{FussyMeasure}}=(),
