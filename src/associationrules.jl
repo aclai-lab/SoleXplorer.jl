@@ -1,18 +1,22 @@
 # ---------------------------------------------------------------------------- #
 #                               abstract types                                 #
 # ---------------------------------------------------------------------------- #
-abstract type AbstractAssociationExtractor end
+abstract type AbstractAssociationRuleExtractor end
 
 # ---------------------------------------------------------------------------- #
 #                                  adapters                                    #
 # ---------------------------------------------------------------------------- #
+get_method(a::AbstractAssociationRuleExtractor)     = a.method
+get_mas_args(a::AbstractAssociationRuleExtractor)   = a.args
+get_mas_kwargs(a::AbstractAssociationRuleExtractor) = a.kwargs
+
 """
 Association rule mining algorithm extractors.
 
 These types serve as adapters that wrap the ModalAssociationRules mining algorithms
 (`apriori`, `fpgrowth`, `eclat`) to provide a unified interface within SoleXplorer.
 """
-struct Apriori <: AbstractAssociationExtractor
+struct Apriori <: AbstractAssociationRuleExtractor
     method :: Base.Callable
     args   :: Tuple
     kwargs :: Union{Nothing, NamedTuple}
@@ -24,7 +28,7 @@ struct Apriori <: AbstractAssociationExtractor
     end
 end
 
-struct FPGrowth <: AbstractAssociationExtractor
+struct FPGrowth <: AbstractAssociationRuleExtractor
     method :: Base.Callable
     args   :: Tuple
     kwargs :: Union{Nothing, NamedTuple}
@@ -36,7 +40,7 @@ struct FPGrowth <: AbstractAssociationExtractor
     end
 end
 
-struct Eclat <: AbstractAssociationExtractor
+struct Eclat <: AbstractAssociationRuleExtractor
     method :: Base.Callable
     args   :: Tuple
     kwargs :: Union{Nothing, NamedTuple}
@@ -48,14 +52,10 @@ struct Eclat <: AbstractAssociationExtractor
     end
 end
 
-get_method(a::AbstractAssociationExtractor)     = a.method
-get_mas_args(a::AbstractAssociationExtractor)   = a.args
-get_mas_kwargs(a::AbstractAssociationExtractor) = a.kwargs
-
 # ---------------------------------------------------------------------------- #
 #                                 mas_caller                                   #
 # ---------------------------------------------------------------------------- #
-function mas_caller(ds::EitherDataSet, association::AbstractAssociationExtractor)
+function mas_caller(ds::EitherDataSet, association::AbstractAssociationRuleExtractor)
     X = if ds isa ModalDataSet
         get_logiset(ds)
     else

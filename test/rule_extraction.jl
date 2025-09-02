@@ -1,8 +1,8 @@
-using Test
-using SoleXplorer
-using MLJ
-using DataFrames, Random
-const SX = SoleXplorer
+# using Test
+# using SoleXplorer
+# using MLJ
+# using DataFrames, Random
+# const SX = SoleXplorer
 
 Xc, yc = @load_iris
 Xc = DataFrame(Xc)
@@ -46,11 +46,11 @@ dsc = setup_dataset(
 )
 solemc = train_test(dsc)
 
-# modelc = symbolic_analysis(
-#     dsc, solemc;
-#     extractor=LumenRuleExtractor()
-# )
-# @test rules(modelc) isa Vector{SX.LumenResult}
+modelc = symbolic_analysis(
+    dsc, solemc;
+    extractor=LumenRuleExtractor()
+)
+@test rules(modelc) isa Vector{SX.LumenResult}
 
 modelc = symbolic_analysis(
     dsc, solemc;
@@ -71,11 +71,11 @@ dsc = setup_dataset(
 )
 solemc = train_test(dsc)
 
-# modelc = symbolic_analysis(
-#     dsc, solemc;
-#     extractor=LumenRuleExtractor()
-# )
-# @test rules(modelc) isa Vector{SX.LumenResult}
+modelc = symbolic_analysis(
+    dsc, solemc;
+    extractor=LumenRuleExtractor()
+)
+@test rules(modelc) isa Vector{SX.LumenResult}
 
 modelc = symbolic_analysis(
     dsc, solemc;

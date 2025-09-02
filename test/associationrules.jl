@@ -1,14 +1,17 @@
-using Test
-using SoleXplorer
-using MLJ
-using DataFrames, Random
-using ModalAssociationRules
-const SX = SoleXplorer
+# using Test
+# using SoleXplorer
+# using MLJ
+# using DataFrames, Random
+# using ModalAssociationRules
+# const SX = SoleXplorer
 
 # ---------------------------------------------------------------------------- #
 #                                    natops                                    #
 # ---------------------------------------------------------------------------- #
-Xts, yts = load_arff_dataset("NATOPS")
+using SoleData.Artifacts
+using SoleData.Artifacts: load
+natopsloader = NatopsLoader()
+Xts, yts = load(natopsloader)
 X_have_command, y_have_command = Xts[1:30, :], yts[1:30]
 
 # make a vector of item, that will be the initial state of the mining machine

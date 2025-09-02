@@ -417,7 +417,9 @@ dsc = setup_dataset(
 
 # Modal time series dataset 
 using SoleXplorer
-Xts, yts = load_arff_dataset("NATOPS") 
+using SoleData.Artifacts: load
+natopsloader = NatopsLoader()
+Xts, yts = load(natopsloader)
 modelts = symbolic_analysis(
     Xts, yts;
     model=ModalRandomForest(),

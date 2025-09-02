@@ -1,5 +1,5 @@
 using Distributed
-addprocs(2)
+addprocs(8)
 
 @everywhere begin
     using Test
