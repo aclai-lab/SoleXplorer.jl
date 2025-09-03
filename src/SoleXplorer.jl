@@ -1,6 +1,23 @@
 """
    SoleXplorer
 
+## Under the Hood: How It Works
+
+1. **Feature extraction**
+   Data instances are seen as models of logical formalisms (see [`SoleLogics.jl`](https://github.com/aclai-lab/SoleLogics.jl)), and are represented in an optimized form for model checking (i.e., as _logisets_, see [`SoleData.jl`](https://github.com/aclai-lab/SoleData.jl)).
+
+2. **Model Fitting**
+   Symbolic models (e.g. decision trees, modal association rules) are trained via [`SoleModels.jl`](https://github.com/aclai-lab/SoleModels.jl)-compliant packages.
+
+4. **Post-hoc Analysis**
+   Metrics and human-readable logic representations are obtained via rule extraction algorithms from [`SolePostHoc.jl`](https://github.com/aclai-lab/SolePostHoc.jl).
+
+5. **Association Analysis**
+   Extract the association rules hidden in data via mining algorithms from [`ModalAssociationRules.jl`](https://github.com/aclai-lab/ModalAssociationRules.jl).
+
+6. **Exploration Interface**
+   `SoleXplorer.jl` ties everything into an interactive exploration session, allowing you to inspect rules, formulas, and patterns from your symbolic datasets and models.
+
 [`SoleXplorer`](https://github.com/aclai-lab/SoleXplorer.jl) is a comprehensive toolbox for 
 symbolic machine learning and explainable AI in Julia.
 
@@ -58,10 +75,13 @@ using  Reexport
 using  SoleBase: Label, CLabel, RLabel, XGLabel
 using  SoleBase: movingwindow, wholewindow, splitwindow, adaptivewindow
 using  SoleData: scalarlogiset
+using  SoleData.Artifacts
 using  SoleModels: Branch, ConstantModel
 using  SoleModels: DecisionEnsemble, DecisionTree, DecisionXGBoost
 using  SoleModels: AbstractModel, solemodel, weighted_aggregation, apply!
 using  SoleModels: RuleExtractor, DecisionSet
+
+@reexport using SoleData.Artifacts: NatopsLoader, load
 
 @reexport using SolePostHoc: InTreesRuleExtractor, LumenRuleExtractor, BATreesRuleExtractor
 @reexport using SolePostHoc: RULECOSIPLUSRuleExtractor, REFNERuleExtractor, TREPANRuleExtractor

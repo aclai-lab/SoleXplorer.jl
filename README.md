@@ -37,7 +37,7 @@ Xc, yc = @load_iris
 modelc = symbolic_analysis(Xc, yc)
 ```
 
-Of course, customization is possible:
+Of course, customizations are possible:
 
 ```julia
 using Random
@@ -57,44 +57,29 @@ modelc = symbolic_analysis(
 ### Temporal association rules
 
 ```julia
-using SoleXplorer
-
 # Load a temporal dataset
-dataset = load_sole_dataset("temporal_events")
+natopsloader = NatopsLoader()
+Xts, yts = SoleXplorer.load(natopsloader)
 
-# Train a modal association ruleset (uses `ModalAssociationRules.jl`)
-model = fit_modal_association_rules(dataset, :event_label; support=0.1, confidence=0.8)
-
-# Start exploration
-explorer = Explorer(model, logiset)
-run(explorer)
+# Train a modal decision tree
+modelts = symbolic_analysis(
+    Xts, yts;
+    model=ModalDecisionTree(),
+    resample=Holdout(shuffle=true),
+    train_ratio=0.80,
+    rng=Xoshiro(1),
+    features=(minimum, maximum),
+    measures=(log_loss, accuracy, confusion_matrix, kappa)
+)
 ```
 
-In the exploration sessions, you can:
-* View rules and their metrics
-* Filter by modal depth or conditions
-* Inspect logical formulas and their evaluation
+## Related packages
+SoleXplorer extensively uses the following packages:
+[`SoleLogics`](https://github.com/aclai-lab/SoleLogics.jl): modal and temporal logic systems.
+[`MLJ`](https://github.com/JuliaAI/MLJ.jl): provides all machine learning frameworks.
+[`SolePostHoc`](https://github.com/aclai-lab/SolePostHoc.jl): for rule extraction.
+[`ModalAssociationRules`](https://github.com/aclai-lab/ModalAssociationRules.jl): for mining association rules.
 
----
-
-## Under the Hood: How It Works
-
-1. **Feature extraction**
-   Data instances are seen as models of logical formalisms (see [`SoleLogics.jl`](https://github.com/aclai-lab/SoleLogics.jl)), and are represented in an optimized form for model checking (i.e., as _logisets_, see [`SoleData.jl`](https://github.com/aclai-lab/SoleData.jl)).
-
-2. **Model Fitting**
-   Symbolic models (e.g. decision trees, modal association rules) are trained via [`SoleModels.jl`](https://github.com/aclai-lab/SoleModels.jl)-compliant packages.
-
-4. **Post-hoc Analysis**
-   Metrics and human-readable logic representations are obtained via rule extraction algorithms from [`SolePostHoc.jl`](https://github.com/aclai-lab/SolePostHoc.jl).
-
-5. **Association Analysis**
-   Extract the association rules hidden in data via mining algorithms from [`ModalAssociationRules.jl`](https://github.com/aclai-lab/ModalAssociationRules.jl).
-
-6. **Exploration Interface**
-   `SoleXplorer.jl` ties everything into an interactive exploration session, allowing you to inspect rules, formulas, and patterns from your symbolic datasets and models.
-
----
 
 ## About
 

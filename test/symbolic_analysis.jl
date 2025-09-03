@@ -10,10 +10,8 @@ Xc = DataFrame(Xc)
 Xr, yr = @load_boston
 Xr = DataFrame(Xr)
 
-using SoleData.Artifacts
-using SoleData.Artifacts: load
 natopsloader = NatopsLoader()
-Xts, yts = load(natopsloader)
+Xts, yts = SX.load(natopsloader)
 
 # I'm easy like sunday morning
 modelc = symbolic_analysis(Xc, yc)
