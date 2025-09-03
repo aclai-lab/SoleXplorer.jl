@@ -6,6 +6,8 @@ abstract type AbstractAssociationRuleExtractor end
 # ---------------------------------------------------------------------------- #
 #                                  adapters                                    #
 # ---------------------------------------------------------------------------- #
+const MaybeAbstractAssociationRuleExtractor = Maybe{AbstractAssociationRuleExtractor}
+
 get_method(a::AbstractAssociationRuleExtractor)     = a.method
 get_mas_args(a::AbstractAssociationRuleExtractor)   = a.args
 get_mas_kwargs(a::AbstractAssociationRuleExtractor) = a.kwargs

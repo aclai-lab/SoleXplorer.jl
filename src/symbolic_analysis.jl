@@ -79,9 +79,12 @@ end
 # ---------------------------------------------------------------------------- #
 #                                   types                                      #
 # ---------------------------------------------------------------------------- #
-const MaybeRules        = Maybe{Union{Vector{DecisionSet}, Vector{LumenResult}}}
-const MaybeMeasures     = Maybe{Measures}
-const MaybeAssociations = Maybe{Vector{ARule}}
+const MaybeRules         = Maybe{Union{Vector{DecisionSet}, Vector{LumenResult}}}
+const MaybeMeasures      = Maybe{Measures}
+const MaybeAssociations  = Maybe{Vector{ARule}}
+
+const MaybeRuleExtractor = Maybe{RuleExtractor}
+    # association::Union{Nothing,AbstractAssociationRuleExtractor}
 
 # ---------------------------------------------------------------------------- #
 #                                  modelset                                    #
@@ -334,8 +337,8 @@ end
 # ---------------------------------------------------------------------------- #
 function _symbolic_analysis!(
     modelset::ModelSet;
-    extractor::Union{Nothing,RuleExtractor,Tuple{RuleExtractor,NamedTuple}}=nothing,
-    association::Union{Nothing,AbstractAssociationRuleExtractor}=nothing,
+    extractor::MaybeRuleExtractor=nothing,
+    association::MaybeAbstractAssociationRuleExtractor=nothing,
     measures::Tuple{Vararg{FussyMeasure}}=()
 )::Nothing
     ds = dsetup(modelset)
@@ -398,31 +401,34 @@ function symbolic_analysis!(
 end
 
 """
-    symbolic_analysis(X::AbstractDataFrame, y::AbstractVector, w=nothing;
-                     extractor=nothing, measures=(), kwargs...) -> ModelSet
+    symbolic_analysis(X::AbstractDataFrame, y::AbstractVector, [w];
+        [extractor::MaybeRuleExtracton], 
+        [association::MaybeAbstractAssociationRuleExtractor],
+        [measures::Tuple{Vararg{FussyMeasure}}],
+        kwargs...) -> ModelSet
 
 End-to-end symbolic analysis starting from raw data.
 
-# Arguments
-- `X, y, w`: Features, targets, and optional weights
-- `extractor`: Rule extraction strategy (ModalExtractor, etc.)
-- `measures`: Performance measures to evaluate (accuracy, auc, etc.)
-- `kwargs`: Passed to dataset setup (model, cv_folds, etc.)
+# Arguments:
+- `X, y, w`    : Features, targets, and optional weights
+- `extractor`  : Rule extraction strategy
+- `association`: Rule association strategy
+- `measures`   : Performance measures to evaluate (accuracy, auc, etc.)
+- `kwargs`     : Passed to dataset setup (model, cv_folds, etc.)
+
+# extractor
+
+# association
+
+# measures
 
 See [`setup_dataset`](@ref) for dataset setup parameter descriptions.
-
-# Extended help
-
-## Workflow
-1. `_setup_dataset(X, y, w; kwargs...)` - Create dataset wrapper
-2. `_train_test(ds)` - Perform CV training and symbolic conversion
-3. `_symbolic_analysis(ds, solem; extractor, measures)` - Extract rules and evaluate
 """
 function symbolic_analysis(
     X::AbstractDataFrame,
     y::AbstractVector,
-    w::MaybeVector = nothing;
-    extractor::Union{Nothing,RuleExtractor}=nothing,
+    w::MaybeVector=nothing;
+    extractor::MaybeRuleExtractor=nothing,
     association::Union{Nothing,AbstractAssociationRuleExtractor}=nothing,
     measures::Tuple{Vararg{FussyMeasure}}=(),
     kwargs...
