@@ -19,7 +19,7 @@ const MaybeInt = Maybe{Int}
 # ---------------------------------------------------------------------------- #
 mutable struct Tuning{T} <: AbstractTuning
     strategy::T
-    range::Union{Tuple{Vararg{Tuple}}, Vector{<:MLJ.NumericRange}}
+    range::Union{Tuple{Vararg{Tuple}}, Vector{<:MLJ.NumericRange}, MLJBase.NominalRange}
     resampling::MaybeResampling
     measure::MaybeMeasure
     repeats::Int64
@@ -36,13 +36,15 @@ AdaptiveTuning(; kwargs...)::Tuning = setup_tuning(PSO.AdaptiveParticleSwarm; kw
 
 function setup_tuning(
     tuning::DataType;
-    range::Union{Tuple, Tuple{Vararg{Tuple}}},
+    range::Union{Tuple, Tuple{Vararg{Tuple}}, MLJBase.NominalRange},
     resampling::MaybeResampling=nothing,
     measure::MaybeMeasure=nothing,
     repeats::Int64=1,
     kwargs...
 )::Tuning
     strategy = tuning(; kwargs...)
-    range isa Tuple{Vararg{Tuple}} || (range=(range,))
+    if !(range isa MLJ.NominalRange)
+        range isa Tuple{Vararg{Tuple}} || (range=(range,))
+    end
     Tuning{typeof(strategy)}(strategy, range, resampling, measure, repeats)
 end

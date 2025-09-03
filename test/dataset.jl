@@ -1,8 +1,8 @@
-# using Test
-# using SoleXplorer
-# using MLJ
-# using DataFrames, Random
-# const SX = SoleXplorer
+using Test
+using SoleXplorer
+using MLJ
+using DataFrames, Random
+const SX = SoleXplorer
 
 Xc, yc = @load_iris
 Xc = DataFrame(Xc)
@@ -160,7 +160,7 @@ dsc = setup_dataset(
     model=ModalDecisionTree(),
     resample=CV(nfolds=5, shuffle=true),
     rng=Xoshiro(1),
-    tuning=(;tuning=Grid(resolution=10), resampling=CV(nfolds=3), range, measure=accuracy, repeats=2)
+    tuning=GridTuning(resolution=10, resampling=CV(nfolds=3), range=range, measure=accuracy, repeats=2)
 )
 @test dsc.mach.model.model.rng isa Xoshiro
 @test dsc.mach.model.tuning.rng isa Xoshiro
@@ -201,7 +201,7 @@ dsr = setup_dataset(
     Xr, yr;
     model=DecisionTreeRegressor(),
     rng=Xoshiro(1234),
-    tuning=(;tuning=Grid(resolution=10), resampling=CV(nfolds=3), range, measure=rms)
+    tuning=GridTuning(resolution=10, resampling=CV(nfolds=3), range=range, measure=rms)
 )
 @test dsr isa SX.PropositionalDataSet{<:MLJ.MLJTuning.DeterministicTunedModel}
 
@@ -212,18 +212,17 @@ dsc = setup_dataset(
     Xc, yc;
     model=DecisionTreeClassifier(),
     rng=Xoshiro(1234),
-    tuning=(;tuning=Grid(resolution=10), resampling=CV(nfolds=3), range, measure=rms)
+    tuning=GridTuning(resolution=10, resampling=CV(nfolds=3), range=range, measure=rms)
 )
 @test dsc isa SX.PropositionalDataSet{<:MLJ.MLJTuning.ProbabilisticTunedModel}
 
 selector = FeatureSelector()
 range = MLJ.range(selector, :features, values = [[:sepal_width,], [:sepal_length, :sepal_width]])
-
 dsc = setup_dataset(
     Xc, yc;
     model=DecisionTreeClassifier(),
     rng=Xoshiro(1234),
-    tuning=(;tuning=Grid(resolution=10),resampling=CV(nfolds=3),range,measure=rms)
+    tuning=GridTuning(resolution=10, resampling=CV(nfolds=3), range=range, measure=rms)
 )
 @test dsc isa SX.PropositionalDataSet{<:MLJ.MLJTuning.ProbabilisticTunedModel}    
 
