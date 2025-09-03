@@ -76,10 +76,10 @@ modelts = symbolic_analysis(
 
 ## Related packages
 SoleXplorer extensively uses the following packages:
-[`SoleLogics`](https://github.com/aclai-lab/SoleLogics.jl): modal and temporal logic systems.
-[`MLJ`](https://github.com/JuliaAI/MLJ.jl): provides all machine learning frameworks.
-[`SolePostHoc`](https://github.com/aclai-lab/SolePostHoc.jl): for rule extraction.
-[`ModalAssociationRules`](https://github.com/aclai-lab/ModalAssociationRules.jl): for mining association rules.
+* [`SoleLogics`](https://github.com/aclai-lab/SoleLogics.jl): modal and temporal logic systems.
+* [`MLJ`](https://github.com/JuliaAI/MLJ.jl): provides all machine learning frameworks.
+* [`SolePostHoc`](https://github.com/aclai-lab/SolePostHoc.jl): for rule extraction.
+* [`ModalAssociationRules`](https://github.com/aclai-lab/ModalAssociationRules.jl): for mining association rules.
 
 
 ## About
