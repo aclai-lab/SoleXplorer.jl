@@ -142,6 +142,76 @@ Return deterministic predictions from symbolic model.
 sole_predict_mode(solem::AbstractModel, y_test::AbstractVector{<:Label}) = supporting_predictions(solem)
 
 # ---------------------------------------------------------------------------- #
+#                                eval measures                                 #
+# ---------------------------------------------------------------------------- #
+"""
+    eval_measures(ds::EitherDataSet, solem::Vector{AbstractModel}, 
+                 measures::Tuple{Vararg{FussyMeasure}}, 
+                 y_test::Vector{<:AbstractVector{<:Label}}) -> Measures
+
+Adapted from MLJ's evaluate
+Evaluate symbolic models using MLJ measures across CV folds.
+"""
+function eval_measures(
+    ds::EitherDataSet,
+    solem::Vector{AbstractModel},
+    measures::Tuple{Vararg{FussyMeasure}},
+    y_test::Vector{<:AbstractVector{<:Label}}
+)::Measures
+    mach_model = get_mach_model(ds)
+    measures        = MLJBase._actual_measures([measures...], mach_model)
+    operations      = get_operations(measures, MLJBase.prediction_type(mach_model))
+
+    nfolds          = length(ds)
+    test_fold_sizes = [length(y_test[k]) for k in 1:nfolds]
+    nmeasures       = length(measures)
+
+    # weights used to aggregate per-fold measurements, which depends on a measures
+    # external mode of aggregation:
+    fold_weights(mode) = nfolds .* test_fold_sizes ./ sum(test_fold_sizes)
+    fold_weights(::MLJBase.StatisticalMeasuresBase.Sum) = nothing
+    
+    measurements_vector = mapreduce(vcat, 1:nfolds) do k
+        yhat_given_operation = Dict(op=>op(solem[k], y_test[k]) for op in unique(operations))
+
+        # costretto a convertirlo a stringa in quanto certe misure di statistical measures non accettano
+        # categorical array, tipo confusion matrix e kappa
+        test = eltype(y_test[k]) <: CLabel ? String.(y_test[k]) : y_test[k]
+
+        [map(measures, operations) do m, op
+            m(
+                yhat_given_operation[op],
+                test,
+                # MLJBase._view(weights, test),
+                # class_weights
+                MLJBase._view(nothing, test),
+                nothing
+            )
+        end]
+    end
+
+    measurements_matrix = permutedims(reduce(hcat, measurements_vector))
+
+    # measurements for each fold:
+    fold = map(1:nmeasures) do k
+        measurements_matrix[:,k]
+    end
+
+    # overall aggregates:
+    measures_values = map(1:nmeasures) do k
+        m = measures[k]
+        mode = MLJBase.StatisticalMeasuresBase.external_aggregation_mode(m)
+        MLJBase.StatisticalMeasuresBase.aggregate(
+            fold[k];
+            mode,
+            weights=fold_weights(mode)
+        )
+    end
+
+    Measures(fold, measures, measures_values, operations)
+end
+
+# ---------------------------------------------------------------------------- #
 #                              symbolic_analysis                               #
 # ---------------------------------------------------------------------------- #
 function _symbolic_analysis!(

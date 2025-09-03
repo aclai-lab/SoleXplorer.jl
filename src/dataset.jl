@@ -32,12 +32,12 @@ Type alias for models that support modal logic.
 """
 const Modal  = Union{ModalDecisionTree, ModalRandomForest, ModalAdaBoost}
 
-"""
-    Tuning = Union{Nothing, MLJTuning.TuningStrategy}
+# """
+#     Tuning = Union{Nothing, MLJTuning.TuningStrategy}
 
-Type alias for MLJ tuning strategy, allowing no tuning (`Nothing`).
-"""
-const Tuning = Union{Nothing, MLJTuning.TuningStrategy}
+# Type alias for MLJ tuning strategy, allowing no tuning (`Nothing`).
+# """
+# const Tuning = Union{Nothing, MLJTuning.TuningStrategy}
 
 """
     MaybeAggregationInfo = Maybe{AggregationInfo}
@@ -52,6 +52,8 @@ const MaybeAggregationInfo = Maybe{AggregationInfo}
 Type alias for optional vector type, used for sample weights.
 """
 const MaybeVector = Maybe{AbstractVector}
+
+const MaybeTuning = Maybe{Tuning}
 
 # ---------------------------------------------------------------------------- #
 #                                  defaults                                    #
@@ -295,7 +297,8 @@ function _setup_dataset(
     win           :: WinFunction                  = AdaptiveWindow(nwindows=3, relative_overlap=0.1),
     features      :: Tuple{Vararg{Base.Callable}} = (maximum, minimum),
     modalreduce   :: Base.Callable                = mean,
-    tuning        :: NamedTuple                   = NamedTuple()
+    # tuning        :: NamedTuple                   = NamedTuple()
+    tuning        :: MaybeTuning                  = nothing
 )::AbstractDataSet
     # propagate user rng to every field that needs it
     # model
@@ -320,15 +323,23 @@ function _setup_dataset(
 
     ttpairs, pinfo = partition(y; resample, train_ratio, valid_ratio, rng)
 
-    isempty(tuning) || begin
+    # isempty(tuning) || begin
+    isnothing(tuning) || begin
         if !(tuning.range isa MLJ.NominalRange)
             # Convert SX.range to MLJ.range now that model is available
             range = tuning.range isa Tuple{Vararg{Tuple}} ? tuning.range : (tuning.range,)
             range = collect(MLJ.range(model, r[1]; r[2:end]...) for r in range)
-            tuning = merge(tuning, (range=range,))
+            tuning.range = range
         end
 
-        model = MLJ.TunedModel(model; tuning...)
+        model = MLJ.TunedModel(
+            model; 
+            tuning=tuning.strategy,
+            range=tuning.range,
+            resampling=tuning.resampling,
+            measure=tuning.measure,
+            repeats=tuning.repeats
+        )
 
         # set the model to use the same rng as the dataset
         model = set_tuning_rng!(model, rng)

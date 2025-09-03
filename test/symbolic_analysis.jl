@@ -32,7 +32,7 @@ dsc = setup_dataset(
     model=DecisionTreeClassifier(),
     resample=CV(nfolds=5, shuffle=true),
     rng=Xoshiro(1),
-    tuning=(tuning=Grid(resolution=10), resampling=CV(nfolds=3), range, measure=accuracy, repeats=2)    
+    tuning=GridTuning(;range, resolution=10, resampling=CV(nfolds=3), measure=accuracy, repeats=2)    
 )
 solemc = train_test(dsc)
 modelc = symbolic_analysis(
@@ -48,7 +48,7 @@ dsr = setup_dataset(
     model=DecisionTreeRegressor(),
     resample=CV(nfolds=5, shuffle=true),
     rng=Xoshiro(1),
-    tuning=(tuning=Grid(resolution=10), resampling=CV(nfolds=3), range, measure=rms, repeats=2)    
+    tuning=GridTuning(resolution=20, resampling=CV(nfolds=3), range=range, repeats=2)    
 )
 solemr = train_test(dsr)
 modelr = symbolic_analysis(
@@ -66,7 +66,7 @@ modelc = symbolic_analysis(
     model=DecisionTreeClassifier(),
     resample=CV(nfolds=5, shuffle=true),
     rng=Xoshiro(1),
-    tuning=(tuning=Grid(resolution=10), resampling=CV(nfolds=3), range, measure=accuracy, repeats=2),
+    tuning=GridTuning(resolution=10, resampling=CV(nfolds=3), range=range, measure=accuracy, repeats=2),
     extractor=InTreesRuleExtractor(),
     measures=(accuracy, log_loss, confusion_matrix, kappa)      
 )
@@ -78,7 +78,7 @@ modelr = symbolic_analysis(
     model=DecisionTreeRegressor(),
     resample=CV(nfolds=5, shuffle=true),
     rng=Xoshiro(1),
-    tuning=(tuning=Grid(resolution=10), resampling=CV(nfolds=3), range, measure=rms, repeats=2),
+    tuning=GridTuning(; range, resolution=10, resampling=CV(nfolds=3), measure=rms, repeats=2),
     measures=(rms, l1, l2, mae, mav)
 )
 @test modelr isa SX.ModelSet
@@ -220,7 +220,7 @@ modelr = symbolic_analysis(
     resample=CV(nfolds=5, shuffle=true),
     valid_ratio=0.2,
     rng=Xoshiro(1),
-    tuning=(;tuning=Grid(resolution=10), resampling=CV(nfolds=3), range, measure=rms, repeats=2),
+    tuning=GridTuning(; range, resolution=10, resampling=CV(nfolds=3), measure=rms, repeats=2),
     measures=(rms, l1, l2, mae, mav) 
 )
 @test modelr isa SX.ModelSet
@@ -303,7 +303,7 @@ range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
 modelc = symbolic_analysis(
     Xc, yc;
     model=DecisionTreeClassifier(),
-    tuning=(;tuning=Grid(resolution=10), resampling=CV(nfolds=3), range, measure=accuracy, repeats=2),
+    tuning=GridTuning(resolution=10, resampling=CV(nfolds=3), range=range, measure=accuracy, repeats=2),
     measures=(log_loss, accuracy, confusion_matrix, kappa)
 )
 @test modelc isa SX.ModelSet
@@ -312,7 +312,7 @@ range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
 modelc = symbolic_analysis(
     Xc, yc;
     model=DecisionTreeClassifier(),
-    tuning=(;tuning=RandomSearch(), resampling=CV(nfolds=3), range, measure=accuracy, repeats=2),
+    tuning=RandomTuning(;range, resampling=CV(nfolds=3), measure=accuracy, repeats=2),
     measures=(log_loss, accuracy, confusion_matrix, kappa)
 )
 @test modelc isa SX.ModelSet
@@ -321,7 +321,7 @@ range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
 modelc = symbolic_analysis(
     Xc, yc;
     model=DecisionTreeClassifier(),
-    tuning=(;tuning=RandomSearch(), resampling=CV(nfolds=3), range, measure=accuracy, repeats=2),
+    tuning=RandomTuning(;range, resampling=CV(nfolds=3), measure=accuracy, repeats=2),
     measures=(log_loss, accuracy, confusion_matrix, kappa)
 )
 @test modelc isa SX.ModelSet
@@ -330,7 +330,7 @@ range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
 modelc = symbolic_analysis(
     Xc, yc;
     model=DecisionTreeClassifier(),
-    tuning=(;tuning=ParticleSwarm(), resampling=CV(nfolds=3), range, measure=accuracy, repeats=2),
+    tuning=ParticleTuning(resampling=CV(nfolds=3), range=range, measure=accuracy, repeats=2),
     measures=(log_loss, accuracy, confusion_matrix, kappa)
 )
 @test modelc isa SX.ModelSet
@@ -339,7 +339,7 @@ range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
 modelc = symbolic_analysis(
     Xc, yc;
     model=DecisionTreeClassifier(),
-    tuning=(;tuning=AdaptiveParticleSwarm(), resampling=CV(nfolds=3), range, measure=accuracy, repeats=2),
+    tuning=AdaptiveTuning(resampling=CV(nfolds=3), range=range, measure=accuracy, repeats=2),
     measures=(log_loss, accuracy, confusion_matrix, kappa)
 )
 @test modelc isa SX.ModelSet

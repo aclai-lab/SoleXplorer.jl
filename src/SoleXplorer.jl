@@ -103,8 +103,8 @@ using ModalAssociationRules
 # cross-validation
 @reexport using MLJ: Holdout, CV, StratifiedCV, TimeSeriesCV
 # tuning
-@reexport using MLJ: Grid, RandomSearch, LatinHypercube
-@reexport using MLJParticleSwarmOptimization: ParticleSwarm, AdaptiveParticleSwarm
+using  MLJParticleSwarmOptimization
+const  PSO = MLJParticleSwarmOptimization
 using  MLJ
 using  MLJ: MLJBase, MLJTuning
 
@@ -168,6 +168,10 @@ using XGBoost, MLJXGBoostInterface
 # ---------------------------------------------------------------------------- #
 #                                   modules                                    #
 # ---------------------------------------------------------------------------- #
+include("measures.jl")
+include("tuning.jl")
+export GridTuning, RandomTuning, CubeTuning, ParticleTuning, AdaptiveTuning
+
 export code_dataset, range
 export setup_dataset
 include("dataset.jl")
@@ -179,8 +183,6 @@ include("train_test.jl")
 export Apriori, FPGrowth, Eclat
 include("extractrules.jl")
 include("associationrules.jl")
-
-include("measures.jl")
 
 export symbolic_analysis, symbolic_analysis!
 export dsetup, solemodels, rules, associations
