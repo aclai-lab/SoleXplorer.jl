@@ -180,6 +180,8 @@ export Apriori, FPGrowth, Eclat
 include("extractrules.jl")
 include("associationrules.jl")
 
+include("measures.jl")
+
 export symbolic_analysis, symbolic_analysis!
 export dsetup, solemodels, rules, associations
 include("symbolic_analysis.jl")
