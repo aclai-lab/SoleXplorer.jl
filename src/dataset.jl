@@ -283,49 +283,19 @@ const EitherDataSet = Union{PropositionalDataSet, ModalDataSet}
 # ---------------------------------------------------------------------------- #
 #                                 constructors                                 #
 # ---------------------------------------------------------------------------- #
-#     _setup_dataset(X, y, w=nothing; kwargs...)::AbstractDataSet
-
-# Internal function to prepare and construct a dataset warper.
-
-# # Arguments
-# - `X::AbstractDataFrame`: Feature data
-# - `y::AbstractVector`: Target variable
-# - `w::MaybeVector=nothing`: Optional sample weights
-
-# # Keyword Arguments
-# - `model::MLJ.Model=_DefaultModel(y)`: MLJ model to use
-# - `resample::ResamplingStrategy=Holdout(shuffle=true)`: Resampling strategy
-# - `train_ratio::Real=0.7`: Fraction of data for training
-# - `valid_ratio::Real=0.0`: Fraction of data for validation
-# - `rng::AbstractRNG=TaskLocalRNG()`: Random number generator
-# - `win::WinFunction=AdaptiveWindow(nwindows=3, relative_overlap=0.1)`: Windowing function
-# - `features::Tuple{Vararg{Base.Callable}}=(maximum, minimum)`: Feature extraction functions
-# - `modalreduce::Base.Callable=mean`: Reduction function for modal algorithms
-# - `tuning::NamedTuple=NamedTuple()`: Hyperparameter tuning specification
-
-# # Returns
-# - `AbstractDataSet`: Either `PropositionalDataSet` or `ModalDataSet`
-
-# This function handles the complete pipeline of dataset preparation including:
-# 1. Model configuration and RNG propagation
-# 2. Multidimensional data treatment (aggregation vs. modal reduction)
-# 3. Data partitioning and resampling setup
-# 4. Hyperparameter tuning configuration
-# 5. MLJ Machine construction
-
 function _setup_dataset(
     X             :: AbstractDataFrame,
     y             :: AbstractVector,
-    w             :: MaybeVector               = nothing;
-    model         :: MLJ.Model               = _DefaultModel(y),
-    resample      :: ResamplingStrategy      = Holdout(shuffle=true),
-    train_ratio   :: Real                    = 0.7,
-    valid_ratio   :: Real                    = 0.0,
-    rng           :: AbstractRNG             = TaskLocalRNG(),
-    win           :: WinFunction             = AdaptiveWindow(nwindows=3, relative_overlap=0.1),
+    w             :: MaybeVector                  = nothing;
+    model         :: MLJ.Model                    = _DefaultModel(y),
+    resample      :: ResamplingStrategy           = Holdout(shuffle=true),
+    train_ratio   :: Real                         = 0.7,
+    valid_ratio   :: Real                         = 0.0,
+    rng           :: AbstractRNG                  = TaskLocalRNG(),
+    win           :: WinFunction                  = AdaptiveWindow(nwindows=3, relative_overlap=0.1),
     features      :: Tuple{Vararg{Base.Callable}} = (maximum, minimum),
-    modalreduce   :: Base.Callable           = mean,
-    tuning        :: NamedTuple              = NamedTuple()
+    modalreduce   :: Base.Callable                = mean,
+    tuning        :: NamedTuple                   = NamedTuple()
 )::AbstractDataSet
     # propagate user rng to every field that needs it
     # model
