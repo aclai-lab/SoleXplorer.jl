@@ -1,15 +1,13 @@
-# using Test
-# using SoleXplorer
-# using MLJ
-# using DataFrames, Random
-# using ModalAssociationRules
-# const SX = SoleXplorer
+using Test
+using SoleXplorer
+using MLJ
+using DataFrames, Random
+using ModalAssociationRules
+const SX = SoleXplorer
 
 # ---------------------------------------------------------------------------- #
 #                                    natops                                    #
 # ---------------------------------------------------------------------------- #
-using SoleData.Artifacts
-using SoleData.Artifacts: load
 natopsloader = NatopsLoader()
 Xts, yts = load(natopsloader)
 X_have_command, y_have_command = Xts[1:30, :], yts[1:30]
@@ -270,7 +268,7 @@ modelts = symbolic_analysis(
     resample=CV(nfolds=5, shuffle=true),
     valid_ratio=0.2,
     rng=Xoshiro(1),
-    tuning=(tuning=Grid(resolution=10), resampling=CV(nfolds=3), range, measure=accuracy, repeats=2),
+    tuning=Grid(resolution=10, resampling=CV(nfolds=3), range=range, measure=accuracy, repeats=2),
     extractor=InTreesRuleExtractor(),
     association=FPGrowth(_items, _itemsetmeasures, _rulemeasures),
     measures=(accuracy, log_loss, confusion_matrix, kappa)      
