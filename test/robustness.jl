@@ -1,7 +1,7 @@
-# using Test
-# using SoleXplorer
-# using MLJ, DataFrames, Random
-# const SX = SoleXplorer
+using Test
+using SoleXplorer
+using MLJ, DataFrames, Random
+const SX = SoleXplorer
 
 Xc, yc = @load_iris
 Xc = DataFrame(Xc)
@@ -9,7 +9,10 @@ Xc = DataFrame(Xc)
 Xr, yr = @load_boston
 Xr = DataFrame(Xr)
 
-Xts, yts = load_arff_dataset("NATOPS")
+using SoleData.Artifacts
+using SoleData.Artifacts: load
+natopsloader = NatopsLoader()
+Xts, yts = load(natopsloader)
 
 # ---------------------------------------------------------------------------- #
 #                    decisiontree classification robustness                    #

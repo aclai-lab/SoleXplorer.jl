@@ -6,10 +6,19 @@ Serve un metodo preciso per buttarla giù.
 Albi sicuramente potrà essere d'aiuto, ma anche Marco.
 
 # ---------------------------------------------------------------------------- #
+#                                  load/save                                   #
+# ---------------------------------------------------------------------------- #
+Importante, vedi di farlo entro Parigi
+
+Edo mi ha suggerito Pkl da scikitlearn
+Perry suggerisce serialize.jl
+
+# ---------------------------------------------------------------------------- #
 #                                  XgBoost ext                                 #
 # ---------------------------------------------------------------------------- #
 Ha un probabile bug in regressione, quando incontra alberi composti da una sola foglia
 Bisogna testarlo e verificare come risolvere la questione.
+POTREBBE ANDARE BENE, VERIFICA I TEST
 
 # ---------------------------------------------------------------------------- #
 #                                 bug di MLJ #1                                #
@@ -48,21 +57,10 @@ e se non funziona aprire una PR in MLJ.
 Andrebbe risolto.
 
 # ---------------------------------------------------------------------------- #
-#                                    posthoc                                   #
-# ---------------------------------------------------------------------------- #
-bisognerebbe ridefinire i metodi con cui si chiamano gli estrattori, 
-per renderli uguali alle chiamate degli altri parametri di sole.
-Banalmente, uguali a comne si chiamano i modelli, cioè
-quando creo la struttura posso inserirne i parametri.
-Questo ad oggi non è possibile in PostHoc: i parametri vengono passati
-con la funzione modalextractrules.
-Si può fare, con poco, qualcosa di più idiomatico.
-Da parlarne con Marco.
-
-# ---------------------------------------------------------------------------- #
 #                            modal association rules                           #
 # ---------------------------------------------------------------------------- #
 da fare tassativamente entro ottobre
+IN LAVORAZIONE
 
 # ---------------------------------------------------------------------------- #
 #                               feature selection                              #
@@ -99,4 +97,20 @@ Propagalo anche a PostHoc
 #                             apply e extractrules                             #
 # ---------------------------------------------------------------------------- #
 Bisogna pensare anche ai modelli non supervisionati: apply(m, X)
-Guarda Lumen per il dispatch più pulito e chiama Perry <- FATTO
+
+# ---------------------------------------------------------------------------- #
+#                                   SoleModel                                  #
+# ---------------------------------------------------------------------------- #
+La struttura SoleModel potrebbe essere ridondante
+
+# ---------------------------------------------------------------------------- #
+#                                      MAS                                     #
+# ---------------------------------------------------------------------------- #
+Spiega a Mauro la questione delle finestre, IMPORTANTE.
+
+# ---------------------------------------------------------------------------- #
+#                                 Idea di Mauro                                #
+# ---------------------------------------------------------------------------- #
+@forward Apriori apriori
+dovrebbe essere nel pacchetto lazy.jl
+cerca in sole chi lo usa

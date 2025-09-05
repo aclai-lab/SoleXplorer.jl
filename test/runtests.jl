@@ -1,14 +1,14 @@
-using Distributed
-addprocs(2)
+# using Distributed
+# addprocs(2)
 
-@everywhere begin
-    using Test
-    using SoleXplorer
-    using MLJ
-    using DataFrames, Random
-end
+# @everywhere begin
+#     using Test
+#     using SoleXplorer
+#     using MLJ
+#     using DataFrames, Random
+# end
 
-const SX = SoleXplorer
+# const SX = SoleXplorer
 
 function run_tests(list)
     println("\n" * ("#"^50))
@@ -26,6 +26,7 @@ test_suites = [
     ("Symbolic Analysis",    ["symbolic_analysis.jl", ]),
     ("Solemodel robustness", ["robustness.jl"         ]),
     ("Rule extraction",      ["rule_extraction.jl"    ]),
+    ("Association Rules",    ["associationrules.jl"   ]),
 ]
 
 @testset "SoleXplorer.jl" begin

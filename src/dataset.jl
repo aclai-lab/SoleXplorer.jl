@@ -32,26 +32,28 @@ Type alias for models that support modal logic.
 """
 const Modal  = Union{ModalDecisionTree, ModalRandomForest, ModalAdaBoost}
 
-"""
-    Tuning = Union{Nothing, MLJTuning.TuningStrategy}
+# """
+#     Tuning = Union{Nothing, MLJTuning.TuningStrategy}
 
-Type alias for MLJ tuning strategy, allowing no tuning (`Nothing`).
-"""
-const Tuning = Union{Nothing, MLJTuning.TuningStrategy}
+# Type alias for MLJ tuning strategy, allowing no tuning (`Nothing`).
+# """
+# const Tuning = Union{Nothing, MLJTuning.TuningStrategy}
 
 """
-    MayAggregationInfo = Maybe{AggregationInfo}
+    MaybeAggregationInfo = Maybe{AggregationInfo}
 
 Type alias for optional aggregation information for modal datasets.
 """
-const MayAggregationInfo = Maybe{AggregationInfo}
+const MaybeAggregationInfo = Maybe{AggregationInfo}
 
 """
-    MayVector = Maybe{AbstractVector}
+    MaybeVector = Maybe{AbstractVector}
 
 Type alias for optional vector type, used for sample weights.
 """
-const MayVector = Maybe{AbstractVector}
+const MaybeVector = Maybe{AbstractVector}
+
+const MaybeTuning = Maybe{Tuning}
 
 # ---------------------------------------------------------------------------- #
 #                                  defaults                                    #
@@ -204,7 +206,7 @@ Wrapper for standard (propositional) machine learning algorithms.
 - `mach::MLJ.Machine`: The underlying MLJ machine
 - `pidxs::Vector{PartitionIdxs}`: Partition indices for train/validation/test splits
 - `pinfo::PartitionInfo`: Information about the partitioning strategy
-- `ainfo::MayAggregationInfo`: Optional aggregation information for feature extraction
+- `ainfo::MaybeAggregationInfo`: Optional aggregation information for feature extraction
 
 The `ainfo` field is used when a multidimensional dataset is aggregated using windowing 
 and feature extraction to convert temporal sequences into tabular format.
@@ -214,7 +216,7 @@ mutable struct PropositionalDataSet{M} <: AbstractDataSet
     mach    :: MLJ.Machine
     pidxs   :: Vector{PartitionIdxs}
     pinfo   :: PartitionInfo
-    ainfo   :: MayAggregationInfo
+    ainfo   :: MaybeAggregationInfo
 end
 
 """
@@ -283,49 +285,20 @@ const EitherDataSet = Union{PropositionalDataSet, ModalDataSet}
 # ---------------------------------------------------------------------------- #
 #                                 constructors                                 #
 # ---------------------------------------------------------------------------- #
-#     _setup_dataset(X, y, w=nothing; kwargs...)::AbstractDataSet
-
-# Internal function to prepare and construct a dataset warper.
-
-# # Arguments
-# - `X::AbstractDataFrame`: Feature data
-# - `y::AbstractVector`: Target variable
-# - `w::MayVector=nothing`: Optional sample weights
-
-# # Keyword Arguments
-# - `model::MLJ.Model=_DefaultModel(y)`: MLJ model to use
-# - `resample::ResamplingStrategy=Holdout(shuffle=true)`: Resampling strategy
-# - `train_ratio::Real=0.7`: Fraction of data for training
-# - `valid_ratio::Real=0.0`: Fraction of data for validation
-# - `rng::AbstractRNG=TaskLocalRNG()`: Random number generator
-# - `win::WinFunction=AdaptiveWindow(nwindows=3, relative_overlap=0.1)`: Windowing function
-# - `features::Tuple{Vararg{Base.Callable}}=(maximum, minimum)`: Feature extraction functions
-# - `modalreduce::Base.Callable=mean`: Reduction function for modal algorithms
-# - `tuning::NamedTuple=NamedTuple()`: Hyperparameter tuning specification
-
-# # Returns
-# - `AbstractDataSet`: Either `PropositionalDataSet` or `ModalDataSet`
-
-# This function handles the complete pipeline of dataset preparation including:
-# 1. Model configuration and RNG propagation
-# 2. Multidimensional data treatment (aggregation vs. modal reduction)
-# 3. Data partitioning and resampling setup
-# 4. Hyperparameter tuning configuration
-# 5. MLJ Machine construction
-
 function _setup_dataset(
     X             :: AbstractDataFrame,
     y             :: AbstractVector,
-    w             :: MayVector               = nothing;
-    model         :: MLJ.Model               = _DefaultModel(y),
-    resample      :: ResamplingStrategy      = Holdout(shuffle=true),
-    train_ratio   :: Real                    = 0.7,
-    valid_ratio   :: Real                    = 0.0,
-    rng           :: AbstractRNG             = TaskLocalRNG(),
-    win           :: WinFunction             = AdaptiveWindow(nwindows=3, relative_overlap=0.1),
+    w             :: MaybeVector                  = nothing;
+    model         :: MLJ.Model                    = _DefaultModel(y),
+    resample      :: ResamplingStrategy           = Holdout(shuffle=true),
+    train_ratio   :: Real                         = 0.7,
+    valid_ratio   :: Real                         = 0.0,
+    rng           :: AbstractRNG                  = TaskLocalRNG(),
+    win           :: WinFunction                  = AdaptiveWindow(nwindows=3, relative_overlap=0.1),
     features      :: Tuple{Vararg{Base.Callable}} = (maximum, minimum),
-    modalreduce   :: Base.Callable           = mean,
-    tuning        :: NamedTuple              = NamedTuple()
+    modalreduce   :: Base.Callable                = mean,
+    # tuning        :: NamedTuple                   = NamedTuple()
+    tuning        :: MaybeTuning                  = nothing
 )::AbstractDataSet
     # propagate user rng to every field that needs it
     # model
@@ -350,15 +323,23 @@ function _setup_dataset(
 
     ttpairs, pinfo = partition(y; resample, train_ratio, valid_ratio, rng)
 
-    isempty(tuning) || begin
+    # isempty(tuning) || begin
+    isnothing(tuning) || begin
         if !(tuning.range isa MLJ.NominalRange)
             # Convert SX.range to MLJ.range now that model is available
             range = tuning.range isa Tuple{Vararg{Tuple}} ? tuning.range : (tuning.range,)
             range = collect(MLJ.range(model, r[1]; r[2:end]...) for r in range)
-            tuning = merge(tuning, (range=range,))
+            tuning.range = range
         end
 
-        model = MLJ.TunedModel(model; tuning...)
+        model = MLJ.TunedModel(
+            model; 
+            tuning=tuning.strategy,
+            range=tuning.range,
+            resampling=tuning.resampling,
+            measure=tuning.measure,
+            repeats=tuning.repeats
+        )
 
         # set the model to use the same rng as the dataset
         model = set_tuning_rng!(model, rng)
@@ -377,7 +358,7 @@ Internal function to prepare and construct a dataset warper.
 # Arguments
 - `X::AbstractDataFrame`: Feature data
 - `y::AbstractVector`: Target variable
-- `w::MayVector=nothing`: Optional sample weights
+- `w::MaybeVector=nothing`: Optional sample weights
 
 # Keyword Arguments
 - `model::MLJ.Model=_DefaultModel(y)`: MLJ model to use
@@ -417,7 +398,9 @@ dsc = setup_dataset(
 
 # Modal time series dataset 
 using SoleXplorer
-Xts, yts = load_arff_dataset("NATOPS") 
+using SoleData.Artifacts: load
+natopsloader = NatopsLoader()
+Xts, yts = load(natopsloader)
 modelts = symbolic_analysis(
     Xts, yts;
     model=ModalRandomForest(),
@@ -449,7 +432,7 @@ end
 """
     length(ds::EitherDataSet)
 
-Return the number of samples in the dataset.
+Return the number of partitions in the dataset.
 """
 Base.length(ds::EitherDataSet) = length(ds.pidxs)
 
@@ -460,6 +443,8 @@ Extract test target values for each partition in the dataset.
 """
 get_y_test(ds::EitherDataSet)::AbstractVector = 
     [@views ds.mach.args[2].data[ds.pidxs[i].test] for i in 1:length(ds)]
+
+
 
 """
     get_mach(ds::EitherDataSet)::Machine
@@ -474,3 +459,10 @@ get_mach(ds::EitherDataSet)::Machine = ds.mach
 Extract the model from the dataset's MLJ machine.
 """
 get_mach_model(ds::EitherDataSet)::MLJ.Model = ds.mach.model
+
+"""
+    get_mach_model(ds::ModalDataSet)::SupportedLogiset
+
+Extract the logiset (if present) from the dataset's MLJ machine.
+"""
+get_logiset(ds::ModalDataSet)::SupportedLogiset = ds.mach.data[1].modalities[1]

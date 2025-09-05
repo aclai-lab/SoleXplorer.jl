@@ -10,7 +10,9 @@ Xc = DataFrame(Xc)
 Xr, yr = @load_boston
 Xr = DataFrame(Xr)
 
-Xts, yts = load_arff_dataset("NATOPS")
+using SoleData.Artifacts: load
+natopsloader = NatopsLoader()
+Xts, yts = load(natopsloader)
 
 # ---------------------------------------------------------------------------- #
 #                        train and test usage examples                         #
@@ -209,8 +211,6 @@ solemr = train_test(
 # ---------------------------------------------------------------------------- #
 #                                    various                                   #
 # ---------------------------------------------------------------------------- #
-@test SX.TunedMach(DecisionTreeClassifier) <: Union{SX.PropositionalDataSet, SX.ModalDataSet}
-
 @testset "Base.show tests for train_test.jl" begin
     rng = Xoshiro(42)
     
