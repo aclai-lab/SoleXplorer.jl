@@ -9,7 +9,7 @@ const SX = SoleXplorer
 #                                    natops                                    #
 # ---------------------------------------------------------------------------- #
 natopsloader = NatopsLoader()
-Xts, yts = load(natopsloader)
+Xts, yts = SX.load(natopsloader)
 X_have_command, y_have_command = Xts[1:30, :], yts[1:30]
 
 # make a vector of item, that will be the initial state of the mining machine

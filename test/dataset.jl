@@ -11,7 +11,7 @@ Xr, yr = @load_boston
 Xr = DataFrame(Xr)
 
 natopsloader = NatopsLoader()
-Xts, yts = load(natopsloader)
+Xts, yts = SX.load(natopsloader)
 
 # ---------------------------------------------------------------------------- #
 #                        prepare dataset usage examples                        #
