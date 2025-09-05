@@ -1,47 +1,21 @@
 # ---------------------------------------------------------------------------- #
 #                               abstract types                                 #
 # ---------------------------------------------------------------------------- #
-# abstract type AbstractTuningStrategy end
 abstract type AbstractTuning end
 
 # ---------------------------------------------------------------------------- #
 #                                   types                                      #
 # ---------------------------------------------------------------------------- #
-# const MaybeAbstractTuningStrategy = Maybe{AbstractTuningStrategy}
-
 const MaybeResampling = Maybe{MLJ.ResamplingStrategy}
 const MaybeMeasure = Maybe{EitherMeasure}
 const MaybeInt = Maybe{Int}
 
-
-# ---------------------------------------------------------------------------- #
-#                                Tuning struct                                 #
-# ---------------------------------------------------------------------------- #
-# mutable struct Tuning{T} <: AbstractTuning
-#     strategy::T
-#     range::Union{Tuple{Vararg{Tuple}}, Vector{<:MLJ.NumericRange}, MLJBase.NominalRange}
-#     resampling::MaybeResampling
-#     measure::MaybeMeasure
-#     repeats::Int64
-# end
-
-struct Tuning{T} <: AbstractTuning
-    strategy::T
-    range::RangeSpec
-    resampling::MaybeResampling
-    measure::MaybeMeasure
-    repeats::Int64
-    
-    # Inner constructor with validation
-    function Tuning{T}(strategy::T, range::RangeSpec, resampling, measure, repeats) where T
-        repeats > 0 || throw(ArgumentError("repeats must be positive, got $repeats"))
-        new{T}(strategy, normalize_range(range), resampling, measure, repeats)
-    end
-end
-
-# Outer constructor
-Tuning(strategy::T, range, resampling=nothing, measure=nothing, repeats=1) where T = 
-    Tuning{T}(strategy, range, resampling, measure, repeats)
+const RangeSpec = Union{
+    Tuple,
+    Tuple{Vararg{Tuple}},
+    Vector{<:MLJ.NumericRange},
+    MLJBase.NominalRange
+}
 
 # ---------------------------------------------------------------------------- #
 #                             Range normalization                              #
@@ -49,6 +23,25 @@ Tuning(strategy::T, range, resampling=nothing, measure=nothing, repeats=1) where
 normalize_range(range::Union{Vector{<:MLJ.NumericRange}, MLJBase.NominalRange}) = range
 normalize_range(range::Tuple{Vararg{Tuple}}) = range
 normalize_range(range::Tuple) = (range,)
+
+# ---------------------------------------------------------------------------- #
+#                                Tuning struct                                 #
+# ---------------------------------------------------------------------------- #
+mutable struct Tuning{T} <: AbstractTuning
+    strategy::T
+    range::RangeSpec
+    resampling::MaybeResampling
+    measure::MaybeMeasure
+    repeats::Int64
+    
+    function Tuning{T}(strategy::T, range::RangeSpec, resampling, measure, repeats) where T
+        repeats > 0 || throw(ArgumentError("repeats must be positive, got $repeats"))
+        new{T}(strategy, normalize_range(range), resampling, measure, repeats)
+    end
+end
+
+Tuning(strategy::T, range, resampling=nothing, measure=nothing, repeats=1) where T = 
+    Tuning{T}(strategy, range, resampling, measure, repeats)
 
 # ---------------------------------------------------------------------------- #
 #                             MLJ Tuning adapter                               #
@@ -79,26 +72,10 @@ const CubeTuning(; kwargs...)::Tuning     = setup_tuning(MLJ.LatinHypercube; kwa
 const ParticleTuning(; kwargs...)::Tuning = setup_tuning(PSO.ParticleSwarm; kwargs...)
 const AdaptiveTuning(; kwargs...)::Tuning = setup_tuning(PSO.AdaptiveParticleSwarm; kwargs...)
 
-# function setup_tuning(
-#     tuning::DataType;
-#     range::Union{Tuple, Tuple{Vararg{Tuple}}, MLJBase.NominalRange},
-#     resampling::MaybeResampling=nothing,
-#     measure::MaybeMeasure=nothing,
-#     repeats::Int64=1,
-#     kwargs...
-# )::Tuning
-#     strategy = tuning(; kwargs...)
-#     if !(range isa MLJ.NominalRange)
-#         range isa Tuple{Vararg{Tuple}} || (range=(range,))
-#     end
-#     Tuning{typeof(strategy)}(strategy, range, resampling, measure, repeats)
-# end
-
 """Enable splatting and iteration over Tuning struct."""
 Base.propertynames(::Tuning) = (:strategy, :range, :resampling, :measure, :repeats)
 Base.getproperty(t::Tuning, s::Symbol) = getfield(t, s)
 
-# Convert to NamedTuple for efficient splatting
 @inline tuning_params(t::Tuning) = (
     strategy = t.strategy,
     range = t.range, 
@@ -107,7 +84,6 @@ Base.getproperty(t::Tuning, s::Symbol) = getfield(t, s)
     repeats = t.repeats
 )
 
-# Enable ... splatting
 Base.pairs(t::Tuning) = pairs(tuning_params(t))
 
 # ---------------------------------------------------------------------------- #

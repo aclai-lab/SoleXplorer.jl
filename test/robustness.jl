@@ -1,7 +1,7 @@
-# using Test
-# using SoleXplorer
-# using MLJ, DataFrames, Random
-# const SX = SoleXplorer
+using Test
+using SoleXplorer
+using MLJ, DataFrames, Random
+const SX = SoleXplorer
 
 Xc, yc = @load_iris
 Xc = DataFrame(Xc)

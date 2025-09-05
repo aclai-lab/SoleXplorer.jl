@@ -10,8 +10,6 @@ Xc = DataFrame(Xc)
 Xr, yr = @load_boston
 Xr = DataFrame(Xr)
 
-using SoleData.Artifacts
-using SoleData.Artifacts: load
 natopsloader = NatopsLoader()
 Xts, yts = load(natopsloader)
 
@@ -196,7 +194,6 @@ dsc = setup_dataset(
 #                                    tuning                                    #
 # ---------------------------------------------------------------------------- #
 range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
-
 dsr = setup_dataset(
     Xr, yr;
     model=DecisionTreeRegressor(),
@@ -207,12 +204,11 @@ dsr = setup_dataset(
 
 range = (SX.range(:min_purity_increase, lower=0.001, upper=1.0, scale=:log),
      SX.range(:max_depth, lower=1, upper=10))
-
 dsc = setup_dataset(
     Xc, yc;
     model=DecisionTreeClassifier(),
     rng=Xoshiro(1234),
-    tuning=GridTuning(resolution=10, resampling=CV(nfolds=3), range=range, measure=rms)
+    tuning=RandomTuning(range=range)
 )
 @test dsc isa SX.PropositionalDataSet{<:MLJ.MLJTuning.ProbabilisticTunedModel}
 
@@ -222,9 +218,28 @@ dsc = setup_dataset(
     Xc, yc;
     model=DecisionTreeClassifier(),
     rng=Xoshiro(1234),
-    tuning=GridTuning(resolution=10, resampling=CV(nfolds=3), range=range, measure=rms)
+    tuning=CubeTuning(resampling=CV(nfolds=3), range=range, measure=rms)
 )
-@test dsc isa SX.PropositionalDataSet{<:MLJ.MLJTuning.ProbabilisticTunedModel}    
+@test dsc isa SX.PropositionalDataSet{<:MLJ.MLJTuning.ProbabilisticTunedModel}  
+
+range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
+dsr = setup_dataset(
+    Xr, yr;
+    model=DecisionTreeRegressor(),
+    rng=Xoshiro(1234),
+    tuning=ParticleTuning(n_particles=3, resampling=CV(nfolds=3), range=range, measure=rms)
+)
+@test dsr isa SX.PropositionalDataSet{<:MLJ.MLJTuning.DeterministicTunedModel}
+
+range = (SX.range(:min_purity_increase, lower=0.001, upper=1.0, scale=:log),
+     SX.range(:max_depth, lower=1, upper=10))
+dsc = setup_dataset(
+    Xc, yc;
+    model=DecisionTreeClassifier(),
+    rng=Xoshiro(1234),
+    tuning=AdaptiveTuning(range=range)
+)
+@test dsc isa SX.PropositionalDataSet{<:MLJ.MLJTuning.ProbabilisticTunedModel}
 
 # ---------------------------------------------------------------------------- #
 #                               various cases                                  #
