@@ -10,6 +10,9 @@ Albi sicuramente potrà essere d'aiuto, ma anche Marco.
 # ---------------------------------------------------------------------------- #
 Importante, vedi di farlo entro Parigi
 
+Edo mi ha suggerito Pkl da scikitlearn
+Perry suggerisce serialize.jl
+
 # ---------------------------------------------------------------------------- #
 #                                  XgBoost ext                                 #
 # ---------------------------------------------------------------------------- #
