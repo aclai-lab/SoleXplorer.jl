@@ -1,27 +1,3 @@
-# # ---------------------------------------------------------------------------- #
-# #                               abstract types                                 #
-# # ---------------------------------------------------------------------------- #
-# abstract type AbstractBalancing end
-
-# # ---------------------------------------------------------------------------- #
-# #                               Balancing struct                               #
-# # ---------------------------------------------------------------------------- #
-# mutable struct Balancing{T} <: AbstractBalancing
-#     strategy::T
-#     range::RangeSpec
-#     resampling::MaybeResampling
-#     measure::MaybeMeasure
-#     repeats::Int64
-    
-#     function Balancing{T}(strategy::T, range::RangeSpec, resampling, measure, repeats) where T
-#         repeats > 0 || throw(ArgumentError("repeats must be positive, got $repeats"))
-#         new{T}(strategy, normalize_range(range), resampling, measure, repeats)
-#     end
-# end
-
-# Balancing(strategy::T, range, resampling=nothing, measure=nothing, repeats=1) where T = 
-#     Balancing{T}(strategy, range, resampling, measure, repeats)
-
 # ---------------------------------------------------------------------------- #
 #                            MLJ Balancing adapters                            #
 # ---------------------------------------------------------------------------- #

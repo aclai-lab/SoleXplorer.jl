@@ -13,13 +13,6 @@ Xr = DataFrame(Xr)
 natopsloader = NatopsLoader()
 Xts, yts = SX.load(natopsloader)
 
-dsc = setup_dataset(
-    Xc, yc;
-    model=DecisionTreeClassifier(),
-    rng=Xoshiro(1),
-    balancing=(SMOTENC(k=5, ratios=1.0), TomekUndersampler(min_ratios=0.5))
-)
-
 # ---------------------------------------------------------------------------- #
 #                        prepare dataset usage examples                        #
 # ---------------------------------------------------------------------------- #
@@ -255,9 +248,41 @@ dsc = setup_dataset(
     Xc, yc;
     model=DecisionTreeClassifier(),
     rng=Xoshiro(1),
-    # balancing=(SMOTENC(k=5, ratios=1.0), TomekUndersampler(min_ratios=0.5))
+    balancing=(SMOTENC(k=5, ratios=1.0), TomekUndersampler(min_ratios=0.5))
 )
-@test dsr isa SX.PropositionalDataSet{<:MLJ.MLJTuning.DeterministicTunedModel}
+@test dsc isa SX.PropositionalDataSet{<:MLJ.MLJBalancing.BalancedModelProbabilistic}
+
+dsc = setup_dataset(
+    Xc, yc;
+    model=DecisionTreeClassifier(),
+    rng=Xoshiro(1),
+    balancing=(BorderlineSMOTE1(k=5, ratios=1.0), SMOTEN())
+)
+@test dsc isa SX.PropositionalDataSet{<:MLJ.MLJBalancing.BalancedModelProbabilistic}
+
+dsc = setup_dataset(
+    Xc, yc;
+    model=DecisionTreeClassifier(),
+    rng=Xoshiro(1),
+    balancing=(ENNUndersampler(k=5), ClusterUndersampler(try_preserve_type=false))
+)
+@test dsc isa SX.PropositionalDataSet{<:MLJ.MLJBalancing.BalancedModelProbabilistic}
+
+dsc = setup_dataset(
+    Xc, yc;
+    model=DecisionTreeClassifier(),
+    rng=Xoshiro(1),
+    balancing=(ROSE(s=1.5), RandomUndersampler())
+)
+@test dsc isa SX.PropositionalDataSet{<:MLJ.MLJBalancing.BalancedModelProbabilistic}
+
+dsc = setup_dataset(
+    Xc, yc;
+    model=DecisionTreeClassifier(),
+    rng=Xoshiro(1),
+    balancing=(RandomWalkOversampler(), SMOTE(k=5, ratios=1.0))
+)
+@test dsc isa SX.PropositionalDataSet{<:MLJ.MLJBalancing.BalancedModelProbabilistic}
 
 # ---------------------------------------------------------------------------- #
 #                               various cases                                  #
