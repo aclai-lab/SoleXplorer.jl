@@ -36,6 +36,7 @@ using  MLJParticleSwarmOptimization
 const  PSO = MLJParticleSwarmOptimization
 using  MLJ
 using  MLJ: MLJBase, MLJTuning
+using Imbalance
 
 # ---------------------------------------------------------------------------- #
 #                              external packages                               #
@@ -97,6 +98,14 @@ using XGBoost, MLJXGBoostInterface
 # ---------------------------------------------------------------------------- #
 #                                   modules                                    #
 # ---------------------------------------------------------------------------- #
+export range
+include("range.jl")
+
+export BorderlineSMOTE1, ClusterUndersampler, ENNUndersampler, ROSE
+export RandomUndersampler, RandomWalkOversampler, SMOTE, SMOTEN
+export SMOTENC, TomekUndersampler
+include("balancing.jl")
+
 include("measures.jl")
 include("tuning.jl")
 export GridTuning, RandomTuning, CubeTuning, ParticleTuning, AdaptiveTuning

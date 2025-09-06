@@ -1,12 +1,8 @@
-"""
-    dataset.jl
+# Dataset construction and management utilities for SoleXplorer.
 
-Dataset construction and management utilities for SoleXplorer.
-
-This module handles the creation of specialized dataset structures that encapsulate
-MLJ machines, partitioning information for propositional sets, including also
-treatment details for modal learning sets.
-"""
+# This module handles the creation of specialized dataset structures that encapsulate
+# MLJ machines, partitioning information for propositional sets, including also
+# treatment details for modal learning sets.
 
 # ---------------------------------------------------------------------------- #
 #                               abstract types                                 #
@@ -32,40 +28,19 @@ Type alias for models that support modal logic.
 """
 const Modal  = Union{ModalDecisionTree, ModalRandomForest, ModalAdaBoost}
 
-# """
-#     Tuning = Union{Nothing, MLJTuning.TuningStrategy}
-
-# Type alias for MLJ tuning strategy, allowing no tuning (`Nothing`).
-# """
-# const Tuning = Union{Nothing, MLJTuning.TuningStrategy}
-
-"""
-    MaybeAggregationInfo = Maybe{AggregationInfo}
-
-Type alias for optional aggregation information for modal datasets.
-"""
 const MaybeAggregationInfo = Maybe{AggregationInfo}
 
-"""
-    MaybeVector = Maybe{AbstractVector}
-
-Type alias for optional vector type, used for sample weights.
-"""
-const MaybeVector = Maybe{AbstractVector}
-
-const MaybeTuning = Maybe{Tuning}
+const MaybeInt = Maybe{Int}
+const MaybeVector    = Maybe{AbstractVector}
+const MaybeBalancing = Maybe{Tuple{Vararg{<:MLJ.Model}}}
+const MaybeTuning    = Maybe{Tuning}
 
 # ---------------------------------------------------------------------------- #
 #                                  defaults                                    #
 # ---------------------------------------------------------------------------- #
-"""
-    _DefaultModel(y::AbstractVector)::MLJ.Model
-
-Return a default model appropriate for the target variable type.
-
-This function is used when no explicit model is provided to `setup_dataset`,
-automatically selecting between classification and regression.
-"""
+# This function is used when no explicit model is provided to `setup_dataset`,
+# automatically selecting between classification and regression.
+# Return a default model appropriate for the target variable type.
 function _DefaultModel(y::AbstractVector)::MLJ.Model
     if     eltype(y) <: CLabel
         return DecisionTreeClassifier()
@@ -79,55 +54,44 @@ end
 # ---------------------------------------------------------------------------- #
 #                                 utilities                                    #
 # ---------------------------------------------------------------------------- #
-"""
-    set_rng!(m::MLJ.Model, rng::AbstractRNG)::MLJ.Model
-
-Set the random number generator for a model that supports it.
-
-This function mutates the model's `rng` field if it exists, ensuring
-reproducible results across training sessions.
-"""
+# Set the random number generator for a model that supports it.
+# This function mutates the model's `rng` field if it exists, ensuring
+# reproducible results across training sessions.
 function set_rng!(m::MLJ.Model, rng::AbstractRNG)::MLJ.Model
     m.rng = rng
     return m
 end
 
-"""
-    set_rng!(r::MLJ.ResamplingStrategy, rng::AbstractRNG)::ResamplingStrategy
-
-Set the random number generator for a resampling strategy.
-"""
+# Set the random number generator for a resampling strategy.
 function set_rng!(r::MLJ.ResamplingStrategy, rng::AbstractRNG)::ResamplingStrategy
     typeof(r)(merge(MLJ.params(r), (rng=rng,))...)
 end
 
+# Set random number generators for balancing-related components of a model.
+function set_balancing_rng(m::MLJ.Model, rng::AbstractRNG)::MLJ.Model
+    if hasproperty(m, :rng)
+        params = MLJ.params(m)
+        params = merge(params, (rng=rng,))
+        return Base.typename(typeof(m)).wrapper(; params...)
+    else
+        return m
+    end
+end
 
-"""
-    set_tuning_rng!(m::MLJ.Model, rng::AbstractRNG)::MLJ.Model
-
-Set random number generators for tuning-related components of a model.
-"""
-function set_tuning_rng!(m::MLJ.Model, rng::AbstractRNG)::MLJ.Model
+# Set random number generators for tuning-related components of a model.
+function set_tuning_rng(m::MLJ.Model, rng::AbstractRNG)::MLJ.Model
     hasproperty(m.tuning, :rng) && (m.tuning.rng = rng)
     hasproperty(m.resampling, :rng) && (m.resampling = set_rng!(m.resampling, rng))
     return m
 end
 
-"""
-    set_fraction_train!(r::ResamplingStrategy, train_ratio::Real)::ResamplingStrategy
-
-Set the training fraction for a resampling strategy.
-"""
-function set_fraction_train!(r::ResamplingStrategy, train_ratio::Real)::ResamplingStrategy
+# Set the training fraction for a resampling strategy.
+function set_fraction_train(r::ResamplingStrategy, train_ratio::Real)::ResamplingStrategy
     typeof(r)(merge(MLJ.params(r), (fraction_train=train_ratio,))...)
 end
 
-"""
-    set_conditions!(m::MLJ.Model, conditions::Tuple{Vararg{Base.Callable}})::MLJ.Model
-
-Set logical conditions (features) for modal decision tree models.
-"""
-function set_conditions!(m::MLJ.Model, conditions::Tuple{Vararg{Base.Callable}})::MLJ.Model
+# Set logical conditions (features) for modal decision tree models.
+function set_conditions(m::MLJ.Model, conditions::Tuple{Vararg{Base.Callable}})::MLJ.Model
     m.conditions = Function[conditions...]
     return m
 end
@@ -169,28 +133,9 @@ Convenience method to encode both features and target simultaneously.
 """
 code_dataset!(X::AbstractDataFrame, y::AbstractVector) = code_dataset!(X), code_dataset!(y)
 
-"""
-    range(field::Union{Symbol,Expr}; kwargs...)
-
-Wrapper for MLJ.range in hyperparameter tuning contexts.
-
-# Arguments
-- `field::Union{Symbol,Expr}`: Model field to tune
-- `kwargs...`: Range specification arguments
-
-# Returns
-- Tuple of (field, kwargs) for later processing by tuning setup
-
-This function provides a more convenient syntax for specifying hyperparameter
-ranges that will be converted to proper MLJ ranges once the model is available.
-"""
 Base.range(field::Union{Symbol,Expr}; kwargs...) = field, kwargs...
 
-"""
-    treat2aggr(t::TreatmentInfo)::AggregationInfo
-
-Convert treatment information (features and winparams) to aggregation information.
-"""
+# Convert treatment information (features and winparams) to aggregation information.
 treat2aggr(t::TreatmentInfo)::AggregationInfo = 
     AggregationInfo(t.features, t.winparams)
 
@@ -297,7 +242,7 @@ function _setup_dataset(
     win           :: WinFunction                  = AdaptiveWindow(nwindows=3, relative_overlap=0.1),
     features      :: Tuple{Vararg{Base.Callable}} = (maximum, minimum),
     modalreduce   :: Base.Callable                = mean,
-    # tuning        :: NamedTuple                   = NamedTuple()
+    balancing     :: MaybeBalancing               = nothing,
     tuning        :: MaybeTuning                  = nothing
 )::AbstractDataSet
     # propagate user rng to every field that needs it
@@ -306,9 +251,9 @@ function _setup_dataset(
     hasproperty(resample, :rng) && (resample = set_rng!(resample, rng))
 
     # ModalDecisionTrees package needs features to be passed in model params
-    hasproperty(model, :features) && (model = set_conditions!(model, features))
+    hasproperty(model, :features) && (model = set_conditions(model, features))
     # Holdout resampling needs to setup fraction_train parameters
-    resample isa Holdout && (resample = set_fraction_train!(resample, train_ratio))
+    resample isa Holdout && (resample = set_fraction_train(resample, train_ratio))
 
     # Handle multidimensional datasets:
     # Decision point: use standard ML algorithms (requiring feature aggregation)
@@ -323,7 +268,19 @@ function _setup_dataset(
 
     ttpairs, pinfo = partition(y; resample, train_ratio, valid_ratio, rng)
 
-    # isempty(tuning) || begin
+    # balancing
+    isnothing(balancing) || begin
+        pairs = map(enumerate(balancing)) do (i, bal)
+            bal = set_balancing_rng(bal, rng)
+            Symbol(:balancer, i) => bal
+        end
+        @show pairs
+        # set the model to use the same rng as the dataset
+        # balancing = set_balancing_rng(balancing, rng)
+        model = MLJ.BalancedModel(;model, pairs...)
+    end
+
+    # tuning
     isnothing(tuning) || begin
         if !(tuning.range isa MLJ.NominalRange)
             # Convert SX.range to MLJ.range now that model is available
@@ -342,7 +299,7 @@ function _setup_dataset(
         )
 
         # set the model to use the same rng as the dataset
-        model = set_tuning_rng!(model, rng)
+        model = set_tuning_rng(model, rng)
     end
 
     mach = isnothing(w) ? MLJ.machine(model, X, y) : MLJ.machine(model, X, y, w)

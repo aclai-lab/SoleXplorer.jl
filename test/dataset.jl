@@ -13,6 +13,13 @@ Xr = DataFrame(Xr)
 natopsloader = NatopsLoader()
 Xts, yts = SX.load(natopsloader)
 
+dsc = setup_dataset(
+    Xc, yc;
+    model=DecisionTreeClassifier(),
+    rng=Xoshiro(1),
+    balancing=(SMOTENC(k=5, ratios=1.0), TomekUndersampler(min_ratios=0.5))
+)
+
 # ---------------------------------------------------------------------------- #
 #                        prepare dataset usage examples                        #
 # ---------------------------------------------------------------------------- #
@@ -240,6 +247,17 @@ dsc = setup_dataset(
     tuning=AdaptiveTuning(range=range)
 )
 @test dsc isa SX.PropositionalDataSet{<:MLJ.MLJTuning.ProbabilisticTunedModel}
+
+# ---------------------------------------------------------------------------- #
+#                                  balancing                                   #
+# ---------------------------------------------------------------------------- #
+dsc = setup_dataset(
+    Xc, yc;
+    model=DecisionTreeClassifier(),
+    rng=Xoshiro(1),
+    # balancing=(SMOTENC(k=5, ratios=1.0), TomekUndersampler(min_ratios=0.5))
+)
+@test dsr isa SX.PropositionalDataSet{<:MLJ.MLJTuning.DeterministicTunedModel}
 
 # ---------------------------------------------------------------------------- #
 #                               various cases                                  #
