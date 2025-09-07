@@ -186,6 +186,45 @@ mutable struct ModalDataSet{M} <: AbstractDataSet
 end
 
 """
+    show(io::IO, ds::PropositionalDataSet)
+
+Display a PropositionalDataSet with key information about the MLJ machine,
+resampling strategy, and aggregation details.
+"""
+function Base.show(io::IO, ds::PropositionalDataSet{M}) where M
+    println(io, "PropositionalDataSet")
+    println(io, "  Model: $(typeof(ds.mach.model))")
+    println(io, "  Resampling: $(typeof(ds.resampling))")
+    
+    if !isnothing(ds.ainfo)
+        println(io, "  Aggregation:")
+        println(io, "    Features: $(ds.ainfo.features)")
+        println(io, "    Window params: $(ds.ainfo.winparams)")
+    else
+        println(io, "  Aggregation: none")
+    end
+end
+
+"""
+    show(io::IO, ds::ModalDataSet)
+
+Display a ModalDataSet with key information about the MLJ machine,
+resampling strategy, and treatment details.
+"""
+function Base.show(io::IO, ds::ModalDataSet{M}) where M
+    println(io, "ModalDataSet")
+    println(io, "  Model: $(typeof(ds.mach.model))")
+    println(io, "  Resampling: $(typeof(ds.resampling))")
+    println(io, "  Treatment:")
+    println(io, "    Type: $(ds.tinfo.treatment)")
+    println(io, "    Features: $(ds.tinfo.features)")
+    println(io, "    Window params: $(ds.tinfo.winparams)")
+    if hasproperty(ds.tinfo, :modalreduce)
+        println(io, "    Modal reduce: $(ds.tinfo.modalreduce)")
+    end
+end
+
+"""
     DataSet(mach, pidxs, pinfo; tinfo=nothing)
 
 Construct an appropriate dataset wrapper based on treatment information.

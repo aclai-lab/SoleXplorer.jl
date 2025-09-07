@@ -30,7 +30,7 @@ using  SoleModels: RuleExtractor, DecisionSet
 # performance measures for regression 
 @reexport using MLJ: rms, l1, l2, mae, mav
 # cross-validation
-@reexport using MLJ: Holdout, CV, StratifiedCV, TimeSeriesCV
+# @reexport using MLJ: Holdout, CV, StratifiedCV, TimeSeriesCV
 # tuning
 using  MLJParticleSwarmOptimization
 const  PSO = MLJParticleSwarmOptimization

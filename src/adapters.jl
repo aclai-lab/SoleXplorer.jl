@@ -1,4 +1,14 @@
 # ---------------------------------------------------------------------------- #
+#                       MLJ Resampling available functions                      #
+# ---------------------------------------------------------------------------- #
+const Availables_Resamplig_Funcs = (
+    :Holdout,
+    :CV,
+    :StratifiedCV,
+    :TimeSeriesCV,
+)
+
+# ---------------------------------------------------------------------------- #
 #                       MLJ Balancing available functions                      #
 # ---------------------------------------------------------------------------- #
 # Current list is up to date to Imbalance package v0.1.6
@@ -7,7 +17,6 @@
 # under the mentorship of Anthony Blaom.
 # Special thanks also go to Rik Huijzer.
 # https://github.com/JuliaAI
-
 const Availables_Balancing_Funcs = (
     :BorderlineSMOTE1,
     :ClusterUndersampler,
@@ -19,15 +28,29 @@ const Availables_Balancing_Funcs = (
     :SMOTE,
     :SMOTEN,
     :SMOTENC,
-    :TomekUndersampler
+    :TomekUndersampler,
 )
 
-for func in Availables_Balancing_Funcs
-    imbalance_func = getfield(Imbalance.MLJ, func)
-    @eval begin
-        function $(func)(args...; kwargs...)
-            return $imbalance_func(args...; kwargs...)
+# ---------------------------------------------------------------------------- #
+#                                   Adapters                                   #
+# ---------------------------------------------------------------------------- #
+const Adapters = Dict(
+    Availables_Resamplig_Funcs => MLJ,
+    Availables_Balancing_Funcs => Imbalance.MLJ
+)
+
+for (funcs, adapter) in Adapters
+    for func in funcs
+        # skip if function is already globally defined,
+        # ie: MLJ is globally used
+        isdefined(@__MODULE__, func) && continue
+
+        sx_func = getfield(adapter, func)
+        @eval begin
+            function $(func)(args...; kwargs...)
+                return $sx_func(args...; kwargs...)
+            end
+            export $(func)
         end
-        export $(func)
     end
 end
