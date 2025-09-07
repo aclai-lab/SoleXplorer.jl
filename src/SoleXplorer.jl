@@ -36,6 +36,7 @@ using  MLJParticleSwarmOptimization
 const  PSO = MLJParticleSwarmOptimization
 using  MLJ
 using  MLJ: MLJBase, MLJTuning
+import MLJ: evaluate
 using Imbalance
 
 # ---------------------------------------------------------------------------- #
@@ -102,7 +103,7 @@ using XGBoost, MLJXGBoostInterface
 export range
 include("range.jl")
 
-include("measures.jl")
+# include("measures.jl")
 include("tuning.jl")
 export GridTuning, RandomTuning, CubeTuning, ParticleTuning, AdaptiveTuning
 
@@ -111,8 +112,8 @@ export setup_dataset
 include("dataset.jl")
 
 include("apply.jl")
-export train_test
-include("train_test.jl")
+# export train_test
+include("evaluate.jl")
 
 # include("extractrules.jl")
 # export Apriori, FPGrowth, Eclat

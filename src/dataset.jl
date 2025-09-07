@@ -272,10 +272,10 @@ const EitherDataSet = Union{PropositionalDataSet, ModalDataSet}
 function set_balancing(
     model     :: MLJ.Model,
     balancing :: Tuple{Vararg{<:MLJ.Model}},
-    rng       :: AbstractRNG
+    # rng       :: AbstractRNG
 )::MLJ.Model
     pairs = map(enumerate(balancing)) do (i, b)
-        b = set_balancing_rng(b, rng)
+        # b = set_balancing_rng(b, rng)
         Symbol(:balancer, i) => b
     end
     model = MLJ.BalancedModel(; model, pairs...)
@@ -322,7 +322,8 @@ function _setup_dataset(
 
     # ttpairs, pinfo = partition(y; resampling, train_ratio, valid_ratio, rng)
 
-    isnothing(balancing) || (model = set_balancing(model, balancing, rng))
+    # isnothing(balancing) || (model = set_balancing(model, balancing, rng))
+    isnothing(balancing) || (model = set_balancing(model, balancing))
 
     # tuning
     isnothing(tuning) || begin

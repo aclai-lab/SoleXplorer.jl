@@ -23,7 +23,6 @@ abstract type AbstractModelSet end
 #                                   types                                      #
 # ---------------------------------------------------------------------------- #
 const MaybeRules         = Maybe{Union{Vector{DecisionSet}, Vector{LumenResult}}}
-const MaybeMeasures      = Maybe{Measures}
 const MaybeAssociations  = Maybe{Vector{ARule}}
 
 const MaybeRuleExtractor = Maybe{RuleExtractor}

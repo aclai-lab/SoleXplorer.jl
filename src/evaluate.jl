@@ -1,5 +1,5 @@
 """
-train_test.jl - Cross-Validation and Model Training Interface
+evaluate.jl - Cross-Validation and Model Training Interface
 
 This module provides training workflows that:
 1. Execute cross-validation across multiple data folds
@@ -9,7 +9,7 @@ This module provides training workflows that:
 
 Key components:
 - SoleModel: Container for collections of symbolic models from CV folds
-- train_test: Main interface for training and symbolic conversion
+- evaluate: Main interface for training and symbolic conversion
 """
 
 # ---------------------------------------------------------------------------- #
@@ -28,7 +28,28 @@ abstract type AbstractSoleModel end
 """
 Alias for XGBoost model types (classifier and regressor).
 """
-const XGBoostModel = Union{XGBoostClassifier, XGBoostRegressor}
+const XGBoostModel  = Union{XGBoostClassifier, XGBoostRegressor}
+
+# const RobustMeasure = StatisticalMeasures.StatisticalMeasuresBase.RobustMeasure
+# const FussyMeasure  = StatisticalMeasures.StatisticalMeasuresBase.FussyMeasure
+# const EitherMeasure = Union{RobustMeasure, FussyMeasure}
+
+# const MaybeMeasures = Maybe{Tuple{Vararg{<:EitherMeasure}}}
+
+# ---------------------------------------------------------------------------- #
+#                              default measures                                #
+# ---------------------------------------------------------------------------- #
+"""
+    _DefaultMeasures(y::AbstractVector)::Tuple{Vararg{FussyMeasure}}
+
+Return default measures appropriate for the target variable type.
+
+This function is used when no explicit measures are provided,
+automatically selecting between classification and regression.
+"""
+function _DefaultMeasures(y::AbstractVector)::Tuple{Vararg{FussyMeasure}}
+    return eltype(y) <: CLabel ? (accuracy, kappa) : (rms, l1, l2)
+end
 
 # ---------------------------------------------------------------------------- #
 #                                  utilities                                   #
@@ -69,63 +90,63 @@ is_tuned_model(ds::AbstractDataSet) = is_tuned_model(ds.mach.model)
 is_tuned_model(::MLJTuning.EitherTunedModel) = true
 is_tuned_model(::Any) = false
 
-"""
-    get_early_stopping_rounds(ds::AbstractDataSet) -> Int
+# """
+#     get_early_stopping_rounds(ds::AbstractDataSet) -> Int
 
-Extract early stopping rounds parameter from XGBoost models.
-"""
-function get_early_stopping_rounds(ds::AbstractDataSet)
-    if is_tuned_model(ds)
-        return ds.mach.model.model.early_stopping_rounds
-    else
-        return ds.mach.model.early_stopping_rounds
-    end
-end
+# Extract early stopping rounds parameter from XGBoost models.
+# """
+# function get_early_stopping_rounds(ds::AbstractDataSet)
+#     if is_tuned_model(ds)
+#         return ds.mach.model.model.early_stopping_rounds
+#     else
+#         return ds.mach.model.early_stopping_rounds
+#     end
+# end
 
-"""
-    makewatchlist!(ds::AbstractDataSet, train::Vector{Int}, valid::Vector{Int})
+# """
+#     makewatchlist!(ds::AbstractDataSet, train::Vector{Int}, valid::Vector{Int})
 
-Create XGBoost watchlist for early stopping validation.
+# Create XGBoost watchlist for early stopping validation.
 
-Throws `ArgumentError` if validation set is empty.
-"""
-function makewatchlist!(ds::AbstractDataSet, train::Vector{Int}, valid::Vector{Int})
-    isempty(valid) && throw(ArgumentError("No validation data provided, use preprocess valid_ratio parameter"))
+# Throws `ArgumentError` if validation set is empty.
+# """
+# function makewatchlist!(ds::AbstractDataSet, train::Vector{Int}, valid::Vector{Int})
+#     isempty(valid) && throw(ArgumentError("No validation data provided, use preprocess valid_ratio parameter"))
 
-    X = get_X(ds)
-    y = get_y(ds)
-    y_train = @views y[train]
-    y_valid = @views y[valid]
-    feature_names = String.(propertynames(X))
-    if eltype(y) <: CLabel
-        y_train = @. MLJ.levelcode(y[train]) - 1 # convert to 0-based indexing
-        y_valid = @. MLJ.levelcode(y[valid]) - 1 # convert to 0-based indexing
-    end
-    dtrain        = XGBoost.DMatrix((@views X[train, :], y_train); feature_names)
-    dvalid        = XGBoost.DMatrix((@views X[valid, :], y_valid); feature_names)
+#     X = get_X(ds)
+#     y = get_y(ds)
+#     y_train = @views y[train]
+#     y_valid = @views y[valid]
+#     feature_names = String.(propertynames(X))
+#     if eltype(y) <: CLabel
+#         y_train = @. MLJ.levelcode(y[train]) - 1 # convert to 0-based indexing
+#         y_valid = @. MLJ.levelcode(y[valid]) - 1 # convert to 0-based indexing
+#     end
+#     dtrain        = XGBoost.DMatrix((@views X[train, :], y_train); feature_names)
+#     dvalid        = XGBoost.DMatrix((@views X[valid, :], y_valid); feature_names)
 
-    watchlist = XGBoost.OrderedDict(["train" => dtrain, "eval" => dvalid])
+#     watchlist = XGBoost.OrderedDict(["train" => dtrain, "eval" => dvalid])
 
-    if is_tuned_model(ds)
-        ds.mach.model.model.watchlist = watchlist
-    else
-        ds.mach.model.watchlist = watchlist
-    end
-end
+#     if is_tuned_model(ds)
+#         ds.mach.model.model.watchlist = watchlist
+#     else
+#         ds.mach.model.watchlist = watchlist
+#     end
+# end
 
-"""
-    set_watchlist!(ds::AbstractDataSet, i::Int)
+# """
+#     set_watchlist!(ds::AbstractDataSet, i::Int)
 
-Configure XGBoost watchlist for fold `i` if early stopping is enabled.
-"""
-function set_watchlist!(ds::AbstractDataSet, i::Int)
-    # xgboost ha la funzione di earlystopping. per farla funzionare occorre passargli una makewatchlist e la valid_ratio
-    if get_early_stopping_rounds(ds) > 0
-        train = get_train(ds.pidxs[i])
-        valid = get_valid(ds.pidxs[i])
-        makewatchlist!(ds, train, valid)
-    end
-end
+# Configure XGBoost watchlist for fold `i` if early stopping is enabled.
+# """
+# function set_watchlist!(ds::AbstractDataSet, i::Int)
+#     # xgboost ha la funzione di earlystopping. per farla funzionare occorre passargli una makewatchlist e la valid_ratio
+#     if get_early_stopping_rounds(ds) > 0
+#         train = get_train(ds.pidxs[i])
+#         valid = get_valid(ds.pidxs[i])
+#         makewatchlist!(ds, train, valid)
+#     end
+# end
 
 # ---------------------------------------------------------------------------- #
 #                                  solemodel                                   #
@@ -175,21 +196,32 @@ Extract the vector of symbolic models from a SoleModel container.
 solemodels(solem::SoleModel) = solem.sole
 
 # ---------------------------------------------------------------------------- #
-#                                  train_test                                  #
+#                                  evaluate                                  #
 # ---------------------------------------------------------------------------- #
-function _train_test(ds::EitherDataSet)::SoleModel
-    n_folds   = length(ds.pidxs)
+function _evaluate(
+    ds       :: EitherDataSet;
+    measures :: MaybeMeasures
+)::SoleModel
+
+    eval_results = evaluate!(
+        ds.mach;
+        resampling=ds.resampling,
+        measures,
+        verbosity=0
+    )
+
+    # n_folds   = length(ds.pidxs)
     solemodel = Vector{AbstractModel}(undef, n_folds)
     mach = get_mach(ds)
 
     # TODO this can be parallelizable
     @inbounds @views for i in 1:n_folds
-        train, test = get_train(ds.pidxs[i]), get_test(ds.pidxs[i])
-        X_test, y_test = get_X(ds)[test, :], get_y(ds)[test]
+        # train, test = get_train(ds.pidxs[i]), get_test(ds.pidxs[i])
+        # X_test, y_test = get_X(ds)[test, :], get_y(ds)[test]
 
-        has_xgboost_model(ds) && set_watchlist!(ds, i)
+        # has_xgboost_model(ds) && set_watchlist!(ds, i)
 
-        MLJ.fit!(mach, rows=train, verbosity=0)
+        # MLJ.fit!(mach, rows=train, verbosity=0)
         solemodel[i] = apply(mach, X_test, y_test)
     end
 
@@ -197,7 +229,7 @@ function _train_test(ds::EitherDataSet)::SoleModel
 end
 
 """
-    _train_test(ds::EitherDataSet) -> SoleModel
+    _evaluate(ds::EitherDataSet) -> SoleModel
 
 Internal cross-validation training implementation.
 
@@ -212,14 +244,14 @@ Returns SoleModel containing all fold models.
 
 See [`setup_dataset`](@ref) for dataset setup parameter descriptions.
 """
-function train_test(args...; kwargs...)::SoleModel
+function evaluate(args...; kwargs...)::SoleModel
     ds = _setup_dataset(args...; kwargs...)
-    _train_test(ds)
+    _evaluate(ds)
 end
 
 """
-    train_test(ds::AbstractDataSet) -> SoleModel
+    evaluate(ds::AbstractDataSet) -> SoleModel
 
 Direct training interface for pre-configured datasets.
 """
-train_test(ds::AbstractDataSet)::SoleModel = _train_test(ds)
+evaluate(ds::AbstractDataSet; kwargs...)::SoleModel = _evaluate(ds; kwargs...)

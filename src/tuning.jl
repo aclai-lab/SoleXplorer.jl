@@ -7,7 +7,13 @@ abstract type AbstractTuning end
 #                                   types                                      #
 # ---------------------------------------------------------------------------- #
 const MaybeResampling = Maybe{MLJ.ResamplingStrategy}
-const MaybeMeasure = Maybe{EitherMeasure}
+# const MaybeMeasure = Maybe{EitherMeasure}
+
+const RobustMeasure = StatisticalMeasures.StatisticalMeasuresBase.RobustMeasure
+const FussyMeasure  = StatisticalMeasures.StatisticalMeasuresBase.FussyMeasure
+const EitherMeasure = Union{RobustMeasure, FussyMeasure}
+
+const MaybeMeasures = Maybe{Tuple{Vararg{<:EitherMeasure}}}
 
 # ---------------------------------------------------------------------------- #
 #                                Tuning struct                                 #
@@ -16,7 +22,7 @@ mutable struct Tuning{T} <: AbstractTuning
     strategy::T
     range::RangeSpec
     resampling::MaybeResampling
-    measure::MaybeMeasure
+    measure::MaybeMeasures
     repeats::Int64
     
     function Tuning{T}(strategy::T, range::RangeSpec, resampling, measure, repeats) where T
@@ -40,7 +46,7 @@ Create a tuning configuration with the specified strategy type.
     strategy_type::Type{<:Any};
     range::Union{Tuple, Tuple{Vararg{Tuple}}, MLJBase.NominalRange},
     resampling::MaybeResampling=nothing,
-    measure::MaybeMeasure=nothing,
+    measure::MaybeMeasures=nothing,
     repeats::Int64=1,
     kwargs...
 )::Tuning
