@@ -9,8 +9,11 @@ const RangeSpec = Union{
 }
 
 # ---------------------------------------------------------------------------- #
-#                             Range normalization                              #
+#                               Range adapter                                  #
 # ---------------------------------------------------------------------------- #
-normalize_range(range::Union{Vector{<:MLJ.NumericRange}, MLJBase.NominalRange}) = range
-normalize_range(range::Tuple{Vararg{Tuple}}) = range
-normalize_range(range::Tuple) = (range,)
+make_mlj_ranges(range, model)
+range = tuning.range isa Tuple{Vararg{Tuple}} ? tuning.range : (tuning.range,)
+range = collect(MLJ.range(model, r[1]; r[2:end]...) for r in range)
+
+# wrapper for MLJ.range
+Base.range(field::Union{Symbol,Expr}; kwargs...) = field, kwargs...

@@ -18,7 +18,7 @@ makedocs(;
     ),
     pages = [
         "Introduction"      => "index.md",
-        "Setup dataset"     => "setup_dataset.md",
+        "Setup dataset"     => "model_setup.md",
         "train_test"        => "train_test.md",
         "symbolic_analysis" => "symbolic_analysis.md",
         "Modal logic"       => "modal.md"

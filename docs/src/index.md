@@ -40,7 +40,7 @@ Xc, yc = @load_iris
 
 SoleXplorer operates through 3 high-level functions, designed to be used sequentially:
 
-**setup_dataset()**: prepares the dataset for analysis, where you set the parameters needed for dataset formatting and the related MLJ machine.
+**model_setup()**: prepares the dataset for analysis, where you set the parameters needed for dataset formatting and the related MLJ machine.
 - choose the model to use.
 - decide the resampling (or cross validation) strategy, with related train, validation and test ratio values.
 - decide the tuning strategy to apply.
@@ -49,7 +49,7 @@ SoleXplorer operates through 3 high-level functions, designed to be used sequent
 
 ```julia
 range = SOleXplorer.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
-dsc = setup_dataset(
+dsc = model_setup(
     Xc, yc;
     model=DecisionTreeClassifier(),
     resampling=CV(nfolds=5, shuffle=true),

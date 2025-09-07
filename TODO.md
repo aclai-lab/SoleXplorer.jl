@@ -82,7 +82,7 @@ Guarda su MLJ se esiste
 #                              peso delle istanze                              #
 # ---------------------------------------------------------------------------- #
 in MLJ si usa X, y, w. da implementare? verifica come funziona, magari viene messo da MLJ
-direttamente dalla mach. Però bisogna implementarlo in setup_dataset e symbolic_analysis.
+direttamente dalla mach. Però bisogna implementarlo in model_setup e symbolic_analysis.
 Vedi anche se MLJ oppure i modelli (Decision Tree...) usano un default nei pesi.
 Prova con dei pesi a caso a vedere se cambia qualcosa.
 Prova a guardare anche se c'è il modo di settare il peso sulle classi (tipo class rebalance, che se hai sbilanciate,

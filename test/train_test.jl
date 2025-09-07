@@ -22,10 +22,10 @@ solemc = train_test(Xc, yc)
 solemr = train_test(Xr, yr)
 @test solemr isa SX.SoleModel{SX.PropositionalDataSet{DecisionTreeRegressor}}
 
-datac  = setup_dataset(Xc, yc)
+datac  = model_setup(Xc, yc)
 solemc = train_test(datac)
 @test solemc isa SX.SoleModel{SX.PropositionalDataSet{DecisionTreeClassifier}}
-datar  = setup_dataset(Xr, yr)
+datar  = model_setup(Xr, yr)
 solemr = train_test(datar)
 @test solemr isa SX.SoleModel{SX.PropositionalDataSet{DecisionTreeRegressor}}
 
@@ -214,7 +214,7 @@ solemr = train_test(
     rng = Xoshiro(42)
     
     # Create a dataset and train models
-    ds = setup_dataset(
+    ds = model_setup(
         Xc, yc,
         model = DecisionTreeClassifier(),
         resampling = CV(nfolds=3, shuffle=true),
@@ -242,7 +242,7 @@ solemr = train_test(
     @test plain_output == output  # Should be identical
     
     # Test with different number of folds
-    ds_5fold = setup_dataset(
+    ds_5fold = model_setup(
         Xc, yc,
         model = DecisionTreeClassifier(),
         resampling = CV(nfolds=5),
@@ -267,7 +267,7 @@ solemr = train_test(
     #     )
     #     y_reg = randn(rng, 10)
         
-    #     ds_reg = setup_dataset(
+    #     ds_reg = model_setup(
     #         X_reg, y_reg,
     #         model = DecisionTreeRegressor(),
     #         resampling = CV(nfolds=2),

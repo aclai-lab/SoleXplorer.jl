@@ -57,11 +57,11 @@ end
 # ---------------------------------------------------------------------------- #
 #                             MLJ Tuning adapter                               #
 # ---------------------------------------------------------------------------- #
-const GridTuning(; kwargs...)::Tuning     = setup_tuning(MLJ.Grid; kwargs...)
-const RandomTuning(; kwargs...)::Tuning   = setup_tuning(MLJ.RandomSearch; kwargs...)
-const CubeTuning(; kwargs...)::Tuning     = setup_tuning(MLJ.LatinHypercube; kwargs...)
-const ParticleTuning(; kwargs...)::Tuning = setup_tuning(PSO.ParticleSwarm; kwargs...)
-const AdaptiveTuning(; kwargs...)::Tuning = setup_tuning(PSO.AdaptiveParticleSwarm; kwargs...)
+# const GridTuning(; kwargs...)::Tuning     = setup_tuning(MLJ.Grid; kwargs...)
+# const RandomTuning(; kwargs...)::Tuning   = setup_tuning(MLJ.RandomSearch; kwargs...)
+# const CubeTuning(; kwargs...)::Tuning     = setup_tuning(MLJ.LatinHypercube; kwargs...)
+# const ParticleTuning(; kwargs...)::Tuning = setup_tuning(PSO.ParticleSwarm; kwargs...)
+# const AdaptiveTuning(; kwargs...)::Tuning = setup_tuning(PSO.AdaptiveParticleSwarm; kwargs...)
 
 """Enable splatting and iteration over Tuning struct."""
 Base.propertynames(::Tuning) = (:strategy, :range, :resampling, :measure, :repeats)

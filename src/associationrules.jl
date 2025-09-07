@@ -57,7 +57,7 @@ end
 # ---------------------------------------------------------------------------- #
 #                                 mas_caller                                   #
 # ---------------------------------------------------------------------------- #
-function mas_caller(ds::EitherDataSet, association::AbstractAssociationRuleExtractor)
+function mas_caller(ds::AbstractDataSet, association::AbstractAssociationRuleExtractor)
     X = if ds isa ModalDataSet
         get_logiset(ds)
     else

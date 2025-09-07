@@ -1,6 +1,19 @@
 # ---------------------------------------------------------------------------- #
+#                               abstract types                                 #
+# ---------------------------------------------------------------------------- #
+"""
+    AbstractSoleModel
+
+Base abstract type for all symbolic model containers in SoleXplorer.
+"""
+abstract type AbstractSoleModel end
+
+# ---------------------------------------------------------------------------- #
 #                                   types                                      #
 # ---------------------------------------------------------------------------- #
+"""
+Alias for XGBoost model types (classifier and regressor).
+"""
 const XGBoostModel  = Union{XGBoostClassifier, XGBoostRegressor}
 
 # const RobustMeasure = StatisticalMeasures.StatisticalMeasuresBase.RobustMeasure
@@ -12,6 +25,14 @@ const XGBoostModel  = Union{XGBoostClassifier, XGBoostRegressor}
 # ---------------------------------------------------------------------------- #
 #                              default measures                                #
 # ---------------------------------------------------------------------------- #
+"""
+    _DefaultMeasures(y::AbstractVector)::Tuple{Vararg{FussyMeasure}}
+
+Return default measures appropriate for the target variable type.
+
+This function is used when no explicit measures are provided,
+automatically selecting between classification and regression.
+"""
 function _DefaultMeasures(y::AbstractVector)::Tuple{Vararg{FussyMeasure}}
     return eltype(y) <: CLabel ? (accuracy, kappa) : (rms, l1, l2)
 end

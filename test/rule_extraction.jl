@@ -10,7 +10,7 @@ Xc = DataFrame(Xc)
 # ---------------------------------------------------------------------------- #
 #                          in trees rules extraction                           #
 # ---------------------------------------------------------------------------- #
-dsc = setup_dataset(
+dsc = model_setup(
     Xc, yc;
     model=DecisionTreeClassifier(),
     resampling=Holdout(;shuffle=true),
@@ -38,7 +38,7 @@ modelc = symbolic_analysis(
 # ---------------------------------------------------------------------------- #
 #                           lumen rules extraction                             #
 # ---------------------------------------------------------------------------- #
-dsc = setup_dataset(
+dsc = model_setup(
     Xc, yc;
     model=DecisionTreeClassifier(),
     resampling=Holdout(;shuffle=true),
@@ -63,7 +63,7 @@ modelc = symbolic_analysis(
     extractor=LumenRuleExtractor(invalid=true)
 )
 
-dsc = setup_dataset(
+dsc = model_setup(
     Xc, yc;
     model=RandomForestClassifier(n_trees=2),
     resampling=Holdout(;shuffle=true),
@@ -91,7 +91,7 @@ modelc = symbolic_analysis(
 # ---------------------------------------------------------------------------- #
 #                          batrees rules extraction                            #
 # ---------------------------------------------------------------------------- #
-dsc = setup_dataset(
+dsc = model_setup(
     Xc, yc;
     model=RandomForestClassifier(n_trees=2),
     resampling=Holdout(;shuffle=true),
@@ -119,7 +119,7 @@ modelc = symbolic_analysis(
 # ---------------------------------------------------------------------------- #
 #                         rulecosi rules extraction                            #
 # ---------------------------------------------------------------------------- #
-dsc = setup_dataset(
+dsc = model_setup(
     Xc, yc;
     model=RandomForestClassifier(n_trees=2),
     resampling=Holdout(;shuffle=true),
@@ -141,7 +141,7 @@ modelc = symbolic_analysis(
 # ---------------------------------------------------------------------------- #
 #                           refne rules extraction                             #
 # ---------------------------------------------------------------------------- #
-dsc = setup_dataset(
+dsc = model_setup(
     Xc, yc;
     model=RandomForestClassifier(n_trees=2),
     resampling=Holdout(;shuffle=true),
@@ -163,7 +163,7 @@ modelc = symbolic_analysis(
 # ---------------------------------------------------------------------------- #
 #                          trepan rules extraction                             #
 # ---------------------------------------------------------------------------- #
-dsc = setup_dataset(
+dsc = model_setup(
     Xc, yc;
     model=RandomForestClassifier(n_trees=2),
     resampling=Holdout(;shuffle=true),

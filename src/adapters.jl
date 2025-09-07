@@ -1,11 +1,24 @@
 # ---------------------------------------------------------------------------- #
-#                       MLJ Resampling available functions                      #
+#                      MLJ Resampling available functions                      #
 # ---------------------------------------------------------------------------- #
 const Availables_Resamplig_Funcs = (
     :Holdout,
     :CV,
     :StratifiedCV,
     :TimeSeriesCV,
+)
+
+# ---------------------------------------------------------------------------- #
+#                        MLJ Tuning available functions                        #
+# ---------------------------------------------------------------------------- #
+const Available_Tuning_Funcs = (
+    :Grid,
+    :RandomSearch,
+    :LatinHypercube,
+)
+const Extra_Tuning_Funcs = (
+    :ParticleSwarm,
+    :AdaptiveParticleSwarm,
 )
 
 # ---------------------------------------------------------------------------- #
@@ -36,13 +49,15 @@ const Availables_Balancing_Funcs = (
 # ---------------------------------------------------------------------------- #
 const Adapters = Dict(
     Availables_Resamplig_Funcs => MLJ,
-    Availables_Balancing_Funcs => Imbalance.MLJ
+    Available_Tuning_Funcs     => MLJTuning,
+    Extra_Tuning_Funcs         => MLJParticleSwarmOptimization,
+    Availables_Balancing_Funcs => Imbalance.MLJ,
 )
 
 for (funcs, adapter) in Adapters
     for func in funcs
         # skip if function is already globally defined,
-        # ie: MLJ is globally used
+        # ie: when MLJ is globally used
         isdefined(@__MODULE__, func) && continue
 
         sx_func = getfield(adapter, func)
@@ -54,3 +69,22 @@ for (funcs, adapter) in Adapters
         end
     end
 end
+
+# ---------------------------------------------------------------------------- #
+#                               Range adapter                                  #
+# ---------------------------------------------------------------------------- #
+const RangeSpec = Union{
+    Tuple,
+    Tuple{Vararg{Tuple}},
+    Vector{<:MLJ.NumericRange},
+    MLJBase.NominalRange
+}
+
+function make_mlj_ranges(range::RangeSpec, model::MLJ.Model)
+    range = range isa Tuple{Vararg{Tuple}} ? range : (range,)
+    @show model
+    collect(MLJ.range(model, r[1]; r[2:end]...) for r in range)
+end
+
+# wrapper for MLJ.range
+Base.range(field::Union{Symbol,Expr}; kwargs...) = field, kwargs...

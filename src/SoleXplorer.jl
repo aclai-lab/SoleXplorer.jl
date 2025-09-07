@@ -12,14 +12,14 @@ using  SoleModels: RuleExtractor, DecisionSet
 
 @reexport using SoleData.Artifacts: NatopsLoader, load
 
-# @reexport using SolePostHoc: InTreesRuleExtractor, LumenRuleExtractor, BATreesRuleExtractor
-# @reexport using SolePostHoc: RULECOSIPLUSRuleExtractor, REFNERuleExtractor, TREPANRuleExtractor
-# using  SolePostHoc
+@reexport using SolePostHoc: InTreesRuleExtractor, LumenRuleExtractor, BATreesRuleExtractor
+@reexport using SolePostHoc: RULECOSIPLUSRuleExtractor, REFNERuleExtractor, TREPANRuleExtractor
+using  SolePostHoc
 
-# @reexport using ModalAssociationRules: Item, Atom, ScalarCondition, VariableMin, VariableMax
-# @reexport using ModalAssociationRules: IA_L, box, diamond
-# @reexport using ModalAssociationRules: gsupport, gconfidence, glift, gconviction, gleverage
-# using ModalAssociationRules
+@reexport using ModalAssociationRules: Item, Atom, ScalarCondition, VariableMin, VariableMax
+@reexport using ModalAssociationRules: IA_L, box, diamond
+@reexport using ModalAssociationRules: gsupport, gconfidence, glift, gconviction, gleverage
+using ModalAssociationRules
 
 # ---------------------------------------------------------------------------- #
 #                                     MLJ                                      #
@@ -33,7 +33,7 @@ using  SoleModels: RuleExtractor, DecisionSet
 # @reexport using MLJ: Holdout, CV, StratifiedCV, TimeSeriesCV
 # tuning
 using  MLJParticleSwarmOptimization
-const  PSO = MLJParticleSwarmOptimization
+
 using  MLJ
 using  MLJ: MLJBase, MLJTuning
 import MLJ: evaluate
@@ -67,6 +67,7 @@ export stretch_high, entropy_pairs, rs_range, dfa, low_freq_power, centroid_freq
 export base_set, catch9, catch22_set, complete_set
 include("featureset.jl")
 
+export range
 include("adapters.jl")
 
 # ---------------------------------------------------------------------------- #
@@ -100,27 +101,26 @@ using XGBoost, MLJXGBoostInterface
 # ---------------------------------------------------------------------------- #
 #                                   modules                                    #
 # ---------------------------------------------------------------------------- #
-export range
-include("range.jl")
+# include("range.jl")
 
 # include("measures.jl")
-include("tuning.jl")
-export GridTuning, RandomTuning, CubeTuning, ParticleTuning, AdaptiveTuning
+# include("tuning.jl")
+# export GridTuning, RandomTuning, CubeTuning, ParticleTuning, AdaptiveTuning
 
-export code_dataset, range
-export setup_dataset
-include("dataset.jl")
+export code_dataset
+export model_setup
+include("modelsetup.jl")
 
 include("apply.jl")
 # export train_test
 include("evaluate.jl")
 
-# include("extractrules.jl")
-# export Apriori, FPGrowth, Eclat
-# include("associationrules.jl")
+include("extractrules.jl")
+export Apriori, FPGrowth, Eclat
+include("associationrules.jl")
 
-# export symbolic_analysis, symbolic_analysis!
-# export dsetup, solemodels, rules, associations
-# include("symbolic_analysis.jl")
+export symbolic_analysis, symbolic_analysis!
+export dsetup, solemodels, rules, associations
+include("symbolic_analysis.jl")
 
 end

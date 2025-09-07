@@ -23,7 +23,7 @@ modelc = symbolic_analysis(
     resampling=CV(nfolds=5, shuffle=true),
     rng=Xoshiro(1),
     balancing=(SMOTENC(k=5, ratios=1.0), TomekUndersampler(min_ratios=0.5)),
-    # tuning=GridTuning(; range, resolution=10, resampling=CV(nfolds=3), measure=accuracy, repeats=2),
+    tuning=GridTuning(; range, resolution=10, resampling=CV(nfolds=3), measure=accuracy, repeats=2),
     measures=(accuracy, kappa)
 )
 @test modelc isa SX.ModelSet
@@ -42,7 +42,7 @@ modelts = symbolic_analysis(Xts, yts)
 #                               usage example #1                               #
 # ---------------------------------------------------------------------------- #
 range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
-dsc = setup_dataset(
+dsc = model_setup(
     Xc, yc;
     model=DecisionTreeClassifier(),
     resampling=CV(nfolds=5, shuffle=true),
@@ -58,7 +58,7 @@ modelc = symbolic_analysis(
 @test modelc isa SX.ModelSet
 
 range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
-dsr = setup_dataset(
+dsr = model_setup(
     Xr, yr;
     model=DecisionTreeRegressor(),
     resampling=CV(nfolds=5, shuffle=true),
@@ -101,7 +101,7 @@ modelr = symbolic_analysis(
 # ---------------------------------------------------------------------------- #
 #                    time series dataset with no windowing                     #
 # ---------------------------------------------------------------------------- #
-dsts = setup_dataset(
+dsts = model_setup(
     Xts, yts;
     model=ModalDecisionTree(),
     resampling=Holdout(shuffle=true),
