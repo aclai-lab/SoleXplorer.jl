@@ -180,6 +180,7 @@ solemodels(solem::SoleModel) = solem.sole
 function _train_test(ds::EitherDataSet)::SoleModel
     n_folds   = length(ds.pidxs)
     solemodel = Vector{AbstractModel}(undef, n_folds)
+    mach = get_mach(ds)
 
     # TODO this can be parallelizable
     @inbounds @views for i in 1:n_folds
@@ -188,7 +189,6 @@ function _train_test(ds::EitherDataSet)::SoleModel
 
         has_xgboost_model(ds) && set_watchlist!(ds, i)
 
-        mach = get_mach(ds)
         MLJ.fit!(mach, rows=train, verbosity=0)
         solemodel[i] = apply(mach, X_test, y_test)
     end

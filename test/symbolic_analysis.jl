@@ -13,6 +13,21 @@ Xr = DataFrame(Xr)
 natopsloader = NatopsLoader()
 Xts, yts = SX.load(natopsloader)
 
+range = (
+    SX.range(:(balancer1.k), lower=3, upper=10),
+    SX.range(:(balancer2.min_ratios), lower=0.1, upper=0.9)
+)
+modelc = symbolic_analysis(
+    Xc, yc;
+    model=DecisionTreeClassifier(),
+    resampling=CV(nfolds=5, shuffle=true),
+    rng=Xoshiro(1),
+    balancing=(SMOTENC(k=5, ratios=1.0), TomekUndersampler(min_ratios=0.5)),
+    # tuning=GridTuning(; range, resolution=10, resampling=CV(nfolds=3), measure=accuracy, repeats=2),
+    measures=(accuracy, kappa)
+)
+@test modelc isa SX.ModelSet
+
 # I'm easy like sunday morning
 modelc = symbolic_analysis(Xc, yc)
 @test modelc isa SX.ModelSet
@@ -30,7 +45,7 @@ range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
 dsc = setup_dataset(
     Xc, yc;
     model=DecisionTreeClassifier(),
-    resample=CV(nfolds=5, shuffle=true),
+    resampling=CV(nfolds=5, shuffle=true),
     rng=Xoshiro(1),
     tuning=GridTuning(;range, resolution=10, resampling=CV(nfolds=3), measure=accuracy, repeats=2)    
 )
@@ -46,7 +61,7 @@ range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
 dsr = setup_dataset(
     Xr, yr;
     model=DecisionTreeRegressor(),
-    resample=CV(nfolds=5, shuffle=true),
+    resampling=CV(nfolds=5, shuffle=true),
     rng=Xoshiro(1),
     tuning=GridTuning(resolution=20, resampling=CV(nfolds=3), range=range, repeats=2)    
 )
@@ -64,7 +79,7 @@ range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
 modelc = symbolic_analysis(
     Xc, yc;
     model=DecisionTreeClassifier(),
-    resample=CV(nfolds=5, shuffle=true),
+    resampling=CV(nfolds=5, shuffle=true),
     rng=Xoshiro(1),
     tuning=GridTuning(resolution=10, resampling=CV(nfolds=3), range=range, measure=accuracy, repeats=2),
     extractor=InTreesRuleExtractor(),
@@ -76,7 +91,7 @@ range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
 modelr = symbolic_analysis(
     Xr, yr;
     model=DecisionTreeRegressor(),
-    resample=CV(nfolds=5, shuffle=true),
+    resampling=CV(nfolds=5, shuffle=true),
     rng=Xoshiro(1),
     tuning=GridTuning(; range, resolution=10, resampling=CV(nfolds=3), measure=rms, repeats=2),
     measures=(rms, l1, l2, mae, mav)
@@ -89,18 +104,18 @@ modelr = symbolic_analysis(
 dsts = setup_dataset(
     Xts, yts;
     model=ModalDecisionTree(),
-    resample=Holdout(shuffle=true),
+    resampling=Holdout(shuffle=true),
     train_ratio=0.7,
     rng=Xoshiro(1),
     features=()  
 )
 # ---------------------------------------------------------------------------- #
-#                         resamples in numeric datasets                        #
+#                         resamplings in numeric datasets                        #
 # ---------------------------------------------------------------------------- #
 modelc = symbolic_analysis(
     Xc, yc;
     model=DecisionTreeClassifier(),
-    resample=Holdout(shuffle=true),
+    resampling=Holdout(shuffle=true),
     train_ratio=0.75,
     rng=Xoshiro(1),
     measures=(accuracy, log_loss, confusion_matrix, kappa)      
@@ -110,7 +125,7 @@ modelc = symbolic_analysis(
 modelr = symbolic_analysis(
     Xr, yr;
     model=RandomForestRegressor(),
-    resample=CV(nfolds=5, shuffle=true),
+    resampling=CV(nfolds=5, shuffle=true),
     rng=Xoshiro(1),
     measures=(rms, l1, l2, mae, mav)      
 )
@@ -119,19 +134,19 @@ modelr = symbolic_analysis(
 modelc = symbolic_analysis(
     Xc, yc;
     model=AdaBoostStumpClassifier(),
-    resample=StratifiedCV(nfolds=5, shuffle=true),
+    resampling=StratifiedCV(nfolds=5, shuffle=true),
     rng=Xoshiro(1),
     measures=(accuracy, log_loss, confusion_matrix, kappa)      
 )
 @test modelc isa SX.ModelSet
 
 # ---------------------------------------------------------------------------- #
-#              resamples in propositional translated time series               #
+#              resamplings in propositional translated time series               #
 # ---------------------------------------------------------------------------- #
 modelts = symbolic_analysis(
     Xts, yts;
     model=DecisionTreeClassifier(),
-    resample=Holdout(shuffle=true),
+    resampling=Holdout(shuffle=true),
     train_ratio=0.5,
     rng=Xoshiro(1),
     win=AdaptiveWindow(nwindows=3, relative_overlap=0.3),
@@ -144,7 +159,7 @@ modelts = symbolic_analysis(
 modelts = symbolic_analysis(
     Xts, yts;
     model=RandomForestClassifier(),
-    resample=CV(nfolds=5, shuffle=true),
+    resampling=CV(nfolds=5, shuffle=true),
     rng=Xoshiro(1),
     win=AdaptiveWindow(nwindows=3, relative_overlap=0.3),
     modalreduce=mean,
@@ -156,7 +171,7 @@ modelts = symbolic_analysis(
 modelts = symbolic_analysis(
     Xts, yts;
     model=AdaBoostStumpClassifier(),
-    resample=StratifiedCV(nfolds=5, shuffle=true),
+    resampling=StratifiedCV(nfolds=5, shuffle=true),
     rng=Xoshiro(1),
     win=AdaptiveWindow(nwindows=3, relative_overlap=0.3),
     modalreduce=mean,
@@ -169,7 +184,7 @@ modelts = symbolic_analysis(
 # modelts = symbolic_analysis(
 #     Xts, yts;
 #     model=XGBoostClassifier(),
-#     resample=(type=TimeSeriesCV(nfolds=5), rng=Xoshiro(1)),
+#     resampling=(type=TimeSeriesCV(nfolds=5), rng=Xoshiro(1)),
 #     win=AdaptiveWindow(nwindows=3, relative_overlap=0.3),
 #     modalreduce=mean,
 #     features=(maximum, minimum),
@@ -178,12 +193,12 @@ modelts = symbolic_analysis(
 # @test modelts isa SX.ModelSet
 
 # ---------------------------------------------------------------------------- #
-#                        resample in modal time series                         #
+#                        resampling in modal time series                         #
 # ---------------------------------------------------------------------------- #
 modelts = symbolic_analysis(
     Xts, yts;
     model=ModalDecisionTree(),
-    resample=CV(;nfolds=4),
+    resampling=CV(;nfolds=4),
     rng=Xoshiro(1),
     measures=(accuracy,)
 )
@@ -192,7 +207,7 @@ modelts = symbolic_analysis(
 modelts = symbolic_analysis(
     Xts, yts;
     model=ModalRandomForest(),
-    resample=Holdout(shuffle=true),
+    resampling=Holdout(shuffle=true),
     train_ratio=0.75,
     rng=Xoshiro(1),
     features=(minimum, maximum),
@@ -206,7 +221,7 @@ modelts = symbolic_analysis(
 modelc = symbolic_analysis(
     Xc, yc;
     model=XGBoostClassifier(early_stopping_rounds=20),
-    resample=CV(nfolds=5, shuffle=true),
+    resampling=CV(nfolds=5, shuffle=true),
     valid_ratio=0.2,
     rng=Xoshiro(1),
     measures=(confusion_matrix,) 
@@ -217,7 +232,7 @@ range = SX.range(:num_round; lower=10, unit=10, upper=100)
 modelr = symbolic_analysis(
     Xr, yr;
     model=XGBoostRegressor(early_stopping_rounds=20),
-    resample=CV(nfolds=5, shuffle=true),
+    resampling=CV(nfolds=5, shuffle=true),
     valid_ratio=0.2,
     rng=Xoshiro(1),
     tuning=GridTuning(; range, resolution=10, resampling=CV(nfolds=3), measure=rms, repeats=2),
@@ -359,6 +374,10 @@ modelw = symbolic_analysis(
     measures=(accuracy,)
 )
 @test modelc isa SX.ModelSet
+
+# ---------------------------------------------------------------------------- #
+#                             balance and tuning                               #
+# ---------------------------------------------------------------------------- #
 
 # ---------------------------------------------------------------------------- #
 #                                  windowing                                   #

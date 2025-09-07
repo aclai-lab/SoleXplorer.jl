@@ -228,6 +228,21 @@ Type alias for either dataset type, useful for functions that work with both.
 const EitherDataSet = Union{PropositionalDataSet, ModalDataSet}
 
 # ---------------------------------------------------------------------------- #
+#                           MLJ models's extra setup                           #
+# ---------------------------------------------------------------------------- #
+function set_balancing(
+    model::MLJ.Model,
+    balancing::Tuple{Vararg{<:MLJ.Model}},
+    rng::AbstractRNG
+)::MLJ.Model
+    pairs = map(enumerate(balancing)) do (i, b)
+        b = set_balancing_rng(b, rng)
+        Symbol(:balancer, i) => b
+    end
+    model = MLJ.BalancedModel(;model, pairs...)
+end
+
+# ---------------------------------------------------------------------------- #
 #                                 constructors                                 #
 # ---------------------------------------------------------------------------- #
 function _setup_dataset(
@@ -235,7 +250,7 @@ function _setup_dataset(
     y             :: AbstractVector,
     w             :: MaybeVector                  = nothing;
     model         :: MLJ.Model                    = _DefaultModel(y),
-    resample      :: ResamplingStrategy           = Holdout(shuffle=true),
+    resampling      :: ResamplingStrategy           = Holdout(shuffle=true),
     train_ratio   :: Real                         = 0.7,
     valid_ratio   :: Real                         = 0.0,
     rng           :: AbstractRNG                  = TaskLocalRNG(),
@@ -248,12 +263,12 @@ function _setup_dataset(
     # propagate user rng to every field that needs it
     # model
     hasproperty(model,    :rng) && (model    = set_rng!(model,    rng))
-    hasproperty(resample, :rng) && (resample = set_rng!(resample, rng))
+    hasproperty(resampling, :rng) && (resampling = set_rng!(resampling, rng))
 
     # ModalDecisionTrees package needs features to be passed in model params
     hasproperty(model, :features) && (model = set_conditions(model, features))
     # Holdout resampling needs to setup fraction_train parameters
-    resample isa Holdout && (resample = set_fraction_train(resample, train_ratio))
+    resampling isa Holdout && (resampling = set_fraction_train(resampling, train_ratio))
 
     # Handle multidimensional datasets:
     # Decision point: use standard ML algorithms (requiring feature aggregation)
@@ -266,19 +281,9 @@ function _setup_dataset(
         tinfo = nothing
     end
 
-    ttpairs, pinfo = partition(y; resample, train_ratio, valid_ratio, rng)
+    ttpairs, pinfo = partition(y; resampling, train_ratio, valid_ratio, rng)
 
-    # balancing
-    isnothing(balancing) || begin
-        pairs = map(enumerate(balancing)) do (i, bal)
-            bal = set_balancing_rng(bal, rng)
-            Symbol(:balancer, i) => bal
-        end
-        @show pairs
-        # set the model to use the same rng as the dataset
-        # balancing = set_balancing_rng(balancing, rng)
-        model = MLJ.BalancedModel(;model, pairs...)
-    end
+    isnothing(balancing) || (model = set_balancing(model, balancing, rng))
 
     # tuning
     isnothing(tuning) || begin
@@ -319,7 +324,7 @@ Internal function to prepare and construct a dataset warper.
 
 # Keyword Arguments
 - `model::MLJ.Model=_DefaultModel(y)`: MLJ model to use
-- `resample::ResamplingStrategy=Holdout(shuffle=true)`: Resampling strategy
+- `resampling::ResamplingStrategy=Holdout(shuffle=true)`: Resampling strategy
 - `train_ratio::Real=0.7`: Fraction of data for training
 - `valid_ratio::Real=0.0`: Fraction of data for validation
 - `rng::AbstractRNG=TaskLocalRNG()`: Random number generator
@@ -348,7 +353,7 @@ range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
 dsc = setup_dataset(
     Xc, yc;
     model=DecisionTreeClassifier(),
-    resample=CV(nfolds=5, shuffle=true),
+    resampling=CV(nfolds=5, shuffle=true),
     rng=Xoshiro(1),
     tuning=(tuning=Grid(resolution=10), resampling=CV(nfolds=3), range, measure=accuracy, repeats=2)    
 )
@@ -361,7 +366,7 @@ Xts, yts = load(natopsloader)
 modelts = symbolic_analysis(
     Xts, yts;
     model=ModalRandomForest(),
-    resample=Holdout(shuffle=true),
+    resampling=Holdout(shuffle=true),
     train_ratio=0.75,
     rng=Xoshiro(1),
     features=(minimum, maximum),

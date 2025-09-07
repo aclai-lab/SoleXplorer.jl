@@ -107,35 +107,35 @@ dsc = setup_dataset(
 # ---------------------------------------------------------------------------- #
 dsc = setup_dataset(
     Xc, yc;
-    resample=CV(),
+    resampling=CV(),
 )
 @test dsc isa SX.PropositionalDataSet{DecisionTreeClassifier}
 @test dsc.pinfo.type isa MLJ.CV
 
 dsc = setup_dataset(
     Xc, yc;
-    resample=Holdout(),
+    resampling=Holdout(),
 )
 @test dsc isa SX.PropositionalDataSet{DecisionTreeClassifier}
 @test dsc.pinfo.type isa MLJ.Holdout
 
 dsc = setup_dataset(
     Xc, yc;
-    resample=StratifiedCV(),
+    resampling=StratifiedCV(),
 )
 @test dsc isa SX.PropositionalDataSet{DecisionTreeClassifier}
 @test dsc.pinfo.type isa MLJ.StratifiedCV
 
 dsc = setup_dataset(
     Xc, yc;
-    resample=TimeSeriesCV(),
+    resampling=TimeSeriesCV(),
 )
 @test dsc isa SX.PropositionalDataSet{DecisionTreeClassifier}
 @test dsc.pinfo.type isa MLJ.TimeSeriesCV
 
 dsc = setup_dataset(
     Xc, yc;
-    resample=CV(nfolds=10, shuffle=true),
+    resampling=CV(nfolds=10, shuffle=true),
 )
 @test dsc isa SX.PropositionalDataSet{DecisionTreeClassifier}
 
@@ -144,7 +144,7 @@ dsc = setup_dataset(
 # ---------------------------------------------------------------------------- #
 dsc = setup_dataset(
     Xc, yc;
-    resample=CV(nfolds=10, shuffle=true),
+    resampling=CV(nfolds=10, shuffle=true),
     rng=Xoshiro(1)
 )
 @test dsc isa SX.PropositionalDataSet{DecisionTreeClassifier}
@@ -156,7 +156,7 @@ range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
 dsc = setup_dataset(
     Xc, yc;
     model=ModalDecisionTree(),
-    resample=CV(nfolds=5, shuffle=true),
+    resampling=CV(nfolds=5, shuffle=true),
     rng=Xoshiro(1),
     tuning=GridTuning(resolution=10, resampling=CV(nfolds=3), range=range, measure=accuracy, repeats=2)
 )
@@ -312,10 +312,10 @@ dsc = setup_dataset(Xc, yc)
     # Setup test data
     rng = Xoshiro(42)
     y = ["A", "B", "A", "B", "A", "B", "A", "B"]
-    resample = CV(nfolds=3)
+    resampling = CV(nfolds=3)
     
     @testset "PartitionInfo show methods" begin
-        pinfo = SX.PartitionInfo(resample, 0.7, 0.2, rng)
+        pinfo = SX.PartitionInfo(resampling, 0.7, 0.2, rng)
         
         # Test Base.show(io::IO, info::PartitionInfo)
         io = IOBuffer()
@@ -377,7 +377,7 @@ dsc = setup_dataset(Xc, yc)
     
     @testset "Integration test with partition function" begin
         # Test show methods with actual partition results
-        pidxs, pinfo = SX.partition(y; resample=resample, train_ratio=0.7, valid_ratio=0.2, rng=rng)
+        pidxs, pinfo = SX.partition(y; resampling=resampling, train_ratio=0.7, valid_ratio=0.2, rng=rng)
         
         # Test PartitionInfo show
         io = IOBuffer()

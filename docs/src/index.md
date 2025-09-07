@@ -52,7 +52,7 @@ range = SOleXplorer.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:l
 dsc = setup_dataset(
     Xc, yc;
     model=DecisionTreeClassifier(),
-    resample=CV(nfolds=5, shuffle=true),
+    resampling=CV(nfolds=5, shuffle=true),
     rng=Xoshiro(1),
     tuning=Grid(resolution=10, resampling=CV(nfolds=3), range=range, measure=accuracy, repeats=2)    
 )
@@ -86,7 +86,7 @@ range = SoleXplorer.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:l
 modelc = symbolic_analysis(
     Xc, yc;
     model=DecisionTreeClassifier(),
-    resample=CV(nfolds=5, shuffle=true),
+    resampling=CV(nfolds=5, shuffle=true),
     rng=Xoshiro(1),
     tuning=Grid(resolution=10, resampling=CV(nfolds=3), range=range, measure=accuracy, repeats=2),
     extractor=InTreesRuleExtractor(),

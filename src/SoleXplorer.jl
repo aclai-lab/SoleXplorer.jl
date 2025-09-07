@@ -44,6 +44,7 @@ using Imbalance
 @reexport using SoleData: load_arff_dataset
 using  DataFrames
 using  Random
+using  Catch22
 
 # ---------------------------------------------------------------------------- #
 #                                   types                                      #
@@ -56,16 +57,16 @@ Type alias for `Union{T, Nothing}`.
 const Maybe{T} = Union{T, Nothing}
 
 # ---------------------------------------------------------------------------- #
-#                                    utils                                     #
+#                               export adapters                                #
 # ---------------------------------------------------------------------------- #
-# feature extraction via Catch22
 # export user friendly Catch22 nicknames
 export mode_5, mode_10, embedding_dist, acf_timescale, acf_first_min, ami2, trev, outlier_timing_pos
 export outlier_timing_neg, whiten_timescale, forecast_error, ami_timescale, high_fluctuation, stretch_decreasing
 export stretch_high, entropy_pairs, rs_range, dfa, low_freq_power, centroid_freq, transition_variance, periodicity
 export base_set, catch9, catch22_set, complete_set
-using  Catch22
 include("featureset.jl")
+
+include("adapters.jl")
 
 # ---------------------------------------------------------------------------- #
 #                                 interfaces                                   #
@@ -101,11 +102,6 @@ using XGBoost, MLJXGBoostInterface
 export range
 include("range.jl")
 
-export BorderlineSMOTE1, ClusterUndersampler, ENNUndersampler, ROSE
-export RandomUndersampler, RandomWalkOversampler, SMOTE, SMOTEN
-export SMOTENC, TomekUndersampler
-include("balancing.jl")
-
 include("measures.jl")
 include("tuning.jl")
 export GridTuning, RandomTuning, CubeTuning, ParticleTuning, AdaptiveTuning
@@ -114,12 +110,12 @@ export code_dataset, range
 export setup_dataset
 include("dataset.jl")
 
-export train_test
 include("apply.jl")
+export train_test
 include("train_test.jl")
 
-export Apriori, FPGrowth, Eclat
 include("extractrules.jl")
+export Apriori, FPGrowth, Eclat
 include("associationrules.jl")
 
 export symbolic_analysis, symbolic_analysis!

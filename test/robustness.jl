@@ -23,7 +23,7 @@ Xts, yts = SX.load(natopsloader)
                     model = symbolic_analysis(
                         Xc, yc;
                         model=DecisionTreeClassifier(;max_depth, min_purity_increase),
-                        resample=Holdout(shuffle=true),
+                        resampling=Holdout(shuffle=true),
                         train_ratio,
                         rng=Xoshiro(seed),
                         measures=(accuracy,)
@@ -50,7 +50,7 @@ end
                     model = symbolic_analysis(
                         Xr, yr;
                         model=DecisionTreeRegressor(;max_depth, min_purity_increase),
-                        resample=Holdout(shuffle=true),
+                        resampling=Holdout(shuffle=true),
                         train_ratio,
                         rng=Xoshiro(seed),
                         measures=(rms,)
@@ -77,7 +77,7 @@ end
                     model = symbolic_analysis(
                         Xc, yc;
                         model=RandomForestClassifier(;n_trees, sampling_fraction),
-                        resample=Holdout(shuffle=true),
+                        resampling=Holdout(shuffle=true),
                         train_ratio,
                         rng=Xoshiro(seed),
                         measures=(accuracy,)
@@ -104,7 +104,7 @@ end
                     model = symbolic_analysis(
                         Xr, yr;
                         model=RandomForestRegressor(;n_trees, sampling_fraction),
-                        resample=Holdout(shuffle=true),
+                        resampling=Holdout(shuffle=true),
                         train_ratio,
                         rng=Xoshiro(seed),
                         measures=(rms,)
@@ -131,7 +131,7 @@ end
                     model = symbolic_analysis(
                         Xc, yc;
                         model=AdaBoostStumpClassifier(;n_iter, feature_importance),
-                        resample=Holdout(shuffle=true),
+                        resampling=Holdout(shuffle=true),
                         train_ratio,
                         rng=Xoshiro(seed),
                         measures=(accuracy,)
@@ -158,7 +158,7 @@ end
                     model = symbolic_analysis(
                         Xc, yc;
                         model=XGBoostClassifier(;eta, num_round),
-                        resample=Holdout(shuffle=true),
+                        resampling=Holdout(shuffle=true),
                         train_ratio,
                         rng=Xoshiro(seed),
                         measures=(accuracy,)
@@ -185,7 +185,7 @@ end
                     model = symbolic_analysis(
                         Xr, yr;
                         model=XGBoostRegressor(;eta, num_round),
-                        resample=Holdout(shuffle=true),
+                        resampling=Holdout(shuffle=true),
                         train_ratio,
                         rng=Xoshiro(seed),
                         measures=(rms,)

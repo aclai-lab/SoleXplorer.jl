@@ -98,7 +98,7 @@ end
 function partition end
 
 """
-    partition(y::AbstractVector{<:Label}; resample::MLJ.ResamplingStrategy,
+    partition(y::AbstractVector{<:Label}; resampling::MLJ.ResamplingStrategy,
              train_ratio::Real, valid_ratio::Real, 
              rng::AbstractRNG) -> (Vector{PartitionIdxs}, PartitionInfo)
 
@@ -106,7 +106,7 @@ Create data partitions using MLJ resampling strategies.
 
 # Arguments
 - `y::AbstractVector{<:Label}`: Target vector for stratified sampling
-- `resample::MLJ.ResamplingStrategy`: Partitioning strategy (CV, Holdout, etc.)
+- `resampling::MLJ.ResamplingStrategy`: Partitioning strategy (CV, Holdout, etc.)
 - `train_ratio::Real`: Training data proportion (0.0-1.0)
 - `valid_ratio::Real`: Validation data proportion (0.0-1.0)
 - `rng::AbstractRNG`: Random number generator for reproducibility
@@ -117,7 +117,7 @@ Create data partitions using MLJ resampling strategies.
 
 # Example
     # 5-fold CV with 20% validation
-    partitions, info = partition(y; resample=CV(nfolds=5), 
+    partitions, info = partition(y; resampling=CV(nfolds=5), 
                                train_ratio=0.8, valid_ratio=0.2, 
                                rng=MersenneTwister(42))
     
@@ -128,14 +128,14 @@ Create data partitions using MLJ resampling strategies.
 """
 function partition(
     y           :: AbstractVector{<:Label};
-    resample    :: MLJ.ResamplingStrategy,
+    resampling    :: MLJ.ResamplingStrategy,
     train_ratio :: Real,
     valid_ratio :: Real,
     rng         :: AbstractRNG
 )::Tuple{Vector{PartitionIdxs}, PartitionInfo}
-    pinfo = PartitionInfo(resample, train_ratio, valid_ratio, rng)
+    pinfo = PartitionInfo(resampling, train_ratio, valid_ratio, rng)
 
-    ttpairs = MLJBase.train_test_pairs(resample, 1:length(y), y)
+    ttpairs = MLJBase.train_test_pairs(resampling, 1:length(y), y)
 
     if valid_ratio == 0.0
         return ([PartitionIdxs(train, eltype(train)[], test) for (train, test) in ttpairs], pinfo)

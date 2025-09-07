@@ -30,6 +30,12 @@ const TunedModalDecisionTreeApply = Union{
     Machine{<:MLJ.MLJTuning.EitherTunedModel{<:Any, <:ModalAdaBoost}}
 }
 
+const EitherBalancedModel{T,M} = Union{
+    MLJ.MLJBalancing.BalancedModelProbabilistic{T,M},
+    MLJ.MLJBalancing.BalancedModelDeterministic{T,M},
+    # MLJBalancing.BalancedModelInterval{T,M}
+}
+
 # ---------------------------------------------------------------------------- #
 #                              xgboost utilities                               #
 # ---------------------------------------------------------------------------- #
@@ -87,6 +93,19 @@ function apply(
     featurenames = MLJ.report(m).best_report.features
     classlabels  = sort(MLJ.report(m).best_report.classes_seen)
     solem        = solemodel(MLJ.fitted_params(m).best_fitted_params.tree; featurenames, classlabels)
+    logiset      = scalarlogiset(X, allow_propositional=true)
+    apply!(solem, logiset, y)
+    return solem
+end
+
+function apply(
+    m :: Machine{<:EitherBalancedModel{<:Any, <:DecisionTreeClassifier}},
+    X :: AbstractDataFrame,
+    y :: AbstractVector
+)::DecisionTree
+    featurenames = MLJ.report(m).model.features
+    classlabels  = sort(MLJ.report(m).model.classes_seen)
+    solem        = solemodel(MLJ.fitted_params(m).model.tree; featurenames, classlabels)
     logiset      = scalarlogiset(X, allow_propositional=true)
     apply!(solem, logiset, y)
     return solem
