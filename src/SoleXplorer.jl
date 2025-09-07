@@ -12,14 +12,14 @@ using  SoleModels: RuleExtractor, DecisionSet
 
 @reexport using SoleData.Artifacts: NatopsLoader, load
 
-@reexport using SolePostHoc: InTreesRuleExtractor, LumenRuleExtractor, BATreesRuleExtractor
-@reexport using SolePostHoc: RULECOSIPLUSRuleExtractor, REFNERuleExtractor, TREPANRuleExtractor
-using  SolePostHoc
+# @reexport using SolePostHoc: InTreesRuleExtractor, LumenRuleExtractor, BATreesRuleExtractor
+# @reexport using SolePostHoc: RULECOSIPLUSRuleExtractor, REFNERuleExtractor, TREPANRuleExtractor
+# using  SolePostHoc
 
-@reexport using ModalAssociationRules: Item, Atom, ScalarCondition, VariableMin, VariableMax
-@reexport using ModalAssociationRules: IA_L, box, diamond
-@reexport using ModalAssociationRules: gsupport, gconfidence, glift, gconviction, gleverage
-using ModalAssociationRules
+# @reexport using ModalAssociationRules: Item, Atom, ScalarCondition, VariableMin, VariableMax
+# @reexport using ModalAssociationRules: IA_L, box, diamond
+# @reexport using ModalAssociationRules: gsupport, gconfidence, glift, gconviction, gleverage
+# using ModalAssociationRules
 
 # ---------------------------------------------------------------------------- #
 #                                     MLJ                                      #
@@ -72,9 +72,9 @@ include("adapters.jl")
 #                                 interfaces                                   #
 # ---------------------------------------------------------------------------- #
 
-export partition
-export get_X, get_y, get_train, get_test
-include("partition.jl")
+# export partition
+# export get_X, get_y, get_train, get_test
+# include("partition.jl")
 
 export WinFunction, MovingWindow, WholeWindow, SplitWindow, AdaptiveWindow
 include("treatment.jl")
@@ -114,12 +114,12 @@ include("apply.jl")
 export train_test
 include("train_test.jl")
 
-include("extractrules.jl")
-export Apriori, FPGrowth, Eclat
-include("associationrules.jl")
+# include("extractrules.jl")
+# export Apriori, FPGrowth, Eclat
+# include("associationrules.jl")
 
-export symbolic_analysis, symbolic_analysis!
-export dsetup, solemodels, rules, associations
-include("symbolic_analysis.jl")
+# export symbolic_analysis, symbolic_analysis!
+# export dsetup, solemodels, rules, associations
+# include("symbolic_analysis.jl")
 
 end

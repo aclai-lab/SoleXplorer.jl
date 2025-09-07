@@ -158,10 +158,10 @@ and feature extraction to convert temporal sequences into tabular format.
 
 """
 mutable struct PropositionalDataSet{M} <: AbstractDataSet
-    mach    :: MLJ.Machine
-    pidxs   :: Vector{PartitionIdxs}
-    pinfo   :: PartitionInfo
-    ainfo   :: MaybeAggregationInfo
+    mach       :: MLJ.Machine
+    resampling :: MLJ.ResamplingStrategy
+    # pinfo      :: PartitionInfo
+    ainfo      :: MaybeAggregationInfo
 end
 
 """
@@ -179,10 +179,10 @@ The `tinfo` field  to store treatment information, such as features and window p
 used to reduce the dataset size while preserving temporal structure.
 """
 mutable struct ModalDataSet{M} <: AbstractDataSet
-    mach    :: MLJ.Machine
-    pidxs   :: Vector{PartitionIdxs}
-    pinfo   :: PartitionInfo
-    tinfo   :: TreatmentInfo
+    mach       :: MLJ.Machine
+    resampling :: MLJ.ResamplingStrategy
+    # pinfo      :: PartitionInfo
+    tinfo      :: TreatmentInfo
 end
 
 """
@@ -204,18 +204,18 @@ This constructor automatically determines the appropriate dataset type based on
 whether temporal structure should be preserved (modal) or aggregated (propositional).
 """
 function DataSet(
-    mach    :: MLJ.Machine{M},
-    pidxs   :: Vector{PartitionIdxs},
-    pinfo   :: PartitionInfo;
-    tinfo   :: Union{TreatmentInfo, Nothing}=nothing
+    mach       :: MLJ.Machine{M},
+    resampling :: MLJ.ResamplingStrategy;
+    # pinfo      :: PartitionInfo;
+    tinfo      :: Union{TreatmentInfo, Nothing}=nothing
 ) where {M<:MLJ.Model}
     isnothing(tinfo) ?
-        PropositionalDataSet{M}(mach, pidxs, pinfo, nothing) : begin
+        PropositionalDataSet{M}(mach, resampling, nothing) : begin
             if tinfo.treatment == :reducesize
-                ModalDataSet{M}(mach, pidxs, pinfo, tinfo)
+                ModalDataSet{M}(mach, resampling, tinfo)
             else
                 ainfo = treat2aggr(tinfo)
-                PropositionalDataSet{M}(mach, pidxs, pinfo, ainfo)
+                PropositionalDataSet{M}(mach, resampling, ainfo)
             end
         end
 end
@@ -231,15 +231,15 @@ const EitherDataSet = Union{PropositionalDataSet, ModalDataSet}
 #                           MLJ models's extra setup                           #
 # ---------------------------------------------------------------------------- #
 function set_balancing(
-    model::MLJ.Model,
-    balancing::Tuple{Vararg{<:MLJ.Model}},
-    rng::AbstractRNG
+    model     :: MLJ.Model,
+    balancing :: Tuple{Vararg{<:MLJ.Model}},
+    rng       :: AbstractRNG
 )::MLJ.Model
     pairs = map(enumerate(balancing)) do (i, b)
         b = set_balancing_rng(b, rng)
         Symbol(:balancer, i) => b
     end
-    model = MLJ.BalancedModel(;model, pairs...)
+    model = MLJ.BalancedModel(; model, pairs...)
 end
 
 # ---------------------------------------------------------------------------- #
@@ -250,9 +250,9 @@ function _setup_dataset(
     y             :: AbstractVector,
     w             :: MaybeVector                  = nothing;
     model         :: MLJ.Model                    = _DefaultModel(y),
-    resampling      :: ResamplingStrategy           = Holdout(shuffle=true),
-    train_ratio   :: Real                         = 0.7,
-    valid_ratio   :: Real                         = 0.0,
+    resampling    :: MLJ.ResamplingStrategy       = Holdout(shuffle=true),
+    # train_ratio   :: Real                         = 0.7,
+    # valid_ratio   :: Real                         = 0.0,
     rng           :: AbstractRNG                  = TaskLocalRNG(),
     win           :: WinFunction                  = AdaptiveWindow(nwindows=3, relative_overlap=0.1),
     features      :: Tuple{Vararg{Base.Callable}} = (maximum, minimum),
@@ -268,7 +268,7 @@ function _setup_dataset(
     # ModalDecisionTrees package needs features to be passed in model params
     hasproperty(model, :features) && (model = set_conditions(model, features))
     # Holdout resampling needs to setup fraction_train parameters
-    resampling isa Holdout && (resampling = set_fraction_train(resampling, train_ratio))
+    # resampling isa Holdout && (resampling = set_fraction_train(resampling, train_ratio))
 
     # Handle multidimensional datasets:
     # Decision point: use standard ML algorithms (requiring feature aggregation)
@@ -281,7 +281,7 @@ function _setup_dataset(
         tinfo = nothing
     end
 
-    ttpairs, pinfo = partition(y; resampling, train_ratio, valid_ratio, rng)
+    # ttpairs, pinfo = partition(y; resampling, train_ratio, valid_ratio, rng)
 
     isnothing(balancing) || (model = set_balancing(model, balancing, rng))
 
@@ -309,7 +309,8 @@ function _setup_dataset(
 
     mach = isnothing(w) ? MLJ.machine(model, X, y) : MLJ.machine(model, X, y, w)
     
-    DataSet(mach, ttpairs, pinfo; tinfo)
+    # DataSet(mach, resampling, pinfo; tinfo)
+    DataSet(mach, resampling; tinfo)
 end
 
 """
