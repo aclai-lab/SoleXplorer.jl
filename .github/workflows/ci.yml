@@ -39,6 +39,36 @@ jobs:
       - uses: julia-actions/julia-buildpkg@v1
         env:
           PYTHON: ""
+
+      # Pre-download artifacts with retry logic
+      - name: Pre-download artifacts
+        run: |
+          julia -e '
+          using Pkg
+          try
+              # Try to preload artifacts multiple times
+              for attempt in 1:3
+                  try
+                      println("Attempt $attempt to download artifacts...")
+                      Pkg.instantiate()
+                      # Try to trigger artifact download
+                      using SoleData
+                      println("Artifacts downloaded successfully")
+                      break
+                  catch e
+                      println("Attempt $attempt failed: $e")
+                      if attempt == 3
+                          println("All attempts failed, continuing with tests...")
+                      else
+                          sleep(5)
+                      end
+                  end
+              end
+          catch e
+              println("Pre-download failed, but continuing: $e")
+          end'
+        continue-on-error: false
+        
       - uses: julia-actions/julia-runtest@v1
         env:
           PYTHON: ""
