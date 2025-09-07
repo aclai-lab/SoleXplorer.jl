@@ -200,24 +200,24 @@ solemodels(solem::SoleModel) = solem.sole
 # ---------------------------------------------------------------------------- #
 function _evaluate(
     ds       :: EitherDataSet;
-    measures :: MaybeMeasures
-)::SoleModel
+    measures :: MaybeMeasures=nothing
+)::Tuple{MLJ.PerformanceEvaluation,SoleModel}
 
     eval_results = evaluate!(
         ds.mach;
         resampling=ds.resampling,
         measures,
         verbosity=0
-    )
+    )::MLJ.PerformanceEvaluation
 
-    # n_folds   = length(ds.pidxs)
+    n_folds   = length(eval_results.train_test_rows)
     solemodel = Vector{AbstractModel}(undef, n_folds)
     mach = get_mach(ds)
 
     # TODO this can be parallelizable
-    @inbounds @views for i in 1:n_folds
-        # train, test = get_train(ds.pidxs[i]), get_test(ds.pidxs[i])
-        # X_test, y_test = get_X(ds)[test, :], get_y(ds)[test]
+    @inbounds for i in 1:n_folds
+        test = eval_results.train_test_rows[i][2]
+        @views X_test, y_test = get_X(ds)[test, :], get_y(ds)[test]
 
         # has_xgboost_model(ds) && set_watchlist!(ds, i)
 
@@ -225,7 +225,7 @@ function _evaluate(
         solemodel[i] = apply(mach, X_test, y_test)
     end
 
-    return SoleModel(ds, solemodel)
+    return (eval_results, SoleModel(ds, solemodel))
 end
 
 """
@@ -244,7 +244,7 @@ Returns SoleModel containing all fold models.
 
 See [`setup_dataset`](@ref) for dataset setup parameter descriptions.
 """
-function evaluate(args...; kwargs...)::SoleModel
+function evaluate(args...; kwargs...)::Tuple{MLJ.PerformanceEvaluation,SoleModel}
     ds = _setup_dataset(args...; kwargs...)
     _evaluate(ds)
 end
@@ -254,4 +254,4 @@ end
 
 Direct training interface for pre-configured datasets.
 """
-evaluate(ds::AbstractDataSet; kwargs...)::SoleModel = _evaluate(ds; kwargs...)
+evaluate(ds::AbstractDataSet; kwargs...)::Tuple{MLJ.PerformanceEvaluation,SoleModel} = _evaluate(ds; kwargs...)
