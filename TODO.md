@@ -114,3 +114,5 @@ Spiega a Mauro la questione delle finestre, IMPORTANTE.
 @forward Apriori apriori
 dovrebbe essere nel pacchetto lazy.jl
 cerca in sole chi lo usa
+
+https://github.com/actions/download-artifact?tab=readme-ov-file#download-artifacts-from-other-workflow-runs-or-repositories

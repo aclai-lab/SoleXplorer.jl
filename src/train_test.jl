@@ -177,7 +177,7 @@ solemodels(solem::SoleModel) = solem.sole
 # ---------------------------------------------------------------------------- #
 #                                  train_test                                  #
 # ---------------------------------------------------------------------------- #
-function _train_test(ds::EitherDataSet)::SoleModel
+function _train_test(ds::AbstractDataSet)::SoleModel
     n_folds   = length(ds.pidxs)
     solemodel = Vector{AbstractModel}(undef, n_folds)
 
@@ -197,7 +197,7 @@ function _train_test(ds::EitherDataSet)::SoleModel
 end
 
 """
-    _train_test(ds::EitherDataSet) -> SoleModel
+    _train_test(ds::AbstractDataSet) -> SoleModel
 
 Internal cross-validation training implementation.
 

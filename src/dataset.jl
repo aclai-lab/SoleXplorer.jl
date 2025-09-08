@@ -275,13 +275,6 @@ function DataSet(
         end
 end
 
-"""
-    EitherDataSet = Union{PropositionalDataSet, ModalDataSet}
-
-Type alias for either dataset type, useful for functions that work with both.
-"""
-const EitherDataSet = Union{PropositionalDataSet, ModalDataSet}
-
 # ---------------------------------------------------------------------------- #
 #                                 constructors                                 #
 # ---------------------------------------------------------------------------- #
@@ -430,35 +423,35 @@ function setup_dataset(
 end
 
 """
-    length(ds::EitherDataSet)
+    length(ds::AbstractDataSet)
 
 Return the number of partitions in the dataset.
 """
-Base.length(ds::EitherDataSet) = length(ds.pidxs)
+Base.length(ds::AbstractDataSet) = length(ds.pidxs)
 
 """
-    get_y_test(ds::EitherDataSet)::AbstractVector
+    get_y_test(ds::AbstractDataSet)::AbstractVector
 
 Extract test target values for each partition in the dataset.
 """
-get_y_test(ds::EitherDataSet)::AbstractVector = 
+get_y_test(ds::AbstractDataSet)::AbstractVector = 
     [@views ds.mach.args[2].data[ds.pidxs[i].test] for i in 1:length(ds)]
 
 
 
 """
-    get_mach(ds::EitherDataSet)::Machine
+    get_mach(ds::AbstractDataSet)::Machine
 
 Extract the MLJ machine from the dataset.
 """
-get_mach(ds::EitherDataSet)::Machine = ds.mach
+get_mach(ds::AbstractDataSet)::Machine = ds.mach
 
 """
-    get_mach_model(ds::EitherDataSet)::MLJ.Model
+    get_mach_model(ds::AbstractDataSet)::MLJ.Model
 
 Extract the model from the dataset's MLJ machine.
 """
-get_mach_model(ds::EitherDataSet)::MLJ.Model = ds.mach.model
+get_mach_model(ds::AbstractDataSet)::MLJ.Model = ds.mach.model
 
 """
     get_mach_model(ds::ModalDataSet)::SupportedLogiset
