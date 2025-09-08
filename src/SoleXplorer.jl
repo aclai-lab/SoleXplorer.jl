@@ -24,7 +24,6 @@ using ModalAssociationRules
 # ---------------------------------------------------------------------------- #
 #                                     MLJ                                      #
 # ---------------------------------------------------------------------------- #
-
 # performance measures for classification
 @reexport using MLJ: accuracy, confusion_matrix, kappa, log_loss
 # performance measures for regression 
