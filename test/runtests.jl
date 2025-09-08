@@ -1,16 +1,14 @@
-using Test
+using Distributed
+addprocs(2)
 
-# using Distributed
-# addprocs(2)
+@everywhere begin
+    using Test
+    using SoleXplorer
+    using MLJ
+    using DataFrames, Random
+end
 
-# @everywhere begin
-#     using Test
-#     using SoleXplorer
-#     using MLJ
-#     using DataFrames, Random
-# end
-
-# const SX = SoleXplorer
+const SX = SoleXplorer
 
 function run_tests(list)
     println("\n" * ("#"^50))
