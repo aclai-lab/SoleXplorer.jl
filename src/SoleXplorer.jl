@@ -73,7 +73,8 @@ export partition
 export get_X, get_y, get_train, get_test
 include("partition.jl")
 
-export WinFunction, MovingWindow, WholeWindow, SplitWindow, AdaptiveWindow
+export AbstractWinFunction, WinFunction
+export MovingWindow, WholeWindow, SplitWindow, AdaptiveWindow
 include("treatment.jl")
 
 # ---------------------------------------------------------------------------- #
