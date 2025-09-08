@@ -181,3 +181,20 @@ modelc = symbolic_analysis(
     dsc, solemc;
     extractor=TREPANRuleExtractor(invalid=true)
 )
+
+# ---------------------------------------------------------------------------- #
+#                                    XGBoost                                   #
+# ---------------------------------------------------------------------------- #
+# dsc = setup_dataset(
+#     Xc, yc;
+#     model=XGBoostClassifier(),
+#     resample=Holdout(;shuffle=true),
+#     rng=Xoshiro(1),   
+# )
+# solemc = train_test(dsc)
+
+# modelc = symbolic_analysis(
+#     dsc, solemc;
+#     extractor=LumenRuleExtractor()
+# )
+# @test SX.rules(modelc) isa Vector{SX.LumenResult}
