@@ -215,8 +215,7 @@ end
 # ---------------------------------------------------------------------------- #
 function _symbolic_analysis!(
     modelset::ModelSet;
-    extractor::MaybeRuleExtractor=nothing,
-    # SolePostHoc hack: LumenRuleExtractor no longer is a SoleModel.RuleExtractor
+    extractor::Union{MaybeRuleExtractor,Tuple{RuleExtractor,NamedTuple}}=nothing,
     association::MaybeAbstractAssociationRuleExtractor=nothing,
     measures::Tuple{Vararg{FussyMeasure}}=()
 )::Nothing
