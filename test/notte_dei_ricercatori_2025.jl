@@ -1,5 +1,6 @@
 using ZipArchives, CSV, DataFrames
 using AudioReader
+using Audio911
 
 function get_audio(archive, filepath)
     audio_data = zip_readentry(archive, filepath)
@@ -42,9 +43,48 @@ X = DataFrame(
 patient_id = [parse(Int, split(basename(file), "_")[1]) for file in wav_files]
 y = [get(patient_dict, id, "Unknown") for id in patient_id]
 
-########################################################################################################
+# ---------------------------------------------------------------------------- #
+#                            serialize result                                  #
+# ---------------------------------------------------------------------------- #
+# save data using JLD2
+jldsave("respiratory_data.jld2"; X=X, y=y)
 
-audio_data = zip_readentry(archive, filepath)
-# Create temporary buffer and read with AudioReader
-temp_io = IOBuffer(audio_data)
-return AudioReader.load(temp_io)
+# ---------------------------------------------------------------------------- #
+#      serialize specifically for Notte dei Ricercatori and JuliaCon 2025      #
+# ---------------------------------------------------------------------------- #
+# create DataFrame from X.audio including patient id
+wav_df = DataFrame(
+    audio = X.audio
+)
+# add patient condition from the dictionary
+wav_df.condition = [get(patient_dict, id, "Unknown") for id in patient_id]
+
+# filter healthy and pneumonia patients
+healthy_patients = wav_df[wav_df.condition   .== "Healthy", :]
+pneumonia_patients = wav_df[wav_df.condition .== "Pneumonia", :]
+
+# select the smallest to balance classes
+min_samples = min(nrow(healthy_patients), nrow(pneumonia_patients))
+
+# merge datasets
+merged_df = vcat(healthy_patients[1:min_samples,:], pneumonia_patients[1:min_samples,:])
+
+# create a DataFrame with only the audio column
+audio_only_df = select(wav_df, :audio)
+
+# save data using JLD2
+jldsave("respiratory_juliacon2025.jld2"; X=audio_only_df, y=merged_df.condition)
+
+# ---------------------------------------------------------------------------- #
+#                                  load data                                   #
+# ---------------------------------------------------------------------------- #
+data          = JLD2.load("respiratory_juliacon2025.jld2")
+audio_ds      = data["X"]
+conditions_ds = data["y"]
+
+# ---------------------------------------------------------------------------- #
+#                                   audio911                                   #
+# ---------------------------------------------------------------------------- #
+for audio in audio_ds
+
+end
