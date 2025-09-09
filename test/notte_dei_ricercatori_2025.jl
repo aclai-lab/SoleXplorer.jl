@@ -1,4 +1,4 @@
-using ZipArchives, CSV, DataFrames
+using ZipArchives, CSV, DataFrames, StatsBase
 using AudioReader
 using Audio911
 
@@ -44,7 +44,7 @@ patient_id = [parse(Int, split(basename(file), "_")[1]) for file in wav_files]
 y = [get(patient_dict, id, "Unknown") for id in patient_id]
 
 # ---------------------------------------------------------------------------- #
-#                            serialize result                                  #
+#                              serialize result                                #
 # ---------------------------------------------------------------------------- #
 # save data using JLD2
 jldsave("respiratory_data.jld2"; X=X, y=y)
@@ -85,6 +85,38 @@ conditions_ds = data["y"]
 # ---------------------------------------------------------------------------- #
 #                                   audio911                                   #
 # ---------------------------------------------------------------------------- #
-for audio in audio_ds
+# audio processing pipeline
+function audio_pipeline(audio)
+    win = MovingWindow(window_size=256, window_step=128)
+    type = (:hann, :periodic)
+    frames = get_frames(audio; win, type)
 
+    stft = get_stft(frames)
+    mel_spec = get_melspec(stft)
+    return mel_spec[1][1:13,:]
 end
+
+# collect audio features
+raw_audio_features = [audio_pipeline(row.audio) for row in eachrow(audio_ds)]
+
+# create vector where each index contains the mode of each row
+row_modes = [[mode(i) for i in eachrow(matrix)] for matrix in raw_audio_features]
+
+# reduce in matrix
+audio_features = reduce(hcat, row_modes)'
+
+# Create DataFrame with mel feature column names
+audio_features_df = DataFrame(audio_features, ["mel$i" for i in 1:size(audio_features, 2)])
+
+# ---------------------------------------------------------------------------- #
+#                              serialize result                                #
+# ---------------------------------------------------------------------------- #
+# save data using JLD2
+jldsave("respiratory_audio_feats.jld2"; X=audio_features_df, y=conditions_ds)
+
+# ---------------------------------------------------------------------------- #
+#                                  test data                                   #
+# ---------------------------------------------------------------------------- #
+data  = JLD2.load("respiratory_audio_feats.jld2")
+Xtest = data["X"]
+ytest = data["y"]
