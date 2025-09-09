@@ -36,6 +36,21 @@ jobs:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
       - uses: julia-actions/cache@v2
+
+      # testing this part
+      - uses: actions/download-artifact@v5
+        with:
+          name: https://github.com/aclai-lab/Artifacts/raw/main/sole/binaries/generic/abc.tar.gz
+      - name: Display structure of downloaded files
+        run: ls -R
+      - uses: actions/download-artifact@v5
+        with:
+          name: my-other-artifact
+          github-token: ${{ secrets.GH_PAT }} # token with actions:read permissions on target repo
+          repository: https://github.com/aclai-lab/SoleData.jl
+          run-id: 1234
+      # end test
+
       - uses: julia-actions/julia-buildpkg@v1
         env:
           PYTHON: ""
