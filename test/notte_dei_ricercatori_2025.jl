@@ -2,6 +2,10 @@ using ZipArchives, CSV, DataFrames, StatsBase
 using AudioReader
 using Audio911
 
+# ---------------------------------------------------------------------------- #
+#                              audio utilities                                 #
+# ---------------------------------------------------------------------------- #
+# load wav files
 function get_audio(archive, filepath)
     audio_data = zip_readentry(archive, filepath)
     # write to temporary file
@@ -14,6 +18,20 @@ function get_audio(archive, filepath)
     return audio
 end
 
+# audio processing pipeline
+function audio_pipeline(audio)
+    win = MovingWindow(window_size=256, window_step=128)
+    type = (:hann, :periodic)
+    frames = get_frames(audio; win, type)
+
+    stft = get_stft(frames)
+    mel_spec = get_melspec(stft)
+    return mel_spec[1][1:13,:]
+end
+
+# ---------------------------------------------------------------------------- #
+#                          load and setup dataset                              #
+# ---------------------------------------------------------------------------- #
 # path to already downloaded dataset
 file="/home/paso/Documents/Datasets/Respiratory_DB.zip"
 
@@ -85,17 +103,6 @@ conditions_ds = data["y"]
 # ---------------------------------------------------------------------------- #
 #                                   audio911                                   #
 # ---------------------------------------------------------------------------- #
-# audio processing pipeline
-function audio_pipeline(audio)
-    win = MovingWindow(window_size=256, window_step=128)
-    type = (:hann, :periodic)
-    frames = get_frames(audio; win, type)
-
-    stft = get_stft(frames)
-    mel_spec = get_melspec(stft)
-    return mel_spec[1][1:13,:]
-end
-
 # collect audio features
 raw_audio_features = [audio_pipeline(row.audio) for row in eachrow(audio_ds)]
 
