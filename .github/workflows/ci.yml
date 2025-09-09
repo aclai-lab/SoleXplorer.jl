@@ -36,11 +36,10 @@ jobs:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
       - uses: julia-actions/cache@v2
-
-      # testing this part
-      - uses: actions/download-artifact@v5
-      # end test
-
+      - name: Clear artifact cache
+        run: |
+          julia -e "using Pkg; Pkg.gc(collect_delay=0)"
+          rm -rf ~/.julia/artifacts/
       - uses: julia-actions/julia-buildpkg@v1
         env:
           PYTHON: ""
