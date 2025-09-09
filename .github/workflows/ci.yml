@@ -37,8 +37,8 @@ jobs:
           arch: ${{ matrix.arch }}
       - uses: julia-actions/cache@v2
       - name: Clear artifact cache
-        run: |
-          julia -e "using Pkg; Pkg.gc(collect_delay=0)"
+        run:
+          julia -e "using Pkg, Dates; Pkg.gc(collect_delay=Second(0))"
           rm -rf ~/.julia/artifacts/
       - uses: julia-actions/julia-buildpkg@v1
         env:
