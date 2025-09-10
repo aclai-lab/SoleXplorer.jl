@@ -1,6 +1,8 @@
-using ZipArchives, CSV, DataFrames, StatsBase
+using ZipArchives, CSV, JLD2, DataFrames
+using StatsBase, Random
 using AudioReader
 using Audio911
+using SoleXplorer
 
 # ---------------------------------------------------------------------------- #
 #                              audio utilities                                 #
@@ -20,13 +22,14 @@ end
 
 # audio processing pipeline
 function audio_pipeline(audio)
-    win = MovingWindow(window_size=256, window_step=128)
+    win = Audio911.MovingWindow(window_size=256, window_step=128)
     type = (:hann, :periodic)
     frames = get_frames(audio; win, type)
 
-    stft = get_stft(frames)
+    stft = get_stft(frames; spectrum_type=:magnitude)
     mel_spec = get_melspec(stft)
-    return mel_spec[1][1:13,:]
+    # return mel_spec[1][1:13,:]
+    return mel_spec[1]
 end
 
 # ---------------------------------------------------------------------------- #
@@ -65,7 +68,7 @@ y = [get(patient_dict, id, "Unknown") for id in patient_id]
 #                              serialize result                                #
 # ---------------------------------------------------------------------------- #
 # save data using JLD2
-jldsave("respiratory_data.jld2"; X=X, y=y)
+# jldsave("respiratory_data.jld2"; X=X, y=y)
 
 # ---------------------------------------------------------------------------- #
 #      serialize specifically for Notte dei Ricercatori and JuliaCon 2025      #
@@ -88,7 +91,7 @@ min_samples = min(nrow(healthy_patients), nrow(pneumonia_patients))
 merged_df = vcat(healthy_patients[1:min_samples,:], pneumonia_patients[1:min_samples,:])
 
 # create a DataFrame with only the audio column
-audio_only_df = select(wav_df, :audio)
+audio_only_df = select(merged_df, :audio)
 
 # save data using JLD2
 jldsave("respiratory_juliacon2025.jld2"; X=audio_only_df, y=merged_df.condition)
@@ -107,7 +110,7 @@ conditions_ds = data["y"]
 raw_audio_features = [audio_pipeline(row.audio) for row in eachrow(audio_ds)]
 
 # create vector where each index contains the mode of each row
-row_modes = [[mode(i) for i in eachrow(matrix)] for matrix in raw_audio_features]
+row_modes = [[mean(i) for i in eachrow(matrix)] for matrix in raw_audio_features]
 
 # reduce in matrix
 audio_features = reduce(hcat, row_modes)'
@@ -125,5 +128,17 @@ jldsave("respiratory_audio_feats.jld2"; X=audio_features_df, y=conditions_ds)
 #                                  test data                                   #
 # ---------------------------------------------------------------------------- #
 data  = JLD2.load("respiratory_audio_feats.jld2")
-Xtest = data["X"]
-ytest = data["y"]
+Xc = data["X"]
+yc = data["y"]
+
+# ---------------------------------------------------------------------------- #
+#                                sole xplorer                                  #
+# ---------------------------------------------------------------------------- #
+modelc = symbolic_analysis(
+    Xc, yc;
+    model=DecisionTreeClassifier(),
+    resample=StratifiedCV(nfolds=20, shuffle=true),
+    rng=Xoshiro(12345),
+    # extractor=InTreesRuleExtractor(),
+    measures=(accuracy,)      
+)
