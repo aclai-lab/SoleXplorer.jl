@@ -157,7 +157,7 @@ function eval_measures(
     measures::Tuple{Vararg{FussyMeasure}},
     y_test::Vector{<:AbstractVector{<:Label}}
 )::Measures
-    mach_model = get_mach_model(ds)
+    mach_model      = get_mach_model(ds)
     measures        = MLJBase._actual_measures([measures...], mach_model)
     operations      = get_operations(measures, MLJBase.prediction_type(mach_model))
 
