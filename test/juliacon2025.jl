@@ -29,7 +29,7 @@ function audio_pipeline(audio)
     stft = get_stft(frames; spectrum_type=:magnitude)
     mel_spec = get_melspec(stft)
     # return mel_spec[1][1:13,:]
-    return mel_spec[1]
+    return mel_spec
 end
 
 # ---------------------------------------------------------------------------- #
@@ -94,12 +94,12 @@ merged_df = vcat(healthy_patients[1:min_samples,:], pneumonia_patients[1:min_sam
 audio_only_df = select(merged_df, :audio)
 
 # save data using JLD2
-jldsave("respiratory_juliacon2025.jld2"; X=audio_only_df, y=merged_df.condition)
+jldsave("respiratory_juliacon2025_wav.jld2"; X=audio_only_df, y=merged_df.condition)
 
 # ---------------------------------------------------------------------------- #
 #                                  load data                                   #
 # ---------------------------------------------------------------------------- #
-data          = JLD2.load("respiratory_juliacon2025.jld2")
+data          = JLD2.load("respiratory_juliacon2025_wav.jld2")
 audio_ds      = data["X"]
 conditions_ds = data["y"]
 
@@ -107,7 +107,8 @@ conditions_ds = data["y"]
 #                                   audio911                                   #
 # ---------------------------------------------------------------------------- #
 # collect audio features
-raw_audio_features = [audio_pipeline(row.audio) for row in eachrow(audio_ds)]
+raw_audio_features = [audio_pipeline(row.audio)[1] for row in eachrow(audio_ds)]
+freqs = Int.(floor.(audio_pipeline(audio_ds[1,1])[3]))
 
 # create vector where each index contains the mode of each row
 row_modes = [[mean(i) for i in eachrow(matrix)] for matrix in raw_audio_features]
@@ -116,20 +117,22 @@ row_modes = [[mean(i) for i in eachrow(matrix)] for matrix in raw_audio_features
 audio_features = reduce(hcat, row_modes)'
 
 # Create DataFrame with mel feature column names
-audio_features_df = DataFrame(audio_features, ["mel$i" for i in 1:size(audio_features, 2)])
+audio_features_df = DataFrame(audio_features, ["$(freqs[i])hz" for i in 1:size(audio_features, 2)])
 
 # ---------------------------------------------------------------------------- #
 #                              serialize result                                #
 # ---------------------------------------------------------------------------- #
 # save data using JLD2
-jldsave("respiratory_audio_feats.jld2"; X=audio_features_df, y=conditions_ds)
+jldsave("respiratory_juliacon2025.jld2"; X=audio_features_df, y=conditions_ds)
 
 # ---------------------------------------------------------------------------- #
 #                                  test data                                   #
 # ---------------------------------------------------------------------------- #
-data  = JLD2.load("respiratory_audio_feats.jld2")
+data  = JLD2.load("respiratory_juliacon2025.jld2")
 Xc = data["X"]
 yc = data["y"]
+
+Xlight = Xc[:, 3:18]
 
 # ---------------------------------------------------------------------------- #
 #                                sole xplorer                                  #
@@ -137,6 +140,15 @@ yc = data["y"]
 modelc = symbolic_analysis(
     Xc, yc;
     model=DecisionTreeClassifier(),
+    resample=StratifiedCV(nfolds=20, shuffle=true),
+    rng=Xoshiro(12345),
+    # extractor=InTreesRuleExtractor(),
+    measures=(accuracy,)      
+)
+
+modelc = symbolic_analysis(
+    Xlight, yc;
+    model=RandomForestClassifier(n_trees=30),
     resample=StratifiedCV(nfolds=20, shuffle=true),
     rng=Xoshiro(12345),
     # extractor=InTreesRuleExtractor(),
