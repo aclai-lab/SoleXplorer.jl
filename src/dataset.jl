@@ -314,8 +314,6 @@ function _setup_dataset(
         tinfo = nothing
     end
 
-    y isa MLJ.CategoricalVector || (y = MLJ.categorical(y))
-
     ttpairs, pinfo = partition(y; resample, train_ratio, valid_ratio, rng)
 
     # isempty(tuning) || begin
