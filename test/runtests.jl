@@ -6,6 +6,7 @@ addprocs(2)
     using SoleXplorer
     using MLJ
     using DataFrames, Random
+    using JLD2
 end
 
 const SX = SoleXplorer

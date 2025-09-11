@@ -1,6 +1,7 @@
 using Test
 using SoleXplorer
 using MLJ, DataFrames, Random
+using JLD2
 const SX = SoleXplorer
 
 Xc, yc = @load_iris
@@ -148,9 +149,41 @@ end
 end
 
 # ---------------------------------------------------------------------------- #
-#                      xgboost classification robustness                       #
+#                  xgboost binary classification robustness                    #
 # ---------------------------------------------------------------------------- #
-@testset "xgboost classification data validation" begin
+data_path = joinpath(@__DIR__, "respiratory_juliacon2025.jld2")
+data  = JLD2.load(data_path)
+Xb = data["X"]
+yb = MLJ.CategoricalArray{String,1,UInt32}(data["y"])
+
+@testset "xgboost binary classification data validation" begin
+    for train_ratio in 0.5:0.1:0.9
+        for seed in 1:5:40
+            for num_round in 10:5:50
+                for eta in 0.1:0.1:0.4
+                    model = symbolic_analysis(
+                        Xb, yb;
+                        model=XGBoostClassifier(;eta, num_round),
+                        resample=Holdout(shuffle=true),
+                        train_ratio,
+                        rng=Xoshiro(seed),
+                        measures=(accuracy,)
+                    )
+                    sx_acc = model.measures.measures_values[1]
+                    yhat = MLJ.predict_mode(model.ds.mach, model.ds.mach.args[1].data[model.ds.pidxs[1].test, :])
+                    mlj_acc = accuracy(yhat, model.ds.mach.args[2].data[model.ds.pidxs[1].test])
+
+                    @test sx_acc == mlj_acc
+                end
+            end
+        end
+    end
+end
+
+# ---------------------------------------------------------------------------- #
+#                   xgboost multi classification robustness                    #
+# ---------------------------------------------------------------------------- #
+@testset "xgboost multi classification data validation" begin
     for train_ratio in 0.5:0.1:0.9
         for seed in 1:5:40
             for num_round in 10:5:50
@@ -177,7 +210,7 @@ end
 # ---------------------------------------------------------------------------- #
 #                        xgboost regression robustness                         #
 # ---------------------------------------------------------------------------- #
-@testset "xgboost data validation" begin
+@testset "xgboost regression data validation" begin
     for train_ratio in 0.5:0.1:0.9
         for seed in 1:5:40
             for num_round in 10:5:50

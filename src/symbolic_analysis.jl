@@ -177,8 +177,6 @@ function eval_measures(
         # categorical array, tipo confusion matrix e kappa
         test = eltype(y_test[k]) <: CLabel ? String.(y_test[k]) : y_test[k]
 
-        # @show yhat_given_operation
-
         [map(measures, operations) do m, op
             m(
                 yhat_given_operation[op],
