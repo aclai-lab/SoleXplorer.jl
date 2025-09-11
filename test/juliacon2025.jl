@@ -1,5 +1,5 @@
 using ZipArchives, CSV, JLD2, DataFrames
-using StatsBase, Random
+using StatsBase, Random, MLJ
 using AudioReader
 using Audio911
 using SoleXplorer
@@ -130,14 +130,16 @@ jldsave("respiratory_juliacon2025.jld2"; X=audio_features_df, y=conditions_ds)
 # ---------------------------------------------------------------------------- #
 data  = JLD2.load("respiratory_juliacon2025.jld2")
 Xc = data["X"]
-yc = data["y"]
+# this is imperative: some algos accept only categorical value
+# TODO automate in solexplorer if it's a CLabel ?
+yc = MLJ.CategoricalArray{String,1,UInt32}(data["y"])
 
 Xlight = Xc[:, 3:18]
 
 # ---------------------------------------------------------------------------- #
 #                                sole xplorer                                  #
 # ---------------------------------------------------------------------------- #
-modelc = symbolic_analysis(
+dtc = symbolic_analysis(
     Xc, yc;
     model=DecisionTreeClassifier(),
     resample=StratifiedCV(nfolds=20, shuffle=true),
@@ -146,10 +148,32 @@ modelc = symbolic_analysis(
     measures=(accuracy,)      
 )
 
-modelc = symbolic_analysis(
+rfc = symbolic_analysis(
     Xlight, yc;
     model=RandomForestClassifier(n_trees=30),
     resample=StratifiedCV(nfolds=20, shuffle=true),
+    rng=Xoshiro(12345),
+    # extractor=InTreesRuleExtractor(),
+    measures=(accuracy,)      
+)
+
+# ---------------------------------------------------------------------------- #
+#                              serialize forest                                #
+# ---------------------------------------------------------------------------- #
+# save data using JLD2
+jldsave("forest_juliacon2025.jld2"; X=rfc)
+
+# ---------------------------------------------------------------------------- #
+#                                  test data                                   #
+# ---------------------------------------------------------------------------- #
+data  = JLD2.load("forest_juliacon2025.jld2")
+test_model = data["X"]
+
+xgb = symbolic_analysis(
+    Xlight, yc;
+    model=XGBoostClassifier(early_stopping_rounds=20),
+    resample=StratifiedCV(nfolds=20, shuffle=true),
+    valid_ratio=0.2,
     rng=Xoshiro(12345),
     # extractor=InTreesRuleExtractor(),
     measures=(accuracy,)      
