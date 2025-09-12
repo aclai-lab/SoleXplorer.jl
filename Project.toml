@@ -30,7 +30,7 @@ SolePostHoc = {rev = "devXGB", url = "https://github.com/aclai-lab/SolePostHoc.j
 [compat]
 Catch22 = "0.4 - 0.7"
 DataFrames = "1"
-MLJ = "0.20"
+MLJ = "0.20, 0.21"
 MLJDecisionTreeInterface = "0.4"
 MLJParticleSwarmOptimization = "0.1"
 MLJXGBoostInterface = "0.3"
