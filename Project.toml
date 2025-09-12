@@ -24,7 +24,8 @@ XGBoost = "009559a3-9522-5dbb-924b-0b6ed2b22bb9"
 ModalAssociationRules = {rev = "main", url = "https://github.com/aclai-lab/ModalAssociationRules.jl"}
 ModalDecisionTrees = {rev = "64-modaladaboost", url = "https://github.com/aclai-lab/ModalDecisionTrees.jl"}
 SoleData = {rev = "main", url = "https://github.com/aclai-lab/SoleData.jl"}
-SolePostHoc = {rev = "main", url = "https://github.com/aclai-lab/SolePostHoc.jl"}
+SoleModels = {rev = "binary_xgb", url = "https://github.com/aclai-lab/SoleModels.jl"}
+SolePostHoc = {rev = "devXGB", url = "https://github.com/aclai-lab/SolePostHoc.jl"}
 
 [compat]
 Catch22 = "0.4 - 0.7"
@@ -47,6 +48,7 @@ julia = "1"
 [extras]
 Distributed = "8ba89e20-285c-5b6f-9357-94700520ee1b"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
 
 [targets]
-test = ["Distributed", "Test"]
+test = ["Distributed", "Test", "JLD2"]
