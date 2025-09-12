@@ -14,13 +14,6 @@ Edo mi ha suggerito Pkl da scikitlearn
 Perry suggerisce serialize.jl
 
 # ---------------------------------------------------------------------------- #
-#                                  XgBoost ext                                 #
-# ---------------------------------------------------------------------------- #
-Ha un probabile bug in regressione, quando incontra alberi composti da una sola foglia
-Bisogna testarlo e verificare come risolvere la questione.
-POTREBBE ANDARE BENE, VERIFICA I TEST
-
-# ---------------------------------------------------------------------------- #
 #                                 bug di MLJ #1                                #
 # ---------------------------------------------------------------------------- #
 modelts = symbolic_analysis(
@@ -57,12 +50,6 @@ e se non funziona aprire una PR in MLJ.
 Andrebbe risolto.
 
 # ---------------------------------------------------------------------------- #
-#                            modal association rules                           #
-# ---------------------------------------------------------------------------- #
-da fare tassativamente entro ottobre
-IN LAVORAZIONE
-
-# ---------------------------------------------------------------------------- #
 #                               feature selection                              #
 # ---------------------------------------------------------------------------- #
 da fare entro la laurea
@@ -97,22 +84,3 @@ Propagalo anche a PostHoc
 #                             apply e extractrules                             #
 # ---------------------------------------------------------------------------- #
 Bisogna pensare anche ai modelli non supervisionati: apply(m, X)
-
-# ---------------------------------------------------------------------------- #
-#                                   SoleModel                                  #
-# ---------------------------------------------------------------------------- #
-La struttura SoleModel potrebbe essere ridondante
-
-# ---------------------------------------------------------------------------- #
-#                                      MAS                                     #
-# ---------------------------------------------------------------------------- #
-Spiega a Mauro la questione delle finestre, IMPORTANTE.
-
-# ---------------------------------------------------------------------------- #
-#                                 Idea di Mauro                                #
-# ---------------------------------------------------------------------------- #
-@forward Apriori apriori
-dovrebbe essere nel pacchetto lazy.jl
-cerca in sole chi lo usa
-
-https://github.com/actions/download-artifact?tab=readme-ov-file#download-artifacts-from-other-workflow-runs-or-repositories
