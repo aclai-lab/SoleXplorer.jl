@@ -9,6 +9,10 @@ addprocs(2)
     using JLD2
 end
 
+using SoleData.Artifacts
+# fill your Artifacts.toml file;
+@test_nowarn fillartifacts()
+
 const SX = SoleXplorer
 
 function run_tests(list)

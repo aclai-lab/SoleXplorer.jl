@@ -40,7 +40,7 @@ modelc = symbolic_analysis(
 # ---------------------------------------------------------------------------- #
 dsc = setup_dataset(
     Xc, yc;
-    model=DecisionTreeClassifier(),
+    model=XGBoostClassifier(),
     resample=Holdout(;shuffle=true),
     rng=Xoshiro(1),   
 )

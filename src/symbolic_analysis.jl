@@ -81,7 +81,7 @@ function Base.show(io::IO, ::MIME"text/plain", m::ModelSet{S}) where S
     println(io, "  Models: $(length(m.sole)) symbolic models")
     
     if !isnothing(m.rules)
-        println(io, "  Rules: $(length(first(m.rules))) extracted rules per model")
+        # println(io, "  Rules: $(length(first(m.rules))) extracted rules per model")
     else
         println(io, "  Rules: none")
     end
