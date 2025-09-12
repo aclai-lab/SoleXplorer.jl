@@ -27,7 +27,6 @@ const MaybeMeasures      = Maybe{Measures}
 const MaybeAssociations  = Maybe{Vector{ARule}}
 
 const MaybeRuleExtractor = Maybe{RuleExtractor}
-    # association::Union{Nothing,AbstractAssociationRuleExtractor}
 
 # ---------------------------------------------------------------------------- #
 #                                  modelset                                    #
@@ -38,20 +37,20 @@ const MaybeRuleExtractor = Maybe{RuleExtractor}
 Comprehensive container for symbolic model analysis results.
 
 # Fields
-- `ds::EitherDataSet`: Dataset wrapper used for training
+- `ds::AbstractDataSet`: Dataset wrapper used for training
 - `sole::Vector{AbstractModel}`: Symbolic models from each CV fold
 - `rules::MaybeRules`: Extracted decision rules (optional)
 - `measures::MaybeMeasures`: Performance evaluation results (optional)
 """
 mutable struct ModelSet{S} <: AbstractModelSet
-    ds           :: EitherDataSet
+    ds           :: AbstractDataSet
     sole         :: Vector{AbstractModel}
     rules        :: MaybeRules
     associations :: MaybeAssociations
     measures     :: MaybeMeasures
 
     function ModelSet(
-        ds       :: EitherDataSet,
+        ds       :: AbstractDataSet,
         sole     :: SoleModel{S};
         rules    :: MaybeRules=nothing,
         miner    :: MaybeAssociations=nothing,
@@ -82,7 +81,7 @@ function Base.show(io::IO, ::MIME"text/plain", m::ModelSet{S}) where S
     println(io, "  Models: $(length(m.sole)) symbolic models")
     
     if !isnothing(m.rules)
-        println(io, "  Rules: $(length(first(m.rules))) extracted rules per model")
+        # println(io, "  Rules: $(length(first(m.rules))) extracted rules per model")
     else
         println(io, "  Rules: none")
     end
@@ -145,7 +144,7 @@ sole_predict_mode(solem::AbstractModel, y_test::AbstractVector{<:Label}) = suppo
 #                                eval measures                                 #
 # ---------------------------------------------------------------------------- #
 """
-    eval_measures(ds::EitherDataSet, solem::Vector{AbstractModel}, 
+    eval_measures(ds::AbstractDataSet, solem::Vector{AbstractModel}, 
                  measures::Tuple{Vararg{FussyMeasure}}, 
                  y_test::Vector{<:AbstractVector{<:Label}}) -> Measures
 
@@ -153,12 +152,12 @@ Adapted from MLJ's evaluate
 Evaluate symbolic models using MLJ measures across CV folds.
 """
 function eval_measures(
-    ds::EitherDataSet,
+    ds::AbstractDataSet,
     solem::Vector{AbstractModel},
     measures::Tuple{Vararg{FussyMeasure}},
     y_test::Vector{<:AbstractVector{<:Label}}
 )::Measures
-    mach_model = get_mach_model(ds)
+    mach_model      = get_mach_model(ds)
     measures        = MLJBase._actual_measures([measures...], mach_model)
     operations      = get_operations(measures, MLJBase.prediction_type(mach_model))
 
@@ -216,7 +215,7 @@ end
 # ---------------------------------------------------------------------------- #
 function _symbolic_analysis!(
     modelset::ModelSet;
-    extractor::MaybeRuleExtractor=nothing,
+    extractor::Union{MaybeRuleExtractor,Tuple{RuleExtractor,NamedTuple}}=nothing,
     association::MaybeAbstractAssociationRuleExtractor=nothing,
     measures::Tuple{Vararg{FussyMeasure}}=()
 )::Nothing
@@ -245,7 +244,7 @@ function _symbolic_analysis!(
 end
 
 function _symbolic_analysis(
-    ds::EitherDataSet,
+    ds::AbstractDataSet,
     solem::SoleModel;
     kwargs...
 )::ModelSet
@@ -255,7 +254,7 @@ function _symbolic_analysis(
 end
 
 """
-    symbolic_analysis(ds::EitherDataSet, solem::SoleModel; 
+    symbolic_analysis(ds::AbstractDataSet, solem::SoleModel; 
                      extractor=nothing, measures=()) -> ModelSet
 
 Perform symbolic analysis on pre-trained models.
@@ -264,7 +263,7 @@ Use when you already have trained symbolic models and want to add
 rule extraction and/or performance evaluation.
 """
 function symbolic_analysis(
-    ds::EitherDataSet,
+    ds::AbstractDataSet,
     solem::SoleModel;
     kwargs...
 )::ModelSet
@@ -323,7 +322,7 @@ symbolic_analysis(X::Any, args...; kwargs...) = symbolic_analysis(DataFrame(X), 
 #                                 constructors                                 #
 # ---------------------------------------------------------------------------- #
 """
-    dsetup(m::ModelSet) -> EitherDataSet
+    dsetup(m::ModelSet) -> AbstractDataSet
 
 Extract the dataset setup from a ModelSet.
 """

@@ -18,13 +18,6 @@ const RangeSpec = Union{
 }
 
 # ---------------------------------------------------------------------------- #
-#                             Range normalization                              #
-# ---------------------------------------------------------------------------- #
-normalize_range(range::Union{Vector{<:MLJ.NumericRange}, MLJBase.NominalRange}) = range
-normalize_range(range::Tuple{Vararg{Tuple}}) = range
-normalize_range(range::Tuple) = (range,)
-
-# ---------------------------------------------------------------------------- #
 #                                Tuning struct                                 #
 # ---------------------------------------------------------------------------- #
 mutable struct Tuning{T} <: AbstractTuning
@@ -36,7 +29,7 @@ mutable struct Tuning{T} <: AbstractTuning
     
     function Tuning{T}(strategy::T, range::RangeSpec, resampling, measure, repeats) where T
         repeats > 0 || throw(ArgumentError("repeats must be positive, got $repeats"))
-        new{T}(strategy, normalize_range(range), resampling, measure, repeats)
+        new{T}(strategy, range, resampling, measure, repeats)
     end
 end
 

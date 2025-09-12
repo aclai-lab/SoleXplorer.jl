@@ -268,7 +268,7 @@ modelts = symbolic_analysis(
     resample=CV(nfolds=5, shuffle=true),
     valid_ratio=0.2,
     rng=Xoshiro(1),
-    tuning=Grid(resolution=10, resampling=CV(nfolds=3), range=range, measure=accuracy, repeats=2),
+    tuning=GridTuning(resolution=10, resampling=CV(nfolds=3), range=range, measure=accuracy, repeats=2),
     extractor=InTreesRuleExtractor(),
     association=FPGrowth(_items, _itemsetmeasures, _rulemeasures),
     measures=(accuracy, log_loss, confusion_matrix, kappa)      

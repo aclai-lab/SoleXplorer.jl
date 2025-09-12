@@ -1,7 +1,7 @@
 name = "SoleXplorer"
 uuid = "5816ab97-8dbe-4a0a-b2fb-0334bd9876ed"
 authors = ["Lorenzo BALBONI", "Mauro MILELLA", "Giovanni PAGLIARINI", "Alberto PAPARELLA", "Riccardo PASINI", "Marco PERROTTA"]
-version = "0.2.4"
+version = "0.2.5"
 
 [deps]
 Catch22 = "acdeb78f-3d39-4310-8fdf-6d75c17c6d5a"
@@ -20,21 +20,12 @@ SoleModels = "4249d9c7-3290-4ddd-961c-e1d3ec2467f8"
 SolePostHoc = "cf1aa0c3-12c9-4ebe-9bdc-bd6c2ca79b72"
 XGBoost = "009559a3-9522-5dbb-924b-0b6ed2b22bb9"
 
-[sources.ModalAssociationRules]
-rev = "main"
-url = "https://github.com/aclai-lab/ModalAssociationRules.jl"
-
-[sources.ModalDecisionTrees]
-rev = "64-modaladaboost"
-url = "https://github.com/aclai-lab/ModalDecisionTrees.jl"
-
-[sources.SoleData]
-rev = "main"
-url = "https://github.com/aclai-lab/SoleData.jl"
-
-[sources.SolePostHoc]
-rev = "main"
-url = "https://github.com/aclai-lab/SolePostHoc.jl"
+[sources]
+ModalAssociationRules = {rev = "main", url = "https://github.com/aclai-lab/ModalAssociationRules.jl"}
+ModalDecisionTrees = {rev = "64-modaladaboost", url = "https://github.com/aclai-lab/ModalDecisionTrees.jl"}
+SoleData = {rev = "main", url = "https://github.com/aclai-lab/SoleData.jl"}
+SoleModels = {rev = "binary_xgb", url = "https://github.com/aclai-lab/SoleModels.jl"}
+SolePostHoc = {rev = "devXGB", url = "https://github.com/aclai-lab/SolePostHoc.jl"}
 
 [compat]
 Catch22 = "0.4 - 0.7"
@@ -57,6 +48,7 @@ julia = "1"
 [extras]
 Distributed = "8ba89e20-285c-5b6f-9357-94700520ee1b"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
 
 [targets]
-test = ["Distributed", "Test"]
+test = ["Distributed", "Test", "JLD2"]
