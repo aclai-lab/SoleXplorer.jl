@@ -111,9 +111,9 @@ modelts = symbolic_analysis(Xts, yts; model=ModalDecisionTree())
 X1 = scalarlogiset(get_X(dsetup(modelts)))
 
 # algorithms to be tested
-SX_ALGORITHMS = [Apriori, FPGrowth, Eclat]
+SX_ALGORITHMS  = [Apriori, FPGrowth, Eclat]
 MAS_ALGORITHMS = [apriori, fpgrowth, eclat]
-ALGORITHMS = collect(zip(SX_ALGORITHMS, MAS_ALGORITHMS))
+ALGORITHMS     = collect(zip(SX_ALGORITHMS, MAS_ALGORITHMS))
 
 printstyled("Testing: $([a |> string for a in ALGORITHMS])\n", color=:green)
 
@@ -205,49 +205,51 @@ _1_items = Vector{Item}(Atom.([
 
 # 1st comparison
 _1_itemsetmeasures = [(gsupport, 0.8, 0.8)]
-_1_rulemeasures = [(gconfidence, 0.7, 0.7)]
+_1_rulemeasures    = [(gconfidence, 0.7, 0.7)]
 
-modelc = symbolic_analysis(Xc, yc)
+modelc      = symbolic_analysis(Xc, yc)
+sx_apriori  = deepcopy(modelc)
+sx_fpgrowth = deepcopy(modelc)
 
-sx_apriori = symbolic_analysis!(modelc; association=Apriori(_1_items, _1_itemsetmeasures, _1_rulemeasures))
-sx_fpgrowth = symbolic_analysis!(modelc; association=FPGrowth(_1_items, _1_itemsetmeasures, _1_rulemeasures))
+symbolic_analysis!(sx_apriori; association=Apriori(_1_items, _1_itemsetmeasures, _1_rulemeasures))
+symbolic_analysis!(sx_fpgrowth; association=FPGrowth(_1_items, _1_itemsetmeasures, _1_rulemeasures))
 
-apriori_miner = Miner(X, apriori, _1_items, _1_itemsetmeasures, _1_rulemeasures)
+apriori_miner  = Miner(X, apriori, _1_items, _1_itemsetmeasures, _1_rulemeasures)
 fpgrowth_miner = Miner(X, fpgrowth, _1_items, _1_itemsetmeasures, _1_rulemeasures)
 mine!(apriori_miner)
 mine!(fpgrowth_miner)
 
-@test associations(sx_fpgrowth) == arules(fpgrowth_miner)
+@test associations(sx_fpgrowth)     == arules(fpgrowth_miner)
 @test Set(associations(sx_apriori)) == Set(arules(apriori_miner))
 
 # 2nd comparison
 _2_itemsetmeasures = [(gsupport, 0.9, 0.4)]
-_2_rulemeasures = [(gconfidence, 0.3, 0.5)]
+_2_rulemeasures    = [(gconfidence, 0.3, 0.5)]
 
-sx_apriori = symbolic_analysis!(modelc; association=Apriori(_1_items, _2_itemsetmeasures, _2_rulemeasures))
-sx_fpgrowth = symbolic_analysis!(modelc; association=FPGrowth(_1_items, _2_itemsetmeasures, _2_rulemeasures))
+symbolic_analysis!(sx_apriori; association=Apriori(_1_items, _2_itemsetmeasures, _2_rulemeasures))
+symbolic_analysis!(sx_fpgrowth; association=FPGrowth(_1_items, _2_itemsetmeasures, _2_rulemeasures))
 
-apriori_miner = Miner(X, apriori, _1_items, _2_itemsetmeasures, _2_rulemeasures)
+apriori_miner  = Miner(X, apriori, _1_items, _2_itemsetmeasures, _2_rulemeasures)
 fpgrowth_miner = Miner(X, fpgrowth, _1_items, _2_itemsetmeasures, _2_rulemeasures)
 mine!(apriori_miner)
 mine!(fpgrowth_miner)
 
-@test associations(sx_fpgrowth) == arules(fpgrowth_miner)
+@test associations(sx_fpgrowth)     == arules(fpgrowth_miner)
 @test Set(associations(sx_apriori)) == Set(arules(apriori_miner))
 
 # 3rd comparison
 _3_itemsetmeasures = [(gsupport, 0.1, 0.1)]
-_3_rulemeasures = [(gconfidence, 0.1, 0.1)]
+_3_rulemeasures    = [(gconfidence, 0.1, 0.1)]
 
-sx_apriori = symbolic_analysis!(modelc; association=Apriori(_1_items, _3_itemsetmeasures, _3_rulemeasures))
-sx_fpgrowth = symbolic_analysis!(modelc; association=FPGrowth(_1_items, _3_itemsetmeasures, _3_rulemeasures))
+symbolic_analysis!(sx_apriori; association=Apriori(_1_items, _3_itemsetmeasures, _3_rulemeasures))
+symbolic_analysis!(sx_fpgrowth; association=FPGrowth(_1_items, _3_itemsetmeasures, _3_rulemeasures))
 
-apriori_miner = Miner(X, apriori, _1_items, _3_itemsetmeasures, _3_rulemeasures)
+apriori_miner  = Miner(X, apriori, _1_items, _3_itemsetmeasures, _3_rulemeasures)
 fpgrowth_miner = Miner(X, fpgrowth, _1_items, _3_itemsetmeasures, _3_rulemeasures)
 mine!(apriori_miner)
 mine!(fpgrowth_miner)
 
-@test associations(sx_fpgrowth) == arules(fpgrowth_miner)
+@test associations(sx_fpgrowth)     == arules(fpgrowth_miner)
 @test Set(associations(sx_apriori)) == Set(arules(apriori_miner))
 
 # ---------------------------------------------------------------------------- #

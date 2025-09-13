@@ -109,12 +109,14 @@ export train_test
 include("apply.jl")
 include("train_test.jl")
 
-export Apriori, FPGrowth, Eclat
 include("extractrules.jl")
+
+export Apriori, FPGrowth, Eclat
 include("associationrules.jl")
 
+export AbstractModelSet, ModelSet
+export dsetup, solemodels, rules, associations, performance
 export symbolic_analysis, symbolic_analysis!
-export dsetup, solemodels, rules, associations
 include("symbolic_analysis.jl")
 
 end

@@ -1,21 +1,24 @@
-"""
-symbolic_analysis.jl — Unified Symbolic Model Analysis Interface
+# symbolic_analysis.jl — Unified Symbolic Model Analysis Interface
 
-This module provides the main entry point for complete symbolic model analysis workflows:
+# This module provides the main entry point for complete symbolic model analysis workflows:
 
-1. Dataset setup and cross-validation training (via train_test.jl)
-2. Training and testing models (via train_test.jl)
-3. Rule extraction from symbolic models (via extractrules.jl) 
-4. Performance evaluation using MLJ measures
-"""
+# 1. Dataset setup and cross-validation training (via train_test.jl)
+# 2. Training and testing models (via train_test.jl)
+# 3. Rule extraction from symbolic models (via extractrules.jl) 
+# 4. Performance evaluation using MLJ measures
 
 # ---------------------------------------------------------------------------- #
 #                               abstract types                                 #
 # ---------------------------------------------------------------------------- #
 """
-    AbstractModelSet  
+    AbstractModelSet
 
-Base type for comprehensive analysis result containers.
+Abstract type for containers that hold symbolic model analysis results.
+
+# Concrete Implementations
+- [`ModelSet`](@ref): The primary implementation containing complete analysis results
+
+See also: [`symbolic_analysis`](@ref)
 """
 abstract type AbstractModelSet end
 
@@ -24,8 +27,8 @@ abstract type AbstractModelSet end
 # ---------------------------------------------------------------------------- #
 const MaybeRules         = Maybe{Union{Vector{DecisionSet}, Vector{LumenResult}}}
 const MaybeMeasures      = Maybe{Measures}
-const MaybeAssociations  = Maybe{Vector{ARule}}
-
+const MaybeAssociaRules  = Maybe{Vector{ARule}}
+const MaybeAssociation   = Maybe{AbstractAssociationRuleExtractor}
 const MaybeRuleExtractor = Maybe{RuleExtractor}
 
 # ---------------------------------------------------------------------------- #
@@ -34,32 +37,103 @@ const MaybeRuleExtractor = Maybe{RuleExtractor}
 """
     ModelSet{S} <: AbstractModelSet
 
-Comprehensive container for symbolic model analysis results.
+Wrapper for complete symbolic model analysis results.
+
+This structure holds all components of a symbolic analysis workflow including
+the dataset configuration, sole trained models, extracted rules, association rules,
+and performance measures.
+
+# Type Parameters
+- `S`: The sole model type (e.g., DecisionTreeClassifier)
 
 # Fields
-- `ds::AbstractDataSet`: Dataset wrapper used for training
-- `sole::Vector{AbstractModel}`: Symbolic models from each CV fold
-- `rules::MaybeRules`: Extracted decision rules (optional)
-- `measures::MaybeMeasures`: Performance evaluation results (optional)
+- `ds::AbstractDataSet`: Dataset configuration with cross-validation setup,
+   plus all settings needed by modal analysis.
+- `sole::Vector{AbstractModel}`: Vector of trained symbolic models (one per CV fold)
+### Optional
+- `rules::MaybeRules`: Extracted rules
+- `associations::MaybeAssociations`: Association rules between features
+- `measures::MaybeMeasures`: Performance evaluation measures
+
+# Accessing Components
+- [`dsetup`](@ref): Extract dataset configuration
+- [`solemodels`](@ref): Extract trained models
+- [`rules`](@ref): Extract decision rules
+- [`associations`](@ref): Extract association rules
+
+See also: [`symbolic_analysis`](@ref)
 """
 mutable struct ModelSet{S} <: AbstractModelSet
     ds           :: AbstractDataSet
     sole         :: Vector{AbstractModel}
     rules        :: MaybeRules
-    associations :: MaybeAssociations
+    associations :: MaybeAssociaRules
     measures     :: MaybeMeasures
 
     function ModelSet(
         ds       :: AbstractDataSet,
         sole     :: SoleModel{S};
         rules    :: MaybeRules=nothing,
-        miner    :: MaybeAssociations=nothing,
+        miner    :: MaybeAssociaRules=nothing,
         measures :: MaybeMeasures=nothing
     ) where S
         new{S}(ds, solemodels(sole), rules, miner, measures)
     end
 end
 
+# ---------------------------------------------------------------------------- #
+#                                 constructors                                 #
+# ---------------------------------------------------------------------------- #
+"""
+    dsetup(m::ModelSet) -> AbstractDataSet
+
+Returns the dataset configuration from a ModelSet.
+
+See also: [`ModelSet`](@ref), [`symbolic_analysis`](@ref)
+"""
+dsetup(m::ModelSet) = m.ds
+
+"""
+    solemodels(m::ModelSet) -> Vector{AbstractModel}
+
+Returns the trained sole symbolic models from a ModelSet.
+
+See also: [`ModelSet`](@ref), [`symbolic_analysis`](@ref)
+"""
+solemodels(m::ModelSet) = m.sole
+
+"""
+    rules(m::ModelSet) -> MaybeRules
+
+Returns the rules extracted from a ModelSet.
+Returns nothing if rule extraction isn't yet performed.
+
+See also: [`ModelSet`](@ref), [`symbolic_analysis`](@ref)
+"""
+rules(m::ModelSet) = m.rules
+
+"""
+    associations(m::ModelSet) -> MaybeAssociaRules
+
+Returns the association rules extracted from a ModelSet.
+Returns nothing if association rules isn't yet performed.
+
+See also: [`ModelSet`](@ref), [`symbolic_analysis`](@ref)
+"""
+associations(m::ModelSet) = m.associations
+
+"""
+    performance(m::ModelSet) -> MaybeMeasures
+
+Extract the performance evaluation measures from a ModelSet.
+
+See also: [`ModelSet`](@ref), [`symbolic_analysis`](@ref)
+"""
+performance(m::ModelSet) = m.measures
+
+# ---------------------------------------------------------------------------- #
+#                                modelset show                                 #
+# ---------------------------------------------------------------------------- #
 function Base.show(io::IO, m::ModelSet{S}) where S
     print(io, "ModelSet{$S}(")
     print(io, "models=$(length(m.sole))")
@@ -81,7 +155,7 @@ function Base.show(io::IO, ::MIME"text/plain", m::ModelSet{S}) where S
     println(io, "  Models: $(length(m.sole)) symbolic models")
     
     if !isnothing(m.rules)
-        # println(io, "  Rules: $(length(first(m.rules))) extracted rules per model")
+        println(io, "  Rules: $(length(first(m.rules))) extracted rules per model")
     else
         println(io, "  Rules: none")
     end
@@ -105,25 +179,20 @@ end
 # ---------------------------------------------------------------------------- #
 #                                 utilities                                    #
 # ---------------------------------------------------------------------------- #
-"""
-    supporting_predictions(solem::AbstractModel) -> Vector
-
-Extract supporting predictions from a symbolic model.
-"""
 function supporting_predictions(solem::AbstractModel)
     return solem.info isa Base.RefValue ?
         solem.info[].supporting_predictions :
         solem.info.supporting_predictions
 end
 
-"""
-    sole_predict(solem::AbstractModel, y_test::AbstractVector{<:Label}) -> Vector
+sole_predict_mode(solem::AbstractModel, y_test::AbstractVector{<:Label}) = supporting_predictions(solem)
 
-Convert symbolic model predictions to MLJ probabilistic format.
-"""
+# if it's a classification task, convert, if needed,
+# predictions in categorical values.
+# if not, wnon't do anything.
 function sole_predict(solem::AbstractModel, y_test::AbstractVector{<:Label})
     preds = supporting_predictions(solem)
-    eltype(preds) <: CLabel ?
+    return eltype(preds) <: CLabel ?
         begin
             classes_seen = unique(y_test)
             eltype(preds) <: MLJ.CategoricalValue ||
@@ -133,24 +202,10 @@ function sole_predict(solem::AbstractModel, y_test::AbstractVector{<:Label})
         preds
 end
 
-"""
-    sole_predict_mode(solem::AbstractModel, y_test::AbstractVector{<:Label}) -> Vector
-
-Return deterministic predictions from symbolic model.
-"""
-sole_predict_mode(solem::AbstractModel, y_test::AbstractVector{<:Label}) = supporting_predictions(solem)
-
 # ---------------------------------------------------------------------------- #
 #                                eval measures                                 #
 # ---------------------------------------------------------------------------- #
-"""
-    eval_measures(ds::AbstractDataSet, solem::Vector{AbstractModel}, 
-                 measures::Tuple{Vararg{FussyMeasure}}, 
-                 y_test::Vector{<:AbstractVector{<:Label}}) -> Measures
-
-Adapted from MLJ's evaluate
-Evaluate symbolic models using MLJ measures across CV folds.
-"""
+# Adapted from MLJ's evaluate
 function eval_measures(
     ds::AbstractDataSet,
     solem::Vector{AbstractModel},
@@ -173,8 +228,8 @@ function eval_measures(
     measurements_vector = mapreduce(vcat, 1:nfolds) do k
         yhat_given_operation = Dict(op=>op(solem[k], y_test[k]) for op in unique(operations))
 
-        # costretto a convertirlo a stringa in quanto certe misure di statistical measures non accettano
-        # categorical array, tipo confusion matrix e kappa
+        # Forced to convert to string as some statistical measures don't accept
+        # categorical arrays, like confusion matrix and kappa
         test = eltype(y_test[k]) <: CLabel ? String.(y_test[k]) : y_test[k]
 
         [map(measures, operations) do m, op
@@ -184,7 +239,7 @@ function eval_measures(
                 # MLJBase._view(weights, test),
                 # class_weights
                 MLJBase._view(nothing, test),
-                nothing
+                nothing # TODO introduce class_weights
             )
         end]
     end
@@ -211,7 +266,7 @@ function eval_measures(
 end
 
 # ---------------------------------------------------------------------------- #
-#                              symbolic_analysis                               #
+#                         internal symbolic_analysis                           #
 # ---------------------------------------------------------------------------- #
 function _symbolic_analysis!(
     modelset::ModelSet;
@@ -222,8 +277,7 @@ function _symbolic_analysis!(
     ds = dsetup(modelset)
     solem = solemodels(modelset)
 
-    modelset.rules = isnothing(extractor) ? nothing : begin
-        # TODO propaga rng, dovrai fare intrees mutable struct
+    !isnothing(extractor) && (modelset.rules = begin
         if extractor isa Tuple
             params = last(extractor)
             extractor = first(extractor)
@@ -231,13 +285,13 @@ function _symbolic_analysis!(
             params = NamedTuple(;)
         end
         extractrules(extractor, params, ds, solem)
-    end
+    end)
 
-    modelset.associations = isnothing(association) ? nothing : mas_caller(ds, association)
+    !isnothing(association) && (modelset.associations = mas_caller(ds, association))
 
     y_test = get_y_test(ds)
     isempty(measures) && (measures = _DefaultMeasures(first(y_test)))
-    # all_classes = unique(Iterators.flatten(y_test))
+
     modelset.measures = eval_measures(ds, solem, measures, y_test)
 
     return nothing
@@ -253,54 +307,107 @@ function _symbolic_analysis(
     return modelset
 end
 
+# ---------------------------------------------------------------------------- #
+#                              symbolic_analysis                               #
+# ---------------------------------------------------------------------------- #
 """
-    symbolic_analysis(ds::AbstractDataSet, solem::SoleModel; 
-                     extractor=nothing, measures=()) -> ModelSet
+    symbolic_analysis!(modelset::ModelSet; kwargs...)
 
-Perform symbolic analysis on pre-trained models.
+Perform additional analysis on an existing ModelSet.
 
-Use when you already have trained symbolic models and want to add
-rule extraction and/or performance evaluation.
+In-place version that adds or updates analysis components (rules, associations,
+measures) on an existing ModelSet.
+
+# Examples
+```julia
+# initial analysis
+modelset = symbolic_analysis(X, y)
+
+# add rule extraction later
+symbolic_analysis!(modelset; extractor=Lumen())
+
+# add association mining later
+symbolic_analysis!(modelset; association=Apriori())
+```
+
+See also: [`symbolic_analysis`](@ref), [`ModelSet`](@ref)
 """
-function symbolic_analysis(
-    ds::AbstractDataSet,
-    solem::SoleModel;
-    kwargs...
-)::ModelSet
-    _symbolic_analysis(ds, solem; kwargs...)
-end
-
-function symbolic_analysis!(
-    modelset::ModelSet; 
-    kwargs...
-)::ModelSet
-    _symbolic_analysis!(modelset; kwargs...)
-    return modelset
-end
+symbolic_analysis!(modelset::ModelSet; kwargs...) = _symbolic_analysis!(modelset; kwargs...)
 
 """
-    symbolic_analysis(X::AbstractDataFrame, y::AbstractVector, [w];
-        [extractor::MaybeRuleExtracton], 
-        [association::MaybeAbstractAssociationRuleExtractor],
-        [measures::Tuple{Vararg{FussyMeasure}}],
-        kwargs...) -> ModelSet
+    symbolic_analysis(
+        X::AbstractDataFrame,
+        y::AbstractVector,
+        w::MaybeVector=nothing;
+        extractor::MaybeRuleExtractor=nothing,
+        association::Union{Nothing,AbstractAssociationRuleExtractor}=nothing,
+        measures::Tuple{Vararg{FussyMeasure}}=(),
+        kwargs...
+    ) -> ModelSet
 
-End-to-end symbolic analysis starting from raw data.
+Complete end-to-end symbolic model analysis workflow.
 
-# Arguments:
-- `X, y, w`    : Features, targets, and optional weights
-- `extractor`  : Rule extraction strategy
-- `association`: Rule association strategy
-- `measures`   : Performance measures to evaluate (accuracy, auc, etc.)
-- `kwargs`     : Passed to dataset setup (model, cv_folds, etc.)
+This is the main entry point for symbolic analysis.
+It performs the complete workflow:
+1. **Dataset Setup**: Configures cross-validation and time series preprocessing.
+2. **Model Configuration**: Sets up the MLJ machine.
+3. **Model Training**: Trains symbolic models on each CV fold.
+4. **Rule Extraction**: Extracts interpretable rules from trained models.
+5. **Association Mining**: Discovers feature relationships and patterns.
+6. **Evaluation**: Computes comprehensive performance metrics.
 
-# extractor
+# Arguments
+- `X::AbstractDataFrame`: Feature matrix with observations as rows
+- `y::AbstractVector`: Target variable (labels for classification)
+- `w::MaybeVector`: Sample weights (optional)
 
-# association
+## Analysis Options
+- `extractor`: Rule extraction method:
+  See [SolePostHoc](https://github.com/aclai-lab/SolePostHoc.jl)
+- `association`: Association rule mining:
+  See [ModalAssociationRules](https://github.com/aclai-lab/ModalAssociationRules.jl)
+- `measures`: Performance measures tuple:
+  - `(accuracy, auc, f1_score)`: Custom measures
+  - `()`: Use default measures for task type
 
-# measures
+## Dataset & Training Options (kwargs)
+  See [`setup_dataset`](@Ref)
 
-See [`setup_dataset`](@ref) for dataset setup parameter descriptions.
+# Examples
+```julia
+# Basic analysis with default settings
+modelset = symbolic_analysis(X, y)
+
+# Full analysis example
+range = SoleXplorer.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
+modelset = symbolic_analysis(X, y;
+    model=RandomForestClassifier(),
+    resample=CV(nfolds=5, shuffle=true),
+    rng=Xoshiro(1),
+    tuning=GridTuning(resolution=10, resampling=CV(nfolds=3), range=range, measure=accuracy, repeats=2),
+    extractor=InTreesRuleExtractor(),
+    measures=(accuracy, log_loss, confusion_matrix, kappa)   
+)
+
+# Time series analysis example
+modelset = symbolic_analysis(X, y;
+    model=ModalRandomForest(),
+    resample=Holdout(shuffle=true),
+    train_ratio=0.75,
+    rng=Xoshiro(1),
+    features=(minimum, maximum),
+    measures=(log_loss, accuracy, confusion_matrix, kappa)
+)
+
+# Access modelset
+setup = dsetup(modelset)
+models = solemodels(modelset)
+rules = rules(modelset)  
+associations = associations(modelset)
+performance = performance(modelset)
+```
+
+See also: [`ModelSet`](@ref), [`setup_dataset`](@Ref), [`train_test`](@Ref)
 """
 function symbolic_analysis(
     X::AbstractDataFrame,
@@ -316,35 +423,48 @@ function symbolic_analysis(
     _symbolic_analysis(ds, solem; extractor, association, measures)
 end
 
+"""
+    symbolic_analysis(ds::AbstractDataSet, solem::SoleModel; kwargs...) -> ModelSet
+
+Perform complete symbolic analysis on pre-trained models.
+
+# Arguments  
+- `ds::AbstractDataSet`: Dataset used for training the models.
+- `solem::SoleModel`: Trained sole symbolic models.
+- `kwargs...`: Analysis options (extractor, association, measures).
+
+# Examples
+```julia
+# analyze pre-trained models
+ds = setup_dataset(
+    X, y;
+    model=DecisionTreeClassifier(),
+    resample=CV(nfolds=5, shuffle=true)
+)
+solem = train_test(ds)
+results = symbolic_analysis(
+    ds, solem; 
+    extractor=Lumen(),
+    measures=(accuracy, kappa)
+)
+```
+
+See also: [`symbolic_analysis!`](@ref), [`setup_dataset`](@ref), [`train_test`](@ref)
+"""
+function symbolic_analysis(
+    ds::AbstractDataSet,
+    solem::SoleModel;
+    kwargs...
+)::ModelSet
+    _symbolic_analysis(ds, solem; kwargs...)
+end
+
+"""
+    symbolic_analysis(X::Any, args...; kwargs...) -> ModelSet
+
+Convenience method that converts input data to DataFrame format.
+
+See also: [`symbolic_analysis`](@ref)
+"""
 symbolic_analysis(X::Any, args...; kwargs...) = symbolic_analysis(DataFrame(X), args...; kwargs...)
 
-# ---------------------------------------------------------------------------- #
-#                                 constructors                                 #
-# ---------------------------------------------------------------------------- #
-"""
-    dsetup(m::ModelSet) -> AbstractDataSet
-
-Extract the dataset setup from a ModelSet.
-"""
-dsetup(m::ModelSet) = m.ds
-
-"""
-    solemodels(m::ModelSet) -> Vector{AbstractModel}
-
-Extract the vector of symbolic models from a ModelSet.
-"""
-solemodels(m::ModelSet) = m.sole
-
-"""
-    rules(m::ModelSet) -> DecisionSet
-
-Extract the vector of rules from a ModelSet.
-"""
-rules(m::ModelSet) = m.rules
-
-"""
-    associations(m::ModelSet) -> Vector{ARule}
-
-Extract the vector of associations from a ModelSet.
-"""
-associations(m::ModelSet) = m.associations
