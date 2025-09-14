@@ -1,11 +1,13 @@
+```@meta
+CurrentModule = SoleXplorer
+```
+
 # SoleXplorer
-## A symbolic journey through your datasets
 
-[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://aclai-lab.github.io/SoleXplorer.jl/)
-[![CI](https://github.com/aclai-lab/SoleXplorer.jl/actions/workflows/ci.yml/badge.svg)](https://github.com/aclai-lab/SoleXplorer.jl/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/aclai-lab/SoleXplorer.jl/graph/badge.svg?token=EJQ1MJOTDO)](https://codecov.io/gh/aclai-lab/SoleXplorer.jl)
+## Introduction
+Welcome to the documentation for [SoleXplorer](https://github.com/aclai-lab/SoleXplorer.jl), an interactive interface for exploring symbolic machine learning models.
 
-**SoleXplorer.jl** is an interactive interface for exploring symbolic machine learning models, built on top of the [Sole.jl](https://github.com/aclai-lab/Sole.jl) ecosystem. It provides tools for visualizing, inspecting, and interacting with models derived from (logic-based) symbolic learning algorithms.
+Built on top of the [Sole.jl](https://github.com/aclai-lab/Sole.jl) ecosystem. It provides tools for visualizing, inspecting, and interacting with models derived from (logic-based) symbolic learning algorithms.
 
 Key features:
 * Can handle both classification and regression tasks.
@@ -17,7 +19,6 @@ Key features:
 * Integrated GUI.
 
 ## Installation
-
 ```julia
 using Pkg
 Pkg.add SoleXplorer
@@ -26,7 +27,6 @@ Pkg.add SoleXplorer
 ## Quick Start
 
 ### Decision tree
-
 Every parameter is defaulted: start analysis simply passing your raw dataset:
 
 ```julia
@@ -57,7 +57,6 @@ modelc = symbolic_analysis(
 ```
 
 ### Temporal association rules
-
 ```julia
 # Load a temporal dataset
 natopsloader = NatopsLoader()
@@ -83,6 +82,4 @@ SoleXplorer extensively uses the following packages:
 * [`ModalAssociationRules`](https://github.com/aclai-lab/ModalAssociationRules.jl): for mining association rules.
 
 ## About
-
 The package is developed by the [ACLAI Lab](https://aclai.unife.it/en/) @ University of Ferrara.
-

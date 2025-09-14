@@ -1,17 +1,17 @@
 using Documenter
 using SoleXplorer
 
-# DocMeta.setdocmeta!(AudioReader, :DocTestSetup, :(using AudioReader); recursive = true)
+# DocMeta.setdocmeta!(SoleXplorer, :DocTestSetup, :(using SoleXplorer); recursive = true)
 
 # makedocs(;
-#     modules=[AudioReader],
-#     authors="Riccardo Pasini",
-#     repo=Documenter.Remotes.GitHub("PasoStudio73", "AudioReader.jl"),
-#     sitename="AudioReader.jl",
+#     modules=[SoleXplorer],
+#     authors=["Lorenzo BALBONI", "Mauro MILELLA", "Giovanni PAGLIARINI", "Alberto PAPARELLA", "Riccardo PASINI", "Marco PERROTTA"],
+#     repo=Documenter.Remotes.GitHub("aclai-lab", "SoleXplorer.jl"),
+#     sitename="SoleXplorer.jl",
 #     format=Documenter.HTML(;
 #         size_threshold=4000000,
 #         prettyurls=get(ENV, "CI", "false") == "true",
-#         canonical="https://PasoStudio73.github.io/AudioReader.jl",
+#         canonical="https://aclai-lab.github.io/SoleXplorer.jl",
 #         assets=String[],
 #     ),
 #     pages=[
@@ -22,7 +22,7 @@ using SoleXplorer
 # )
 
 # deploydocs(;
-#     repo = "github.com/PasoStudio73/AudioReader.jl",
+#     repo = "github.com/aclai-lab/SoleXplorer.jl",
 #     devbranch = "main",
 #     target = "build",
 #     branch = "gh-pages",
