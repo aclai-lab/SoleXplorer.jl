@@ -1,7 +1,0 @@
-[deps]
-Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
-LiveServer = "16fef848-5104-11e9-1b77-fb7a48bbb589"
-SoleXplorer = "5816ab97-8dbe-4a0a-b2fb-0334bd9876ed"
-
-[compat]
-Documenter = "1"
