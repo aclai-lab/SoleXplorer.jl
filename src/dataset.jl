@@ -100,11 +100,11 @@ function set_conditions!(m::MLJ.Model, conditions::Tuple{Vararg{Base.Callable}})
 end
 
 """
-    code_dataset!(X::AbstractDataFrame)
+    code_dataset(X::AbstractDataFrame)
 
 In-place encoding of non-numeric columns in a DataFrame to numeric codes.
 """
-function code_dataset!(X::AbstractDataFrame)
+function code_dataset(X::AbstractDataFrame)
     for (name, col) in pairs(eachcol(X))
         if !(eltype(col) <: Number)
             X_coded = MLJ.levelcode.(categorical(col)) 
@@ -116,11 +116,11 @@ function code_dataset!(X::AbstractDataFrame)
 end
 
 """
-    code_dataset!(y::AbstractVector)
+    code_dataset(y::AbstractVector)
 
 In-place encoding of non-numeric target vector to numeric codes.
 """
-function code_dataset!(y::AbstractVector)
+function code_dataset(y::AbstractVector)
     if !(eltype(y) <: Number)
         eltype(y) <: Symbol && (y = string.(y))
         y = MLJ.levelcode.(categorical(y)) 
@@ -130,11 +130,11 @@ function code_dataset!(y::AbstractVector)
 end
 
 """
-    code_dataset!(X::AbstractDataFrame, y::AbstractVector)
+    code_dataset(X::AbstractDataFrame, y::AbstractVector)
 
 Convenience method to encode both features and target simultaneously.
 """
-code_dataset!(X::AbstractDataFrame, y::AbstractVector) = code_dataset!(X), code_dataset!(y)
+code_dataset(X::AbstractDataFrame, y::AbstractVector) = code_dataset(X), code_dataset(y)
 
 """
     range(field::Union{Symbol,Expr}; kwargs...)
@@ -272,7 +272,7 @@ function _setup_dataset(
         treat = model isa Modal ? :reducesize : :aggregate
         X, tinfo = treatment(X; win, features, treat, modalreduce)
     else
-        X = code_dataset!(X)
+        X = code_dataset(X)
         tinfo = nothing
     end
 

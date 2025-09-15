@@ -93,7 +93,7 @@ dsc = setup_dataset(Xc, y_symbol)
 
 # dataset is composed also of non numeric columns
 Xnn = hcat(Xc, DataFrame(target = yc))
-@test_nowarn SX.code_dataset!(Xnn)
+@test_nowarn SX.code_dataset(Xnn)
 
 dsc = setup_dataset(
     Xts, yts;
@@ -247,8 +247,8 @@ dsc = setup_dataset(
 y_invalid = fill(nothing, length(yc)) 
 @test_throws ArgumentError setup_dataset(Xc, y_invalid)
 
-@test SX.code_dataset!(yc) isa Vector{Int64}
-@test SX.code_dataset!(Xc, yc) isa Tuple{DataFrame, Vector{Int64}}
+@test SX.code_dataset(yc) isa Vector{Int64}
+@test SX.code_dataset(Xc, yc) isa Tuple{DataFrame, Vector{Int64}}
 
 dsc = setup_dataset(Xc, yc)
 @test length(dsc) == length(dsc.pidxs)
