@@ -281,9 +281,10 @@ function _setup_dataset(
     ttpairs, pinfo = partition(y; resample, train_ratio, valid_ratio, rng)
 
     isnothing(tuning) || begin
-        if !(tuning.range isa MLJ.NominalRange)
+        t_range = get_range(tuning)
+        if !(t_range isa MLJ.NominalRange)
             # Convert SX.range to MLJ.range now that model is available
-            range = tuning.range isa Tuple{Vararg{Tuple}} ? tuning.range : (tuning.range,)
+            range = t_range isa Tuple{Vararg{Tuple}} ? t_range : (t_range,)
             range = collect(MLJ.range(model, r[1]; r[2:end]...) for r in range)
             tuning.range = range
         end
