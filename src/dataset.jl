@@ -342,7 +342,7 @@ end
 """
     setup_dataset(X, y, w=nothing; kwargs...)::AbstractDataSet
 
-Internal function to prepare and construct a dataset warper.
+Prepare and construct a dataset wrapper.
 
 # Arguments
 - `X::AbstractDataFrame`: Feature data
