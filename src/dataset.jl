@@ -26,6 +26,7 @@ abstract type AbstractDataSet end
 const Modal  = Union{ModalDecisionTree, ModalRandomForest, ModalAdaBoost}
 const MaybeAggregationInfo = Maybe{AggregationInfo}
 const MaybeTuning = Maybe{Tuning}
+const MaybeTreatInfo = Maybe{TreatmentInfo}
 
 # ---------------------------------------------------------------------------- #
 #                                  defaults                                    #
@@ -190,7 +191,7 @@ Construct an appropriate dataset wrapper based on treatment information.
 - `mach::MLJ.Machine{M}`: The underlying MLJ machine
 - `pidxs::Vector{PartitionIdxs}`: Partition indices
 - `pinfo::PartitionInfo`: Partition information
-- `tinfo::Union{TreatmentInfo, Nothing}`: Optional treatment information
+- `tinfo::MaybeTreatInfo`: Optional treatment information
 
 # Returns
 - `PropositionalDataSet{M}` if no treatment info or aggregation treatment
@@ -203,17 +204,17 @@ function DataSet(
     mach    :: MLJ.Machine{M},
     pidxs   :: Vector{PartitionIdxs},
     pinfo   :: PartitionInfo;
-    tinfo   :: Union{TreatmentInfo, Nothing}=nothing
+    tinfo   :: MaybeTreatInfo=nothing
 ) where {M<:MLJ.Model}
     isnothing(tinfo) ?
         PropositionalDataSet{M}(mach, pidxs, pinfo, nothing) : begin
-            if tinfo.treatment == :reducesize
-                ModalDataSet{M}(mach, pidxs, pinfo, tinfo)
-            else
-                ainfo = treat2aggr(tinfo)
-                PropositionalDataSet{M}(mach, pidxs, pinfo, ainfo)
-            end
+        if tinfo.treatment == :reducesize
+            ModalDataSet{M}(mach, pidxs, pinfo, tinfo)
+        else
+            ainfo = treat2aggr(tinfo)
+            PropositionalDataSet{M}(mach, pidxs, pinfo, ainfo)
         end
+    end
 end
 
 # ---------------------------------------------------------------------------- #

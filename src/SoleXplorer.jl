@@ -71,7 +71,6 @@ include("featureset.jl")
 # ---------------------------------------------------------------------------- #
 #                                 interfaces                                   #
 # ---------------------------------------------------------------------------- #
-
 export partition
 export get_X, get_y, get_train, get_test
 include("partition.jl")
@@ -104,6 +103,7 @@ include("measures.jl")
 include("tuning.jl")
 export GridTuning, RandomTuning, CubeTuning, ParticleTuning, AdaptiveTuning
 
+export AbstractDataSet
 export code_dataset, range
 export setup_dataset
 include("dataset.jl")
