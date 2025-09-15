@@ -64,7 +64,7 @@ end
 
 Set the random number generator for a resampling strategy.
 """
-function set_rng!(r::MLJ.ResamplingStrategy, rng::AbstractRNG)::ResamplingStrategy
+function set_rng(r::MLJ.ResamplingStrategy, rng::AbstractRNG)::ResamplingStrategy
     typeof(r)(merge(MLJ.params(r), (rng=rng,))...)
 end
 
@@ -76,7 +76,7 @@ Set random number generators for tuning-related components of a model.
 """
 function set_tuning_rng!(m::MLJ.Model, rng::AbstractRNG)::MLJ.Model
     hasproperty(m.tuning, :rng) && (m.tuning.rng = rng)
-    hasproperty(m.resampling, :rng) && (m.resampling = set_rng!(m.resampling, rng))
+    hasproperty(m.resampling, :rng) && (m.resampling = set_rng(m.resampling, rng))
     return m
 end
 
@@ -258,8 +258,9 @@ function _setup_dataset(
 )::AbstractDataSet
     # propagate user rng to every field that needs it
     # model
-    hasproperty(model,    :rng) && (model    = set_rng!(model,    rng))
-    hasproperty(resample, :rng) && (resample = set_rng!(resample, rng))
+
+    hasproperty(model, :rng) && set_rng!(model, rng)
+    hasproperty(resample, :rng) && (resample = set_rng(resample, rng))
 
     # ModalDecisionTrees package needs features to be passed in model params
     hasproperty(model, :features) && (model = set_conditions!(model, features))
@@ -297,7 +298,7 @@ function _setup_dataset(
         )
 
         # set the model to use the same rng as the dataset
-        model = set_tuning_rng!(model, rng)
+        set_tuning_rng!(model, rng)
     end
 
     mach = isnothing(w) ? MLJ.machine(model, X, y) : MLJ.machine(model, X, y, w)
