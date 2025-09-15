@@ -8,7 +8,6 @@ abstract type AbstractTuning end
 # ---------------------------------------------------------------------------- #
 const MaybeResampling = Maybe{MLJ.ResamplingStrategy}
 const MaybeMeasure = Maybe{EitherMeasure}
-const MaybeInt = Maybe{Int}
 
 const RangeSpec = Union{
     Tuple,

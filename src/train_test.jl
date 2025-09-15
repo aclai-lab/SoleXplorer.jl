@@ -34,20 +34,6 @@ const XGBoostModel = Union{XGBoostClassifier, XGBoostRegressor}
 #                                  utilities                                   #
 # ---------------------------------------------------------------------------- #
 """
-    get_X(ds::AbstractDataSet) -> DataFrame
-
-Extract feature DataFrame from dataset's MLJ machine.
-"""
-get_X(ds::AbstractDataSet)::DataFrame = ds.mach.args[1].data
-
-"""
-    get_y(ds::AbstractDataSet) -> Vector
-
-Extract target vector from dataset's MLJ machine.
-"""
-get_y(ds::AbstractDataSet)::Vector    = ds.mach.args[2].data
-
-"""
     has_xgboost_model(ds::AbstractDataSet) -> Bool
     has_xgboost_model(model) -> Bool
 

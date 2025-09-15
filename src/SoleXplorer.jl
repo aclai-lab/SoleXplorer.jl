@@ -44,7 +44,7 @@ using  DataFrames
 using  Random
 
 # ---------------------------------------------------------------------------- #
-#                                   types                                      #
+#                                 maybe types                                  #
 # ---------------------------------------------------------------------------- #
 """
     Maybe{T}
@@ -52,6 +52,9 @@ using  Random
 Type alias for `Union{T, Nothing}`.
 """
 const Maybe{T} = Union{T, Nothing}
+
+const MaybeVector = Maybe{AbstractVector}
+const MaybeNTuple = Maybe{NamedTuple}
 
 # ---------------------------------------------------------------------------- #
 #                                    utils                                     #

@@ -1,19 +1,6 @@
-using Distributed
-addprocs(2)
-
-@everywhere begin
-    using Test
-    using SoleXplorer
-    using MLJ
-    using DataFrames, Random
-    using JLD2
-end
-
 using SoleData.Artifacts
 # fill your Artifacts.toml file;
 @test_nowarn fillartifacts()
-
-const SX = SoleXplorer
 
 function run_tests(list)
     println("\n" * ("#"^50))

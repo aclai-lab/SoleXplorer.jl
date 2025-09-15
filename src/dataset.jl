@@ -1,12 +1,10 @@
-"""
-    dataset.jl
+# dataset.jl
 
-Dataset construction and management utilities for SoleXplorer.
+# Dataset construction and management utilities for SoleXplorer.
 
-This module handles the creation of specialized dataset structures that encapsulate
-MLJ machines, partitioning information for propositional sets, including also
-treatment details for modal learning sets.
-"""
+# This module handles the creation of specialized dataset structures that encapsulate
+# MLJ machines, partitioning information for propositional sets, including also
+# treatment details for modal learning sets.
 
 # ---------------------------------------------------------------------------- #
 #                               abstract types                                 #
@@ -25,47 +23,16 @@ abstract type AbstractDataSet end
 # ---------------------------------------------------------------------------- #
 #                                   types                                      #
 # ---------------------------------------------------------------------------- #
-"""
-    Modal = Union{ModalDecisionTree, ModalRandomForest, ModalAdaBoost}
-
-Type alias for models that support modal logic.
-"""
 const Modal  = Union{ModalDecisionTree, ModalRandomForest, ModalAdaBoost}
-
-# """
-#     Tuning = Union{Nothing, MLJTuning.TuningStrategy}
-
-# Type alias for MLJ tuning strategy, allowing no tuning (`Nothing`).
-# """
-# const Tuning = Union{Nothing, MLJTuning.TuningStrategy}
-
-"""
-    MaybeAggregationInfo = Maybe{AggregationInfo}
-
-Type alias for optional aggregation information for modal datasets.
-"""
 const MaybeAggregationInfo = Maybe{AggregationInfo}
-
-"""
-    MaybeVector = Maybe{AbstractVector}
-
-Type alias for optional vector type, used for sample weights.
-"""
-const MaybeVector = Maybe{AbstractVector}
-
 const MaybeTuning = Maybe{Tuning}
 
 # ---------------------------------------------------------------------------- #
 #                                  defaults                                    #
 # ---------------------------------------------------------------------------- #
-"""
-    _DefaultModel(y::AbstractVector)::MLJ.Model
-
-Return a default model appropriate for the target variable type.
-
-This function is used when no explicit model is provided to `setup_dataset`,
-automatically selecting between classification and regression.
-"""
+# Return a default model appropriate for the target variable type.
+# This function is used when no explicit model is provided to `setup_dataset`,
+# automatically selecting between classification and regression.
 function _DefaultModel(y::AbstractVector)::MLJ.Model
     if     eltype(y) <: CLabel
         return DecisionTreeClassifier()
@@ -186,11 +153,7 @@ ranges that will be converted to proper MLJ ranges once the model is available.
 """
 Base.range(field::Union{Symbol,Expr}; kwargs...) = field, kwargs...
 
-"""
-    treat2aggr(t::TreatmentInfo)::AggregationInfo
-
-Convert treatment information (features and winparams) to aggregation information.
-"""
+# Convert treatment information (features and winparams) to aggregation information.
 treat2aggr(t::TreatmentInfo)::AggregationInfo = 
     AggregationInfo(t.features, t.winparams)
 
@@ -316,7 +279,6 @@ function _setup_dataset(
 
     ttpairs, pinfo = partition(y; resample, train_ratio, valid_ratio, rng)
 
-    # isempty(tuning) || begin
     isnothing(tuning) || begin
         if !(tuning.range isa MLJ.NominalRange)
             # Convert SX.range to MLJ.range now that model is available
@@ -411,8 +373,6 @@ setup_dataset(args...; kwargs...) = _setup_dataset(args...; kwargs...)
     setup_dataset(X::AbstractDataFrame, y::Symbol; kwargs...)::AbstractDataSet
 
 Convenience method when target variable is a column in the feature DataFrame.
-
-See [`setup_dataset`](@ref) for detailed parameter descriptions.
 """
 function setup_dataset(
     X::AbstractDataFrame,
@@ -430,14 +390,26 @@ Return the number of partitions in the dataset.
 Base.length(ds::AbstractDataSet) = length(ds.pidxs)
 
 """
+    get_X(ds::AbstractDataSet) -> DataFrame
+
+Extract feature DataFrame from dataset's MLJ machine.
+"""
+get_X(ds::AbstractDataSet)::DataFrame = ds.mach.args[1].data
+
+"""
+    get_y(ds::AbstractDataSet) -> Vector
+
+Extract target vector from dataset's MLJ machine.
+"""
+get_y(ds::AbstractDataSet)::Vector    = ds.mach.args[2].data
+
+"""
     get_y_test(ds::AbstractDataSet)::AbstractVector
 
 Extract test target values for each partition in the dataset.
 """
 get_y_test(ds::AbstractDataSet)::AbstractVector = 
     [@views ds.mach.args[2].data[ds.pidxs[i].test] for i in 1:length(ds)]
-
-
 
 """
     get_mach(ds::AbstractDataSet)::Machine
