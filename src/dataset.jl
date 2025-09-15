@@ -46,54 +46,32 @@ end
 # ---------------------------------------------------------------------------- #
 #                                 utilities                                    #
 # ---------------------------------------------------------------------------- #
-"""
-    set_rng!(m::MLJ.Model, rng::AbstractRNG)::MLJ.Model
-
-Set the random number generator for a model that supports it.
-
-This function mutates the model's `rng` field if it exists, ensuring
-reproducible results across training sessions.
-"""
+# Set the random number generator for a model that supports it.
+# This function mutates the model's `rng` field if it exists, ensuring
+# reproducible results across training sessions.
 function set_rng!(m::MLJ.Model, rng::AbstractRNG)::MLJ.Model
     m.rng = rng
     return m
 end
 
-"""
-    set_rng!(r::MLJ.ResamplingStrategy, rng::AbstractRNG)::ResamplingStrategy
-
-Set the random number generator for a resampling strategy.
-"""
+# Set the random number generator for a resampling strategy.
 function set_rng(r::MLJ.ResamplingStrategy, rng::AbstractRNG)::ResamplingStrategy
     typeof(r)(merge(MLJ.params(r), (rng=rng,))...)
 end
 
-
-"""
-    set_tuning_rng!(m::MLJ.Model, rng::AbstractRNG)::MLJ.Model
-
-Set random number generators for tuning-related components of a model.
-"""
+# Set random number generators for tuning-related components of a model.
 function set_tuning_rng!(m::MLJ.Model, rng::AbstractRNG)::MLJ.Model
     hasproperty(m.tuning, :rng) && (m.tuning.rng = rng)
     hasproperty(m.resampling, :rng) && (m.resampling = set_rng(m.resampling, rng))
     return m
 end
 
-"""
-    set_fraction_train(r::ResamplingStrategy, train_ratio::Real)::ResamplingStrategy
-
-Set the training fraction for a resampling strategy.
-"""
+# Set the training fraction for a resampling strategy.
 function set_fraction_train(r::ResamplingStrategy, train_ratio::Real)::ResamplingStrategy
     typeof(r)(merge(MLJ.params(r), (fraction_train=train_ratio,))...)
 end
 
-"""
-    set_conditions!(m::MLJ.Model, conditions::Tuple{Vararg{Base.Callable}})::MLJ.Model
-
-Set logical conditions (features) for modal decision tree models.
-"""
+# Set logical conditions (features) for modal decision tree models.
 function set_conditions!(m::MLJ.Model, conditions::Tuple{Vararg{Base.Callable}})::MLJ.Model
     m.conditions = Function[conditions...]
     return m
@@ -253,7 +231,6 @@ function _setup_dataset(
     win           :: WinFunction                  = AdaptiveWindow(nwindows=3, relative_overlap=0.1),
     features      :: Tuple{Vararg{Base.Callable}} = (maximum, minimum),
     modalreduce   :: Base.Callable                = mean,
-    # tuning        :: NamedTuple                   = NamedTuple()
     tuning        :: MaybeTuning                  = nothing
 )::AbstractDataSet
     # propagate user rng to every field that needs it
