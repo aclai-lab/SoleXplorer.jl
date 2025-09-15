@@ -150,7 +150,7 @@ Extract the computed performance measure values from a ModelSet.
 values(m::ModelSet) = performance(m).measures_values
 
 # ---------------------------------------------------------------------------- #
-#                                modelset show                                 #
+#                                  base show                                   #
 # ---------------------------------------------------------------------------- #
 function Base.show(io::IO, m::ModelSet{S}) where S
     print(io, "ModelSet{$S}(")
@@ -283,12 +283,12 @@ function _symbolic_analysis!(
     association::MaybeAbstractAssociationRuleExtractor=nothing,
     measures::Tuple{Vararg{FussyMeasure}}=()
 )::Nothing
-    ds = dsetup(modelset)
+    ds    = dsetup(modelset)
     solem = solemodels(modelset)
 
     !isnothing(extractor) && (modelset.rules = begin
         if extractor isa Tuple
-            params = last(extractor)
+            params    = last(extractor)
             extractor = first(extractor)
         else
             params = NamedTuple(;)
