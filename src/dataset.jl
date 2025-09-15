@@ -218,7 +218,60 @@ function DataSet(
 end
 
 # ---------------------------------------------------------------------------- #
-#                                 constructors                                 #
+#                                    methods                                   #
+# ---------------------------------------------------------------------------- #
+"""
+    length(ds::AbstractDataSet)
+
+Return the number of partitions in the dataset.
+"""
+Base.length(ds::AbstractDataSet) = length(ds.pidxs)
+
+"""
+    get_X(ds::AbstractDataSet) -> DataFrame
+
+Extract feature DataFrame from dataset's MLJ machine.
+"""
+get_X(ds::AbstractDataSet)::DataFrame = ds.mach.args[1].data
+
+"""
+    get_y(ds::AbstractDataSet) -> Vector
+
+Extract target vector from dataset's MLJ machine.
+"""
+get_y(ds::AbstractDataSet)::Vector    = ds.mach.args[2].data
+
+"""
+    get_y_test(ds::AbstractDataSet)::AbstractVector
+
+Extract test target values for each partition in the dataset.
+"""
+get_y_test(ds::AbstractDataSet)::AbstractVector = 
+    [@views ds.mach.args[2].data[ds.pidxs[i].test] for i in 1:length(ds)]
+
+"""
+    get_mach(ds::AbstractDataSet)::Machine
+
+Extract the MLJ machine from the dataset.
+"""
+get_mach(ds::AbstractDataSet)::Machine = ds.mach
+
+"""
+    get_mach_model(ds::AbstractDataSet)::MLJ.Model
+
+Extract the model from the dataset's MLJ machine.
+"""
+get_mach_model(ds::AbstractDataSet)::MLJ.Model = ds.mach.model
+
+"""
+    get_mach_model(ds::ModalDataSet)::SupportedLogiset
+
+Extract the logiset (if present) from the dataset's MLJ machine.
+"""
+get_logiset(ds::ModalDataSet)::SupportedLogiset = ds.mach.data[1].modalities[1]
+
+# ---------------------------------------------------------------------------- #
+#                            internal setup dataset                            #
 # ---------------------------------------------------------------------------- #
 function _setup_dataset(
     X             :: AbstractDataFrame,
@@ -283,6 +336,9 @@ function _setup_dataset(
     DataSet(mach, ttpairs, pinfo; tinfo)
 end
 
+# ---------------------------------------------------------------------------- #
+#                                setup dataset                                 #
+# ---------------------------------------------------------------------------- #
 """
     setup_dataset(X, y, w=nothing; kwargs...)::AbstractDataSet
 
@@ -359,53 +415,3 @@ function setup_dataset(
 )::AbstractDataSet
     setup_dataset(X[!, Not(y)], X[!, y]; kwargs...)
 end
-
-"""
-    length(ds::AbstractDataSet)
-
-Return the number of partitions in the dataset.
-"""
-Base.length(ds::AbstractDataSet) = length(ds.pidxs)
-
-"""
-    get_X(ds::AbstractDataSet) -> DataFrame
-
-Extract feature DataFrame from dataset's MLJ machine.
-"""
-get_X(ds::AbstractDataSet)::DataFrame = ds.mach.args[1].data
-
-"""
-    get_y(ds::AbstractDataSet) -> Vector
-
-Extract target vector from dataset's MLJ machine.
-"""
-get_y(ds::AbstractDataSet)::Vector    = ds.mach.args[2].data
-
-"""
-    get_y_test(ds::AbstractDataSet)::AbstractVector
-
-Extract test target values for each partition in the dataset.
-"""
-get_y_test(ds::AbstractDataSet)::AbstractVector = 
-    [@views ds.mach.args[2].data[ds.pidxs[i].test] for i in 1:length(ds)]
-
-"""
-    get_mach(ds::AbstractDataSet)::Machine
-
-Extract the MLJ machine from the dataset.
-"""
-get_mach(ds::AbstractDataSet)::Machine = ds.mach
-
-"""
-    get_mach_model(ds::AbstractDataSet)::MLJ.Model
-
-Extract the model from the dataset's MLJ machine.
-"""
-get_mach_model(ds::AbstractDataSet)::MLJ.Model = ds.mach.model
-
-"""
-    get_mach_model(ds::ModalDataSet)::SupportedLogiset
-
-Extract the logiset (if present) from the dataset's MLJ machine.
-"""
-get_logiset(ds::ModalDataSet)::SupportedLogiset = ds.mach.data[1].modalities[1]
