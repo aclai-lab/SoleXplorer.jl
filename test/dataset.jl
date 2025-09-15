@@ -414,12 +414,12 @@ using DataFrames
     end
 end
 
-range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
+# range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
 
-@btime setup_dataset(
-    Xc, yc;
-    model=ModalDecisionTree(),
-    resample=CV(nfolds=5, shuffle=true),
-    rng=Xoshiro(1),
-    tuning=GridTuning(resolution=10, resampling=CV(nfolds=3), range=range, measure=accuracy, repeats=2)
-);
+# @btime setup_dataset(
+#     Xc, yc;
+#     model=ModalDecisionTree(),
+#     resample=CV(nfolds=5, shuffle=true),
+#     rng=Xoshiro(1),
+#     tuning=GridTuning(resolution=10, resampling=CV(nfolds=3), range=range, measure=accuracy, repeats=2)
+# );

@@ -81,11 +81,11 @@ function set_tuning_rng!(m::MLJ.Model, rng::AbstractRNG)::MLJ.Model
 end
 
 """
-    set_fraction_train!(r::ResamplingStrategy, train_ratio::Real)::ResamplingStrategy
+    set_fraction_train(r::ResamplingStrategy, train_ratio::Real)::ResamplingStrategy
 
 Set the training fraction for a resampling strategy.
 """
-function set_fraction_train!(r::ResamplingStrategy, train_ratio::Real)::ResamplingStrategy
+function set_fraction_train(r::ResamplingStrategy, train_ratio::Real)::ResamplingStrategy
     typeof(r)(merge(MLJ.params(r), (fraction_train=train_ratio,))...)
 end
 
@@ -257,15 +257,13 @@ function _setup_dataset(
     tuning        :: MaybeTuning                  = nothing
 )::AbstractDataSet
     # propagate user rng to every field that needs it
-    # model
-
     hasproperty(model, :rng) && set_rng!(model, rng)
     hasproperty(resample, :rng) && (resample = set_rng(resample, rng))
 
     # ModalDecisionTrees package needs features to be passed in model params
-    hasproperty(model, :features) && (model = set_conditions!(model, features))
+    hasproperty(model, :features) && set_conditions!(model, features)
     # Holdout resampling needs to setup fraction_train parameters
-    resample isa Holdout && (resample = set_fraction_train!(resample, train_ratio))
+    resample isa Holdout && (resample = set_fraction_train(resample, train_ratio))
 
     # Handle multidimensional datasets:
     # Decision point: use standard ML algorithms (requiring feature aggregation)
