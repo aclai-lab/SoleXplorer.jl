@@ -131,49 +131,58 @@ See also: [`ModelSet`](@ref), [`symbolic_analysis`](@ref)
 """
 performance(m::ModelSet) = m.measures
 
+"""
+    measures(m::ModelSet) -> Vector
+
+Extract the performance measure objects from a ModelSet.
+
+# See also: [`performance`](@ref), [`ModelSet`](@ref)
+"""
+measures(m::ModelSet) = performance(m).measures
+
+"""
+    values(m::ModelSet) -> Vector
+
+Extract the computed performance measure values from a ModelSet.
+
+# See also: [`performance`](@ref), [`ModelSet`](@ref)
+"""
+values(m::ModelSet) = performance(m).measures_values
+
 # ---------------------------------------------------------------------------- #
 #                                modelset show                                 #
 # ---------------------------------------------------------------------------- #
 function Base.show(io::IO, m::ModelSet{S}) where S
     print(io, "ModelSet{$S}(")
-    print(io, "models=$(length(m.sole))")
-    if !isnothing(m.rules)
-        print(io, ", rules=$(length(m.rules.rules))")
-    end
-        if !isnothing(m.associations)
-        print(io, ", associations=$(length(m.associations))")
-    end
-    if !isnothing(m.measures)
-        print(io, ", measures=$(length(m.measures.measures))")
-    end
+    print(io, "models=$(length(solemodels(m)))")
+
+    isnothing(rules(m))        || print(io, ", rules=$(length(rules(m)))")
+    isnothing(associations(m)) || print(io, ", associations=$(length(associations(m)))")
+    isnothing(measures(m))     || print(io, ", measures=$(length(measures(m)))")
+
     print(io, ")")
 end
 
 function Base.show(io::IO, ::MIME"text/plain", m::ModelSet{S}) where S
     println(io, "ModelSet{$S}:")
-    println(io, "  Dataset: $(typeof(m.ds))")
-    println(io, "  Models: $(length(m.sole)) symbolic models")
+    println(io, "  Dataset: $(typeof(dsetup(m)))")
+    println(io, "  Models:  $(length(solemodels(m))) symbolic models")
     
-    if !isnothing(m.rules)
-        println(io, "  Rules: $(length(first(m.rules))) extracted rules per model")
-    else
-        println(io, "  Rules: none")
-    end
+    isnothing(rules(m)) ?
+        println(io, "  Rules: none") :
+        println(io, "  Rules: $(length(first(rules(m)))) extracted rules per model")
 
-    if !isnothing(m.associations)
-        println(io, "  Associations: $(length(m.associations)) associated rules per model")
-    else
-        println(io, "  Associations: none")
-    end
+    isnothing(associations(m)) ?
+        println(io, "  Associations: none") :
+        println(io, "  Associations: $(length(associations(m))) associated rules per model")
     
-    if !isnothing(m.measures)
-        println(io, "  Measures:")
-        for (measure, value) in zip(m.measures.measures, m.measures.measures_values)
-            println(io, "    $(measure) = $(value)")
+    isnothing(performance(m)) ?
+        println(io, "  Measures: none") : begin
+            println(io, "  Measures:")
+            for (measure, value) in zip(measures(m), values(m))
+                println(io, "    $(measure) = $(value)")
+            end
         end
-    else
-        println(io, "  Measures: none")
-    end
 end
 
 # ---------------------------------------------------------------------------- #
