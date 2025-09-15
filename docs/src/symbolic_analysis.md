@@ -12,3 +12,16 @@ symbolic_analysis(ds::AbstractDataSet, solem::SoleModel)
 symbolic_analysis!(modelset::ModelSet)
 ```
 
+# [ModelSet](@id ModelSet)
+
+```@docs
+AbstractModelSet
+ModelSet
+dsetup(m::ModelSet)
+solemodels(m::ModelSet)
+rules(m::ModelSet)
+associations(m::ModelSet)
+performance(m::ModelSet)
+```
+
+
