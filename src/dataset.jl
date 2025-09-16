@@ -122,7 +122,26 @@ code_dataset(X::AbstractDataFrame, y::AbstractVector) = code_dataset(X), code_da
 # ---------------------------------------------------------------------------- #
 #                          multidimensional dataset                            #
 # ---------------------------------------------------------------------------- #
+"""
+    PropositionalDataSet{M} <: AbstractDataSet
 
+Dataset wrapper for standard machine learning algorithms that work with tabular/propositional data.
+
+This dataset type encapsulates an MLJ machine along with partitioning information and optional
+aggregation metadata. It is used when working with traditional ML models that require flattened
+feature representations, typically created by aggregating multidimensional data.
+
+# Fields
+- `mach::MLJ.Machine`: MLJ machine containing the model, training data, and cache
+- `pidxs::Vector{PartitionIdxs}`: Partition indices for train/test splits across folds
+- `pinfo::PartitionInfo`: Metadata about the partitioning strategy used
+- `ainfo::MaybeAggregationInfo`: Optional aggregation information for multidimensional data
+
+# Type Parameter
+- `M`: The type of the MLJ model contained in the machine
+
+See also: [`ModalDataSet`](@ref), [`setup_dataset`](@ref), [`AbstractDataSet`](@ref)
+"""
 mutable struct PropositionalDataSet{M} <: AbstractDataSet
     mach    :: MLJ.Machine
     pidxs   :: Vector{PartitionIdxs}
@@ -130,7 +149,26 @@ mutable struct PropositionalDataSet{M} <: AbstractDataSet
     ainfo   :: MaybeAggregationInfo
 end
 
+"""
+    ModalDataSet{M} <: AbstractDataSet
 
+Dataset wrapper for modal logic algorithms that preserve temporal/structural relationships.
+
+This dataset type is designed for modal learning algorithms that can work directly with
+multidimensional time series or structured data without requiring feature aggregation.
+It maintains treatment information that describes how the original data structure is preserved.
+
+# Fields
+- `mach::MLJ.Machine`: MLJ machine containing the modal model, training data, and cache
+- `pidxs::Vector{PartitionIdxs}`: Partition indices for train/test splits across folds
+- `pinfo::PartitionInfo`: Metadata about the partitioning strategy used  
+- `tinfo::TreatmentInfo`: Treatment information describing data structure preservation
+
+# Type Parameter
+- `M`: The type of the modal MLJ model contained in the machine
+
+See also: [`PropositionalDataSet`](@ref), [`setup_dataset`](@ref), [`AbstractDataSet`](@ref)
+"""
 mutable struct ModalDataSet{M} <: AbstractDataSet
     mach    :: MLJ.Machine
     pidxs   :: Vector{PartitionIdxs}
@@ -138,7 +176,35 @@ mutable struct ModalDataSet{M} <: AbstractDataSet
     tinfo   :: TreatmentInfo
 end
 
+"""
+    DataSet(mach, pidxs, pinfo; tinfo=nothing) -> AbstractDataSet
 
+Constructor function that creates the appropriate dataset type based on treatment information.
+
+This function serves as a smart constructor that automatically determines whether to create
+a `PropositionalDataSet` or `ModalDataSet` based on the provided treatment information and
+the type of treatment specified.
+
+# Arguments
+- `mach::MLJ.Machine{M}`: MLJ machine containing model and data
+- `pidxs::Vector{PartitionIdxs}`: Partition indices for cross-validation folds
+- `pinfo::PartitionInfo`: Information about the partitioning strategy
+- `tinfo::MaybeTreatInfo=nothing`: Optional treatment information for multidimensional data
+
+# Returns
+- `PropositionalDataSet{M}`: When `tinfo` is `nothing` or treatment is not `:reducesize`
+- `ModalDataSet{M}`: When `tinfo` specifies `:reducesize` treatment
+
+# Decision Logic
+1. **No treatment info** (`tinfo = nothing`): Creates `PropositionalDataSet` with no aggregation info
+2. **Reduce size treatment** (`get_treatment(tinfo) == :reducesize`): Creates `ModalDataSet` preserving structure
+3. **Other treatments** (e.g., `:aggregate`): Creates `PropositionalDataSet` with aggregation info converted from treatment
+
+# Type Parameter
+- `M <: MLJ.Model`: The type of the model in the MLJ machine
+
+See also: [`PropositionalDataSet`](@ref), [`ModalDataSet`](@ref), [`AbstractDataSet`](@ref)
+"""
 function DataSet(
     mach    :: MLJ.Machine{M},
     pidxs   :: Vector{PartitionIdxs},

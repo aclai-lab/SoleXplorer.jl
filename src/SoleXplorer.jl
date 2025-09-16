@@ -100,11 +100,13 @@ using XGBoost, MLJXGBoostInterface
 #                                   modules                                    #
 # ---------------------------------------------------------------------------- #
 include("measures.jl")
+export range
 include("tuning.jl")
 export GridTuning, RandomTuning, CubeTuning, ParticleTuning, AdaptiveTuning
 
 export AbstractDataSet
-export code_dataset, range
+export PropositionalDataSet, ModalDataSet, DataSet
+export code_dataset
 export setup_dataset
 include("dataset.jl")
 
