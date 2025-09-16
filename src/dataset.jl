@@ -139,10 +139,6 @@ ranges that will be converted to proper MLJ ranges once the model is available.
 """
 Base.range(field::Union{Symbol,Expr}; kwargs...) = field, kwargs...
 
-# Convert treatment information (features and winparams) to aggregation information.
-treat2aggr(t::TreatmentInfo)::AggregationInfo = 
-    AggregationInfo(t.features, t.winparams)
-
 # ---------------------------------------------------------------------------- #
 #                          multidimensional dataset                            #
 # ---------------------------------------------------------------------------- #

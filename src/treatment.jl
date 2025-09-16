@@ -265,6 +265,13 @@ function Base.show(io::IO, info::AggregationInfo)
 end
 
 # ---------------------------------------------------------------------------- #
+#                        modal -> propositional adapter                        #
+# ---------------------------------------------------------------------------- #
+# convert treatment information (features and winparams) to aggregation information.
+treat2aggr(t::TreatmentInfo)::AggregationInfo = 
+    AggregationInfo(t.features, t.winparams)
+
+# ---------------------------------------------------------------------------- #
 #                                 constructors                                 #
 # ---------------------------------------------------------------------------- #
 function treatment end
