@@ -41,6 +41,26 @@ Tuning(strategy::T, range, resampling=nothing, measure=nothing, repeats=1) where
 get_range(t::Tuning) = t.range
 
 # ---------------------------------------------------------------------------- #
+#                                    range                                     #
+# ---------------------------------------------------------------------------- #
+"""
+    range(field::Union{Symbol,Expr}; kwargs...)
+
+Wrapper for MLJ.range in hyperparameter tuning contexts.
+
+# Arguments
+- `field::Union{Symbol,Expr}`: Model field to tune
+- `kwargs...`: Range specification arguments
+
+# Returns
+- Tuple of (field, kwargs) for later processing by tuning setup
+
+This function provides a more convenient syntax for specifying hyperparameter
+ranges that will be converted to proper MLJ ranges once the model is available.
+"""
+Base.range(field::Union{Symbol,Expr}; kwargs...) = field, kwargs...
+
+# ---------------------------------------------------------------------------- #
 #                             MLJ Tuning adapter                               #
 # ---------------------------------------------------------------------------- #
 """

@@ -120,43 +120,9 @@ Convenience method to encode both features and target simultaneously.
 code_dataset(X::AbstractDataFrame, y::AbstractVector) = code_dataset(X), code_dataset(y)
 
 # ---------------------------------------------------------------------------- #
-#                                    range                                     #
-# ---------------------------------------------------------------------------- #
-"""
-    range(field::Union{Symbol,Expr}; kwargs...)
-
-Wrapper for MLJ.range in hyperparameter tuning contexts.
-
-# Arguments
-- `field::Union{Symbol,Expr}`: Model field to tune
-- `kwargs...`: Range specification arguments
-
-# Returns
-- Tuple of (field, kwargs) for later processing by tuning setup
-
-This function provides a more convenient syntax for specifying hyperparameter
-ranges that will be converted to proper MLJ ranges once the model is available.
-"""
-Base.range(field::Union{Symbol,Expr}; kwargs...) = field, kwargs...
-
-# ---------------------------------------------------------------------------- #
 #                          multidimensional dataset                            #
 # ---------------------------------------------------------------------------- #
-"""
-    PropositionalDataSet{M} <: AbstractDataSet
 
-Wrapper for standard (propositional) machine learning algorithms.
-
-# Fields
-- `mach::MLJ.Machine`: The underlying MLJ machine
-- `pidxs::Vector{PartitionIdxs}`: Partition indices for train/validation/test splits
-- `pinfo::PartitionInfo`: Information about the partitioning strategy
-- `ainfo::MaybeAggregationInfo`: Optional aggregation information for feature extraction
-
-The `ainfo` field is used when a multidimensional dataset is aggregated using windowing 
-and feature extraction to convert temporal sequences into tabular format.
-
-"""
 mutable struct PropositionalDataSet{M} <: AbstractDataSet
     mach    :: MLJ.Machine
     pidxs   :: Vector{PartitionIdxs}
@@ -164,20 +130,7 @@ mutable struct PropositionalDataSet{M} <: AbstractDataSet
     ainfo   :: MaybeAggregationInfo
 end
 
-"""
-    ModalDataSet{M} <: AbstractDataSet
 
-Wrapper for modal logic algorithms that work with temporal structures.
-
-# Fields
-- `mach::MLJ.Machine`: The underlying MLJ machine
-- `pidxs::Vector{PartitionIdxs}`: Partition indices for train/validation/test splits
-- `pinfo::PartitionInfo`: Information about the partitioning strategy
-- `tinfo::TreatmentInfo`: Information about temporal data treatment
-
-The `tinfo` field  to store treatment information, such as features and window parameters,
-used to reduce the dataset size while preserving temporal structure.
-"""
 mutable struct ModalDataSet{M} <: AbstractDataSet
     mach    :: MLJ.Machine
     pidxs   :: Vector{PartitionIdxs}
@@ -185,24 +138,7 @@ mutable struct ModalDataSet{M} <: AbstractDataSet
     tinfo   :: TreatmentInfo
 end
 
-"""
-    DataSet(mach, pidxs, pinfo; tinfo=nothing)
 
-Construct an appropriate dataset wrapper based on treatment information.
-
-# Arguments
-- `mach::MLJ.Machine{M}`: The underlying MLJ machine
-- `pidxs::Vector{PartitionIdxs}`: Partition indices
-- `pinfo::PartitionInfo`: Partition information
-- `tinfo::MaybeTreatInfo`: Optional treatment information
-
-# Returns
-- `PropositionalDataSet{M}` if no treatment info or aggregation treatment
-- `ModalDataSet{M}` if treatment is `:reducesize`
-
-This constructor automatically determines the appropriate dataset type based on
-whether temporal structure should be preserved (modal) or aggregated (propositional).
-"""
 function DataSet(
     mach    :: MLJ.Machine{M},
     pidxs   :: Vector{PartitionIdxs},
@@ -211,7 +147,7 @@ function DataSet(
 ) where {M<:MLJ.Model}
     isnothing(tinfo) ?
         PropositionalDataSet{M}(mach, pidxs, pinfo, nothing) : begin
-        if tinfo.treatment == :reducesize
+        if get_treatment(tinfo) == :reducesize
             ModalDataSet{M}(mach, pidxs, pinfo, tinfo)
         else
             ainfo = treat2aggr(tinfo)

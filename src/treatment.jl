@@ -216,17 +216,7 @@ end
 # ---------------------------------------------------------------------------- #
 #                          multidimensional dataset                            #
 # ---------------------------------------------------------------------------- #
-"""
-    TreatmentInfo <: AbstractTreatmentInfo
-
-Metadata container for dataset preprocessing operations.
-
-# Fields
-- `features::Tuple{Vararg{Base.Callable}}`: Feature extraction functions applied
-- `winparams::WinFunction`: Windowing strategy used
-- `treatment::Symbol`: Treatment type (:aggregate, :reducesize, :none)
-- `modalreduce::Base.Callable`: Reduction function for modal treatments
-"""
+# Metadata container for dataset preprocessing operations.
 struct TreatmentInfo <: AbstractTreatmentInfo
     features    :: Tuple{Vararg{Base.Callable}}
     winparams   :: WinFunction
@@ -234,20 +224,20 @@ struct TreatmentInfo <: AbstractTreatmentInfo
     modalreduce :: Base.Callable
 end
 
-"""
-    AggregationInfo <: AbstractTreatmentInfo
-
-Simplified metadata for aggregation-only preprocessing.
-
-# Fields
-- `features::Tuple{Vararg{Base.Callable}}`: Feature functions used
-- `winparams::WinFunction`: Windowing configuration
-"""
+# Simplified metadata for aggregation-only preprocessing.
 struct AggregationInfo <: AbstractTreatmentInfo
     features    :: Tuple{Vararg{Base.Callable}}
     winparams   :: WinFunction
 end
 
+# ---------------------------------------------------------------------------- #
+#                                    methods                                   #
+# ---------------------------------------------------------------------------- #
+get_treatment(t::TreatmentInfo) = t.treatment
+
+# ---------------------------------------------------------------------------- #
+#                                   base show                                  #
+# ---------------------------------------------------------------------------- #
 function Base.show(io::IO, info::TreatmentInfo)
     println(io, "TreatmentInfo:")
     for field in fieldnames(TreatmentInfo)
