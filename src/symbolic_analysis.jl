@@ -298,7 +298,7 @@ function _symbolic_analysis!(
 
     !isnothing(association) && (modelset.associations = mas_caller(ds, association))
 
-    y_test = get_y_test(ds)
+    y_test = get_y(ds, :test)
     isempty(measures) && (measures = _DefaultMeasures(first(y_test)))
 
     modelset.measures = eval_measures(ds, solem, measures, y_test)
