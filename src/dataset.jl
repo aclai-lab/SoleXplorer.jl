@@ -225,11 +225,6 @@ end
 # ---------------------------------------------------------------------------- #
 #                                    methods                                   #
 # ---------------------------------------------------------------------------- #
-"""
-    length(ds::AbstractDataSet)
-
-Return the number of partitions in the dataset.
-"""
 Base.length(ds::AbstractDataSet) = length(ds.pidxs)
 
 """
@@ -240,19 +235,27 @@ Extract feature DataFrame from dataset's MLJ machine.
 get_X(ds::AbstractDataSet)::DataFrame = ds.mach.args[1].data
 
 """
+    get_X(ds::AbstractDataSet, part::Symbol) -> Vector{<:AbstractDataFrame}
+
+Extract feature DataFrames for a specific partition (e.g., :train, :test or :valid) across all folds.
+"""
+get_X(ds::AbstractDataSet, part::Symbol)::Vector{<:AbstractDataFrame} = 
+    [@views get_X(ds)[getproperty(ds.pidxs[i], part), :] for i in 1:length(ds)]
+
+"""
     get_y(ds::AbstractDataSet) -> Vector
 
 Extract target vector from dataset's MLJ machine.
 """
-get_y(ds::AbstractDataSet)::Vector    = ds.mach.args[2].data
+get_y(ds::AbstractDataSet)::Vector = ds.mach.args[2].data
 
 """
-    get_y_test(ds::AbstractDataSet)::AbstractVector
+    get_y(ds::AbstractDataSet, part::Symbol) -> Vector{<:AbstractVector}
 
-Extract test target values for each partition in the dataset.
+Extract target values for a specific partition (e.g., :train, :test or :valid) across all folds.
 """
-get_y_test(ds::AbstractDataSet)::AbstractVector = 
-    [@views ds.mach.args[2].data[ds.pidxs[i].test] for i in 1:length(ds)]
+get_y(ds::AbstractDataSet, part::Symbol)::AbstractVector = 
+    [@views get_y(ds)[getproperty(ds.pidxs[i], part)] for i in 1:length(ds)]
 
 """
     get_mach(ds::AbstractDataSet)::Machine

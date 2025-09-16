@@ -283,7 +283,7 @@ y_invalid = fill(nothing, length(yc))
 dsc = setup_dataset(Xc, yc)
 @test length(dsc) == length(dsc.pidxs)
 
-@test SX.get_y_test(dsc) isa Vector{<:AbstractVector{<:SX.CLabel}}
+@test SX.get_y(dsc, :test) isa Vector{<:AbstractVector{<:SX.CLabel}}
 @test SX.get_mach_model(dsc) isa DecisionTreeClassifier
 
 @test_nowarn dsc.pinfo
