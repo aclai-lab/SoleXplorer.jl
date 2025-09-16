@@ -17,6 +17,8 @@ Abstract supertype for all dataset structures in SoleXplorer.
 Concrete subtypes include:
 - [`PropositionalDataSet`](@ref): for standard ML algorithms with aggregated features
 - [`ModalDataSet`](@ref): for modal logic algorithms with temporal structure preservation
+
+See also: [`setup_dataset`](@ref)
 """
 abstract type AbstractDataSet end
 
@@ -45,7 +47,7 @@ function _DefaultModel(y::AbstractVector)::MLJ.Model
 end
 
 # ---------------------------------------------------------------------------- #
-#                                 utilities                                    #
+#                                   set rng                                    #
 # ---------------------------------------------------------------------------- #
 # Set the random number generator for a model that supports it.
 # This function mutates the model's `rng` field if it exists, ensuring
@@ -78,6 +80,9 @@ function set_conditions!(m::MLJ.Model, conditions::Tuple{Vararg{Base.Callable}})
     return m
 end
 
+# ---------------------------------------------------------------------------- #
+#                                 code dataset                                 #
+# ---------------------------------------------------------------------------- #
 """
     code_dataset(X::AbstractDataFrame)
 
@@ -86,8 +91,7 @@ In-place encoding of non-numeric columns in a DataFrame to numeric codes.
 function code_dataset(X::AbstractDataFrame)
     for (name, col) in pairs(eachcol(X))
         if !(eltype(col) <: Number)
-            X_coded = MLJ.levelcode.(categorical(col)) 
-            X[!, name] = X_coded
+            X[!, name] = MLJ.levelcode.(categorical(col)) 
         end
     end
     
@@ -115,6 +119,9 @@ Convenience method to encode both features and target simultaneously.
 """
 code_dataset(X::AbstractDataFrame, y::AbstractVector) = code_dataset(X), code_dataset(y)
 
+# ---------------------------------------------------------------------------- #
+#                                    range                                     #
+# ---------------------------------------------------------------------------- #
 """
     range(field::Union{Symbol,Expr}; kwargs...)
 

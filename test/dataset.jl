@@ -84,6 +84,36 @@ dsr = setup_dataset(
 @test dsr isa SX.PropositionalDataSet{XGBoostRegressor}
 
 # ---------------------------------------------------------------------------- #
+#                                 code dataset                                 #
+# ---------------------------------------------------------------------------- #
+Xcd = DataFrame(
+    numeric_int = [1, 2, 3, 4],
+    numeric_float = [1.1, 2.2, 3.3, 4.4],
+    categorical_string = ["A", "B", "A", "C"],
+    boolean = [true, false, true, false]
+)
+ydc = ["class1", "class2", "class1", "class3"]
+
+# apply encoding
+coded_Xcd = code_dataset(Xcd)
+coded_ydc = code_dataset(ydc)
+coded_ds  = code_dataset(Xcd, ydc)
+
+@test eltype(Xcd.categorical_string) <: Number
+@test eltype(Xcd.boolean) <: Number
+@test eltype(coded_ydc) <: Number
+
+@test eltype(coded_ds[1].categorical_string) <: Number
+@test eltype(coded_ds[1].boolean) <: Number
+@test eltype(coded_ds[2]) <: Number
+
+# test that encoding is consistent
+@test Xcd.categorical_string[1] == Xcd.categorical_string[3]  # both "A"
+@test coded_ydc[1] == coded_ydc[3]  # both "class1"
+@test coded_ds[1].categorical_string[1] == coded_ds[1].categorical_string[3]  # both "A"
+@test coded_ds[2][1] == coded_ds[2][3]  # both "class1"
+
+# ---------------------------------------------------------------------------- #
 #                covering various examples to complete codecov                 #
 # ---------------------------------------------------------------------------- #
 y_symbol = :petal_width
