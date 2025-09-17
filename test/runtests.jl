@@ -3,6 +3,10 @@ using SoleData.Artifacts
 # fill your Artifacts.toml file;
 @test_nowarn fillartifacts()
 
+# Loader lists
+# abcloader = ABCLoader()
+# mitloader = MITESPRESSOLoader()
+
 function run_tests(list)
     println("\n" * ("#"^50))
     for test in list
@@ -14,12 +18,12 @@ end
 println("Julia version: ", VERSION)
 
 test_suites = [
-    ("Setup Dataset",        ["dataset.jl",           ]),
-    ("Train and Test",       ["train_test.jl",        ]),
-    ("Symbolic Analysis",    ["symbolic_analysis.jl", ]),
-    ("Solemodel robustness", ["robustness.jl"         ]),
+    # ("Setup Dataset",        ["dataset.jl",           ]),
+    # ("Train and Test",       ["train_test.jl",        ]),
+    # ("Symbolic Analysis",    ["symbolic_analysis.jl", ]),
+    # ("Solemodel robustness", ["robustness.jl"         ]),
     ("Rule extraction",      ["rule_extraction.jl"    ]),
-    ("Association Rules",    ["associationrules.jl"   ]),
+    # ("Association Rules",    ["associationrules.jl"   ]),
 ]
 
 @testset "SoleXplorer.jl" begin

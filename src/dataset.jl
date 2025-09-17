@@ -343,7 +343,160 @@ end
 # ---------------------------------------------------------------------------- #
 #                                setup dataset                                 #
 # ---------------------------------------------------------------------------- #
+"""
+    setup_dataset(
+        X, y, w=nothing;
+        model=_DefaultModel(y),
+        resample=Holdout(shuffle=true),
+        train_ratio=0.7,
+        valid_ratio=0.0,
+        rng=TaskLocalRNG(),
+        win=AdaptiveWindow(nwindows=3, relative_overlap=0.1),
+        features=(maximum, minimum),
+        modalreduce=mean,
+        tuning=nothing
+    ) -> AbstractDataSet
 
+Creates and configures a dataset structure for machine learning.
+
+This is the core implementation function that handles the complete dataset setup pipeline,
+including data preprocessing, model configuration, partitioning, hyperparameter tuning,
+and MLJ machine creation.
+
+# Arguments
+- `X::AbstractDataFrame`: Feature matrix/DataFrame
+- `y::AbstractVector`: Target variable vector
+- `w::MaybeVector=nothing`: Optional sample weights
+
+# Keyword Arguments
+
+## Model Configuration
+- `model::MLJ.Model=_DefaultModel(y)`: ML model to use, 
+   auto-selected based on target type, if no `model` is subbmitted
+- `tuning::MaybeTuning=nothing`: Hyperparameter tuning configuration,
+   requires `range` vectors.
+
+## Data Partitioning
+- `resample::ResamplingStrategy=Holdout(shuffle=true)`: Cross-validation strategy
+- `train_ratio::Real=0.7`: Training set proportion (for Holdout)
+- `valid_ratio::Real=0.0`: Validation set proportion
+- `rng::AbstractRNG=TaskLocalRNG()`: Random number generator for reproducibility
+
+## Multidimensional Data Processing
+- `win::WinFunction=AdaptiveWindow(nwindows=3, relative_overlap=0.1)`: Windowing function
+- `features::Tuple{Vararg{Base.Callable}}=(maximum, minimum)`: Feature extraction functions
+- `modalreduce::Base.Callable=mean`: Reduction function for modal algorithms
+
+# Returns
+- `PropositionalDataSet{M}`: For standard ML algorithms with tabular data
+- `ModalDataSet{M}`: For modal logic algorithms with structured data
+
+# Processing Pipeline
+
+## 1. Random Number Generator Propagation
+```julia
+# Ensures reproducible results across all components
+hasproperty(model, :rng) && set_rng!(model, rng)
+hasproperty(resample, :rng) && (resample = set_rng(resample, rng))
+```
+
+## 2. Model-Specific Configuration
+- **Modal models**: Sets feature extraction functions via `set_conditions!`
+- **Holdout resampling**: Configures training fraction via `set_fraction_train`
+
+## 3. Data Type Detection & Processing
+```julia
+if X[1, 1] isa AbstractArray
+    # Multidimensional data: choose treatment strategy
+    treat = model isa Modal ? :reducesize : :aggregate
+    X, tinfo = treatment(X; win, features, treat, modalreduce)
+else
+    # Tabular data: encode categorical variables
+    X = code_dataset(X)
+    tinfo = nothing
+end
+```
+
+## 4. Data Partitioning
+Creates train/test splits with cross-validation folds using the specified resampling strategy.
+
+## 5. Hyperparameter Tuning Setup
+```julia
+if !isnothing(tuning)
+    # Convert SX.range to MLJ.range specifications
+    # Wrap model in TunedModel with tuning configuration
+    # Propagate RNG to tuning components
+end
+```
+
+## 6. MLJ Machine Creation
+Creates MLJ machine with or without sample weights, ready for training.
+
+## 7. Dataset Construction
+Uses the smart `DataSet` constructor to create the appropriate dataset type.
+
+# Data Type Handling
+
+## Tabular Data (Standard Case)
+- **Detection**: `X[1, 1]` is not an `AbstractArray`
+- **Processing**: Categorical encoding via `code_dataset`
+- **Result**: `PropositionalDataSet` with encoded features
+
+## Multidimensional Data (Time Series/Structured)
+- **Detection**: `X[1, 1]` is an `AbstractArray`
+- **Modal algorithms**: Use `:reducesize` treatment → `ModalDataSet`
+- **Standard algorithms**: Use `:aggregate` treatment → `PropositionalDataSet`
+
+# Tuning Integration
+Supports both simple and complex hyperparameter tuning configurations:
+```julia
+# Simple range tuning
+tuning = Tuning(range=(:max_depth, 1:10))
+
+# Complex multi-parameter tuning
+tuning = Tuning(
+    range=[(:max_depth, 1:10), (:min_samples_split, 2:20)],
+    measure=accuracy,
+    resampling=CV(nfolds=3)
+)
+```
+
+# Examples
+```julia
+# Standard classification
+dataset = _setup_dataset(X_tabular, y_class)
+
+# Regression with custom model
+dataset = _setup_dataset(X, y_continuous; model=RandomForestRegressor())
+
+# Modal learning with time series
+dataset = _setup_dataset(X_timeseries, y; model=ModalDecisionTree())
+
+# With hyperparameter tuning
+dataset = _setup_dataset(X, y; tuning=Tuning(range=(:max_depth, 1:10)))
+
+# Custom cross-validation
+dataset = _setup_dataset(X, y; resample=CV(nfolds=5), rng=123)
+```
+
+# Implementation Details
+- **Efficient processing**: Minimal data copying through view-based operations
+- **Type stability**: Returns concrete dataset types based on input characteristics
+- **Error handling**: Validates inputs and provides informative error messages
+- **Memory efficiency**: Uses MLJ's lazy evaluation and caching mechanisms
+
+# See Also
+- [`setup_dataset`](@ref): Public interface for this function
+- [`DataSet`](@ref): Smart constructor for dataset types
+- [`treatment`](@ref): Multidimensional data processing
+- [`partition`](@ref): Data partitioning utilities
+- [`code_dataset`](@ref): Categorical encoding
+- [`PropositionalDataSet`](@ref), [`ModalDataSet`](@ref): Dataset types
+
+# Internal Use
+This function is the core implementation behind the public `setup_dataset` interface.
+External users should typically use `setup_dataset` instead of calling this directly.
+"""
 setup_dataset(args...; kwargs...) = _setup_dataset(args...; kwargs...)
 
 """
