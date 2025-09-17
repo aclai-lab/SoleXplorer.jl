@@ -84,3 +84,5 @@ Propagalo anche a PostHoc
 #                             apply e extractrules                             #
 # ---------------------------------------------------------------------------- #
 Bisogna pensare anche ai modelli non supervisionati: apply(m, X)
+
+controlla l'inglese grammarly

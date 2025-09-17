@@ -14,8 +14,6 @@ abstract type AbstractMeasures end
 const RobustMeasure = StatisticalMeasures.StatisticalMeasuresBase.RobustMeasure
 const FussyMeasure  = StatisticalMeasures.StatisticalMeasuresBase.FussyMeasure
 
-const EitherMeasure = Union{RobustMeasure, FussyMeasure}
-
 const ValidMeasures = Union{
         Float64, 
         StatisticalMeasures.ConfusionMatrices.ConfusionMatrix

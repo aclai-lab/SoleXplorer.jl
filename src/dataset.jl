@@ -296,7 +296,7 @@ function _setup_dataset(
     tuning        :: MaybeTuning                  = nothing
 )::AbstractDataSet
     # propagate user rng to every field that needs it
-    hasproperty(model, :rng) && set_rng!(model, rng)
+    hasproperty(model, :rng)    && set_rng!(model, rng)
     hasproperty(resample, :rng) && (resample = set_rng(resample, rng))
 
     # ModalDecisionTrees package needs features to be passed in model params
@@ -328,11 +328,7 @@ function _setup_dataset(
 
         model = MLJ.TunedModel(
             model; 
-            tuning=tuning.strategy,
-            range=tuning.range,
-            resampling=tuning.resampling,
-            measure=tuning.measure,
-            repeats=tuning.repeats
+            tuning_params(tuning)...
         )
 
         # set the model to use the same rng as the dataset
@@ -347,68 +343,7 @@ end
 # ---------------------------------------------------------------------------- #
 #                                setup dataset                                 #
 # ---------------------------------------------------------------------------- #
-"""
-    setup_dataset(X, y, w=nothing; kwargs...)::AbstractDataSet
 
-Prepare and construct a dataset wrapper.
-
-# Arguments
-- `X::AbstractDataFrame`: Feature data
-- `y::AbstractVector`: Target variable
-- `w::MaybeVector=nothing`: Optional sample weights
-
-# Keyword Arguments
-- `model::MLJ.Model=_DefaultModel(y)`: MLJ model to use
-- `resample::ResamplingStrategy=Holdout(shuffle=true)`: Resampling strategy
-- `train_ratio::Real=0.7`: Fraction of data for training
-- `valid_ratio::Real=0.0`: Fraction of data for validation
-- `rng::AbstractRNG=TaskLocalRNG()`: Random number generator
-- `win::WinFunction=AdaptiveWindow(nwindows=3, relative_overlap=0.1)`: Windowing function
-- `features::Tuple{Vararg{Base.Callable}}=(maximum, minimum)`: Feature extraction functions
-- `modalreduce::Base.Callable=mean`: Reduction function for modal algorithms
-- `tuning::NamedTuple=NamedTuple()`: Hyperparameter tuning specification
-
-# Returns
-- `AbstractDataSet`: Either `PropositionalDataSet` or `ModalDataSet`
-
-This function handles the complete pipeline of dataset preparation including:
-1. Model configuration and RNG propagation
-2. Multidimensional data treatment (aggregation vs. modal reduction)
-3. Data partitioning and resampling setup
-4. Hyperparameter tuning configuration
-5. MLJ Machine construction
-
-# Example
-```julia
-# Standard classification dataset
-using MLJ, DataFrames, SoleXplorer
-Xc, yc = @load_iris
-Xc = DataFrame(Xc)
-range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
-dsc = setup_dataset(
-    Xc, yc;
-    model=DecisionTreeClassifier(),
-    resample=CV(nfolds=5, shuffle=true),
-    rng=Xoshiro(1),
-    tuning=(tuning=Grid(resolution=10), resampling=CV(nfolds=3), range, measure=accuracy, repeats=2)    
-)
-
-# Modal time series dataset 
-using SoleXplorer
-using SoleData.Artifacts: load
-natopsloader = NatopsLoader()
-Xts, yts = load(natopsloader)
-modelts = symbolic_analysis(
-    Xts, yts;
-    model=ModalRandomForest(),
-    resample=Holdout(shuffle=true),
-    train_ratio=0.75,
-    rng=Xoshiro(1),
-    features=(minimum, maximum),
-    measures=(log_loss, accuracy, confusion_matrix, kappa)
-)
-```
-"""
 setup_dataset(args...; kwargs...) = _setup_dataset(args...; kwargs...)
 
 """

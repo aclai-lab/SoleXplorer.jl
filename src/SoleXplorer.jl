@@ -101,6 +101,7 @@ using XGBoost, MLJXGBoostInterface
 # ---------------------------------------------------------------------------- #
 include("measures.jl")
 export range
+export get_range, get_strategy, get_resampling, get_measure, get_repeats
 include("tuning.jl")
 export GridTuning, RandomTuning, CubeTuning, ParticleTuning, AdaptiveTuning
 

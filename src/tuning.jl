@@ -6,8 +6,9 @@ abstract type AbstractTuning end
 # ---------------------------------------------------------------------------- #
 #                                   types                                      #
 # ---------------------------------------------------------------------------- #
+const EitherMeasures  = Union{RobustMeasure, FussyMeasure}
 const MaybeResampling = Maybe{MLJ.ResamplingStrategy}
-const MaybeMeasure = Maybe{EitherMeasure}
+const MaybeMeasure   = Maybe{EitherMeasures}
 
 const RangeSpec = Union{
     Tuple,
@@ -20,11 +21,11 @@ const RangeSpec = Union{
 #                                Tuning struct                                 #
 # ---------------------------------------------------------------------------- #
 mutable struct Tuning{T} <: AbstractTuning
-    strategy::T
-    range::RangeSpec
-    resampling::MaybeResampling
-    measure::MaybeMeasure
-    repeats::Int64
+    strategy   :: T
+    range      :: RangeSpec
+    resampling :: MaybeResampling
+    measure    :: MaybeMeasure
+    repeats    :: Int64
     
     function Tuning{T}(strategy::T, range::RangeSpec, resampling, measure, repeats) where T
         repeats > 0 || throw(ArgumentError("repeats must be positive, got $repeats"))
@@ -38,7 +39,21 @@ Tuning(strategy::T, range, resampling=nothing, measure=nothing, repeats=1) where
 # ---------------------------------------------------------------------------- #
 #                                   methods                                    #
 # ---------------------------------------------------------------------------- #
-get_range(t::Tuning) = t.range
+Base.propertynames(::Tuning) = (:strategy, :range, :resampling, :measure, :repeats)
+Base.getproperty(t::Tuning, s::Symbol) = getfield(t, s)
+
+get_range(t::Tuning)      = t.range
+get_strategy(t::Tuning)   = t.strategy
+get_resampling(t::Tuning) = t.resampling
+get_measure(t::Tuning)    = t.measure
+get_repeats(t::Tuning)    = t.repeats
+
+@inline tuning_params(t::Tuning) = (
+    range      = get_range(t), 
+    resampling = get_resampling(t),
+    measure    = get_measure(t),
+    repeats    = get_repeats(t)
+)
 
 # ---------------------------------------------------------------------------- #
 #                                    range                                     #
@@ -63,45 +78,23 @@ Base.range(field::Union{Symbol,Expr}; kwargs...) = field, kwargs...
 # ---------------------------------------------------------------------------- #
 #                             MLJ Tuning adapter                               #
 # ---------------------------------------------------------------------------- #
-"""
-    setup_tuning(strategy_type; range, kwargs...)
-
-Create a tuning configuration with the specified strategy type.
-"""
 @inline function setup_tuning(
-    strategy_type::Type{<:Any};
-    range::Union{Tuple, Tuple{Vararg{Tuple}}, MLJBase.NominalRange},
-    resampling::MaybeResampling=nothing,
-    measure::MaybeMeasure=nothing,
-    repeats::Int64=1,
+    strategy_type :: Type{<:Any};
+    range         :: RangeSpec,
+    resampling    :: MaybeResampling=nothing,
+    measure       :: MaybeMeasure=nothing,
+    repeats       :: Int64=1,
     kwargs...
 )::Tuning
     strategy = strategy_type(; kwargs...)
     return Tuning(strategy, range, resampling, measure, repeats)
 end
 
-# ---------------------------------------------------------------------------- #
-#                             MLJ Tuning adapter                               #
-# ---------------------------------------------------------------------------- #
 const GridTuning(; kwargs...)::Tuning     = setup_tuning(MLJ.Grid; kwargs...)
 const RandomTuning(; kwargs...)::Tuning   = setup_tuning(MLJ.RandomSearch; kwargs...)
 const CubeTuning(; kwargs...)::Tuning     = setup_tuning(MLJ.LatinHypercube; kwargs...)
 const ParticleTuning(; kwargs...)::Tuning = setup_tuning(PSO.ParticleSwarm; kwargs...)
 const AdaptiveTuning(; kwargs...)::Tuning = setup_tuning(PSO.AdaptiveParticleSwarm; kwargs...)
-
-"""Enable splatting and iteration over Tuning struct."""
-Base.propertynames(::Tuning) = (:strategy, :range, :resampling, :measure, :repeats)
-Base.getproperty(t::Tuning, s::Symbol) = getfield(t, s)
-
-@inline tuning_params(t::Tuning) = (
-    strategy = t.strategy,
-    range = t.range, 
-    resampling = t.resampling,
-    measure = t.measure,
-    repeats = t.repeats
-)
-
-Base.pairs(t::Tuning) = pairs(tuning_params(t))
 
 # ---------------------------------------------------------------------------- #
 #                                show methods                                  #

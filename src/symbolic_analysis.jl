@@ -282,7 +282,7 @@ function _symbolic_analysis!(
     extractor::Union{MaybeRuleExtractor,Tuple{RuleExtractor,NamedTuple}}=nothing,
     association::MaybeAbstractAssociationRuleExtractor=nothing,
     measures::Tuple{Vararg{FussyMeasure}}=()
-)::Nothing
+)::ModelSet
     ds    = dsetup(modelset)
     solem = solemodels(modelset)
 
@@ -303,7 +303,7 @@ function _symbolic_analysis!(
 
     modelset.measures = eval_measures(ds, solem, measures, y_test)
 
-    return nothing
+    return modelset
 end
 
 function _symbolic_analysis(
@@ -341,7 +341,7 @@ symbolic_analysis!(modelset; association=Apriori())
 
 See also: [`symbolic_analysis`](@ref), [`ModelSet`](@ref)
 """
-symbolic_analysis!(modelset::ModelSet; kwargs...) = _symbolic_analysis!(modelset; kwargs...)
+symbolic_analysis!(modelset::ModelSet; kwargs...)::ModelSet = _symbolic_analysis!(modelset; kwargs...)
 
 """
     symbolic_analysis(
@@ -475,5 +475,5 @@ Convenience method that converts input data to DataFrame format.
 
 See also: [`symbolic_analysis`](@ref)
 """
-symbolic_analysis(X::Any, args...; kwargs...) = symbolic_analysis(DataFrame(X), args...; kwargs...)
+symbolic_analysis(X::Any, args...; kwargs...)::ModelSet = symbolic_analysis(DataFrame(X), args...; kwargs...)
 
