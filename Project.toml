@@ -25,7 +25,7 @@ ModalAssociationRules = {rev = "main", url = "https://github.com/aclai-lab/Modal
 ModalDecisionTrees = {rev = "64-modaladaboost", url = "https://github.com/aclai-lab/ModalDecisionTrees.jl"}
 SoleData = {rev = "main", url = "https://github.com/aclai-lab/SoleData.jl"}
 SoleModels = {rev = "devBestGuess", url = "https://github.com/aclai-lab/SoleModels.jl"}
-SolePostHoc = {rev = "devXGB", url = "https://github.com/aclai-lab/SolePostHoc.jl"}
+SolePostHoc = {rev = "PyCall_init", url = "https://github.com/aclai-lab/SolePostHoc.jl"}
 
 [compat]
 Catch22 = "0.4 - 0.7"
