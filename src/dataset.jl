@@ -367,7 +367,7 @@ and MLJ machine creation.
 
 ## Available Models
 
-From package [DecisionTree.jl](https://github.com/JuliaAI/DecisionTree.jl):
+From package Bensadoun, R., et al. (2013). [DecisionTree.jl](https://github.com/JuliaAI/DecisionTree.jl):
 ```
 DecisionTreeClassifier(
   max_depth = -1, 
@@ -424,7 +424,7 @@ AdaBoostStumpClassifier(
   rng = Random.TaskLocalRNG())
 ```
 
-From package [ModalDecisionTrees.jl](https://github.com/aclai-lab/ModalDecisionTrees.jl):
+From package ACLAI Lab and G. Pagliarini (2023). [ModalDecisionTrees.jl](https://github.com/aclai-lab/ModalDecisionTrees.jl):
 ```
 ModalDecisionTree(
   max_depth = nothing, 
@@ -500,7 +500,7 @@ ModalAdaBoost(
   feature_importance = :split, 
   rng = Random.TaskLocalRNG())
 ```
-From package [XGBoost.jl](https://github.com/dmlc/XGBoost.jl)
+From package Chen, T., & Guestrin, C. (2016). [XGBoost.jl](https://github.com/dmlc/XGBoost.jl)
 ```
 XGBoostClassifier(
   test = 1, 

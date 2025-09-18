@@ -33,12 +33,7 @@ const TunedModalDecisionTreeApply = Union{
 # ---------------------------------------------------------------------------- #
 #                              xgboost utilities                               #
 # ---------------------------------------------------------------------------- #
-"""
-    get_base_score(m::Machine) -> Union{Number,Nothing}
-
-Extract base_score from XGBoost models, handling both regular and tuned variants.
-Returns `nothing` if the model doesn't have a base_score property.
-"""
+# Extract base_score from XGBoost models, handling both regular and tuned variants
 function get_base_score(m::Machine)
     if m.model isa MLJTuning.EitherTunedModel
         return hasproperty(m.model.model, :base_score) ? m.model.model.base_score : nothing
@@ -47,20 +42,10 @@ function get_base_score(m::Machine)
     end
 end
 
-"""
-    get_encoding(classes_seen) -> Dict
-
-Create mapping from internal class indices to MLJ class labels.
-Used for preserving class information in classification models.
-"""
+# Create mapping from internal class indices to MLJ class labels
 get_encoding(classes_seen) = Dict(MLJ.int(c) => c for c in MLJ.classes(classes_seen))
 
-"""
-    get_classlabels(encoding) -> Vector{String}
-
-Extract ordered class labels from encoding dictionary.
-Ensures consistent class ordering across model conversions.
-"""
+# Extract ordered class labels from encoding dictionary
 get_classlabels(encoding)  = [string(encoding[i]) for i in sort(keys(encoding) |> collect)]
 
 # ---------------------------------------------------------------------------- #
