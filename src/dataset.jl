@@ -69,11 +69,6 @@ function set_tuning_rng!(m::MLJ.Model, rng::AbstractRNG)::MLJ.Model
     return m
 end
 
-# Set the training fraction for a resampling strategy.
-function set_fraction_train(r::ResamplingStrategy, train_ratio::Real)::ResamplingStrategy
-    typeof(r)(merge(MLJ.params(r), (fraction_train=train_ratio,))...)
-end
-
 # Set logical conditions (features) for modal decision tree models.
 function set_conditions!(m::MLJ.Model, conditions::Tuple{Vararg{Base.Callable}})::MLJ.Model
     m.conditions = Function[conditions...]
@@ -287,7 +282,6 @@ function _setup_dataset(
     w             :: MaybeVector                  = nothing;
     model         :: MLJ.Model                    = _DefaultModel(y),
     resample      :: ResamplingStrategy           = Holdout(shuffle=true),
-    train_ratio   :: Real                         = 0.7,
     valid_ratio   :: Real                         = 0.0,
     rng           :: AbstractRNG                  = TaskLocalRNG(),
     win           :: WinFunction                  = AdaptiveWindow(nwindows=3, relative_overlap=0.1),
@@ -301,8 +295,6 @@ function _setup_dataset(
 
     # ModalDecisionTrees package needs features to be passed in model params
     hasproperty(model, :features) && set_conditions!(model, features)
-    # Holdout resampling needs to setup fraction_train parameters
-    resample isa Holdout && (resample = set_fraction_train(resample, train_ratio))
 
     # Handle multidimensional datasets:
     # Decision point: use standard ML algorithms (requiring feature aggregation)
@@ -315,7 +307,7 @@ function _setup_dataset(
         tinfo = nothing
     end
 
-    ttpairs, pinfo = partition(y; resample, train_ratio, valid_ratio, rng)
+    ttpairs, pinfo = partition(y; resample, valid_ratio, rng)
 
     isnothing(tuning) || begin
         t_range = get_range(tuning)
@@ -347,8 +339,7 @@ end
     setup_dataset(
         X, y, w=nothing;
         model=_DefaultModel(y),
-        resample=Holdout(shuffle=true),
-        train_ratio=0.7,
+        resample=Holdout(fraction_train=0.7, shuffle=true),
         valid_ratio=0.0,
         rng=TaskLocalRNG(),
         win=AdaptiveWindow(nwindows=3, relative_overlap=0.1),
@@ -389,7 +380,6 @@ and MLJ machine creation.
 
 ## Data Partitioning
 - `resample::ResamplingStrategy=Holdout(shuffle=true)`: Cross-validation strategy
-- `train_ratio::Real=0.7`: Training set proportion (for Holdout)
 - `valid_ratio::Real=0.0`: Validation set proportion
 - `rng::AbstractRNG=TaskLocalRNG()`: Random number generator for reproducibility
 

@@ -127,7 +127,7 @@ Xnn = hcat(Xc, DataFrame(target = yc))
 
 dsc = setup_dataset(
     Xts, yts;
-    train_ratio=0.5,
+    resample=Holdout(fraction_train=0.5, shuffle=true),
     modalreduce=maximum
 )
 @test dsc isa SX.PropositionalDataSet{DecisionTreeClassifier}
@@ -216,7 +216,7 @@ dsc = setup_dataset(
 
 @test_throws MethodError setup_dataset(
     Xc, yc;
-    train_ratio=0.5,
+    resample=Holdout(fraction_train=0.5, shuffle=true),
     invalid=maximum
 )
 
@@ -311,7 +311,6 @@ dsc = setup_dataset(Xc, yc)
         
         @test occursin("PartitionInfo:", output)
         @test occursin("type:", output)
-        @test occursin("train_ratio:", output)
         @test occursin("valid_ratio:", output)
         @test occursin("rng:", output)
         @test occursin("0.7", output)
@@ -364,7 +363,7 @@ dsc = setup_dataset(Xc, yc)
     
     @testset "Integration test with partition function" begin
         # Test show methods with actual partition results
-        pidxs, pinfo = SX.partition(y; resample=resample, train_ratio=0.7, valid_ratio=0.2, rng=rng)
+        pidxs, pinfo = SX.partition(y; resample, valid_ratio=0.2, rng=rng)
         
         # Test PartitionInfo show
         io = IOBuffer()

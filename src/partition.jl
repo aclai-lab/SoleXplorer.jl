@@ -1,51 +1,34 @@
 # ---------------------------------------------------------------------------- #
 #                               abstract types                                 #
 # ---------------------------------------------------------------------------- #
-"""
-    AbstractPartitionInfo
-
-Base type for partition metadata containers.
-"""
+# Base type for partition metadata containers.
 abstract type AbstractPartitionInfo end
 
-"""
-    AbstractPartitionIdxs
-
-Base type for partition index containers.
-"""
+# Base type for partition index containers.
 abstract type AbstractPartitionIdxs end
 
 # ---------------------------------------------------------------------------- #
 #                                 dataset info                                 #
 # ---------------------------------------------------------------------------- #
-"""
-    PartitionInfo{T} <: AbstractPartitionInfo
-
-Container for partition strategy metadata and parameters.
+# Container for partition strategy metadata and parameters.
 
 # Fields
-- `type::T`: MLJ resampling strategy (e.g., CV, Holdout, StratifiedCV)
-- `train_ratio::Real`: Proportion of data for training (0.0-1.0)
-- `valid_ratio::Real`: Proportion of data for validation (0.0-1.0)
-- `rng::AbstractRNG`: Random number generator for reproducible splits
-"""
+# - `type::T`: MLJ resampling strategy (e.g., CV, Holdout, StratifiedCV)
+# - `valid_ratio::Real`: Proportion of data for validation (0.0-1.0)
+# - `rng::AbstractRNG`: Random number generator for reproducible splits
 struct PartitionInfo{T} <: AbstractPartitionInfo
     type        :: T
-    train_ratio :: Real
     valid_ratio :: Real
     rng         :: AbstractRNG
 
     function PartitionInfo(
         type        :: T,
-        train_ratio :: Real,
         valid_ratio :: Real,
         rng         :: AbstractRNG,
     )::PartitionInfo where {T<:MLJ.ResamplingStrategy}
-        # Validate ratios
-        0 ≤ train_ratio ≤ 1 || throw(ArgumentError("train_ratio must be between 0 and 1"))
         0 ≤ valid_ratio ≤ 1 || throw(ArgumentError("valid_ratio must be between 0 and 1"))
 
-        new{T}(type, train_ratio, valid_ratio, rng)
+        new{T}(type, valid_ratio, rng)
     end
 end
 
@@ -67,16 +50,12 @@ end
 # ---------------------------------------------------------------------------- #
 #                             partition indexes                                #
 # ---------------------------------------------------------------------------- #
-"""
-    PartitionIdxs{T<:Int} <: AbstractPartitionIdxs
-
-Container for train/validation/test index vectors.
+# Container for train/validation/test index vectors.
 
 # Fields
-- `train::Vector{T}`: Row indices for training data
-- `valid::Vector{T}`: Row indices for validation data (may be empty)
-- `test::Vector{T}`: Row indices for test/holdout data
-"""
+# - `train::Vector{T}`: Row indices for training data
+# - `valid::Vector{T}`: Row indices for validation data (may be empty)
+# - `test::Vector{T}`: Row indices for test/holdout data
 struct PartitionIdxs{T<:Int} <: AbstractPartitionIdxs
     train :: Vector{T}
     valid :: Vector{T}
@@ -100,43 +79,24 @@ end
 # ---------------------------------------------------------------------------- #
 function partition end
 
-"""
-    partition(y::AbstractVector{<:Label}; resample::MLJ.ResamplingStrategy,
-             train_ratio::Real, valid_ratio::Real, 
-             rng::AbstractRNG) -> (Vector{PartitionIdxs}, PartitionInfo)
-
-Create data partitions using MLJ resampling strategies.
+# Create data partitions using MLJ resampling strategies.
 
 # Arguments
-- `y::AbstractVector{<:Label}`: Target vector for stratified sampling
-- `resample::MLJ.ResamplingStrategy`: Partitioning strategy (CV, Holdout, etc.)
-- `train_ratio::Real`: Training data proportion (0.0-1.0)
-- `valid_ratio::Real`: Validation data proportion (0.0-1.0)
-- `rng::AbstractRNG`: Random number generator for reproducibility
+# - `y::AbstractVector{<:Label}`: Target vector for stratified sampling
+# - `resample::MLJ.ResamplingStrategy`: Partitioning strategy (CV, Holdout, etc.)
+# - `valid_ratio::Real`: Validation data proportion (0.0-1.0)
+# - `rng::AbstractRNG`: Random number generator for reproducibility
 
 # Returns
-- `Vector{PartitionIdxs}`: One partition per fold/split
-- `PartitionInfo`: Metadata about partitioning configuration
-
-# Example
-    # 5-fold CV with 20% validation
-    partitions, info = partition(y; resample=CV(nfolds=5), 
-                               train_ratio=0.8, valid_ratio=0.2, 
-                               rng=MersenneTwister(42))
-    
-    # First fold indices
-    train_idx = get_train(partitions[1])
-    valid_idx = get_valid(partitions[1]) 
-    test_idx = get_test(partitions[1])
-"""
+# - `Vector{PartitionIdxs}`: One partition per fold/split
+# - `PartitionInfo`: Metadata about partitioning configuration
 function partition(
     y           :: AbstractVector{<:Label};
     resample    :: MLJ.ResamplingStrategy,
-    train_ratio :: Real,
     valid_ratio :: Real,
     rng         :: AbstractRNG
 )::Tuple{Vector{PartitionIdxs}, PartitionInfo}
-    pinfo = PartitionInfo(resample, train_ratio, valid_ratio, rng)
+    pinfo = PartitionInfo(resample, valid_ratio, rng)
 
     ttpairs = MLJBase.train_test_pairs(resample, 1:length(y), y)
 
@@ -151,6 +111,8 @@ end
 # ---------------------------------------------------------------------------- #
 #                                   methods                                    #
 # ---------------------------------------------------------------------------- #
+Base.length(t::PartitionIdxs) = length(t.train) + length(t.valid) + length(t.test)
+
 """
     get_train(t::PartitionIdxs) -> Vector{Int}
 
@@ -172,13 +134,9 @@ Extract test indices from partition.
 """
 get_test(t::PartitionIdxs)  = t.test
 
-"""
-    length(t::PartitionIdxs) -> Int
-
-Return total number of samples across all partitions.
-"""
-Base.length(t::PartitionIdxs) = length(t.train) + length(t.valid) + length(t.test)
-
+# ---------------------------------------------------------------------------- #
+#                                  base show                                   #
+# ---------------------------------------------------------------------------- #
 function Base.show(io::IO, pidx::PartitionIdxs{T}) where T
     n_train = length(pidx.train)
     n_valid = length(pidx.valid)

@@ -66,8 +66,7 @@ Xts, yts = SoleXplorer.load(natopsloader)
 modelts = symbolic_analysis(
     Xts, yts;
     model=ModalDecisionTree(),
-    resample=Holdout(shuffle=true),
-    train_ratio=0.80,
+    resample=Holdout(fraction_train=0.8, shuffle=true),
     rng=Xoshiro(1),
     features=(minimum, maximum),
     measures=(log_loss, accuracy, confusion_matrix, kappa)

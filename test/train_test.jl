@@ -218,7 +218,6 @@ solemr = train_test(
         Xc, yc,
         model = DecisionTreeClassifier(),
         resample = CV(nfolds=3, shuffle=true),
-        train_ratio = 0.7,
         rng = rng
     )
     
@@ -246,7 +245,6 @@ solemr = train_test(
         Xc, yc,
         model = DecisionTreeClassifier(),
         resample = CV(nfolds=5),
-        train_ratio = 0.8,
         rng = rng
     )
     
@@ -271,7 +269,6 @@ solemr = train_test(
     #         X_reg, y_reg,
     #         model = DecisionTreeRegressor(),
     #         resample = CV(nfolds=2),
-    #         train_ratio = 0.7,
     #         rng = rng
     #     )
         

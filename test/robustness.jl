@@ -17,15 +17,14 @@ Xts, yts = SX.load(natopsloader)
 #                    decisiontree classification robustness                    #
 # ---------------------------------------------------------------------------- #
 @testset "decisiontree classification data validation" begin
-    for train_ratio in 0.5:0.1:0.9
+    for fraction_train in 0.5:0.1:0.9
         for seed in 1:5:40
             for min_purity_increase in 0.0:0.1:0.3
                 for max_depth in 1:10
                     model = symbolic_analysis(
                         Xc, yc;
                         model=DecisionTreeClassifier(;max_depth, min_purity_increase),
-                        resample=Holdout(shuffle=true),
-                        train_ratio,
+                        resample=Holdout(; fraction_train, shuffle=true),
                         rng=Xoshiro(seed),
                         measures=(accuracy,)
                     )
@@ -44,15 +43,14 @@ end
 #                      decisiontree regression robustness                      #
 # ---------------------------------------------------------------------------- #
 @testset "decisiontree regression data validation" begin
-    for train_ratio in 0.5:0.1:0.9
+    for fraction_train in 0.5:0.1:0.9
         for seed in 1:5:40
             for min_purity_increase in 0.0:0.1:0.3
                 for max_depth in 1:10
                     model = symbolic_analysis(
                         Xr, yr;
                         model=DecisionTreeRegressor(;max_depth, min_purity_increase),
-                        resample=Holdout(shuffle=true),
-                        train_ratio,
+                        resample=Holdout(; fraction_train, shuffle=true),
                         rng=Xoshiro(seed),
                         measures=(rms,)
                     )
@@ -71,15 +69,14 @@ end
 #                    randomforest classification robustness                    #
 # ---------------------------------------------------------------------------- #
 @testset "randomforest classification data validation" begin
-    for train_ratio in 0.5:0.1:0.9
+    for fraction_train in 0.5:0.1:0.9
         for seed in 1:5:40
             for sampling_fraction in 0.7:0.1:0.9
                 for n_trees in 10:10:100
                     model = symbolic_analysis(
                         Xc, yc;
                         model=RandomForestClassifier(;n_trees, sampling_fraction),
-                        resample=Holdout(shuffle=true),
-                        train_ratio,
+                        resample=Holdout(; fraction_train, shuffle=true),
                         rng=Xoshiro(seed),
                         measures=(accuracy,)
                     )
@@ -98,15 +95,14 @@ end
 #                      randomforest regression robustness                      #
 # ---------------------------------------------------------------------------- #
 @testset "randomforest regression data validation" begin
-    for train_ratio in 0.5:0.1:0.9
+    for fraction_train in 0.5:0.1:0.9
         for seed in 1:5:40
             for sampling_fraction in 0.7:0.1:0.9
                 for n_trees in 10:10:100
                     model = symbolic_analysis(
                         Xr, yr;
                         model=RandomForestRegressor(;n_trees, sampling_fraction),
-                        resample=Holdout(shuffle=true),
-                        train_ratio,
+                        resample=Holdout(; fraction_train, shuffle=true),
                         rng=Xoshiro(seed),
                         measures=(rms,)
                     )
@@ -125,15 +121,14 @@ end
 #                              adaboost robustness                             #
 # ---------------------------------------------------------------------------- #
 @testset "adaboost classification data validation" begin
-    for train_ratio in 0.5:0.1:0.9
+    for fraction_train in 0.5:0.1:0.9
         for seed in 1:40
             for feature_importance in [:impurity, :split]
                 for n_iter in 1:5:100
                     model = symbolic_analysis(
                         Xc, yc;
                         model=AdaBoostStumpClassifier(;n_iter, feature_importance),
-                        resample=Holdout(shuffle=true),
-                        train_ratio,
+                        resample=Holdout(; fraction_trainshuffle=true),
                         rng=Xoshiro(seed),
                         measures=(accuracy,)
                     )
@@ -157,15 +152,14 @@ Xb = data["X"]
 yb = MLJ.CategoricalArray{String,1,UInt32}(data["y"])
 
 @testset "xgboost binary classification data validation" begin
-    for train_ratio in 0.5:0.1:0.9
+    for fraction_train in 0.5:0.1:0.9
         for seed in 1:5:40
             for num_round in 10:5:50
                 for eta in 0.1:0.1:0.4
                     model = symbolic_analysis(
                         Xb, yb;
                         model=XGBoostClassifier(;eta, num_round),
-                        resample=Holdout(shuffle=true),
-                        train_ratio,
+                        resample=Holdout(; fraction_train, shuffle=true),
                         rng=Xoshiro(seed),
                         measures=(accuracy,)
                     )
@@ -184,15 +178,14 @@ end
 #                   xgboost multi classification robustness                    #
 # ---------------------------------------------------------------------------- #
 @testset "xgboost multi classification data validation" begin
-    for train_ratio in 0.5:0.1:0.9
+    for fraction_train in 0.5:0.1:0.9
         for seed in 1:5:40
             for num_round in 10:5:50
                 for eta in 0.1:0.1:0.4
                     model = symbolic_analysis(
                         Xc, yc;
                         model=XGBoostClassifier(;eta, num_round),
-                        resample=Holdout(shuffle=true),
-                        train_ratio,
+                        resample=Holdout(; fraction_train, shuffle=true),
                         rng=Xoshiro(seed),
                         measures=(accuracy,)
                     )
@@ -211,15 +204,14 @@ end
 #                        xgboost regression robustness                         #
 # ---------------------------------------------------------------------------- #
 @testset "xgboost regression data validation" begin
-    for train_ratio in 0.5:0.1:0.9
+    for fraction_train in 0.5:0.1:0.9
         for seed in 1:5:40
             for num_round in 10:5:50
                 for eta in 0.1:0.1:0.4
                     model = symbolic_analysis(
                         Xr, yr;
                         model=XGBoostRegressor(;eta, num_round),
-                        resample=Holdout(shuffle=true),
-                        train_ratio,
+                        resample=Holdout(; fraction_train, shuffle=true),
                         rng=Xoshiro(seed),
                         measures=(rms,)
                     )

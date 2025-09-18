@@ -89,8 +89,7 @@ modelr = symbolic_analysis(
 dsts = setup_dataset(
     Xts, yts;
     model=ModalDecisionTree(),
-    resample=Holdout(shuffle=true),
-    train_ratio=0.7,
+    resample=Holdout(fraction_train=0.7, shuffle=true),
     rng=Xoshiro(1),
     features=()  
 )
@@ -100,8 +99,7 @@ dsts = setup_dataset(
 modelc = symbolic_analysis(
     Xc, yc;
     model=DecisionTreeClassifier(),
-    resample=Holdout(shuffle=true),
-    train_ratio=0.75,
+    resample=Holdout(fraction_train=0.75, shuffle=true),
     rng=Xoshiro(1),
     measures=(accuracy, log_loss, confusion_matrix, kappa)      
 )
@@ -131,8 +129,7 @@ modelc = symbolic_analysis(
 modelts = symbolic_analysis(
     Xts, yts;
     model=DecisionTreeClassifier(),
-    resample=Holdout(shuffle=true),
-    train_ratio=0.5,
+    resample=Holdout(fraction_train=0.5, shuffle=true),
     rng=Xoshiro(1),
     win=AdaptiveWindow(nwindows=3, relative_overlap=0.3),
     modalreduce=mean,
@@ -192,8 +189,7 @@ modelts = symbolic_analysis(
 modelts = symbolic_analysis(
     Xts, yts;
     model=ModalRandomForest(),
-    resample=Holdout(shuffle=true),
-    train_ratio=0.75,
+    resample=Holdout(fraction_train=0.75, shuffle=true),
     rng=Xoshiro(1),
     features=(minimum, maximum),
     measures=(log_loss, accuracy, confusion_matrix, kappa)

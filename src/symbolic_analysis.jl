@@ -401,8 +401,7 @@ modelset = symbolic_analysis(X, y;
 # Time series analysis example
 modelset = symbolic_analysis(X, y;
     model=ModalRandomForest(),
-    resample=Holdout(shuffle=true),
-    train_ratio=0.75,
+    resample=Holdout(fraction_train=0.7, shuffle=true),
     rng=Xoshiro(1),
     features=(minimum, maximum),
     measures=(log_loss, accuracy, confusion_matrix, kappa)
