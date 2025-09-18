@@ -704,11 +704,7 @@ Parameters are the same, SoleXplorer will take care of automatically set the cas
 depending on the model choose.
 
 - `win::WinFunction=AdaptiveWindow(nwindows=3, relative_overlap=0.1)`: Windowing function
-Available windows strategies:
-`MovingWindow()`, see parameters [MovingWindow]@(ref).
-`WholeWindow()`, see parameters [WholeWindow]@(ref).
-`SplitWindow()`, see parameters [SplitWindow]@(ref).
-`AdaptiveWindow()`, see parameters [AdaptiveWindow]@(ref).
+Available windows strategies: [MovingWindow](@ref), [WholeWindow](@ref), [SplitWindow](@ref), [AdaptiveWindow](@ref).
 
 - `features::Tuple{Vararg{Base.Callable}}=(maximum, minimum)`: Feature extraction functions
 Note that beyond standard reduction functions (e.g., maximum, minimum, mean, mode), [Catch22](https://time-series-features.gitbook.io/catch22) time-series features are also available.

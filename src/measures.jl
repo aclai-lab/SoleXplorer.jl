@@ -1,11 +1,7 @@
 # ---------------------------------------------------------------------------- #
 #                               abstract types                                 #
 # ---------------------------------------------------------------------------- #
-"""
-    AbstractMeasures
-
-Base type for performance measure containers.
-"""
+# Base type for performance measure containers
 abstract type AbstractMeasures end
 
 # ---------------------------------------------------------------------------- #
@@ -22,17 +18,13 @@ const ValidMeasures = Union{
 # ---------------------------------------------------------------------------- #
 #                                  measures                                    #
 # ---------------------------------------------------------------------------- #
-"""
-    Measures <: AbstractMeasures
-
-Container for performance evaluation results across CV folds.
+# Container for performance evaluation results across CV folds.
 
 # Fields
-- `per_fold::Vector{Vector{ValidMeasures}}`: Measure values for each fold/measure combination
-- `measures::Vector{RobustMeasure}`: The measure functions used for evaluation  
-- `measures_values::Vector{ValidMeasures}`: Aggregated measure values across folds
-- `operations::AbstractVector`: Prediction operations used (predict, predict_mode, etc.)
-"""
+# - `per_fold::Vector{Vector{ValidMeasures}}`: Measure values for each fold/measure combination
+# - `measures::Vector{RobustMeasure}`: The measure functions used for evaluation  
+# - `measures_values::Vector{ValidMeasures}`: Aggregated measure values across folds
+# - `operations::AbstractVector`: Prediction operations used (predict, predict_mode, etc.)
 struct Measures <: AbstractMeasures
     per_fold        :: Vector{Vector{ValidMeasures}}
     measures        :: Vector{RobustMeasure}
@@ -40,6 +32,9 @@ struct Measures <: AbstractMeasures
     operations      :: AbstractVector
 end
 
+# ---------------------------------------------------------------------------- #
+#                                  base show                                   #
+# ---------------------------------------------------------------------------- #
 function Base.show(io::IO, m::Measures)
     print(io, "Measures(")
     for (i, (measure, value)) in enumerate(zip(m.measures, m.measures_values))
@@ -61,14 +56,7 @@ end
 # ---------------------------------------------------------------------------- #
 #                                  default                                     #
 # ---------------------------------------------------------------------------- #
-"""
-    _DefaultMeasures(y::AbstractVector)::Tuple{Vararg{FussyMeasure}}
-
-Return default measures appropriate for the target variable type.
-
-This function is used when no explicit measures are provided,
-automatically selecting between classification and regression.
-"""
+# Return default measures appropriate for the target variable type
 function _DefaultMeasures(y::AbstractVector)::Tuple{Vararg{FussyMeasure}}
     return eltype(y) <: CLabel ? (accuracy, kappa) : (rms, l1, l2)
 end
@@ -76,12 +64,8 @@ end
 # ---------------------------------------------------------------------------- #
 #                               get operations                                 #
 # ---------------------------------------------------------------------------- #
-"""
-    get_operations(measures::Vector, prediction::Symbol) -> Vector{Function}
-
-Adapted from MLJ's evaluate
-Determine appropriate prediction operations for each measure.
-"""
+# Adapted from MLJ's evaluate
+# Determine appropriate prediction operations for each measure
 function get_operations(
     measures   :: Vector,
     prediction :: Symbol,

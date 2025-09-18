@@ -12,12 +12,10 @@ get_method(a::AbstractAssociationRuleExtractor)     = a.method
 get_mas_args(a::AbstractAssociationRuleExtractor)   = a.args
 get_mas_kwargs(a::AbstractAssociationRuleExtractor) = a.kwargs
 
-"""
-Association rule mining algorithm extractors.
 
-These types serve as adapters that wrap the ModalAssociationRules mining algorithms
-(`apriori`, `fpgrowth`, `eclat`) to provide a unified interface within SoleXplorer.
-"""
+# Association rule mining algorithm extractors.
+# These types serve as adapters that wrap the ModalAssociationRules mining algorithms
+# (`apriori`, `fpgrowth`, `eclat`) to provide a unified interface within SoleXplorer.
 struct Apriori <: AbstractAssociationRuleExtractor
     method :: Base.Callable
     args   :: Tuple
@@ -57,6 +55,11 @@ end
 # ---------------------------------------------------------------------------- #
 #                                 mas_caller                                   #
 # ---------------------------------------------------------------------------- #
+# Execute association rule mining on a dataset using the specified mining algorithm.
+# This function serves as the main interface for association rule mining within SoleXplorer,
+# handling the conversion between different dataset types and the ModalAssociationRules 
+# mining framework. It automatically adapts the data representation based on the dataset 
+# type and applies the configured mining algorithm.
 function mas_caller(ds::AbstractDataSet, association::AbstractAssociationRuleExtractor)
     X = if ds isa ModalDataSet
         get_logiset(ds)

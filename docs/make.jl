@@ -19,6 +19,7 @@ makedocs(;
         "Home"              => "index.md",
         "Symbolic Analysis" => "symbolic_analysis.md",
         "Setup Dataset"     => "setup_dataset.md",
+        "Windowing"         => "windowing.md",
     ],
     warnonly=:true,
 )

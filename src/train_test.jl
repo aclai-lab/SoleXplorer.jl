@@ -1,80 +1,38 @@
-"""
-train_test.jl - Cross-Validation and Model Training Interface
-
-This module provides training workflows that:
-1. Execute cross-validation across multiple data folds
-2. Train ML models on each fold using MLJ
-3. Convert trained models to symbolic representations
-4. Return SoleModel containers with symbolic models for analysis
-
-Key components:
-- SoleModel: Container for collections of symbolic models from CV folds
-- train_test: Main interface for training and symbolic conversion
-"""
-
 # ---------------------------------------------------------------------------- #
 #                               abstract types                                 #
 # ---------------------------------------------------------------------------- #
-"""
-    AbstractSoleModel
-
-Base abstract type for all symbolic model containers in SoleXplorer.
-"""
+# Base abstract type for all symbolic model containers in SoleXplorer
 abstract type AbstractSoleModel end
 
 # ---------------------------------------------------------------------------- #
 #                                   types                                      #
 # ---------------------------------------------------------------------------- #
-"""
-Alias for XGBoost model types (classifier and regressor).
-"""
 const XGBoostModel = Union{XGBoostClassifier, XGBoostRegressor}
 
 # ---------------------------------------------------------------------------- #
 #                                  utilities                                   #
 # ---------------------------------------------------------------------------- #
-"""
-    has_xgboost_model(ds::AbstractDataSet) -> Bool
-    has_xgboost_model(model) -> Bool
-
-Check if dataset or model uses XGBoost.
-Used to determine if XGBoost-specific setup (watchlist) is needed.
-"""
+# Check if dataset or model uses XGBoost.
+# Used to determine if XGBoost-specific setup (watchlist) is needed
 has_xgboost_model(ds::AbstractDataSet) = has_xgboost_model(ds.mach.model)
 has_xgboost_model(model::MLJTuning.EitherTunedModel) = has_xgboost_model(model.model)
 has_xgboost_model(::XGBoostModel) = true
 has_xgboost_model(::Any) = false
 
-"""
-    is_tuned_model(ds::AbstractDataSet) -> Bool
-    is_tuned_model(model) -> Bool
-
-Check if dataset uses hyperparameter tuning.
-"""
+# Check if dataset uses hyperparameter tuning
 is_tuned_model(ds::AbstractDataSet) = is_tuned_model(ds.mach.model)
 is_tuned_model(::MLJTuning.EitherTunedModel) = true
 is_tuned_model(::Any) = false
 
-"""
-    get_early_stopping_rounds(ds::AbstractDataSet) -> Int
-
-Extract early stopping rounds parameter from XGBoost models.
-"""
 function get_early_stopping_rounds(ds::AbstractDataSet)
-    if is_tuned_model(ds)
-        return ds.mach.model.model.early_stopping_rounds
-    else
-        return ds.mach.model.early_stopping_rounds
-    end
+    return is_tuned_model(ds) ?
+        ds.mach.model.model.early_stopping_rounds :
+        ds.mach.model.early_stopping_rounds
+
 end
 
-"""
-    makewatchlist!(ds::AbstractDataSet, train::Vector{Int}, valid::Vector{Int})
-
-Create XGBoost watchlist for early stopping validation.
-
-Throws `ArgumentError` if validation set is empty.
-"""
+# Create XGBoost watchlist for early stopping validation
+# Throws `ArgumentError` if validation set is empty
 function makewatchlist!(ds::AbstractDataSet, train::Vector{Int}, valid::Vector{Int})
     isempty(valid) && throw(ArgumentError("No validation data provided, use preprocess valid_ratio parameter"))
 
@@ -99,13 +57,9 @@ function makewatchlist!(ds::AbstractDataSet, train::Vector{Int}, valid::Vector{I
     end
 end
 
-"""
-    set_watchlist!(ds::AbstractDataSet, i::Int)
-
-Configure XGBoost watchlist for fold `i` if early stopping is enabled.
-"""
+# Configure XGBoost watchlist for fold `i` if early stopping is enabled
 function set_watchlist!(ds::AbstractDataSet, i::Int)
-    # xgboost ha la funzione di earlystopping. per farla funzionare occorre passargli una makewatchlist e la valid_ratio
+    # XGBoost supports early stopping. This requires configuring a watchlist and validation ratio
     if get_early_stopping_rounds(ds) > 0
         train = get_train(ds.pidxs[i])
         valid = get_valid(ds.pidxs[i])
@@ -138,6 +92,9 @@ mutable struct SoleModel{D} <: AbstractSoleModel
     end
 end
 
+# ---------------------------------------------------------------------------- #
+#                                  base show                                   #
+# ---------------------------------------------------------------------------- #
 function Base.show(io::IO, solem::SoleModel{D}) where D
     n_models = length(solem.sole)
     dataset_type = D <: AbstractDataSet ? string(D) : "Unknown"
@@ -151,7 +108,7 @@ function Base.show(io::IO, ::MIME"text/plain", solem::SoleModel{D}) where D
 end
 
 # ---------------------------------------------------------------------------- #
-#                                 constructors                                 #
+#                                   methods                                    #
 # ---------------------------------------------------------------------------- #
 """
     solemodels(solem::SoleModel) -> Vector{AbstractModel}

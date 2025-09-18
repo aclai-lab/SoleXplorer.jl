@@ -1,35 +1,22 @@
-"""
-treatment.jl — Multidimensional Dataset Preprocessing
+# This module transforms multidimensional datasets (especially time series) into formats
+# suitable for different algorithm families:
 
-This module transforms multidimensional datasets (especially time series) into formats
-suitable for different algorithm families:
+# 1. Propositional algorithms (DecisionTree, XGBoost):
+#    - Applies windowing to divide time series into segments
+#    - Extracts scalar features (max, min, mean, etc.) from each window
+#    - Returns a standard tabular DataFrame
 
-1. Propositional algorithms (DecisionTree, XGBoost):
-   - Applies windowing to divide time series into segments
-   - Extracts scalar features (max, min, mean, etc.) from each window
-   - Returns a standard tabular DataFrame
+# 2. Modal algorithms (ModalDecisionTree):
+#    - Creates windowed time series preserving temporal structure
+#    - Applies reduction functions to manage dimensionality
 
-2. Modal algorithms (ModalDecisionTree):
-   - Creates windowed time series preserving temporal structure
-   - Applies reduction functions to manage dimensionality
-
-Key components:
-- WinFunction: Configurable windowing strategies (moving, adaptive, split)
-- TreatmentInfo: Metadata about applied transformations
-- treatment(): Main preprocessing interface
-
-Currently supports numeric and time series data with plans for arbitrary
-dimensional extensions.
-"""
+# Currently supports numeric and time series data with plans for arbitrary
+# dimensional extensions.
 
 # ---------------------------------------------------------------------------- #
 #                               abstract types                                 #
 # ---------------------------------------------------------------------------- #
-"""
-    AbstractTreatmentInfo
-
-Base type for metadata containers.
-"""
+# Base type for metadata containers
 abstract type AbstractTreatmentInfo end
 
 """
