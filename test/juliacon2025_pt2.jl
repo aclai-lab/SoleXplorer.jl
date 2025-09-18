@@ -47,14 +47,39 @@ lfc = symbolic_analysis(
     measures=(accuracy,)      
 )
 
+lXc = symbolic_analysis(
+    Xlight, yc;
+    model=XGBoostClassifier(num_round=4),
+    resample=Holdout(fraction_train=0.7, shuffle=true),
+    rng=Xoshiro(12345),
+    extractor=LumenRuleExtractor(),
+    measures=(accuracy,)      
+)
+
+# test with actual MLJ model
+Tree = @MLJ.load XGBoostClassifier pkg=XGBoost
+tree = Tree(;num_round=4)
+
+mlj = evaluate(
+    tree, Xlight, yc;
+    resampling=Holdout(fraction_train=0.7, shuffle=true, rng=Xoshiro(12345)),
+    measures=[accuracy],
+    per_observation=false,
+    verbosity=0
+)
+
+@test lXc.measures.measures_values[1] == mlj.measurement[1]
+
 # ---------------------------------------------------------------------------- #
 #                              serialize results                               #
 # ---------------------------------------------------------------------------- #
 # save data using JLD2
 jldsave("forest_juliacon2025.jld2"; X=rfc)
 
-# save lumen random forest decision set
-jldsave("lumen_randomforest_juliacon2025.jld2"; lr=rfc)
+lumenresult = lfc.rules[1]
+jldsave("lumen_randomforest_juliacon2025.jld2"; lumenresult)
+lumenresult = lXc.rules[1]
+jldsave("lumen_xgboost_juliacon2025.jld2"; lumenresult)
 
 # ---------------------------------------------------------------------------- #
 #                                  test data                                   #

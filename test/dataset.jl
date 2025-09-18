@@ -302,7 +302,7 @@ dsc = setup_dataset(Xc, yc)
     resample = CV(nfolds=3)
     
     @testset "PartitionInfo show methods" begin
-        pinfo = SX.PartitionInfo(resample, 0.7, 0.2, rng)
+        pinfo = SX.PartitionInfo(resample, 0.2, rng)
         
         # Test Base.show(io::IO, info::PartitionInfo)
         io = IOBuffer()
@@ -313,7 +313,6 @@ dsc = setup_dataset(Xc, yc)
         @test occursin("type:", output)
         @test occursin("valid_ratio:", output)
         @test occursin("rng:", output)
-        @test occursin("0.7", output)
         @test occursin("0.2", output)
         
         # Test Base.show(io::IO, ::MIME"text/plain", info::PartitionInfo)

@@ -128,7 +128,7 @@ end
                     model = symbolic_analysis(
                         Xc, yc;
                         model=AdaBoostStumpClassifier(;n_iter, feature_importance),
-                        resample=Holdout(; fraction_trainshuffle=true),
+                        resample=Holdout(; fraction_train=0.7, shuffle=true),
                         rng=Xoshiro(seed),
                         measures=(accuracy,)
                     )
