@@ -1,6 +1,5 @@
 using ZipArchives, CSV, JLD2, DataFrames
 using StatsBase, Random, MLJ
-using AudioReader
 using Audio911
 using SoleXplorer
 
@@ -23,8 +22,7 @@ end
 # audio processing pipeline
 function audio_pipeline(audio)
     win = Audio911.MovingWindow(window_size=256, window_step=128)
-    type = (:hann, :periodic)
-    frames = get_frames(audio; win, type)
+    frames = get_frames(audio; win, hanning)
 
     stft = get_stft(frames; spectrum_type=:magnitude)
     mel_spec = get_melspec(stft)
@@ -128,7 +126,7 @@ jldsave("respiratory_juliacon2025.jld2"; X=audio_features_df, y=conditions_ds)
 # ---------------------------------------------------------------------------- #
 #                                  test data                                   #
 # ---------------------------------------------------------------------------- #
-data  = JLD2.load("respiratory_juliacon2025.jld2")
+data  = JLD2.load(joinpath(@__DIR__, "respiratory_juliacon2025.jld2"))
 Xc = data["X"]
 # this is imperative: some algos accept only categorical value
 # TODO automate in solexplorer if it's a CLabel ?
@@ -153,15 +151,18 @@ rfc = symbolic_analysis(
     model=RandomForestClassifier(n_trees=30),
     resample=StratifiedCV(nfolds=20, shuffle=true),
     rng=Xoshiro(12345),
-    # extractor=InTreesRuleExtractor(),
+    extractor=LumenRuleExtractor(),
     measures=(accuracy,)      
 )
 
 # ---------------------------------------------------------------------------- #
-#                              serialize forest                                #
+#                              serialize results                               #
 # ---------------------------------------------------------------------------- #
 # save data using JLD2
 jldsave("forest_juliacon2025.jld2"; X=rfc)
+
+# save lumen random forest decision set
+jldsave("lumen_randomforest_juliacon2025.jld2"; lr=rfc)
 
 # ---------------------------------------------------------------------------- #
 #                                  test data                                   #
