@@ -16,8 +16,9 @@ makedocs(;
         assets=String[],
     ),
     pages=[
-        "Home"      => "index.md",
+        "Home"              => "index.md",
         "Symbolic Analysis" => "symbolic_analysis.md",
+        "Setup Dataset"     => "setup_dataset.md",
     ],
     warnonly=:true,
 )

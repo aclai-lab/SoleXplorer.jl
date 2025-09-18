@@ -267,7 +267,7 @@ Extract the model from the dataset's MLJ machine.
 get_mach_model(ds::AbstractDataSet)::MLJ.Model = ds.mach.model
 
 """
-    get_mach_model(ds::ModalDataSet)::SupportedLogiset
+    get_logiset(ds::ModalDataSet)::SupportedLogiset
 
 Extract the logiset (if present) from the dataset's MLJ machine.
 """
@@ -281,13 +281,13 @@ function _setup_dataset(
     y             :: AbstractVector,
     w             :: MaybeVector                  = nothing;
     model         :: MLJ.Model                    = _DefaultModel(y),
-    resample      :: ResamplingStrategy           = Holdout(shuffle=true),
+    resample      :: ResamplingStrategy           = Holdout(fraction_train=0.7, shuffle=true),
     valid_ratio   :: Real                         = 0.0,
     rng           :: AbstractRNG                  = TaskLocalRNG(),
+    tuning        :: MaybeTuning                  = nothing,
     win           :: WinFunction                  = AdaptiveWindow(nwindows=3, relative_overlap=0.1),
     features      :: Tuple{Vararg{Base.Callable}} = (maximum, minimum),
-    modalreduce   :: Base.Callable                = mean,
-    tuning        :: MaybeTuning                  = nothing
+    modalreduce   :: Base.Callable                = mean
 )::AbstractDataSet
     # propagate user rng to every field that needs it
     hasproperty(model, :rng)    && set_rng!(model, rng)
@@ -342,10 +342,10 @@ end
         resample=Holdout(fraction_train=0.7, shuffle=true),
         valid_ratio=0.0,
         rng=TaskLocalRNG(),
+        tuning=nothing,
         win=AdaptiveWindow(nwindows=3, relative_overlap=0.1),
         features=(maximum, minimum),
         modalreduce=mean,
-        tuning=nothing
     ) -> AbstractDataSet
 
 Creates and configures a dataset structure for machine learning.
@@ -366,137 +366,418 @@ and MLJ machine creation.
    auto-selected based on target type, if no `model` is subbmitted
 
 ## Available Models
-- **`DecisionTreeClassifier`**, **`DecisionTreeRegressor`**
-  **`RandomForestClassifier`**, **`RandomForestRegressor`**
-  **`AdaBoostStumpClassifier`**
-  from package [DecisionTree.jl]
 
-## Resample
+From package [DecisionTree.jl](https://github.com/JuliaAI/DecisionTree.jl):
+```
+DecisionTreeClassifier(
+  max_depth = -1, 
+  min_samples_leaf = 1, 
+  min_samples_split = 2, 
+  min_purity_increase = 0.0, 
+  n_subfeatures = 0, 
+  post_prune = false, 
+  merge_purity_threshold = 1.0, 
+  display_depth = 5, 
+  feature_importance = :impurity, 
+  rng = Random.TaskLocalRNG())
+```
+```
+DecisionTreeRegressor(
+  max_depth = -1, 
+  min_samples_leaf = 5, 
+  min_samples_split = 2, 
+  min_purity_increase = 0.0, 
+  n_subfeatures = 0, 
+  post_prune = false, 
+  merge_purity_threshold = 1.0, 
+  feature_importance = :impurity, 
+  rng = Random.TaskLocalRNG())
+```
+```
+RandomForestClassifier(
+  max_depth = -1, 
+  min_samples_leaf = 1, 
+  min_samples_split = 2, 
+  min_purity_increase = 0.0, 
+  n_subfeatures = -1, 
+  n_trees = 100, 
+  sampling_fraction = 0.7, 
+  feature_importance = :impurity, 
+  rng = Random.TaskLocalRNG())
+```
+```
+RandomForestRegressor(
+  max_depth = -1, 
+  min_samples_leaf = 1, 
+  min_samples_split = 2, 
+  min_purity_increase = 0.0, 
+  n_subfeatures = -1, 
+  n_trees = 100, 
+  sampling_fraction = 0.7, 
+  feature_importance = :impurity, 
+  rng = Random.TaskLocalRNG())
+```
+```
+AdaBoostStumpClassifier(
+  n_iter = 10, 
+  feature_importance = :impurity, 
+  rng = Random.TaskLocalRNG())
+```
 
+From package [ModalDecisionTrees.jl](https://github.com/aclai-lab/ModalDecisionTrees.jl):
+```
+ModalDecisionTree(
+  max_depth = nothing, 
+  min_samples_leaf = 4, 
+  min_purity_increase = 0.002, 
+  max_purity_at_leaf = Inf, 
+  max_modal_depth = nothing, 
+  relations = nothing, 
+  features = nothing, 
+  conditions = nothing, 
+  featvaltype = Float64, 
+  initconditions = nothing, 
+  downsize = SoleData.var"#downsize#541"(), 
+  force_i_variables = true, 
+  fixcallablenans = false, 
+  print_progress = false, 
+  rng = Random.TaskLocalRNG(), 
+  display_depth = nothing, 
+  min_samples_split = nothing, 
+  n_subfeatures = identity, 
+  post_prune = false, 
+  merge_purity_threshold = nothing, 
+  feature_importance = :split)
+```
+```
+ModalRandomForest(
+  sampling_fraction = 0.7, 
+  ntrees = 10, 
+  max_depth = nothing, 
+  min_samples_leaf = 1, 
+  min_purity_increase = -Inf, 
+  max_purity_at_leaf = Inf, 
+  max_modal_depth = nothing, 
+  relations = nothing, 
+  features = nothing, 
+  conditions = nothing, 
+  featvaltype = Float64, 
+  initconditions = nothing, 
+  downsize = SoleData.var"#downsize#542"(), 
+  force_i_variables = true, 
+  fixcallablenans = false, 
+  print_progress = false, 
+  rng = Random.TaskLocalRNG(), 
+  display_depth = nothing, 
+  min_samples_split = nothing, 
+  n_subfeatures = ModalDecisionTrees.MLJInterface.sqrt_f, 
+  post_prune = false, 
+  merge_purity_threshold = nothing, 
+  feature_importance = :split)
+```
+```
+ModalAdaBoost(
+  max_depth = 1, 
+  min_samples_leaf = 4, 
+  min_purity_increase = 0.002, 
+  max_purity_at_leaf = Inf, 
+  max_modal_depth = nothing, 
+  relations = :IA7, 
+  features = nothing, 
+  conditions = nothing, 
+  featvaltype = Float64, 
+  initconditions = nothing, 
+  downsize = SoleData.var"#downsize#541"(), 
+  force_i_variables = true, 
+  fixcallablenans = true, 
+  print_progress = false, 
+  display_depth = nothing, 
+  min_samples_split = nothing, 
+  n_subfeatures = identity, 
+  post_prune = false, 
+  merge_purity_threshold = nothing, 
+  n_iter = 10, 
+  feature_importance = :split, 
+  rng = Random.TaskLocalRNG())
+```
+From package [XGBoost.jl](https://github.com/dmlc/XGBoost.jl)
+```
+XGBoostClassifier(
+  test = 1, 
+  num_round = 100, 
+  booster = "gbtree", 
+  disable_default_eval_metric = 0, 
+  eta = 0.3, 
+  num_parallel_tree = 1, 
+  gamma = 0.0, 
+  max_depth = 6, 
+  min_child_weight = 1.0, 
+  max_delta_step = 0.0, 
+  subsample = 1.0, 
+  colsample_bytree = 1.0, 
+  colsample_bylevel = 1.0, 
+  colsample_bynode = 1.0, 
+  lambda = 1.0, 
+  alpha = 0.0, 
+  tree_method = "auto", 
+  sketch_eps = 0.03, 
+  scale_pos_weight = 1.0, 
+  updater = nothing, 
+  refresh_leaf = 1, 
+  process_type = "default", 
+  grow_policy = "depthwise", 
+  max_leaves = 0, 
+  max_bin = 256, 
+  predictor = "cpu_predictor", 
+  sample_type = "uniform", 
+  normalize_type = "tree", 
+  rate_drop = 0.0, 
+  one_drop = 0, 
+  skip_drop = 0.0, 
+  feature_selector = "cyclic", 
+  top_k = 0, 
+  tweedie_variance_power = 1.5, 
+  objective = "automatic", 
+  base_score = 0.5, 
+  early_stopping_rounds = 0, 
+  watchlist = nothing, 
+  nthread = 1, 
+  importance_type = "gain", 
+  seed = nothing, 
+  validate_parameters = false, 
+  eval_metric = String[], 
+  monotone_constraints = nothing)
+```
+```
+XGBoostRegressor(
+  test = 1, 
+  num_round = 100, 
+  booster = "gbtree", 
+  disable_default_eval_metric = 0, 
+  eta = 0.3, 
+  num_parallel_tree = 1, 
+  gamma = 0.0, 
+  max_depth = 6, 
+  min_child_weight = 1.0, 
+  max_delta_step = 0.0, 
+  subsample = 1.0, 
+  colsample_bytree = 1.0, 
+  colsample_bylevel = 1.0, 
+  colsample_bynode = 1.0, 
+  lambda = 1.0, 
+  alpha = 0.0, 
+  tree_method = "auto", 
+  sketch_eps = 0.03, 
+  scale_pos_weight = 1.0, 
+  updater = nothing, 
+  refresh_leaf = 1, 
+  process_type = "default", 
+  grow_policy = "depthwise", 
+  max_leaves = 0, 
+  max_bin = 256, 
+  predictor = "cpu_predictor", 
+  sample_type = "uniform", 
+  normalize_type = "tree", 
+  rate_drop = 0.0, 
+  one_drop = 0, 
+  skip_drop = 0.0, 
+  feature_selector = "cyclic", 
+  top_k = 0, 
+  tweedie_variance_power = 1.5, 
+  objective = "reg:squarederror", 
+  base_score = 0.5, 
+  early_stopping_rounds = 0, 
+  watchlist = nothing, 
+  nthread = 1, 
+  importance_type = "gain", 
+  seed = nothing, 
+  validate_parameters = false, 
+  eval_metric = String[], 
+  monotone_constraints = nothing)
+```
 
+Each model is fully parameterizable, see the original package reference documentation.
 
-- `tuning::MaybeTuning=nothing`: Hyperparameter tuning configuration,
-   requires `range` vectors.
-
-## Data Partitioning
+## Data Resample
 - `resample::ResamplingStrategy=Holdout(shuffle=true)`: Cross-validation strategy
 - `valid_ratio::Real=0.0`: Validation set proportion
 - `rng::AbstractRNG=TaskLocalRNG()`: Random number generator for reproducibility
 
+Resampling strategies are taken from the package [MLJ](https://juliaai.github.io/MLJ.jl/stable/).
+See official documentation [here](https://juliaai.github.io/MLJBase.jl/stable/resampling/).
+Available strategies:
+```
+Holdout(; fraction_train=0.7, shuffle=true, rng=TaskLocalRNG())
+```
+```
+CV(; nfolds=6,  shuffle=true, rng=TaskLocalRNG())
+```
+```
+StratifiedCV(; nfolds=6, shuffle=true, rng=TaskLocalRNG())
+```
+```
+TimeSeriesCV(; nfolds=4)
+```
+
+`valid_ratio` is used with XGBoost early stop [technique](https://xgboost.readthedocs.io/en/stable/prediction.html).
+`rng` can be setted externally for convenience.
+
+## Tuning
+`tuning::MaybeTuning=nothing`: Hyperparameter tuning configuration,
+requires `range` vectors, i.e:
+```
+range = SoleXplorer.range(:min_purity_increase; lower=0.1, upper=1.0, scale=:log)
+```
+
+Tuning strategies are adapted from the package [MLJ](https://juliaai.github.io/MLJ.jl/stable/)
+and package [MLJParticleSwarmOptimization](https://github.com/JuliaAI/MLJParticleSwarmOptimization.jl).
+
+Available strategies:
+```
+GridTuning(
+  goal = nothing, 
+  resolution = 10, 
+  shuffle = true, 
+  rng = Random.TaskLocalRNG(),
+  range = range,
+  resampling = nothing
+  measure = nothing
+  repeats = 1)
+```
+```
+RandomTuning(
+  bounded = Distributions.Uniform, 
+  positive_unbounded = Distributions.Gamma, 
+  other = Distributions.Normal, 
+  rng = Random.TaskLocalRNG(),
+  range = range,
+  resampling = nothing
+  measure = nothing
+  repeats = 1)
+```
+```
+CubeTuning(
+  gens = 1, 
+  popsize = 100, 
+  ntour = 2, 
+  ptour = 0.8, 
+  interSampleWeight = 1.0, 
+  ae_power = 2, 
+  periodic_ae = false, 
+  rng = Random.TaskLocalRNG(),
+  range = range,
+  resampling = nothing
+  measure = nothing
+  repeats = 1
+```
+```
+ParticleTuning(
+  n_particles = 3, 
+  w = 1.0, 
+  c1 = 2.0, 
+  c2 = 2.0, 
+  prob_shift = 0.25, 
+  rng = Random.TaskLocalRNG(),
+  range = range,
+  resampling = nothing
+  measure = nothing
+  repeats = 1)
+```
+```
+AdaptiveTuning(
+  n_particles = 3, 
+  c1 = 2.0, 
+  c2 = 2.0, 
+  prob_shift = 0.25, 
+  rng = Random.TaskLocalRNG(),
+  range = range,
+  resampling = nothing
+  measure = nothing
+  repeats = 1) 
+```
+
 ## Multidimensional Data Processing
+These parameters are needed only if a time series dataset is used.
+With these parameters we can tweak size reduction, in case of **modal** analysis
+or aggregation strategy, in case of further **propositional** analysis.
+Parameters are the same, SoleXplorer will take care of automatically set the case,
+depending on the model choose.
+
 - `win::WinFunction=AdaptiveWindow(nwindows=3, relative_overlap=0.1)`: Windowing function
+Available windows strategies:
+`MovingWindow()`, see parameters [MovingWindow]@(ref).
+`WholeWindow()`, see parameters [WholeWindow]@(ref).
+`SplitWindow()`, see parameters [SplitWindow]@(ref).
+`AdaptiveWindow()`, see parameters [AdaptiveWindow]@(ref).
+
 - `features::Tuple{Vararg{Base.Callable}}=(maximum, minimum)`: Feature extraction functions
+Note that beyond standard reduction functions (e.g., maximum, minimum, mean, mode), [Catch22](https://time-series-features.gitbook.io/catch22) time-series features are also available.
 - `modalreduce::Base.Callable=mean`: Reduction function for modal algorithms
 
 # Returns
 - `PropositionalDataSet{M}`: For standard ML algorithms with tabular data
 - `ModalDataSet{M}`: For modal logic algorithms with structured data
 
-# Processing Pipeline
-
-## 1. Random Number Generator Propagation
+# Examples:
 ```julia
-# Ensures reproducible results across all components
-hasproperty(model, :rng) && set_rng!(model, rng)
-hasproperty(resample, :rng) && (resample = set_rng(resample, rng))
-```
+using SoleXplorer
+using MLJ
+using DataFrames, Random
+const SX = SoleXplorer
 
-## 2. Model-Specific Configuration
-- **Modal models**: Sets feature extraction functions via `set_conditions!`
-- **Holdout resampling**: Configures training fraction via `set_fraction_train`
+Xc, yc = @load_iris
+Xc = DataFrame(Xc)
 
-## 3. Data Type Detection & Processing
-```julia
-if X[1, 1] isa AbstractArray
-    # Multidimensional data: choose treatment strategy
-    treat = model isa Modal ? :reducesize : :aggregate
-    X, tinfo = treatment(X; win, features, treat, modalreduce)
-else
-    # Tabular data: encode categorical variables
-    X = code_dataset(X)
-    tinfo = nothing
-end
-```
+Xr, yr = @load_boston
+Xr = DataFrame(Xr)
 
-## 4. Data Partitioning
-Creates train/test splits with cross-validation folds using the specified resampling strategy.
+natopsloader = NatopsLoader()
+Xts, yts = SX.load(natopsloader)
 
-## 5. Hyperparameter Tuning Setup
-```julia
-if !isnothing(tuning)
-    # Convert SX.range to MLJ.range specifications
-    # Wrap model in TunedModel with tuning configuration
-    # Propagate RNG to tuning components
-end
-```
+# basic setup
+dsc = setup_dataset(Xc, yc)
 
-## 6. MLJ Machine Creation
-Creates MLJ machine with or without sample weights, ready for training.
+# model type specification
+dsc = setup_dataset(
+    Xc, yc;
+    model=AdaBoostStumpClassifier()
+)
 
-## 7. Dataset Construction
-Uses the smart `DataSet` constructor to create the appropriate dataset type.
+# resampling
+dsc = setup_dataset(
+    Xc, yc;
+    resample=CV(nfolds=10),
+)
 
-# Data Type Handling
+dsc = setup_dataset(
+    Xc, yc;
+    resample=CV(nfolds=10, shuffle=true),
+    rng=Xoshiro(1)
+)
 
-## Tabular Data (Standard Case)
-- **Detection**: `X[1, 1]` is not an `AbstractArray`
-- **Processing**: Categorical encoding via `code_dataset`
-- **Result**: `PropositionalDataSet` with encoded features
+# tuning
+range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
+dsc = setup_dataset(
+    Xc, yc;
+    model=ModalDecisionTree(),
+    resample=CV(nfolds=5, shuffle=true),
+    rng=Xoshiro(1),
+    tuning=GridTuning(resolution=10, resampling=CV(nfolds=3), range=range, measure=accuracy, repeats=2)
+)
 
-## Multidimensional Data (Time Series/Structured)
-- **Detection**: `X[1, 1]` is an `AbstractArray`
-- **Modal algorithms**: Use `:reducesize` treatment → `ModalDataSet`
-- **Standard algorithms**: Use `:aggregate` treatment → `PropositionalDataSet`
-
-# Tuning Integration
-Supports both simple and complex hyperparameter tuning configurations:
-```julia
-# Simple range tuning
-tuning = Tuning(range=(:max_depth, 1:10))
-
-# Complex multi-parameter tuning
-tuning = Tuning(
-    range=[(:max_depth, 1:10), (:min_samples_split, 2:20)],
-    measure=accuracy,
-    resampling=CV(nfolds=3)
+# time-series
+dts = setup_dataset(
+    Xts, yts;
+    model=ModalRandomForest(),
+    resample=Holdout(fraction_train=0.7, shuffle=true),
+    rng=Xoshiro(1),
+    win=AdaptiveWindow(nwindows=3, relative_overlap=0.3),
+    features=(minimum, maximum),
+    modalreduce=mode
 )
 ```
 
-# Examples
-```julia
-# Standard classification
-dataset = _setup_dataset(X_tabular, y_class)
-
-# Regression with custom model
-dataset = _setup_dataset(X, y_continuous; model=RandomForestRegressor())
-
-# Modal learning with time series
-dataset = _setup_dataset(X_timeseries, y; model=ModalDecisionTree())
-
-# With hyperparameter tuning
-dataset = _setup_dataset(X, y; tuning=Tuning(range=(:max_depth, 1:10)))
-
-# Custom cross-validation
-dataset = _setup_dataset(X, y; resample=CV(nfolds=5), rng=123)
-```
-
-# Implementation Details
-- **Efficient processing**: Minimal data copying through view-based operations
-- **Type stability**: Returns concrete dataset types based on input characteristics
-- **Error handling**: Validates inputs and provides informative error messages
-- **Memory efficiency**: Uses MLJ's lazy evaluation and caching mechanisms
-
-# See Also
-- [`setup_dataset`](@ref): Public interface for this function
-- [`DataSet`](@ref): Smart constructor for dataset types
-- [`treatment`](@ref): Multidimensional data processing
-- [`partition`](@ref): Data partitioning utilities
-- [`code_dataset`](@ref): Categorical encoding
-- [`PropositionalDataSet`](@ref), [`ModalDataSet`](@ref): Dataset types
-
-# Internal Use
-This function is the core implementation behind the public `setup_dataset` interface.
-External users should typically use `setup_dataset` instead of calling this directly.
+# See also: [`DataSet`](@ref), [`PropositionalDataSet`](@ref), [`ModalDataSet`](@ref), [`symbolic_analysis`](@ref)
 """
 setup_dataset(args...; kwargs...) = _setup_dataset(args...; kwargs...)
 
