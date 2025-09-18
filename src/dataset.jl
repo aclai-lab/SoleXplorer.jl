@@ -371,8 +371,19 @@ and MLJ machine creation.
 # Keyword Arguments
 
 ## Model Configuration
-- `model::MLJ.Model=_DefaultModel(y)`: ML model to use, 
+- `model::MLJ.Model=_DefaultModel(y)`: Sole compatible MLJ model to use, 
    auto-selected based on target type, if no `model` is subbmitted
+
+## Available Models
+- **`DecisionTreeClassifier`**, **`DecisionTreeRegressor`**
+  **`RandomForestClassifier`**, **`RandomForestRegressor`**
+  **`AdaBoostStumpClassifier`**
+  from package [DecisionTree.jl]
+
+## Resample
+
+
+
 - `tuning::MaybeTuning=nothing`: Hyperparameter tuning configuration,
    requires `range` vectors.
 

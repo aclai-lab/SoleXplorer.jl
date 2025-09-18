@@ -108,6 +108,7 @@ export GridTuning, RandomTuning, CubeTuning, ParticleTuning, AdaptiveTuning
 export AbstractDataSet
 export PropositionalDataSet, ModalDataSet, DataSet
 export code_dataset
+export get_mach, get_mach_model, get_logiset
 export setup_dataset
 include("dataset.jl")
 
