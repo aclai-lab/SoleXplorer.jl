@@ -271,6 +271,11 @@ dsc = setup_dataset(
 )
 @test dsc isa SX.PropositionalDataSet{<:MLJ.MLJTuning.ProbabilisticTunedModel}
 
+tuning=GridTuning(resolution=10, range=range)
+@test propertynames(tuning) == (:strategy, :range, :resampling, :measure, :repeats)
+@test SX.getproperty(tuning, :resampling) isa Holdout
+@test get_strategy(tuning) isa MLJ.Grid
+
 # ---------------------------------------------------------------------------- #
 #                               various cases                                  #
 # ---------------------------------------------------------------------------- #
@@ -442,12 +447,35 @@ using DataFrames
     end
 end
 
-# range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
-
-# @btime setup_dataset(
-#     Xc, yc;
-#     model=ModalDecisionTree(),
-#     resampling=CV(nfolds=5, shuffle=true),
-#     rng=Xoshiro(1),
-#     tuning=GridTuning(resolution=10, resampling=CV(nfolds=3), range=range, measure=accuracy, repeats=2)
-# );
+@testset "Tuning show methods" begin
+    # Create a test tuning configuration
+    tuning = GridTuning(
+        range=(:max_depth, 1:10),
+        measure=accuracy,
+        repeats=2
+    )
+    
+    # Test text/plain show method
+    io = IOBuffer()
+    show(io, MIME"text/plain"(), tuning)
+    output = String(take!(io))
+    
+    @test contains(output, "Tuning{")
+    @test contains(output, "strategy:")
+    @test contains(output, "range:")
+    @test contains(output, "resampling:")
+    @test contains(output, "measure:")
+    @test contains(output, "repeats:")
+    
+    # Test compact show method
+    io = IOBuffer()
+    show(io, tuning)
+    compact_output = String(take!(io))
+    
+    @test contains(compact_output, "Tuning{")
+    @test contains(compact_output, "repeats=2")
+    
+    # Test that it doesn't error when printed
+    @test_nowarn println(tuning)
+    @test_nowarn display(tuning)
+end
