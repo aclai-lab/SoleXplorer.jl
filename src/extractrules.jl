@@ -1,12 +1,7 @@
 # ---------------------------------------------------------------------------- #
 #                                 utilities                                    #
 # ---------------------------------------------------------------------------- #
-# Callable constructor for RuleExtractor types that creates an extractor-parameters tuple.
-
-# This function enables a convenient syntax for creating rule extractors with custom parameters
-# by making RuleExtractor types callable. It returns a tuple containing the default extractor
-# instance and the provided keyword arguments as a NamedTuple, which can be used directly
-# in the symbolic analysis pipeline
+# callable constructor for RuleExtractor types that creates an extractor-parameters tuple.
 function (RE::Type{<:RuleExtractor})(;kwargs...)
     return (RE(), (;kwargs...))
 end

@@ -1,10 +1,10 @@
 # dataset.jl
 
-# Dataset construction and management utilities for SoleXplorer.
+# dataset construction and management utilities for SoleXplorer
 
-# This module handles the creation of specialized dataset structures that encapsulate
+# this module handles the creation of specialized dataset structures that encapsulate
 # MLJ machines, partitioning information for propositional sets, including also
-# treatment details for modal learning sets.
+# treatment details for modal learning sets
 
 # ---------------------------------------------------------------------------- #
 #                               abstract types                                 #
@@ -33,9 +33,9 @@ const MaybeTreatInfo = Maybe{TreatmentInfo}
 # ---------------------------------------------------------------------------- #
 #                                  defaults                                    #
 # ---------------------------------------------------------------------------- #
-# Return a default model appropriate for the target variable type.
-# This function is used when no explicit model is provided to `setup_dataset`,
-# automatically selecting between classification and regression.
+# return a default model appropriate for the target variable type
+# this function is used when no explicit model is provided to `setup_dataset`,
+# automatically selecting between classification and regression
 function _DefaultModel(y::AbstractVector)::MLJ.Model
     if     eltype(y) <: CLabel
         return DecisionTreeClassifier()

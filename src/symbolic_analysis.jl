@@ -1,6 +1,6 @@
 # symbolic_analysis.jl — Unified Symbolic Model Analysis Interface
 
-# This module provides the main entry point for complete symbolic model analysis workflows:
+# this module provides the main entry point for complete symbolic model analysis workflows:
 
 # 1. Dataset setup and cross-validation training (via train_test.jl)
 # 2. Training and testing models (via train_test.jl)

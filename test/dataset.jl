@@ -288,19 +288,22 @@ y_invalid = fill(nothing, length(yc))
 dsc = setup_dataset(Xc, yc)
 @test length(dsc) == length(dsc.pidxs)
 
+@test SX.get_X(dsc, :train) isa Vector{<:AbstractDataFrame}
 @test SX.get_y(dsc, :test) isa Vector{<:AbstractVector{<:SX.CLabel}}
 @test SX.get_mach_model(dsc) isa DecisionTreeClassifier
 
 @test_nowarn dsc.pinfo
 @test_nowarn dsc.pidxs
+@test_nowarn length(dsc.pidxs)
 
 @test length(dsc.pidxs) == length(dsc)
+
+@test_throws ArgumentError treatment(Xc, :invalid)
 
 # ---------------------------------------------------------------------------- #
 #                                  Base.show                                   #
 # ---------------------------------------------------------------------------- #
 @testset "Base.show tests for partition.jl" begin
-    
     # Setup test data
     rng = Xoshiro(42)
     y = ["A", "B", "A", "B", "A", "B", "A", "B"]

@@ -16,13 +16,13 @@ const XGBoostModel = Union{XGBoostClassifier, XGBoostRegressor}
 # used to determine if XGBoost-specific setup (watchlist) is needed
 has_xgboost_model(ds::AbstractDataSet) = has_xgboost_model(ds.mach.model)
 has_xgboost_model(model::MLJTuning.EitherTunedModel) = has_xgboost_model(model.model)
-has_xgboost_model(::XGBoostModel) = true
-has_xgboost_model(::Any) = false
+# has_xgboost_model(::XGBoostModel) = true
+# has_xgboost_model(::Any) = false
 
 # Check if dataset uses hyperparameter tuning
 is_tuned_model(ds::AbstractDataSet) = is_tuned_model(ds.mach.model)
-is_tuned_model(::MLJTuning.EitherTunedModel) = true
-is_tuned_model(::Any) = false
+# is_tuned_model(::MLJTuning.EitherTunedModel) = true
+# is_tuned_model(::Any) = false
 
 function get_early_stopping_rounds(ds::AbstractDataSet)
     return is_tuned_model(ds) ?

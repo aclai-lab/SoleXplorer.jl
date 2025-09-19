@@ -1,7 +1,7 @@
 # ---------------------------------------------------------------------------- #
 #                               abstract types                                 #
 # ---------------------------------------------------------------------------- #
-# Base type for performance measure containers
+# base type for performance measure containers
 abstract type AbstractMeasures end
 
 # ---------------------------------------------------------------------------- #
@@ -18,13 +18,13 @@ const ValidMeasures = Union{
 # ---------------------------------------------------------------------------- #
 #                                  measures                                    #
 # ---------------------------------------------------------------------------- #
-# Container for performance evaluation results across CV folds.
+# container for performance evaluation results across CV folds
 
-# Fields
-# - `per_fold::Vector{Vector{ValidMeasures}}`: Measure values for each fold/measure combination
-# - `measures::Vector{RobustMeasure}`: The measure functions used for evaluation  
-# - `measures_values::Vector{ValidMeasures}`: Aggregated measure values across folds
-# - `operations::AbstractVector`: Prediction operations used (predict, predict_mode, etc.)
+# fields
+# - per_fold: measure values for each fold/measure combination
+# - measures: the measure functions used for evaluation  
+# - measures_values: the measure values
+# - operations: prediction operations used (predict, predict_mode, etc.)
 struct Measures <: AbstractMeasures
     per_fold        :: Vector{Vector{ValidMeasures}}
     measures        :: Vector{RobustMeasure}
@@ -56,7 +56,7 @@ end
 # ---------------------------------------------------------------------------- #
 #                                  default                                     #
 # ---------------------------------------------------------------------------- #
-# Return default measures appropriate for the target variable type
+# return default measures appropriate for the target variable type
 function _DefaultMeasures(y::AbstractVector)::Tuple{Vararg{FussyMeasure}}
     return eltype(y) <: CLabel ? (accuracy, kappa) : (rms, l1, l2)
 end
@@ -64,8 +64,8 @@ end
 # ---------------------------------------------------------------------------- #
 #                               get operations                                 #
 # ---------------------------------------------------------------------------- #
-# Adapted from MLJ's evaluate
-# Determine appropriate prediction operations for each measure
+# adapted from MLJ's evaluate
+# determine appropriate prediction operations for each measure
 function get_operations(
     measures   :: Vector,
     prediction :: Symbol,
@@ -81,8 +81,9 @@ function get_operations(
             elseif kind_of_proxy === MLJBase.LearnAPI.Point()
                 if observation_scitype <: Union{Missing,Finite}
                     return sole_predict_mode
-                elseif observation_scitype <:Union{Missing,Infinite}
-                    return sole_predict_mean
+                # TODO implement
+                # elseif observation_scitype <:Union{Missing,Infinite}
+                #     return sole_predict_mean
                 else
                     throw(err_ambiguous_operation(prediction, m))
                 end

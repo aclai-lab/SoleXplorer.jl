@@ -1,21 +1,20 @@
 # ---------------------------------------------------------------------------- #
 #                               abstract types                                 #
 # ---------------------------------------------------------------------------- #
-# Base type for partition metadata containers.
+# base type for partition metadata containers
 abstract type AbstractPartitionInfo end
 
-# Base type for partition index containers.
+# base type for partition index containers
 abstract type AbstractPartitionIdxs end
 
 # ---------------------------------------------------------------------------- #
 #                                 dataset info                                 #
 # ---------------------------------------------------------------------------- #
-# Container for partition strategy metadata and parameters.
+# container for partition strategy metadata and parameters
 
-# Fields
-# - `type::T`: MLJ resampling strategy (e.g., CV, Holdout, StratifiedCV)
-# - `valid_ratio::Real`: Proportion of data for validation (0.0-1.0)
-# - `rng::AbstractRNG`: Random number generator for reproducible splits
+# fields
+# - type::T: MLJ resampling strategy (e.g., CV, Holdout, StratifiedCV)
+# - valid_ratio::Real: Proportion of data for validation (0.0-1.0), optinal for XGBoost
 struct PartitionInfo{T} <: AbstractPartitionInfo
     type        :: T
     valid_ratio :: Real
@@ -50,12 +49,7 @@ end
 # ---------------------------------------------------------------------------- #
 #                             partition indexes                                #
 # ---------------------------------------------------------------------------- #
-# Container for train/validation/test index vectors.
-
-# Fields
-# - `train::Vector{T}`: Row indices for training data
-# - `valid::Vector{T}`: Row indices for validation data (may be empty)
-# - `test::Vector{T}`: Row indices for test/holdout data
+# container for train/validation/test index vectors
 struct PartitionIdxs{T<:Int} <: AbstractPartitionIdxs
     train :: Vector{T}
     valid :: Vector{T}
@@ -79,17 +73,7 @@ end
 # ---------------------------------------------------------------------------- #
 function partition end
 
-# Create data partitions using MLJ resampling strategies.
-
-# Arguments
-# - `y::AbstractVector{<:Label}`: Target vector for stratified sampling
-# - `resampling::MLJ.ResamplingStrategy`: Partitioning strategy (CV, Holdout, etc.)
-# - `valid_ratio::Real`: Validation data proportion (0.0-1.0)
-# - `rng::AbstractRNG`: Random number generator for reproducibility
-
-# Returns
-# - `Vector{PartitionIdxs}`: One partition per fold/split
-# - `PartitionInfo`: Metadata about partitioning configuration
+# create data partitions using MLJ resampling strategies
 function partition(
     y           :: AbstractVector{<:Label};
     resampling  :: MLJ.ResamplingStrategy,

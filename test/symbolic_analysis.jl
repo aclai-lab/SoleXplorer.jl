@@ -397,6 +397,56 @@ modelts = symbolic_analysis(
 @test modelts isa SX.ModelSet
 
 # ---------------------------------------------------------------------------- #
+#                               get_operations                                 #
+# ---------------------------------------------------------------------------- #
+@testset "probabilistic predictions" begin
+    # mock measures with different properties
+    struct MockMeasure{K, O}
+        kind_of_proxy::K
+        observation_scitype::O
+    end
+    
+    # override MLJ methods for our mock measures
+    MLJ.MLJBase.StatisticalMeasuresBase.kind_of_proxy(m::MockMeasure) = m.kind_of_proxy
+    MLJ.MLJBase.StatisticalMeasuresBase.observation_scitype(m::MockMeasure) = m.observation_scitype
+    
+    # invalid
+    point_ambiguous = MockMeasure(MLJ.MLJBase.LearnAPI.Point(), String)
+    @test_throws Exception SX.get_operations([point_ambiguous], :probabilistic)
+    
+    # test unknown proxy type
+    unknown_proxy = MockMeasure("UnknownProxy", Missing)
+    @test_throws Exception SX.get_operations([unknown_proxy], :probabilistic)
+end
+
+@testset "deterministic predictions" begin    
+    # test Distribution proxy (should throw error)
+    dist_measure = MockMeasure(MLJ.MLJBase.LearnAPI.Distribution(), Missing)
+    @test_throws Exception SX.get_operations([dist_measure], :deterministic)
+    
+    # test unknown proxy type
+    unknown_proxy = MockMeasure("UnknownProxy", Missing)
+    @test_throws Exception SX.get_operations([unknown_proxy], :deterministic)
+end
+
+@testset "interval predictions" begin
+    # test ConfidenceInterval proxy
+    interval_measure = MockMeasure(MLJ.MLJBase.LearnAPI.ConfidenceInterval(), Missing)
+    ops = SX.get_operations([interval_measure], :interval)
+    @test ops[1] == SX.sole_predict
+    
+    # test non-ConfidenceInterval proxy
+    point_measure = MockMeasure(MLJ.MLJBase.LearnAPI.Point(), Missing)
+    @test_throws Exception SX.get_operations([point_measure], :interval)
+end
+
+@testset "unsupported prediction types" begin
+    point_measure = MockMeasure(MLJ.MLJBase.LearnAPI.Point(), Missing)
+    @test_throws Exception SX.get_operations([point_measure], :unsupported)
+    @test_throws Exception SX.get_operations([point_measure], :invalid)
+end
+
+# ---------------------------------------------------------------------------- #
 #                                   base.show                                  #
 # ---------------------------------------------------------------------------- #
 @testset "Base.show methods" begin
@@ -430,3 +480,10 @@ modelts = symbolic_analysis(
         @test contains(output, "Models:")
     end
 end
+
+# ---------------------------------------------------------------------------- #
+#                               X not a dataframe                              #
+# ---------------------------------------------------------------------------- #
+Xc, yc = @load_iris
+modelc = symbolic_analysis(Xc, yc)
+@test modelc isa SX.ModelSet

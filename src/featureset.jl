@@ -65,9 +65,8 @@ A minimal feature set containing only basic statistical measures for time series
 - `minimum`: Minimum value in the time series  
 - `mean`   : Arithmetic mean of the time series
 - `std`    : Standard deviation of the time series
-
 """
-base_set     = (maximum, minimum, MLJ.mean, MLJ.std)
+base_set = (maximum, minimum, MLJ.mean, MLJ.std)
 
 """
     catch9
@@ -87,12 +86,11 @@ The Catch22 features are based on the CAnonical Time-series CHaracteristics from
 - Repository: https://github.com/DynamicsAndNeuralSystems/catch22
 - Article:    https://doi.org/10.1007/s10618-019-00647-x
 - Author: Carl H. Lubba et al
+"""
+catch9 = (maximum, minimum, MLJ.mean, MLJ.median, MLJ.std,
+          stretch_high, stretch_decreasing, entropy_pairs, transition_variance)
 
 """
-catch9       = (maximum, minimum, MLJ.mean, MLJ.median, MLJ.std,
-                stretch_high, stretch_decreasing, entropy_pairs, transition_variance)
-
-                """
     catch22_set
 
 The complete Catch22 feature set.
@@ -126,7 +124,6 @@ The Catch22 features are based on the CAnonical Time-series CHaracteristics from
 - Repository: https://github.com/DynamicsAndNeuralSystems/catch22
 - Article:    https://doi.org/10.1007/s10618-019-00647-x
 - Author: Carl H. Lubba et al
-
 """
 catch22_set  = (mode_5, mode_10, embedding_dist, acf_timescale, acf_first_min, ami2,
                 trev, outlier_timing_pos, outlier_timing_neg, whiten_timescale, 
@@ -163,12 +160,6 @@ analysis, and the full Catch22 suite.
   `rs_range`, `dfa`
 - **Other**:
   `embedding_dist`
-
-# References
-The Catch22 features are based on the CAnonical Time-series CHaracteristics from:
-- Repository: https://github.com/DynamicsAndNeuralSystems/catch22
-- Article:    https://doi.org/10.1007/s10618-019-00647-x
-- Author: Carl H. Lubba et al
 """
 complete_set = (maximum, minimum, MLJ.mean, MLJ.median, MLJ.std,
                 MLJ.StatsBase.cov, mode_5, mode_10, embedding_dist, acf_timescale,
