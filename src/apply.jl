@@ -1,19 +1,19 @@
 # apply.jl - Unified Model Prediction Interface
 
-# This methods provide `apply(m, X, y)` methods that:
-# 1. Extract fitted models from MLJ machine wrappers
-# 2. Convert them to SoleModels symbolic representations
-# 3. Create logical datasets and apply symbolic models
-# 4. Return symbolic models ready for rule extraction and analysis
+# this methods provide `apply(m, X, y)` methods that:
+# 1. extract fitted models from MLJ machine wrappers
+# 2. convert them to SoleModels symbolic representations
+# 3. create logical datasets and apply symbolic models
+# 4. return symbolic models ready for rule extraction and analysis
 
-# m = MLJ Machine
+# m = MLJ.Machine
 
 # Supported ML packages:
 # - DecisionTree.jl
 # - ModalDecisionTrees.jl
 # - XGBoost.jl
 
-# All methods handle both regular and hyperparameter-tuned models.
+# all methods handle both regular and hyperparameter-tuned models
 
 # ---------------------------------------------------------------------------- #
 #                                   types                                      #
@@ -33,7 +33,7 @@ const TunedModalDecisionTreeApply = Union{
 # ---------------------------------------------------------------------------- #
 #                              xgboost utilities                               #
 # ---------------------------------------------------------------------------- #
-# Extract base_score from XGBoost models, handling both regular and tuned variants
+# extract base_score from XGBoost models, handling both regular and tuned variants
 function get_base_score(m::Machine)
     if m.model isa MLJTuning.EitherTunedModel
         return hasproperty(m.model.model, :base_score) ? m.model.model.base_score : nothing
@@ -42,10 +42,10 @@ function get_base_score(m::Machine)
     end
 end
 
-# Create mapping from internal class indices to MLJ class labels
+# create mapping from internal class indices to MLJ class labels
 get_encoding(classes_seen) = Dict(MLJ.int(c) => c for c in MLJ.classes(classes_seen))
 
-# Extract ordered class labels from encoding dictionary
+# extract ordered class labels from encoding dictionary
 get_classlabels(encoding)  = [string(encoding[i]) for i in sort(keys(encoding) |> collect)]
 
 # ---------------------------------------------------------------------------- #

@@ -255,31 +255,18 @@ solemr = train_test(
     output_5fold = String(take!(io))
     
     @test occursin("Number of models: 5", output_5fold)
-
-    
-    # @testset "SoleModel show with different dataset types" begin
-    #     # Test with regression dataset
-    #     X_reg = DataFrame(
-    #         x1 = randn(rng, 10),
-    #         x2 = randn(rng, 10)
-    #     )
-    #     y_reg = randn(rng, 10)
-        
-    #     ds_reg = setup_dataset(
-    #         X_reg, y_reg,
-    #         model = DecisionTreeRegressor(),
-    #         resampling = CV(nfolds=2),
-    #         rng = rng
-    #     )
-        
-    #     solem_reg = train_test(ds_reg)
-        
-    #     io = IOBuffer()
-    #     show(io, solem_reg)
-    #     output_reg = String(take!(io))
-        
-    #     @test occursin("SoleModel{", output_reg)
-    #     @test occursin("Number of models: 2", output_reg)
-    #     @test occursin("DataSet", output_reg)
-    # end
 end
+
+model = XGBoostClassifier()
+@test SX.has_xgboost_model(model) == true
+model = RandomForestClassifier()
+@test SX.has_xgboost_model(model) == false
+
+dsc = setup_dataset(Xc, yc)
+@test SX.is_tuned_model(dsc.mach.model) == false
+range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
+dsc = setup_dataset(
+    Xc, yc;
+    tuning=GridTuning(resolution=10, resampling=CV(nfolds=3), range=range, measure=accuracy, repeats=2)
+)
+@test SX.is_tuned_model(dsc.mach.model) == true

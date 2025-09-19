@@ -1,3 +1,13 @@
+# Association Rule Mining Adapters
+
+# this module provides adapter interfaces for working with the ModalAssociationRules.jl
+# package from ACLAI Lab, enabling seamless integration of association rule mining
+# algorithms within the SoleXplorer framework
+
+# the adapters wrap the core mining algorithms (`apriori`, `fpgrowth`, `eclat`) from
+# ModalAssociationRules.jl and provide a unified interface for both propositional
+# and modal datasets
+
 # ---------------------------------------------------------------------------- #
 #                               abstract types                                 #
 # ---------------------------------------------------------------------------- #
@@ -11,7 +21,6 @@ const MaybeAbstractAssociationRuleExtractor = Maybe{AbstractAssociationRuleExtra
 get_method(a::AbstractAssociationRuleExtractor)     = a.method
 get_mas_args(a::AbstractAssociationRuleExtractor)   = a.args
 get_mas_kwargs(a::AbstractAssociationRuleExtractor) = a.kwargs
-
 
 # Association rule mining algorithm extractors.
 # These types serve as adapters that wrap the ModalAssociationRules mining algorithms

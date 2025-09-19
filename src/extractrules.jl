@@ -1,3 +1,13 @@
+# Rule Extraction Adapters
+
+# This module provides adapter interfaces for working with the SolePostHoc.jl
+# package from ACLAI Lab, enabling seamless integration of rule extraction
+# algorithms within the SoleXplorer framework.
+
+# The adapters wrap various rule extraction methods from SolePostHoc.jl and
+# provide a unified interface for extracting interpretable rules from trained
+# machine learning models across different cross-validation folds.
+
 # ---------------------------------------------------------------------------- #
 #                                 utilities                                    #
 # ---------------------------------------------------------------------------- #

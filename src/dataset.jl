@@ -49,27 +49,25 @@ end
 # ---------------------------------------------------------------------------- #
 #                                   set rng                                    #
 # ---------------------------------------------------------------------------- #
-# Set the random number generator for a model that supports it.
-# This function mutates the model's `rng` field if it exists, ensuring
-# reproducible results across training sessions.
+# Set the random number generator for a model that supports it
 function set_rng!(m::MLJ.Model, rng::AbstractRNG)::MLJ.Model
     m.rng = rng
     return m
 end
 
-# Set the random number generator for a resampling strategy.
+# set the random number generator for a resampling strategy
 function set_rng(r::MLJ.ResamplingStrategy, rng::AbstractRNG)::ResamplingStrategy
     typeof(r)(merge(MLJ.params(r), (rng=rng,))...)
 end
 
-# Set random number generators for tuning-related components of a model.
+# set random number generators for tuning-related components of a model
 function set_tuning_rng!(m::MLJ.Model, rng::AbstractRNG)::MLJ.Model
     hasproperty(m.tuning, :rng) && (m.tuning.rng = rng)
     hasproperty(m.resampling, :rng) && (m.resampling = set_rng(m.resampling, rng))
     return m
 end
 
-# Set logical conditions (features) for modal decision tree models.
+# set logical conditions (features) for modal models
 function set_conditions!(m::MLJ.Model, conditions::Tuple{Vararg{Base.Callable}})::MLJ.Model
     m.conditions = Function[conditions...]
     return m
@@ -296,9 +294,9 @@ function _setup_dataset(
     # ModalDecisionTrees package needs features to be passed in model params
     hasproperty(model, :features) && set_conditions!(model, features)
 
-    # Handle multidimensional datasets:
-    # Decision point: use standard ML algorithms (requiring feature aggregation)
-    # or modal logic algorithms (optionally reducing data size).
+    # handle multidimensional datasets:
+    # propositional models requiring feature aggregation
+    # modal models requiring reducing data size
     if is_multidim_dataframe(X)
         treat = model isa Modal ? :reducesize : :aggregate
         X, tinfo = treatment(X, treat; features, win, modalreduce)
@@ -312,7 +310,7 @@ function _setup_dataset(
     isnothing(tuning) || begin
         t_range = get_range(tuning)
         if !(t_range isa MLJ.NominalRange)
-            # Convert SX.range to MLJ.range now that model is available
+            # convert SX.range to MLJ.range now that model is available
             range = t_range isa Tuple{Vararg{Tuple}} ? t_range : (t_range,)
             range = collect(MLJ.range(model, r[1]; r[2:end]...) for r in range)
             tuning.range = range
