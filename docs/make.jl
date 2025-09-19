@@ -1,7 +1,7 @@
 using Documenter
 using SoleXplorer
 
-# DocMeta.setdocmeta!(SoleXplorer, :DocTestSetup, :(using SoleXplorer); recursive = true)
+DocMeta.setdocmeta!(SoleXplorer, :DocTestSetup, :(using SoleXplorer); recursive = true)
 
 makedocs(;
     modules=[SoleXplorer],
@@ -25,10 +25,11 @@ makedocs(;
     warnonly=:true,
 )
 
-# deploydocs(;
-#     repo = "github.com/aclai-lab/SoleXplorer.jl",
-#     devbranch = "main",
-#     target = "build",
-#     branch = "gh-pages",
-#     versions = ["main" => "main", "stable" => "v^", "v#.#"],
-# )
+deploydocs(;
+    repo = "github.com/aclai-lab/SoleXplorer.jl",
+    devbranch = "main",
+    target = "build",
+    branch = "gh-pages",
+    # versions = ["main" => "main", "stable" => "v^", "v#.#"],
+    versions = ["main" => "main"],
+)
