@@ -16,10 +16,10 @@ makedocs(;
         assets=String[],
     ),
     pages=[
-        "Home"              => "index.md",
-        "Symbolic Analysis" => "symbolic_analysis.md",
-        "Setup Dataset"     => "setup_dataset.md",
-        "Windowing"         => "windowing.md",
+        "Home"                         => "index.md",
+        "Symbolic Analysis"            => "symbolic_analysis.md",
+        "Setup Dataset"                => "setup_dataset.md",
+        "Multi Dimensional Treatement" => "treatement.md",
     ],
     warnonly=:true,
 )

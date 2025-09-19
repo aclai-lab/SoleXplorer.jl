@@ -76,6 +76,7 @@ include("partition.jl")
 
 export AbstractWinFunction, WinFunction
 export MovingWindow, WholeWindow, SplitWindow, AdaptiveWindow
+export treatment
 include("treatment.jl")
 
 # ---------------------------------------------------------------------------- #

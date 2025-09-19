@@ -299,9 +299,9 @@ function _setup_dataset(
     # Handle multidimensional datasets:
     # Decision point: use standard ML algorithms (requiring feature aggregation)
     # or modal logic algorithms (optionally reducing data size).
-    if X[1, 1] isa AbstractArray
+    if is_multidim_dataframe(X)
         treat = model isa Modal ? :reducesize : :aggregate
-        X, tinfo = treatment(X; win, features, treat, modalreduce)
+        X, tinfo = treatment(X, treat; features, win, modalreduce)
     else
         X = code_dataset(X)
         tinfo = nothing

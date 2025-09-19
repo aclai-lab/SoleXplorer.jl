@@ -1,22 +1,19 @@
-# This module transforms multidimensional datasets (especially time series) into formats
-# suitable for different algorithm families:
+# this module transforms multidimensional datasets (tested only on time-series)
+# into formats suitable for different model algorithm families:
 
-# 1. Propositional algorithms (DecisionTree, XGBoost):
-#    - Applies windowing to divide time series into segments
-#    - Extracts scalar features (max, min, mean, etc.) from each window
-#    - Returns a standard tabular DataFrame
+# 1. propositional algorithms (DecisionTree, XGBoost):
+#    - applies windowing to divide time series into segments
+#    - extracts scalar features (max, min, mean, etc.) from each window
+#    - returns a standard tabular DataFrame
 
-# 2. Modal algorithms (ModalDecisionTree):
-#    - Creates windowed time series preserving temporal structure
-#    - Applies reduction functions to manage dimensionality
-
-# Currently supports numeric and time series data with plans for arbitrary
-# dimensional extensions.
+# 2. modal algorithms (ModalDecisionTree):
+#    - creates windowed time series preserving temporal structure
+#    - applies reduction functions to manage dimensionality
 
 # ---------------------------------------------------------------------------- #
 #                               abstract types                                 #
 # ---------------------------------------------------------------------------- #
-# Base type for metadata containers
+# base type for metadata containers
 abstract type AbstractTreatmentInfo end
 
 """
@@ -42,7 +39,7 @@ struct WinFunction <: AbstractWinFunction
     func   :: Function
     params :: NamedTuple
 end
-# Make it callable - npoints is passed at execution time
+# make it callable - npoints is passed at execution time
 (w::WinFunction)(npoints::Int; kwargs...) = w.func(npoints; w.params..., kwargs...)
 
 """
@@ -55,8 +52,10 @@ Create a moving window that slides across the time series.
 - `window_step`: Step size between consecutive windows
 
 # Example
-    win = MovingWindow(window_size=10, window_step=5)
-    intervals = win(100)  # For 100-point time series
+```
+win = MovingWindow(window_size=10, window_step=5)
+intervals = win(100)  # For 100-point time series
+```
 """
 function MovingWindow(;
     window_size::Int,
@@ -72,8 +71,10 @@ Create a single window encompassing the entire time series.
 Useful for global feature extraction without temporal partitioning.
 
 # Example
-    win = WholeWindow()
-    intervals = win(100)  # Returns [1:100]
+```
+win = WholeWindow()
+intervals = win(100)  # Returns [1:100]
+```
 """
 WholeWindow(;) = WinFunction(wholewindow, (;))
 
@@ -86,8 +87,10 @@ Divide the time series into equal non-overlapping segments.
 - `nwindows`: Number of equal-sized windows to create
 
 # Example
-    win = SplitWindow(nwindows=4)
-    intervals = win(100)  # Four 25-point windows
+```
+win = SplitWindow(nwindows=4)
+intervals = win(100)  # Four 25-point windows
+```
 """
 SplitWindow(;nwindows::Int) = WinFunction(splitwindow, (; nwindows))
 
@@ -101,8 +104,10 @@ Create overlapping windows with adaptive sizing based on series length.
 - `relative_overlap`: Fraction of overlap between adjacent windows (0.0-1.0)
 
 # Example
-    win = AdaptiveWindow(nwindows=3, relative_overlap=0.1)
-    intervals = win(100)  # Three adaptive windows with 10% overlap
+```
+win = AdaptiveWindow(nwindows=3, relative_overlap=0.1)
+intervals = win(100)  # Three adaptive windows with 10% overlap
+```
 """
 function AdaptiveWindow(;
     nwindows::Int,
@@ -114,96 +119,50 @@ end
 # ---------------------------------------------------------------------------- #
 #                                  utilities                                   #
 # ---------------------------------------------------------------------------- #
-"""
-    apply_vectorized!(X::DataFrame, X_col::Vector{Vector{Float64}}, 
-                     feature_func::Function, col_name::Symbol) -> Nothing
-
-Apply a feature extraction function to all time series in a column.
-
-# Arguments
-- `X`: Target DataFrame to receive new feature column
-- `X_col`: Vector of time series (each element is a Vector{Float64})
-- `feature_func`: Function to apply to each time series (e.g., maximum, minimum)
-- `col_name`: Name for the new feature column
-"""
+# apply a feature reduce function to all time-series in a column
 function apply_vectorized!(
     X::DataFrame,
-    X_col::Vector{Vector{Float64}},
+    X_col::Vector{<:Vector{<:Real}},
     feature_func::Function,
     col_name::Symbol
-)::Nothing
-    X[!, col_name] = collect(feature_func(X_col[i]) for i in 1:length(X_col))
-    return nothing
+)::Vector{<:Vector{<:Real}}
+    X[!, col_name] = collect(feature_func(@views X_col[i]) for i in 1:length(X_col))
 end
 
-"""
-    apply_vectorized!(X::DataFrame, X_col::Vector{Vector{Float64}}, 
-                     feature_func::Function, col_name::Symbol, 
-                     interval::UnitRange{Int64}) -> Nothing
-
-Apply a feature function to a specific time interval within each time series.
-
-# Additional Arguments
-- `interval`: Time range to extract features from (e.g., 1:50 for first 50 points)
-
-# Example
-    apply_vectorized!(df, ts_column, mean, :window1_mean, 1:25)
-"""
+# apply a feature function to a specific time interval within each time-series
+# - interval: time range to extract features from (e.g., 1:50 for first 50 points)
 function apply_vectorized!(
     X::DataFrame,
-    X_col::Vector{Vector{Float64}},
+    X_col::Vector{<:Vector{<:Real}},
     feature_func::Function,
     col_name::Symbol,
     interval::UnitRange{Int64}
-)::Nothing
+)::Vector{<:Real}
     X[!, col_name] = collect(feature_func(@views X_col[i][interval]) for i in 1:length(X_col))
-    return nothing
 end
 
-"""
-    apply_vectorized!(X::DataFrame, X_col::Vector{Vector{Float64}}, 
-                     modalreduce_func::Function, col_name::Symbol,
-                     intervals::Vector{UnitRange{Int64}}, n_rows::Int, 
-                     n_intervals::Int) -> Nothing
-
-Apply a reduction function across multiple intervals for modal algorithm preparation.
-
-# Arguments
-- `modalreduce_func`: Reduction function applied to each interval
-- `intervals`: Vector of time ranges defining windows
-- `n_rows`: Number of time series in the dataset
-- `n_intervals`: Number of intervals per time series
-"""
+# apply a reduction function across multiple intervals for modal algorithm preparation
 function apply_vectorized!(
     X::DataFrame,
-    X_col::Vector{Vector{Float64}},
+    X_col::Vector{<:Vector{<:Real}},
     modalreduce_func::Function,
     col_name::Symbol,
-    intervals::Vector{UnitRange{Int64}},
-    n_rows::Int,
-    n_intervals::Int
-)::Nothing
-    result_column = Vector{Vector{Float64}}(undef, n_rows)
-    row_result = Vector{Float64}(undef, n_intervals)
-    
-    @inbounds @fastmath for row_idx in 1:n_rows
-        ts = X_col[row_idx]
-        
-        for (i, interval) in enumerate(intervals)
-            row_result[i] = modalreduce_func(@view(ts[interval]))
-        end
-        result_column[row_idx] = copy(row_result)
-    end
-
-    X[!, col_name] = result_column
-    
-    return nothing
+    intervals::Vector{UnitRange{Int64}}
+)::Vector{<:Vector{<:Real}}
+    X[!, col_name] = [
+        [modalreduce_func(@view(ts[interval])) for interval in intervals]
+        for ts in X_col
+    ]
 end
+
+# check dataframe
+is_multidim_dataframe(X::DataFrame)::Bool =
+    any(eltype(col) <: AbstractArray for col in eachcol(X))
 
 # ---------------------------------------------------------------------------- #
 #                          multidimensional dataset                            #
 # ---------------------------------------------------------------------------- #
-# Metadata container for dataset preprocessing operations.
+# metadata container for dataset preprocessing operations.
 struct TreatmentInfo <: AbstractTreatmentInfo
     features    :: Tuple{Vararg{Base.Callable}}
     winparams   :: WinFunction
@@ -211,7 +170,7 @@ struct TreatmentInfo <: AbstractTreatmentInfo
     modalreduce :: Base.Callable
 end
 
-# Simplified metadata for aggregation-only preprocessing.
+# simplified metadata for aggregation-only preprocessing.
 struct AggregationInfo <: AbstractTreatmentInfo
     features    :: Tuple{Vararg{Base.Callable}}
     winparams   :: WinFunction
@@ -261,71 +220,61 @@ Transform multidimensional dataset based on specified treatment strategy.
 
 # Arguments
 - `X::AbstractDataFrame`: Input dataset with time series in each cell
-- `treat::Symbol`: Treatment type - :aggregate, :reducesize, or :none
-- `win::WinFunction`: Windowing strategy (default: AdaptiveWindow(nwindows=3, relative_overlap=0.1))
-- `features::Tuple`: Feature extraction functions (default: (maximum, minimum))
-- `modalreduce::Base.Callable`: Reduction function for modal treatments (default: mean)
+- `treat::Symbol`: Treatment type - :aggregate or :reducesize
+- `win::WinFunction`: Windowing strategy (default: `AdaptiveWindow(nwindows=3, relative_overlap=0.1)`)
+- `features::Tuple`: Feature extraction functions (default: `(maximum, minimum)`)
+- `modalreduce::Base.Callable`: Reduction function for modal treatments (default: `mean`)
 
 # Treatment Types
 
-## :aggregate (Propositional Algorithms)
+## `:aggregate` (for Propositional Algorithms)
 Extracts scalar features from time series windows:
 - Single window: Applies features to entire time series
 - Multiple windows: Creates feature columns per window (e.g., "max(col1)w1")
 
-## :reducesize (Modal Algorithms)
+## `:reducesize` (for Modal Algorithms)
 Preserves temporal structure while reducing dimensionality:
 - Applies reduction function to each window
 - Maintains Vector{Float64} format for modal logic compatibility
 """
 function treatment(
-    X           :: AbstractDataFrame;
-    treat       :: Symbol,
+    X           :: AbstractDataFrame,
+    treat       :: Symbol;
     win         :: WinFunction=AdaptiveWindow(nwindows=3, relative_overlap=0.1),
     features    :: Tuple{Vararg{Base.Callable}}=(maximum, minimum),
     modalreduce :: Base.Callable=mean
 )
+    is_multidim_dataframe(X) || throw(ArgumentError("Input DataFrame " * 
+        "does not contain multidimensional data."))
+
     vnames = propertynames(X)
-    n_rows = nrow(X)
     _X = DataFrame()
-
-    # run the windowing algo and set windows indexes
     intervals = win(length(X[1,1]))
-    n_intervals = length(intervals)
 
-    # define column names and prepare data structure based on treatment type
-    # propositional
+    # propositional models
     isempty(features) && (treat = :none)
 
     if treat == :aggregate
-        if n_intervals == 1
-            # apply feature to whole time-series
-            for f in features
-                @simd for v in vnames
-                    col_name = Symbol(f, "(", v, ")")
-                    apply_vectorized!(_X, X[!, v], f, col_name)
-                end
-            end
-        else
-            # apply feature to specific intervals
-            for f in features
-                @simd for v in vnames
-                    for (i, interval) in enumerate(intervals)
-                        col_name = Symbol(f, "(", v, ")w", i)
-                        apply_vectorized!(_X, X[!, v], f, col_name, interval)
-                    end
+        for f in features, v in vnames
+            if length(intervals) == 1
+                # single window: apply to whole time series
+                col_name = Symbol(f, "(", v, ")")
+                apply_vectorized!(_X, X[!, v], f, col_name)
+            else
+                # multiple windows: apply to each interval
+                for (i, interval) in enumerate(intervals)
+                    col_name = Symbol(f, "(", v, ")w", i)
+                    apply_vectorized!(_X, X[!, v], f, col_name, interval)
                 end
             end
         end
 
-    # modal
+    # modal models
     elseif treat == :reducesize
         for v in vnames
-            apply_vectorized!(_X, X[!, v], modalreduce, v, intervals, n_rows, n_intervals)
+            apply_vectorized!(_X, X[!, v], modalreduce, v, intervals)
         end
     
-    elseif treat == :none
-        _X = X
     else
         error("Unknown treatment type: $treat")
     end
