@@ -30,3 +30,8 @@ code_dataset(X::AbstractDataFrame)
 code_dataset(y::AbstractVector)
 code_dataset(X::AbstractDataFrame, y::AbstractVector)
 ```
+
+# [Train and Test Dataset](@id train-test)
+```@docs
+train_test(ds::AbstractDataSet)
+```

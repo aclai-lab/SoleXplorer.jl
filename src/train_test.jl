@@ -1,7 +1,7 @@
 # ---------------------------------------------------------------------------- #
 #                               abstract types                                 #
 # ---------------------------------------------------------------------------- #
-# Base abstract type for all symbolic model containers in SoleXplorer
+# base abstract type for all symbolic model containers in SoleXplorer
 abstract type AbstractSoleModel end
 
 # ---------------------------------------------------------------------------- #
@@ -12,8 +12,8 @@ const XGBoostModel = Union{XGBoostClassifier, XGBoostRegressor}
 # ---------------------------------------------------------------------------- #
 #                                  utilities                                   #
 # ---------------------------------------------------------------------------- #
-# Check if dataset or model uses XGBoost.
-# Used to determine if XGBoost-specific setup (watchlist) is needed
+# check if dataset or model uses XGBoost
+# used to determine if XGBoost-specific setup (watchlist) is needed
 has_xgboost_model(ds::AbstractDataSet) = has_xgboost_model(ds.mach.model)
 has_xgboost_model(model::MLJTuning.EitherTunedModel) = has_xgboost_model(model.model)
 has_xgboost_model(::XGBoostModel) = true
@@ -31,8 +31,8 @@ function get_early_stopping_rounds(ds::AbstractDataSet)
 
 end
 
-# Create XGBoost watchlist for early stopping validation
-# Throws `ArgumentError` if validation set is empty
+# create XGBoost watchlist for early stopping validation
+# throws `ArgumentError` if validation set is empty
 function makewatchlist!(ds::AbstractDataSet, train::Vector{Int}, valid::Vector{Int})
     isempty(valid) && throw(ArgumentError("No validation data provided, use preprocess valid_ratio parameter"))
 
@@ -57,7 +57,7 @@ function makewatchlist!(ds::AbstractDataSet, train::Vector{Int}, valid::Vector{I
     end
 end
 
-# Configure XGBoost watchlist for fold `i` if early stopping is enabled
+# configure XGBoost watchlist for fold `i` if early stopping is enabled
 function set_watchlist!(ds::AbstractDataSet, i::Int)
     # XGBoost supports early stopping. This requires configuring a watchlist and validation ratio
     if get_early_stopping_rounds(ds) > 0
@@ -70,20 +70,7 @@ end
 # ---------------------------------------------------------------------------- #
 #                                  solemodel                                   #
 # ---------------------------------------------------------------------------- #
-"""
-    SoleModel{D} <: AbstractSoleModel
-
-Container for collections of symbolic models from cross-validation.
-
-# Fields
-- `sole::Vector{AbstractModel}`: Vector of symbolic models, one per CV fold
-
-# Type Parameter
-- `D`: Dataset type that generated these models (e.g., PropositionalDataSet)
-
-# Constructor
-    SoleModel(ds::D, sole::Vector{AbstractModel}) where D<:AbstractDataSet
-"""
+# container for collections of symbolic models from cross-validation
 mutable struct SoleModel{D} <: AbstractSoleModel
     sole   :: Vector{AbstractModel}
 
@@ -110,16 +97,13 @@ end
 # ---------------------------------------------------------------------------- #
 #                                   methods                                    #
 # ---------------------------------------------------------------------------- #
-"""
-    solemodels(solem::SoleModel) -> Vector{AbstractModel}
-
-Extract the vector of symbolic models from a SoleModel container.
-"""
+# extract the vector of symbolic models from a SoleModel container
 solemodels(solem::SoleModel) = solem.sole
 
 # ---------------------------------------------------------------------------- #
-#                                  train_test                                  #
+#                             internal train_test                              #
 # ---------------------------------------------------------------------------- #
+# internal cross-validation training implementation
 function _train_test(ds::AbstractDataSet)::SoleModel
     n_folds   = length(ds.pidxs)
     solemodel = Vector{AbstractModel}(undef, n_folds)
@@ -139,22 +123,9 @@ function _train_test(ds::AbstractDataSet)::SoleModel
     return SoleModel(ds, solemodel)
 end
 
-"""
-    _train_test(ds::AbstractDataSet) -> SoleModel
-
-Internal cross-validation training implementation.
-
-Workflow for each fold:
-1. Extract train/test indices and data
-2. Configure XGBoost watchlist if needed (early stopping)
-3. Fit MLJ machine on training data
-4. Apply trained model to test data (converts to symbolic model)
-5. Store symbolic model in results vector
-
-Returns SoleModel containing all fold models.
-
-See [`setup_dataset`](@ref) for dataset setup parameter descriptions.
-"""
+# ---------------------------------------------------------------------------- #
+#                                  train_test                                  #
+# ---------------------------------------------------------------------------- #
 function train_test(args...; kwargs...)::SoleModel
     ds = _setup_dataset(args...; kwargs...)
     _train_test(ds)
@@ -164,5 +135,8 @@ end
     train_test(ds::AbstractDataSet) -> SoleModel
 
 Direct training interface for pre-configured datasets.
+No additional parameters needed.
+
+See also: [`symbolic_analysis`](@ref), [`setup_dataset`](@ref)
 """
 train_test(ds::AbstractDataSet)::SoleModel = _train_test(ds)
