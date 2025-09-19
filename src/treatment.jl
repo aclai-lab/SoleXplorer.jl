@@ -125,7 +125,7 @@ function apply_vectorized!(
     X_col::Vector{<:Vector{<:Real}},
     feature_func::Function,
     col_name::Symbol
-)::Vector{<:Vector{<:Real}}
+)::Vector{<:Real}
     X[!, col_name] = collect(feature_func(@views X_col[i]) for i in 1:length(X_col))
 end
 
@@ -220,7 +220,7 @@ Transform multidimensional dataset based on specified treatment strategy.
 
 # Arguments
 - `X::AbstractDataFrame`: Input dataset with time series in each cell
-- `treat::Symbol`: Treatment type - :aggregate or :reducesize
+- `treat::Symbol`: Treatment type - :aggregate, :reducesize or :none
 - `win::WinFunction`: Windowing strategy (default: `AdaptiveWindow(nwindows=3, relative_overlap=0.1)`)
 - `features::Tuple`: Feature extraction functions (default: `(maximum, minimum)`)
 - `modalreduce::Base.Callable`: Reduction function for modal treatments (default: `mean`)
@@ -236,6 +236,9 @@ Extracts scalar features from time series windows:
 Preserves temporal structure while reducing dimensionality:
 - Applies reduction function to each window
 - Maintains Vector{Float64} format for modal logic compatibility
+
+## `:none` (for particular cases)
+Returns the dataset
 """
 function treatment(
     X           :: AbstractDataFrame,
@@ -274,7 +277,10 @@ function treatment(
         for v in vnames
             apply_vectorized!(_X, X[!, v], modalreduce, v, intervals)
         end
-    
+        
+    elseif treat == :none
+        _X = X
+
     else
         error("Unknown treatment type: $treat")
     end

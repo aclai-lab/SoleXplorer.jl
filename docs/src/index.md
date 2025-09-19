@@ -48,7 +48,7 @@ range = SoleXplorer.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:l
 modelc = symbolic_analysis(
     Xc, yc;
     model=DecisionTreeClassifier(),
-    resample=CV(nfolds=5, shuffle=true),
+    resampling=CV(nfolds=5, shuffle=true),
     rng=Xoshiro(1),
     tuning=(tuning=Grid(resolution=10), resampling=CV(nfolds=3), range, measure=accuracy, repeats=2),
     extractor=InTreesRuleExtractor(),
@@ -66,7 +66,7 @@ Xts, yts = SoleXplorer.load(natopsloader)
 modelts = symbolic_analysis(
     Xts, yts;
     model=ModalDecisionTree(),
-    resample=Holdout(fraction_train=0.8, shuffle=true),
+    resampling=Holdout(fraction_train=0.8, shuffle=true),
     rng=Xoshiro(1),
     features=(minimum, maximum),
     measures=(log_loss, accuracy, confusion_matrix, kappa)

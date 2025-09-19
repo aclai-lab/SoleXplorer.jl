@@ -140,7 +140,7 @@ Xlight = Xc[:, 3:18]
 dtc = symbolic_analysis(
     Xc, yc;
     model=DecisionTreeClassifier(),
-    resample=StratifiedCV(nfolds=20, shuffle=true),
+    resampling=StratifiedCV(nfolds=20, shuffle=true),
     rng=Xoshiro(12345),
     # extractor=InTreesRuleExtractor(),
     measures=(accuracy,)      
@@ -149,7 +149,7 @@ dtc = symbolic_analysis(
 rfc = symbolic_analysis(
     Xlight, yc;
     model=RandomForestClassifier(n_trees=30),
-    resample=StratifiedCV(nfolds=20, shuffle=true),
+    resampling=StratifiedCV(nfolds=20, shuffle=true),
     rng=Xoshiro(12345),
     extractor=LumenRuleExtractor(),
     measures=(accuracy,)      
@@ -173,7 +173,7 @@ test_model = data["X"]
 xgb = symbolic_analysis(
     Xlight, yc;
     model=XGBoostClassifier(early_stopping_rounds=20),
-    resample=StratifiedCV(nfolds=20, shuffle=true),
+    resampling=StratifiedCV(nfolds=20, shuffle=true),
     valid_ratio=0.2,
     rng=Xoshiro(12345),
     # extractor=InTreesRuleExtractor(),

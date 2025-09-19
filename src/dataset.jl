@@ -281,7 +281,7 @@ function _setup_dataset(
     y             :: AbstractVector,
     w             :: MaybeVector                  = nothing;
     model         :: MLJ.Model                    = _DefaultModel(y),
-    resample      :: ResamplingStrategy           = Holdout(fraction_train=0.7, shuffle=true),
+    resampling    :: ResamplingStrategy           = Holdout(fraction_train=0.7, shuffle=true),
     valid_ratio   :: Real                         = 0.0,
     rng           :: AbstractRNG                  = TaskLocalRNG(),
     tuning        :: MaybeTuning                  = nothing,
@@ -291,7 +291,7 @@ function _setup_dataset(
 )::AbstractDataSet
     # propagate user rng to every field that needs it
     hasproperty(model, :rng)    && set_rng!(model, rng)
-    hasproperty(resample, :rng) && (resample = set_rng(resample, rng))
+    hasproperty(resampling, :rng) && (resampling = set_rng(resampling, rng))
 
     # ModalDecisionTrees package needs features to be passed in model params
     hasproperty(model, :features) && set_conditions!(model, features)
@@ -307,7 +307,7 @@ function _setup_dataset(
         tinfo = nothing
     end
 
-    ttpairs, pinfo = partition(y; resample, valid_ratio, rng)
+    ttpairs, pinfo = partition(y; resampling, valid_ratio, rng)
 
     isnothing(tuning) || begin
         t_range = get_range(tuning)
@@ -339,7 +339,7 @@ end
     setup_dataset(
         X, y, w=nothing;
         model=_DefaultModel(y),
-        resample=Holdout(fraction_train=0.7, shuffle=true),
+        resampling=Holdout(fraction_train=0.7, shuffle=true),
         valid_ratio=0.0,
         rng=TaskLocalRNG(),
         tuning=nothing,
@@ -598,8 +598,8 @@ XGBoostRegressor(
 
 Each model is fully parameterizable, see the original package reference documentation.
 
-## Data Resample
-- `resample::ResamplingStrategy=Holdout(shuffle=true)`: Cross-validation strategy
+## Data resampling
+- `resampling::ResamplingStrategy=Holdout(shuffle=true)`: Cross-validation strategy
 - `valid_ratio::Real=0.0`: Validation set proportion
 - `rng::AbstractRNG=TaskLocalRNG()`: Random number generator for reproducibility
 
@@ -742,12 +742,12 @@ dsc = setup_dataset(
 # resampling
 dsc = setup_dataset(
     Xc, yc;
-    resample=CV(nfolds=10),
+    resampling=CV(nfolds=10),
 )
 
 dsc = setup_dataset(
     Xc, yc;
-    resample=CV(nfolds=10, shuffle=true),
+    resampling=CV(nfolds=10, shuffle=true),
     rng=Xoshiro(1)
 )
 
@@ -756,7 +756,7 @@ range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
 dsc = setup_dataset(
     Xc, yc;
     model=ModalDecisionTree(),
-    resample=CV(nfolds=5, shuffle=true),
+    resampling=CV(nfolds=5, shuffle=true),
     rng=Xoshiro(1),
     tuning=GridTuning(resolution=10, resampling=CV(nfolds=3), range=range, measure=accuracy, repeats=2)
 )
@@ -765,7 +765,7 @@ dsc = setup_dataset(
 dts = setup_dataset(
     Xts, yts;
     model=ModalRandomForest(),
-    resample=Holdout(fraction_train=0.7, shuffle=true),
+    resampling=Holdout(fraction_train=0.7, shuffle=true),
     rng=Xoshiro(1),
     win=AdaptiveWindow(nwindows=3, relative_overlap=0.3),
     features=(minimum, maximum),

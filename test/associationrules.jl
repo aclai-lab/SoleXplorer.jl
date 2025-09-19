@@ -267,7 +267,7 @@ _rulemeasures = [(gconfidence, 0.3, 0.5)]
 modelts = symbolic_analysis(
     Xts, yts;
     model=XGBoostClassifier(early_stopping_rounds=20),
-    resample=CV(nfolds=5, shuffle=true),
+    resampling=CV(nfolds=5, shuffle=true),
     valid_ratio=0.2,
     rng=Xoshiro(1),
     tuning=GridTuning(resolution=10, resampling=CV(nfolds=3), range=range, measure=accuracy, repeats=2),

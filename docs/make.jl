@@ -20,6 +20,7 @@ makedocs(;
         "Symbolic Analysis"            => "symbolic_analysis.md",
         "Setup Dataset"                => "setup_dataset.md",
         "Multi Dimensional Treatement" => "treatement.md",
+        "Tuning"                       => "tuning.md",
     ],
     warnonly=:true,
 )

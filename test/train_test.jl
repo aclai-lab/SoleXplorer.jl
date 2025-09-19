@@ -99,7 +99,7 @@ range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
 solemc = train_test(
     Xc, yc;
     model=DecisionTreeClassifier(),
-    resample=CV(nfolds=5, shuffle=true),
+    resampling=CV(nfolds=5, shuffle=true),
     rng=Xoshiro(1),
     tuning=GridTuning(resolution=10, resampling=CV(nfolds=3), range=range, measure=accuracy, repeats=2)
 )
@@ -112,7 +112,7 @@ range = (
 solemc = train_test(
     Xc, yc;
     model=RandomForestClassifier(),
-    resample=CV(nfolds=5, shuffle=true),
+    resampling=CV(nfolds=5, shuffle=true),
     rng=Xoshiro(1),
     tuning=GridTuning(resolution=10, resampling=CV(nfolds=3), range=range, measure=accuracy, repeats=2)
 )
@@ -122,7 +122,7 @@ range = SX.range(:n_iter; lower=10, unit=10, upper=100)
 solemc = train_test(
     Xc, yc;
     model=AdaBoostStumpClassifier(),
-    resample=CV(nfolds=5, shuffle=true),
+    resampling=CV(nfolds=5, shuffle=true),
     rng=Xoshiro(1),
     tuning=GridTuning(resolution=10, resampling=CV(nfolds=3), range=range, measure=accuracy, repeats=2)
 )
@@ -132,7 +132,7 @@ range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
 solemr = train_test(
     Xr, yr;
     model=DecisionTreeRegressor(),
-    resample=CV(nfolds=5, shuffle=true),
+    resampling=CV(nfolds=5, shuffle=true),
     rng=Xoshiro(1),
     tuning=GridTuning(resolution=10, resampling=CV(nfolds=3), range=range, measure=rms, repeats=2)
 )
@@ -145,7 +145,7 @@ range = (
 solemr = train_test(
     Xr, yr;
     model=RandomForestRegressor(),
-    resample=CV(nfolds=5, shuffle=true),
+    resampling=CV(nfolds=5, shuffle=true),
     rng=Xoshiro(1),
     tuning=GridTuning(resolution=10, resampling=CV(nfolds=3), range=range, measure=rms, repeats=2)
 )
@@ -155,7 +155,7 @@ range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
 solemts = train_test(
     Xts, yts;
     model=ModalDecisionTree(),
-    resample=CV(nfolds=5, shuffle=true),
+    resampling=CV(nfolds=5, shuffle=true),
     rng=Xoshiro(1),
     tuning=GridTuning(resolution=10, resampling=CV(nfolds=3), range=range, measure=accuracy, repeats=2)
 )
@@ -165,7 +165,7 @@ range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
 solemts = train_test(
     Xts, yts;
     model=ModalRandomForest(),
-    resample=CV(nfolds=5, shuffle=true),
+    resampling=CV(nfolds=5, shuffle=true),
     rng=Xoshiro(1),
     tuning=GridTuning(resolution=10, resampling=CV(nfolds=3), range=range, measure=accuracy, repeats=2)
 )
@@ -175,7 +175,7 @@ range = SX.range(:n_iter; lower=2, unit=10, upper=10)
 solemts = train_test(
     Xts, yts;
     model=ModalAdaBoost(),
-    resample=CV(nfolds=5, shuffle=true),
+    resampling=CV(nfolds=5, shuffle=true),
     rng=Xoshiro(1),
     tuning=GridTuning(resolution=10, resampling=CV(nfolds=3), range=range, measure=accuracy, repeats=2)
 )
@@ -187,7 +187,7 @@ solemc = train_test(
     model=XGBoostClassifier(
         early_stopping_rounds=20,
     ),
-    resample=CV(nfolds=5, shuffle=true),
+    resampling=CV(nfolds=5, shuffle=true),
     valid_ratio=0.2,
     rng=Xoshiro(1),
     tuning=GridTuning(resolution=10, resampling=CV(nfolds=3), range=range, measure=accuracy, repeats=2)
@@ -200,7 +200,7 @@ solemr = train_test(
     model=XGBoostRegressor(
         early_stopping_rounds=20,
     ),
-    resample=CV(nfolds=5, shuffle=true),
+    resampling=CV(nfolds=5, shuffle=true),
     valid_ratio=0.2,
     rng=Xoshiro(1),
     tuning=GridTuning(resolution=10, resampling=CV(nfolds=3), range=range, measure=rms, repeats=2)
@@ -217,7 +217,7 @@ solemr = train_test(
     ds = setup_dataset(
         Xc, yc,
         model = DecisionTreeClassifier(),
-        resample = CV(nfolds=3, shuffle=true),
+        resampling = CV(nfolds=3, shuffle=true),
         rng = rng
     )
     
@@ -244,7 +244,7 @@ solemr = train_test(
     ds_5fold = setup_dataset(
         Xc, yc,
         model = DecisionTreeClassifier(),
-        resample = CV(nfolds=5),
+        resampling = CV(nfolds=5),
         rng = rng
     )
     
@@ -268,7 +268,7 @@ solemr = train_test(
     #     ds_reg = setup_dataset(
     #         X_reg, y_reg,
     #         model = DecisionTreeRegressor(),
-    #         resample = CV(nfolds=2),
+    #         resampling = CV(nfolds=2),
     #         rng = rng
     #     )
         

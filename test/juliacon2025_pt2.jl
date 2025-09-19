@@ -20,7 +20,7 @@ Xlumen = Xc[:, 3:10]
 dtc = symbolic_analysis(
     Xc, yc;
     model=DecisionTreeClassifier(),
-    resample=StratifiedCV(nfolds=20, shuffle=true),
+    resampling=StratifiedCV(nfolds=20, shuffle=true),
     rng=Xoshiro(12345),
     # extractor=InTreesRuleExtractor(),
     measures=(accuracy,)      
@@ -29,7 +29,7 @@ dtc = symbolic_analysis(
 rfc = symbolic_analysis(
     Xlight, yc;
     model=RandomForestClassifier(n_trees=30),
-    resample=StratifiedCV(nfolds=20, shuffle=true),
+    resampling=StratifiedCV(nfolds=20, shuffle=true),
     rng=Xoshiro(12345),
     extractor=LumenRuleExtractor(),
     measures=(accuracy,)      
@@ -41,7 +41,7 @@ rfc = symbolic_analysis(
 lfc = symbolic_analysis(
     Xlumen, yc;
     model=RandomForestClassifier(n_trees=2),
-    resample=Holdout(fraction_train=0.7, shuffle=true),
+    resampling=Holdout(fraction_train=0.7, shuffle=true),
     rng=Xoshiro(12345),
     extractor=LumenRuleExtractor(),
     measures=(accuracy,)      
@@ -50,7 +50,7 @@ lfc = symbolic_analysis(
 lXc = symbolic_analysis(
     Xlight, yc;
     model=XGBoostClassifier(num_round=4),
-    resample=Holdout(fraction_train=0.7, shuffle=true),
+    resampling=Holdout(fraction_train=0.7, shuffle=true),
     rng=Xoshiro(12345),
     extractor=LumenRuleExtractor(),
     measures=(accuracy,)      

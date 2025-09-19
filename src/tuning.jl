@@ -1,13 +1,19 @@
+# hyperparameter tuning infrastructure
+
+# this module provides a unified interface for hyperparameter tuning in SoleXplorer,
+# supporting multiple optimization strategies and seamless integration with MLJ's
+# tuning framework.
+
 # ---------------------------------------------------------------------------- #
 #                               abstract types                                 #
 # ---------------------------------------------------------------------------- #
+# abstract supertype for all hyperparameter tuning configurations
 abstract type AbstractTuning end
 
 # ---------------------------------------------------------------------------- #
 #                                   types                                      #
 # ---------------------------------------------------------------------------- #
-const EitherMeasures  = Union{RobustMeasure, FussyMeasure}
-const MaybeResampling = Maybe{MLJ.ResamplingStrategy}
+const EitherMeasures = Union{RobustMeasure, FussyMeasure}
 const MaybeMeasure   = Maybe{EitherMeasures}
 
 const RangeSpec = Union{
@@ -20,10 +26,11 @@ const RangeSpec = Union{
 # ---------------------------------------------------------------------------- #
 #                                Tuning struct                                 #
 # ---------------------------------------------------------------------------- #
+# hyperparameter tuning configuration with strategy, ranges, and evaluation settings
 mutable struct Tuning{T} <: AbstractTuning
     strategy   :: T
     range      :: RangeSpec
-    resampling :: MaybeResampling
+    resampling :: MLJ.ResamplingStrategy
     measure    :: MaybeMeasure
     repeats    :: Int64
     
@@ -33,6 +40,7 @@ mutable struct Tuning{T} <: AbstractTuning
     end
 end
 
+# convenience constructor for Tuning{T} that infers the type parameter
 Tuning(strategy::T, range, resampling=nothing, measure=nothing, repeats=1) where T = 
     Tuning{T}(strategy, range, resampling, measure, repeats)
 
@@ -42,12 +50,42 @@ Tuning(strategy::T, range, resampling=nothing, measure=nothing, repeats=1) where
 Base.propertynames(::Tuning) = (:strategy, :range, :resampling, :measure, :repeats)
 Base.getproperty(t::Tuning, s::Symbol) = getfield(t, s)
 
-get_range(t::Tuning)      = t.range
-get_strategy(t::Tuning)   = t.strategy
-get_resampling(t::Tuning) = t.resampling
-get_measure(t::Tuning)    = t.measure
-get_repeats(t::Tuning)    = t.repeats
+"""
+    get_range(t::Tuning) -> RangeSpec
 
+Extract the parameter range specification from a tuning configuration.
+"""
+get_range(t::Tuning) = t.range
+
+"""
+    get_strategy(t::Tuning) -> Any
+
+Extract the tuning strategy from a tuning configuration.
+"""
+get_strategy(t::Tuning) = t.strategy
+
+"""
+    get_resampling(t::Tuning) -> MaybeResampling
+
+Extract the resampling strategy from a tuning configuration.
+"""
+get_resampling(t::Tuning) = t.resampling
+
+"""
+    get_measure(t::Tuning) -> MaybeMeasure
+
+Extract the reference performance measure from a tuning configuration.
+"""
+get_measure(t::Tuning) = t.measure
+
+"""
+    get_repeats(t::Tuning) -> Int64
+
+Extract the number of repetitions from a tuning configuration.
+"""
+get_repeats(t::Tuning) = t.repeats
+
+# convert a Tuning configuration to a NamedTuple suitable for MLJ TunedModel construction
 @inline tuning_params(t::Tuning) = (
     range      = get_range(t), 
     resampling = get_resampling(t),
@@ -78,10 +116,11 @@ Base.range(field::Union{Symbol,Expr}; kwargs...) = field, kwargs...
 # ---------------------------------------------------------------------------- #
 #                             MLJ Tuning adapter                               #
 # ---------------------------------------------------------------------------- #
+# internal function to create tuning configurations with strategy-specific parameters
 @inline function setup_tuning(
     strategy_type :: Type{<:Any};
     range         :: RangeSpec,
-    resampling    :: MaybeResampling=nothing,
+    resampling    :: MLJ.ResamplingStrategy=Holdout(fraction_train=0.7, shuffle=true),
     measure       :: MaybeMeasure=nothing,
     repeats       :: Int64=1,
     kwargs...
@@ -90,11 +129,46 @@ Base.range(field::Union{Symbol,Expr}; kwargs...) = field, kwargs...
     return Tuning(strategy, range, resampling, measure, repeats)
 end
 
-const GridTuning(; kwargs...)::Tuning     = setup_tuning(MLJ.Grid; kwargs...)
-const RandomTuning(; kwargs...)::Tuning   = setup_tuning(MLJ.RandomSearch; kwargs...)
-const CubeTuning(; kwargs...)::Tuning     = setup_tuning(MLJ.LatinHypercube; kwargs...)
+"""
+    GridTuning(; kwargs...) -> Tuning
+
+Create a grid search tuning configuration.
+Parameters reference: [MLJTuning.Grid](https://juliaai.github.io/MLJ.jl/dev/tuning_models/#MLJTuning.Grid)
+"""
+const GridTuning(; kwargs...)::Tuning = setup_tuning(MLJ.Grid; kwargs...)
+
+"""
+    RandomTuning(; kwargs...) -> Tuning
+
+Create a random search tuning configuration.
+Parameters reference: [MLJTuning.RandomSearch](https://juliaai.github.io/MLJ.jl/dev/tuning_models/#MLJTuning.RandomSearch)
+"""
+const RandomTuning(; kwargs...)::Tuning = setup_tuning(MLJ.RandomSearch; kwargs...)
+
+"""
+    CubeTuning(; kwargs...) -> Tuning
+
+Create a Latin hypercube sampling tuning configuration.
+Parameters reference: [MLJTuning.LatinHypercube](https://juliaai.github.io/MLJ.jl/dev/tuning_models/#MLJTuning.LatinHypercube)
+"""
+const CubeTuning(; kwargs...)::Tuning = setup_tuning(MLJ.LatinHypercube; kwargs...)
+
+"""
+    ParticleTuning(; kwargs...) -> Tuning
+
+Create a particle swarm optimization tuning configuration.
+Parameters reference: [MLJParticleSwarmOptimization](https://github.com/JuliaAI/MLJParticleSwarmOptimization.jl/)
+"""
 const ParticleTuning(; kwargs...)::Tuning = setup_tuning(PSO.ParticleSwarm; kwargs...)
+
+"""
+    AdaptiveTuning(; kwargs...) -> Tuning
+
+Create an adaptive particle swarm optimization tuning configuration.
+Parameters reference: [MLJParticleSwarmOptimization](https://github.com/JuliaAI/MLJParticleSwarmOptimization.jl/)
+"""
 const AdaptiveTuning(; kwargs...)::Tuning = setup_tuning(PSO.AdaptiveParticleSwarm; kwargs...)
+
 
 # ---------------------------------------------------------------------------- #
 #                                show methods                                  #

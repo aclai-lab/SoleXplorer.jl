@@ -391,7 +391,7 @@ modelset = symbolic_analysis(X, y)
 range = SoleXplorer.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
 modelset = symbolic_analysis(X, y;
     model=RandomForestClassifier(),
-    resample=CV(nfolds=5, shuffle=true),
+    resampling=CV(nfolds=5, shuffle=true),
     rng=Xoshiro(1),
     tuning=GridTuning(resolution=10, resampling=CV(nfolds=3), range=range, measure=accuracy, repeats=2),
     extractor=InTreesRuleExtractor(),
@@ -401,7 +401,7 @@ modelset = symbolic_analysis(X, y;
 # Time series analysis example
 modelset = symbolic_analysis(X, y;
     model=ModalRandomForest(),
-    resample=Holdout(fraction_train=0.7, shuffle=true),
+    resampling=Holdout(fraction_train=0.7, shuffle=true),
     rng=Xoshiro(1),
     features=(minimum, maximum),
     measures=(log_loss, accuracy, confusion_matrix, kappa)
@@ -447,7 +447,7 @@ Perform complete symbolic analysis on pre-trained models.
 ds = setup_dataset(
     X, y;
     model=DecisionTreeClassifier(),
-    resample=CV(nfolds=5, shuffle=true)
+    resampling=CV(nfolds=5, shuffle=true)
 )
 solem = train_test(ds)
 results = symbolic_analysis(

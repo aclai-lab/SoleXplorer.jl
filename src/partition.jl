@@ -83,7 +83,7 @@ function partition end
 
 # Arguments
 # - `y::AbstractVector{<:Label}`: Target vector for stratified sampling
-# - `resample::MLJ.ResamplingStrategy`: Partitioning strategy (CV, Holdout, etc.)
+# - `resampling::MLJ.ResamplingStrategy`: Partitioning strategy (CV, Holdout, etc.)
 # - `valid_ratio::Real`: Validation data proportion (0.0-1.0)
 # - `rng::AbstractRNG`: Random number generator for reproducibility
 
@@ -92,13 +92,13 @@ function partition end
 # - `PartitionInfo`: Metadata about partitioning configuration
 function partition(
     y           :: AbstractVector{<:Label};
-    resample    :: MLJ.ResamplingStrategy,
+    resampling  :: MLJ.ResamplingStrategy,
     valid_ratio :: Real,
     rng         :: AbstractRNG
 )::Tuple{Vector{PartitionIdxs}, PartitionInfo}
-    pinfo = PartitionInfo(resample, valid_ratio, rng)
+    pinfo = PartitionInfo(resampling, valid_ratio, rng)
 
-    ttpairs = MLJBase.train_test_pairs(resample, 1:length(y), y)
+    ttpairs = MLJBase.train_test_pairs(resampling, 1:length(y), y)
 
     if valid_ratio == 0.0
         return ([PartitionIdxs(train, eltype(train)[], test) for (train, test) in ttpairs], pinfo)
