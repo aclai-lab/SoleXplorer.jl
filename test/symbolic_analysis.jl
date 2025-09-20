@@ -299,6 +299,7 @@ modelc = symbolic_analysis(
     Xc, yc;
     model=DecisionTreeClassifier(),
     resampling=StratifiedCV(nfolds=5, shuffle=true),
+    rng=Xoshiro(11),
     balancing=(
         oversampler=BorderlineSMOTE1(m=6, k=4),
         undersampler=ClusterUndersampler()),

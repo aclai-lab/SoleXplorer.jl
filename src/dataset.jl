@@ -75,6 +75,11 @@ function set_tuning_rng!(m::MLJ.Model, rng::AbstractRNG)::MLJ.Model
     return m
 end
 
+function set_balancing_rng(b::MLJ.Model, rng::AbstractRNG)::MLJ.Model
+    hasproperty(b, :rng) && (b = typeof(b).name.wrapper(merge(MLJ.params(b), (rng=rng,))...))
+    return b
+end
+
 # set logical conditions (features) for modal models
 function set_conditions!(m::MLJ.Model, conditions::Tuple{Vararg{Base.Callable}})::MLJ.Model
     m.conditions = Function[conditions...]
@@ -282,22 +287,6 @@ get_logiset(ds::ModalDataSet)::SupportedLogiset = ds.mach.data[1].modalities[1]
 # ---------------------------------------------------------------------------- #
 #                           MLJ models's extra setup                           #
 # ---------------------------------------------------------------------------- #
-# Validate balancing parameters
-# Only accepts 'oversample' and 'undersample', not 'oversampler'/'undersampler'
-function validate_balancing_params(balancing::NamedTuple)
-    valid_keys = (:oversample, :undersample)
-    invalid_keys = (:oversampler, :undersampler)
-    
-    for key in keys(balancing)
-        if key in invalid_keys
-            throw(ArgumentError("Invalid balancing parameter '$key'. Use '$(key == :oversampler ? :oversample : :undersample)' instead."))
-        elseif key ∉ valid_keys
-            throw(ArgumentError("Unknown balancing parameter '$key'. Valid parameters are: $valid_keys"))
-        end
-    end
-    
-    return true
-end
 # function set_balancing(
 #     model     :: MLJ.Model,
 #     balancing :: Tuple{Vararg{<:MLJ.Model}},
@@ -376,6 +365,10 @@ function _setup_dataset(
         balancing isa NamedTuple{(:oversampler, :undersampler), <:Tuple{MLJ.Model, MLJ.Model}} ||
             throw(ArgumentError("Invalid balancing parameter, usage: " * 
                          "balancing(oversampler=..., undersample=...)"))
+
+        # set the model to use the same rng as the dataset
+        balancing = map(b -> set_balancing_rng(b, rng), balancing)
+
         model = MLJ.BalancedModel(model; balancing...)
     end
 
