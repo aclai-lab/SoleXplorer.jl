@@ -360,7 +360,7 @@ function _setup_dataset(
     # Modal models need features to be passed in model params
     hasproperty(model, :features) && set_conditions!(model, features)
     # MLJ.TunedModels can't automatically assigns measure to Modal models
-    if model isa Modal
+    if model isa Modal && !isnothing(tuning)
         isnothing(get_measure(tuning)) && (tuning.measure = LogLoss())
     end
 
