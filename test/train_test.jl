@@ -211,14 +211,12 @@ solemr = train_test(
 #                                    various                                   #
 # ---------------------------------------------------------------------------- #
 @testset "Base.show tests for train_test.jl" begin
-    rng = Xoshiro(42)
-    
     # Create a dataset and train models
     ds = setup_dataset(
         Xc, yc,
-        model = DecisionTreeClassifier(),
-        resampling = CV(nfolds=3, shuffle=true),
-        rng = rng
+        model=DecisionTreeClassifier(),
+        resampling=CV(nfolds=3, shuffle=true),
+        seed=42
     )
     
     # Create SoleModel with trained models
@@ -245,7 +243,7 @@ solemr = train_test(
         Xc, yc,
         model = DecisionTreeClassifier(),
         resampling = CV(nfolds=5),
-        rng = rng
+        seed=42
     )
     
     solem_5fold = train_test(ds_5fold)

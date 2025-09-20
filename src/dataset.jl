@@ -324,9 +324,6 @@ function set_tuning(
         tuning.range = range
     end
 
-    # MLJ.TunedModels can't automatically assigns measure to Modal models
-    isnothing(get_measure(tuning)) && (tuning.measure = LogLoss())
-
     model = MLJ.TunedModel(model; tuning_params(tuning)...)
 
     # set the model to use the same rng as the dataset
@@ -360,8 +357,12 @@ function _setup_dataset(
         rng = TaskLocalRNG()
     end
 
-    # ModalDecisionTrees package needs features to be passed in model params
+    # Modal models need features to be passed in model params
     hasproperty(model, :features) && set_conditions!(model, features)
+    # MLJ.TunedModels can't automatically assigns measure to Modal models
+    if model isa Modal
+        isnothing(get_measure(tuning)) && (tuning.measure = LogLoss())
+    end
 
     # handle multidimensional datasets:
     # propositional models requiring feature aggregation

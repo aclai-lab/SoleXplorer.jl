@@ -1,10 +1,7 @@
 # ---------------------------------------------------------------------------- #
 #                                  load/save                                   #
 # ---------------------------------------------------------------------------- #
-Importante, vedi di farlo entro Parigi
-
-Edo mi ha suggerito Pkl da scikitlearn
-Perry suggerisce serialize.jl
+Importante, vedi di farlo entro Parigi, JLD2
 
 # ---------------------------------------------------------------------------- #
 #                                 bug di MLJ #1                                #
@@ -52,11 +49,6 @@ da fare entro la laurea
 # ---------------------------------------------------------------------------- #
 sarebbe bello averla impostata entro ottobre, ma ha priorità minore.
 Da parlarne col Balbo
-
-# ---------------------------------------------------------------------------- #
-#                               ribilanciamento                                #
-# ---------------------------------------------------------------------------- #
-Guarda su MLJ se esiste
 
 # ---------------------------------------------------------------------------- #
 #                              peso delle istanze                              #
