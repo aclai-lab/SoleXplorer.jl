@@ -27,6 +27,7 @@ abstract type AbstractDataSet end
 # ---------------------------------------------------------------------------- #
 const Modal  = Union{ModalDecisionTree, ModalRandomForest, ModalAdaBoost}
 const MaybeAggregationInfo = Maybe{AggregationInfo}
+const MaybeBalancing  = Maybe{Tuple{Vararg{<:MLJ.Model}}}
 const MaybeTuning = Maybe{Tuning}
 const MaybeTreatInfo = Maybe{TreatmentInfo}
 
@@ -282,6 +283,7 @@ function _setup_dataset(
     resampling    :: ResamplingStrategy           = Holdout(fraction_train=0.7, shuffle=true),
     valid_ratio   :: Real                         = 0.0,
     rng           :: AbstractRNG                  = TaskLocalRNG(),
+    balancing     :: MaybeBalancing               = nothing,
     tuning        :: MaybeTuning                  = nothing,
     win           :: WinFunction                  = AdaptiveWindow(nwindows=3, relative_overlap=0.1),
     features      :: Tuple{Vararg{Base.Callable}} = (maximum, minimum),
@@ -340,6 +342,7 @@ end
         resampling=Holdout(fraction_train=0.7, shuffle=true),
         valid_ratio=0.0,
         rng=TaskLocalRNG(),
+        balancing=nothing,
         tuning=nothing,
         win=AdaptiveWindow(nwindows=3, relative_overlap=0.1),
         features=(maximum, minimum),
@@ -619,6 +622,91 @@ TimeSeriesCV(; nfolds=4)
 
 `valid_ratio` is used with XGBoost early stop [technique](https://xgboost.readthedocs.io/en/stable/prediction.html).
 `rng` can be setted externally for convenience.
+
+## Balancing
+Balancing strategies are taken from the package [Imbalance](https://github.com/JuliaAI/Imbalance.jl).
+See official documentation [here](https://juliaai.github.io/Imbalance.jl/dev/).
+Available strategies:
+```
+BorderlineSMOTE1(
+  m = 5, 
+  k = 5, 
+  ratios = 1.0, 
+  rng = Random.TaskLocalRNG(), 
+  try_preserve_type = true, 
+  verbosity = 1)
+```
+```
+ClusterUndersampler(
+  mode = "nearest", 
+  ratios = 1.0, 
+  maxiter = 100, 
+  rng = Random.TaskLocalRNG(), 
+  try_preserve_type = true)
+```
+```
+ENNUndersampler(
+  k = 5, 
+  keep_condition = "mode", 
+  min_ratios = 1.0, 
+  force_min_ratios = false, 
+  rng = Random.TaskLocalRNG(), 
+  try_preserve_type = true)
+```
+```
+ROSE(
+  s = 1.0, 
+  ratios = 1.0, 
+  rng = Random.TaskLocalRNG(), 
+  try_preserve_type = true)
+```
+```
+RandomOversampler(
+  ratios = 1.0, 
+  rng = Random.TaskLocalRNG(), 
+  try_preserve_type = true)
+```
+```
+RandomUndersampler(
+  ratios = 1.0, 
+  rng = Random.TaskLocalRNG(), 
+  try_preserve_type = true)
+```
+```
+RandomWalkOversampler(
+  ratios = 1.0, 
+  rng = Random.TaskLocalRNG(), 
+  try_preserve_type = true)
+```
+```
+SMOTE(
+  k = 5, 
+  ratios = 1.0, 
+  rng = Random.TaskLocalRNG(), 
+  try_preserve_type = true)
+```
+```
+SMOTEN(
+  k = 5, 
+  ratios = 1.0, 
+  rng = Random.TaskLocalRNG(), 
+  try_preserve_type = true)
+```
+```
+SMOTENC(
+  k = 5, 
+  ratios = 1.0, 
+  knn_tree = "Brute", 
+  rng = Random.TaskLocalRNG(), 
+  try_preserve_type = true)
+```
+```
+TomekUndersampler(
+  min_ratios = 1.0, 
+  force_min_ratios = false, 
+  rng = Random.TaskLocalRNG(), 
+  try_preserve_type = true)
+```
 
 ## Tuning
 `tuning::MaybeTuning=nothing`: Hyperparameter tuning configuration,
