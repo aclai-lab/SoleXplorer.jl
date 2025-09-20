@@ -1,7 +1,7 @@
 # SoleXplorer
 ## A symbolic journey through your datasets
 
-[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://aclai-lab.github.io/SoleXplorer.jl/)
+[![dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://aclai-lab.github.io/SoleXplorer.jl/)
 [![CI](https://github.com/aclai-lab/SoleXplorer.jl/actions/workflows/ci.yml/badge.svg)](https://github.com/aclai-lab/SoleXplorer.jl/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/aclai-lab/SoleXplorer.jl/graph/badge.svg?token=EJQ1MJOTDO)](https://codecov.io/gh/aclai-lab/SoleXplorer.jl)
 

@@ -30,6 +30,5 @@ deploydocs(;
     devbranch = "main",
     target = "build",
     branch = "gh-pages",
-    # versions = ["main" => "main", "stable" => "v^", "v#.#"],
-    versions = ["main" => "main"],
+    versions = ["main" => "main", "stable" => "v^", "v#.#", "dev" => "dev"],
 )
