@@ -27,9 +27,16 @@ abstract type AbstractDataSet end
 # ---------------------------------------------------------------------------- #
 const Modal  = Union{ModalDecisionTree, ModalRandomForest, ModalAdaBoost}
 const MaybeAggregationInfo = Maybe{AggregationInfo}
-const MaybeBalancing  = Maybe{Tuple{Vararg{<:MLJ.Model}}}
+const MaybeBalancing = Maybe{NamedTuple{<:Any, <:Tuple{MLJ.Model, MLJ.Model}}}
 const MaybeTuning = Maybe{Tuning}
 const MaybeTreatInfo = Maybe{TreatmentInfo}
+
+# warining for balancing classes
+const Regression = Union{
+    DecisionTreeRegressor,
+    RandomForestRegressor,
+    XGBoostRegressor
+}
 
 # ---------------------------------------------------------------------------- #
 #                                  defaults                                    #
@@ -273,6 +280,58 @@ Extract the logiset (if present) from the dataset's MLJ machine.
 get_logiset(ds::ModalDataSet)::SupportedLogiset = ds.mach.data[1].modalities[1]
 
 # ---------------------------------------------------------------------------- #
+#                           MLJ models's extra setup                           #
+# ---------------------------------------------------------------------------- #
+# Validate balancing parameters
+# Only accepts 'oversample' and 'undersample', not 'oversampler'/'undersampler'
+function validate_balancing_params(balancing::NamedTuple)
+    valid_keys = (:oversample, :undersample)
+    invalid_keys = (:oversampler, :undersampler)
+    
+    for key in keys(balancing)
+        if key in invalid_keys
+            throw(ArgumentError("Invalid balancing parameter '$key'. Use '$(key == :oversampler ? :oversample : :undersample)' instead."))
+        elseif key ∉ valid_keys
+            throw(ArgumentError("Unknown balancing parameter '$key'. Valid parameters are: $valid_keys"))
+        end
+    end
+    
+    return true
+end
+# function set_balancing(
+#     model     :: MLJ.Model,
+#     balancing :: Tuple{Vararg{<:MLJ.Model}},
+#     # rng       :: AbstractRNG
+# )::MLJ.Model
+#     pairs = map(enumerate(balancing)) do (i, b)
+#         # b = set_balancing_rng(b, rng)
+#         Symbol(:balancer, i) => b
+#     end
+#     MLJ.BalancedModel(; model, pairs...)
+# end
+
+# function set_tuning(
+#     model  :: MLJ.Model,
+#     tuning :: MLJTuning.TuningStrategy,
+#     range  :: MaybeRange,
+#     rng    :: MaybeRng
+# )::MLJ.Model
+#         if !(range isa MLJ.NominalRange)
+#             # Convert SX.range to MLJ.range now that model is available
+#             range = make_mlj_ranges(range, model)
+#         end
+
+#         # set the model to use the same rng as the dataset
+#         # tuning = set_tuning_rng(tuning, rng)
+
+#         MLJ.TunedModel(
+#             model; 
+#             tuning,
+#             range,
+#         )
+# end
+
+# ---------------------------------------------------------------------------- #
 #                            internal setup dataset                            #
 # ---------------------------------------------------------------------------- #
 function _setup_dataset(
@@ -309,6 +368,17 @@ function _setup_dataset(
 
     ttpairs, pinfo = partition(y; resampling, valid_ratio, rng)
 
+    isnothing(balancing) || begin
+        # regression models don't support balancing
+        model isa Regression &&
+            throw(ArgumentError("Balancing is not supported for regression models."))
+
+        balancing isa NamedTuple{(:oversampler, :undersampler), <:Tuple{MLJ.Model, MLJ.Model}} ||
+            throw(ArgumentError("Invalid balancing parameter, usage: " * 
+                         "balancing(oversampler=..., undersample=...)"))
+        model = MLJ.BalancedModel(model; balancing...)
+    end
+
     isnothing(tuning) || begin
         t_range = get_range(tuning)
         if !(t_range isa MLJ.NominalRange)
@@ -318,10 +388,7 @@ function _setup_dataset(
             tuning.range = range
         end
 
-        model = MLJ.TunedModel(
-            model; 
-            tuning_params(tuning)...
-        )
+        model = MLJ.TunedModel(model; tuning_params(tuning)...)
 
         # set the model to use the same rng as the dataset
         set_tuning_rng!(model, rng)

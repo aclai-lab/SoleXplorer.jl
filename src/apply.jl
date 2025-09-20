@@ -18,13 +18,25 @@
 # ---------------------------------------------------------------------------- #
 #                                   types                                      #
 # ---------------------------------------------------------------------------- #
-const ModalDecisionTreeApply = Union{
-    Machine{ModalDecisionTree},
-    Machine{ModalRandomForest},
-    Machine{ModalAdaBoost}
+const EitherBalancedModel{T,M} = Union{
+    MLJ.MLJBalancing.BalancedModelProbabilistic{T,M},
+    MLJ.MLJBalancing.BalancedModelDeterministic{T,M},
+    MLJ.MLJBalancing.BalancedModelInterval{T,M}
 }
 
-const TunedModalDecisionTreeApply = Union{
+const ModalApply = Union{
+    Machine{ModalDecisionTree},
+    Machine{ModalRandomForest},
+    Machine{ModalAdaBoost},
+}
+
+const BalancedModalApply = Union{
+    Machine{<:EitherBalancedModel{<:Any, <:ModalDecisionTree}},
+    Machine{<:EitherBalancedModel{<:Any, <:ModalRandomForest}},
+    Machine{<:EitherBalancedModel{<:Any, <:ModalAdaBoost}}
+}
+
+const TunedModalApply = Union{
     Machine{<:MLJ.MLJTuning.EitherTunedModel{<:Any, <:ModalDecisionTree}},
     Machine{<:MLJ.MLJTuning.EitherTunedModel{<:Any, <:ModalRandomForest}},
     Machine{<:MLJ.MLJTuning.EitherTunedModel{<:Any, <:ModalAdaBoost}}
@@ -78,6 +90,21 @@ function apply(
 end
 
 function apply(
+    m :: Machine{<:EitherBalancedModel{<:Any, <:DecisionTreeClassifier}},
+    X :: AbstractDataFrame,
+    y :: AbstractVector
+)::DecisionTree
+    featurenames = MLJ.report(m).model.features
+    classlabels  = sort(MLJ.report(m).model.classes_seen)
+    solem        = solemodel(MLJ.fitted_params(m).model.tree; featurenames, classlabels)
+    logiset      = scalarlogiset(X, allow_propositional=true)
+    apply!(solem, logiset, y)
+    return solem
+end
+
+# ---------------------------------------------------------------------------- #
+
+function apply(
     m :: Machine{RandomForestClassifier},
     X :: AbstractDataFrame,
     y :: AbstractVector
@@ -104,6 +131,22 @@ function apply(
 end
 
 function apply(
+    m :: Machine{<:EitherBalancedModel{<:Any, <:RandomForestClassifier}},
+    X :: AbstractDataFrame,
+    y :: AbstractVector
+)::DecisionEnsemble
+    featurenames = MLJ.report(m).model.features
+    bm           = m.fitresult.interface.predict.machine
+    classlabels  = bm.fitresult[2][sortperm((bm).fitresult[3])]
+    solem        = solemodel(MLJ.fitted_params(m).model.forest; featurenames, classlabels, dt_bestguess=true)
+    logiset      = scalarlogiset(X, allow_propositional=true)
+    apply!(solem, logiset, y)
+    return solem
+end
+
+# ---------------------------------------------------------------------------- #
+
+function apply(
     m :: Machine{DecisionTreeRegressor},
     X :: AbstractDataFrame,
     y :: AbstractVector
@@ -126,6 +169,8 @@ function apply(
     apply!(solem, logiset, y)
     return solem
 end
+
+# ---------------------------------------------------------------------------- #
 
 function apply(
     m :: Machine{RandomForestRegressor},
@@ -150,6 +195,8 @@ function apply(
     apply!(solem, logiset, y)
     return solem
 end
+
+# ---------------------------------------------------------------------------- #
 
 function apply(
     m :: Machine{AdaBoostStumpClassifier},
@@ -179,11 +226,26 @@ function apply(
     return solem
 end
 
+function apply(
+    m :: Machine{<:EitherBalancedModel{<:Any, <:AdaBoostStumpClassifier}},
+    X :: AbstractDataFrame,
+    y :: AbstractVector
+)::DecisionEnsemble
+    featurenames = MLJ.report(m).model.features
+    bm = m.fitresult.interface.predict.machine
+    classlabels  = sort(string.(bm.fitresult[3]))
+    weights      = bm.fitresult[2]
+    solem        = solemodel(MLJ.fitted_params(m).model.stumps; featurenames, classlabels, weights)
+    logiset      = scalarlogiset(X, allow_propositional=true)
+    apply!(solem, logiset, y)
+    return solem
+end
+
 # ---------------------------------------------------------------------------- #
 #                           ModalDecisionTrees package                         #
 # ---------------------------------------------------------------------------- #
 function apply(
-    m :: ModalDecisionTreeApply,
+    m :: ModalApply,
     X :: AbstractDataFrame,
     y :: AbstractVector
 )::Union{DecisionTree, DecisionEnsemble}
@@ -192,11 +254,20 @@ function apply(
 end
 
 function apply(
-    m :: TunedModalDecisionTreeApply,
+    m :: TunedModalApply,
     X :: AbstractDataFrame,
     y :: AbstractVector
 )::Union{DecisionTree, DecisionEnsemble}
     (_, solem) = MLJ.report(m).best_report.sprinkle(X, y)
+    return solem
+end
+
+function apply(
+    m :: BalancedModalApply,
+    X :: AbstractDataFrame,
+    y :: AbstractVector
+)::Union{DecisionTree, DecisionEnsemble}
+    (_, solem) = MLJ.report(m).model.sprinkle(X, y)
     return solem
 end
 
@@ -232,6 +303,24 @@ function apply(
     apply!(solem, logiset, y)
     return solem
 end
+
+function apply(
+    m :: Machine{<:EitherBalancedModel{<:Any, <:XGBoostClassifier}},
+    X :: AbstractDataFrame,
+    y :: AbstractVector
+)::DecisionXGBoost
+    bm           = m.fitresult.interface.predict.machine
+    trees        = XGBoost.trees(bm.fitresult[1])
+    encoding     = get_encoding(bm.fitresult[2])
+    featurenames = m.report.vals[1].model.features
+    classlabels  = get_classlabels(encoding)
+    solem        = solemodel(trees, Matrix(X), y; featurenames, classlabels)
+    logiset      = scalarlogiset(mapcols(col -> Float32.(col), X), allow_propositional=true)
+    apply!(solem, logiset, y)
+    return solem
+end
+
+# ---------------------------------------------------------------------------- #
 
 function apply(
     m :: Machine{XGBoostRegressor},

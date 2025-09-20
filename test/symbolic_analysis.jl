@@ -293,7 +293,97 @@ modelts = symbolic_analysis(
 @test modelts isa SX.ModelSet
 
 # ---------------------------------------------------------------------------- #
-#                                    tuning                                    #
+#                                  balancing                                   #
+# ---------------------------------------------------------------------------- #
+modelc = symbolic_analysis(
+    Xc, yc;
+    model=DecisionTreeClassifier(),
+    resampling=StratifiedCV(nfolds=5, shuffle=true),
+    balancing=(
+        oversampler=BorderlineSMOTE1(m=6, k=4),
+        undersampler=ClusterUndersampler()),
+    measures=(accuracy, )
+)
+@test modelc isa SX.ModelSet
+
+modelc = symbolic_analysis(
+    Xc, yc;
+    model=RandomForestClassifier(),
+    resampling=StratifiedCV(nfolds=5, shuffle=true),
+    balancing=(
+        oversampler=ENNUndersampler(k=7),
+        undersampler=ROSE()),
+    measures=(accuracy, )
+)
+@test modelc isa SX.ModelSet
+
+modelc = symbolic_analysis(
+    Xc, yc;
+    model=AdaBoostStumpClassifier(),
+    resampling=StratifiedCV(nfolds=5, shuffle=true),
+    balancing=(
+        oversampler=RandomOversampler(),
+        undersampler=RandomUndersampler()),
+    measures=(accuracy, )
+)
+@test modelc isa SX.ModelSet
+
+modelc = symbolic_analysis(
+    Xc, yc;
+    model=ModalDecisionTree(),
+    resampling=StratifiedCV(nfolds=5, shuffle=true),
+    balancing=(
+        oversampler=RandomWalkOversampler(),
+        undersampler=SMOTE()),
+    measures=(accuracy, )
+)
+@test modelc isa SX.ModelSet
+
+modelc = symbolic_analysis(
+    Xc, yc;
+    model=ModalRandomForest(),
+    resampling=StratifiedCV(nfolds=5, shuffle=true),
+    balancing=(
+        oversampler=SMOTE(),
+        undersampler=RandomUndersampler()),
+    measures=(accuracy, )
+)
+@test modelc isa SX.ModelSet
+
+modelc = symbolic_analysis(
+    Xc, yc;
+    model=ModalAdaBoost(),
+    resampling=StratifiedCV(nfolds=5, shuffle=true),
+    balancing=(
+        oversampler=SMOTENC(),
+        undersampler=TomekUndersampler()),
+    measures=(accuracy, )
+)
+@test modelc isa SX.ModelSet
+
+modelc = symbolic_analysis(
+    Xc, yc;
+    model=XGBoostClassifier(),
+    resampling=StratifiedCV(nfolds=5, shuffle=true),
+    balancing=(
+        oversampler=SMOTENC(),
+        undersampler=TomekUndersampler()),
+    measures=(accuracy, )
+)
+@test modelc isa SX.ModelSet
+
+@test_throws ArgumentError symbolic_analysis(
+    Xr, yr;
+    model=RandomForestRegressor(),
+    resampling=StratifiedCV(nfolds=5, shuffle=true),
+    balancing=(
+        oversampler=ENNUndersampler(k=7),
+        undersampler=ROSE()),
+    measures=(accuracy, )
+)
+
+# ---------------------------------------------------------------------------- #
+#                                   tuning                                     #
 # ---------------------------------------------------------------------------- #
 range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
 modelc = symbolic_analysis(
