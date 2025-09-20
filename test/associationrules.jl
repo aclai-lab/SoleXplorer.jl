@@ -269,7 +269,7 @@ modelts = symbolic_analysis(
     model=XGBoostClassifier(early_stopping_rounds=20),
     resampling=CV(nfolds=5, shuffle=true),
     valid_ratio=0.2,
-    rng=Xoshiro(1),
+    seed=1,
     tuning=GridTuning(resolution=10, resampling=CV(nfolds=3), range=range, measure=accuracy, repeats=2),
     extractor=InTreesRuleExtractor(),
     association=FPGrowth(_items, _itemsetmeasures, _rulemeasures),

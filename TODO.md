@@ -1,11 +1,4 @@
 # ---------------------------------------------------------------------------- #
-#                                documentazione                                #
-# ---------------------------------------------------------------------------- #
-Priorità massima
-Serve un metodo preciso per buttarla giù.
-Albi sicuramente potrà essere d'aiuto, ma anche Marco.
-
-# ---------------------------------------------------------------------------- #
 #                                  load/save                                   #
 # ---------------------------------------------------------------------------- #
 Importante, vedi di farlo entro Parigi
@@ -78,7 +71,7 @@ le rebilancia coi pesi, per non buttare via istanze).
 # ---------------------------------------------------------------------------- #
 #                                       rng                                    #
 # ---------------------------------------------------------------------------- #
-Propagalo anche a PostHoc
+magari vedere di refattorizzarlo meglio per renderlo più elegante
 
 # ---------------------------------------------------------------------------- #
 #                             apply e extractrules                             #

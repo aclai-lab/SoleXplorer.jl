@@ -49,7 +49,7 @@ modelc = symbolic_analysis(
     Xc, yc;
     model=DecisionTreeClassifier(),
     resampling=CV(nfolds=5, shuffle=true),
-    rng=Xoshiro(1),
+    seed=1,
     tuning=(tuning=Grid(resolution=10), resampling=CV(nfolds=3), range, measure=accuracy, repeats=2),
     extractor=InTreesRuleExtractor(),
     measures=(accuracy, log_loss, confusion_matrix, kappa)      
@@ -67,7 +67,7 @@ modelts = symbolic_analysis(
     Xts, yts;
     model=ModalDecisionTree(),
     resampling=Holdout(fraction_train=0.8, shuffle=true),
-    rng=Xoshiro(1),
+    seed=1,
     features=(minimum, maximum),
     measures=(log_loss, accuracy, confusion_matrix, kappa)
 )

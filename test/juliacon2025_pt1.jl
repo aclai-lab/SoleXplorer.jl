@@ -141,7 +141,7 @@ dtc = symbolic_analysis(
     Xc, yc;
     model=DecisionTreeClassifier(),
     resampling=StratifiedCV(nfolds=20, shuffle=true),
-    rng=Xoshiro(12345),
+    seed=12345,
     # extractor=InTreesRuleExtractor(),
     measures=(accuracy,)      
 )
@@ -150,7 +150,7 @@ rfc = symbolic_analysis(
     Xlight, yc;
     model=RandomForestClassifier(n_trees=30),
     resampling=StratifiedCV(nfolds=20, shuffle=true),
-    rng=Xoshiro(12345),
+    seed=12345,
     extractor=LumenRuleExtractor(),
     measures=(accuracy,)      
 )
@@ -175,7 +175,7 @@ xgb = symbolic_analysis(
     model=XGBoostClassifier(early_stopping_rounds=20),
     resampling=StratifiedCV(nfolds=20, shuffle=true),
     valid_ratio=0.2,
-    rng=Xoshiro(12345),
+    seed=12345,
     # extractor=InTreesRuleExtractor(),
     measures=(accuracy,)      
 )
