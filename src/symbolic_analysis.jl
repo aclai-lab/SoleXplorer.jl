@@ -392,7 +392,7 @@ range = SoleXplorer.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:l
 modelset = symbolic_analysis(X, y;
     model=RandomForestClassifier(),
     resampling=CV(nfolds=5, shuffle=true),
-    rng=Xoshiro(1),
+    seed=1,
     tuning=GridTuning(resolution=10, resampling=CV(nfolds=3), range=range, measure=accuracy, repeats=2),
     extractor=InTreesRuleExtractor(),
     measures=(accuracy, log_loss, confusion_matrix, kappa)   
@@ -402,7 +402,7 @@ modelset = symbolic_analysis(X, y;
 modelset = symbolic_analysis(X, y;
     model=ModalRandomForest(),
     resampling=Holdout(fraction_train=0.7, shuffle=true),
-    rng=Xoshiro(1),
+    seed=1,
     features=(minimum, maximum),
     measures=(log_loss, accuracy, confusion_matrix, kappa)
 )

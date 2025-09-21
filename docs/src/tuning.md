@@ -4,7 +4,7 @@ CurrentModule = SoleXplorer
 
 # [Tuning](@id tuning)
 
-SoleXplorer utilizza le seguenti strategie di tuning adattate dal package [MLJ](https://juliaai.github.io/MLJ.jl/stable/): `GridTuning`, `RandomTuning`, `CubeTuning`, `ParticleTuning` and `AdaptiveTuning`.
+SoleXplorer uses the following tuning strategies adapted from package [MLJ](https://juliaai.github.io/MLJ.jl/stable/): `GridTuning`, `RandomTuning`, `CubeTuning`, `ParticleTuning` and `AdaptiveTuning`.
 
 ```
 strategy_type::Type{<:Any}(;

@@ -1,17 +1,7 @@
 # ---------------------------------------------------------------------------- #
-#                                documentazione                                #
-# ---------------------------------------------------------------------------- #
-Priorità massima
-Serve un metodo preciso per buttarla giù.
-Albi sicuramente potrà essere d'aiuto, ma anche Marco.
-
-# ---------------------------------------------------------------------------- #
 #                                  load/save                                   #
 # ---------------------------------------------------------------------------- #
-Importante, vedi di farlo entro Parigi
-
-Edo mi ha suggerito Pkl da scikitlearn
-Perry suggerisce serialize.jl
+Importante, vedi di farlo entro Parigi, JLD2
 
 # ---------------------------------------------------------------------------- #
 #                                 bug di MLJ #1                                #
@@ -61,11 +51,6 @@ sarebbe bello averla impostata entro ottobre, ma ha priorità minore.
 Da parlarne col Balbo
 
 # ---------------------------------------------------------------------------- #
-#                               ribilanciamento                                #
-# ---------------------------------------------------------------------------- #
-Guarda su MLJ se esiste
-
-# ---------------------------------------------------------------------------- #
 #                              peso delle istanze                              #
 # ---------------------------------------------------------------------------- #
 in MLJ si usa X, y, w. da implementare? verifica come funziona, magari viene messo da MLJ
@@ -78,7 +63,7 @@ le rebilancia coi pesi, per non buttare via istanze).
 # ---------------------------------------------------------------------------- #
 #                                       rng                                    #
 # ---------------------------------------------------------------------------- #
-Propagalo anche a PostHoc
+magari vedere di refattorizzarlo meglio per renderlo più elegante
 
 # ---------------------------------------------------------------------------- #
 #                             apply e extractrules                             #

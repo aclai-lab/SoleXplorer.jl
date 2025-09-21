@@ -26,9 +26,19 @@ abstract type AbstractDataSet end
 #                                   types                                      #
 # ---------------------------------------------------------------------------- #
 const Modal  = Union{ModalDecisionTree, ModalRandomForest, ModalAdaBoost}
+
+const MaybeInt             = Maybe{Int64}
 const MaybeAggregationInfo = Maybe{AggregationInfo}
-const MaybeTuning = Maybe{Tuning}
-const MaybeTreatInfo = Maybe{TreatmentInfo}
+const MaybeBalancing       = Maybe{NamedTuple{<:Any, <:Tuple{MLJ.Model, MLJ.Model}}}
+const MaybeTuning          = Maybe{Tuning}
+const MaybeTreatInfo       = Maybe{TreatmentInfo}
+
+# warining for balancing classes
+const Regression = Union{
+    DecisionTreeRegressor,
+    RandomForestRegressor,
+    XGBoostRegressor
+}
 
 # ---------------------------------------------------------------------------- #
 #                                  defaults                                    #
@@ -65,6 +75,13 @@ function set_tuning_rng!(m::MLJ.Model, rng::AbstractRNG)::MLJ.Model
     hasproperty(m.tuning, :rng) && (m.tuning.rng = rng)
     hasproperty(m.resampling, :rng) && (m.resampling = set_rng(m.resampling, rng))
     return m
+end
+
+# set the seed for balancing-related components of a model
+# originally broken in case you pass a RNG method (lenth mismatch during MLJ.fit!)
+function set_balancing_seed(b::MLJ.Model, seed::Int64)::MLJ.Model
+    hasproperty(b, :rng) && (b = typeof(b).name.wrapper(merge(MLJ.params(b), (rng=seed,))...))
+    return b
 end
 
 # set logical conditions (features) for modal models
@@ -272,6 +289,48 @@ Extract the logiset (if present) from the dataset's MLJ machine.
 get_logiset(ds::ModalDataSet)::SupportedLogiset = ds.mach.data[1].modalities[1]
 
 # ---------------------------------------------------------------------------- #
+#                           MLJ models's extra setup                           #
+# ---------------------------------------------------------------------------- #
+function set_balancing(
+    model     :: MLJ.Model,
+    balancing :: NamedTuple{<:Any, <:Tuple{MLJ.Model, MLJ.Model}},
+    seed      :: MaybeInt
+)::MLJ.Model
+    # regression models don't support balancing
+    model isa Regression &&
+        throw(ArgumentError("Balancing is not supported for regression models."))
+
+    balancing isa NamedTuple{(:oversampler, :undersampler), <:Tuple{MLJ.Model, MLJ.Model}} ||
+        throw(ArgumentError("Invalid balancing parameter, usage: " * 
+                        "balancing(oversampler=..., undersample=...)"))
+
+    # set the model to use the same seed as the dataset
+    isnothing(seed) && (seed = 17)
+    balancing = map(b -> set_balancing_seed(b, seed), balancing)
+
+    model = MLJ.BalancedModel(model; balancing...)
+end
+
+function set_tuning(
+    model  :: MLJ.Model,
+    tuning :: Tuning,
+    rng    :: AbstractRNG
+)::MLJ.Model
+    t_range = get_range(tuning)
+    if !(t_range isa MLJ.NominalRange)
+        # convert SX.range to MLJ.range now that model is available
+        range = t_range isa Tuple{Vararg{Tuple}} ? t_range : (t_range,)
+        range = collect(MLJ.range(model, r[1]; r[2:end]...) for r in range)
+        tuning.range = range
+    end
+
+    model = MLJ.TunedModel(model; tuning_params(tuning)...)
+
+    # set the model to use the same rng as the dataset
+    set_tuning_rng!(model, rng)
+end
+
+# ---------------------------------------------------------------------------- #
 #                            internal setup dataset                            #
 # ---------------------------------------------------------------------------- #
 function _setup_dataset(
@@ -281,18 +340,29 @@ function _setup_dataset(
     model         :: MLJ.Model                    = _DefaultModel(y),
     resampling    :: ResamplingStrategy           = Holdout(fraction_train=0.7, shuffle=true),
     valid_ratio   :: Real                         = 0.0,
-    rng           :: AbstractRNG                  = TaskLocalRNG(),
+    seed          :: MaybeInt                     = nothing,
+    balancing     :: MaybeBalancing               = nothing,
     tuning        :: MaybeTuning                  = nothing,
     win           :: WinFunction                  = AdaptiveWindow(nwindows=3, relative_overlap=0.1),
     features      :: Tuple{Vararg{Base.Callable}} = (maximum, minimum),
     modalreduce   :: Base.Callable                = mean
 )::AbstractDataSet
-    # propagate user rng to every field that needs it
-    hasproperty(model, :rng)    && set_rng!(model, rng)
-    hasproperty(resampling, :rng) && (resampling = set_rng(resampling, rng))
+    # setup rng
+    if !isnothing(seed)
+        rng = Xoshiro(seed)
+        # propagate user rng to every field that needs it
+        hasproperty(model, :rng)      && set_rng!(model, rng)
+        hasproperty(resampling, :rng) && (resampling = set_rng(resampling, rng))
+    else
+        rng = TaskLocalRNG()
+    end
 
-    # ModalDecisionTrees package needs features to be passed in model params
+    # Modal models need features to be passed in model params
     hasproperty(model, :features) && set_conditions!(model, features)
+    # MLJ.TunedModels can't automatically assigns measure to Modal models
+    if model isa Modal && !isnothing(tuning)
+        isnothing(get_measure(tuning)) && (tuning.measure = LogLoss())
+    end
 
     # handle multidimensional datasets:
     # propositional models requiring feature aggregation
@@ -307,23 +377,8 @@ function _setup_dataset(
 
     ttpairs, pinfo = partition(y; resampling, valid_ratio, rng)
 
-    isnothing(tuning) || begin
-        t_range = get_range(tuning)
-        if !(t_range isa MLJ.NominalRange)
-            # convert SX.range to MLJ.range now that model is available
-            range = t_range isa Tuple{Vararg{Tuple}} ? t_range : (t_range,)
-            range = collect(MLJ.range(model, r[1]; r[2:end]...) for r in range)
-            tuning.range = range
-        end
-
-        model = MLJ.TunedModel(
-            model; 
-            tuning_params(tuning)...
-        )
-
-        # set the model to use the same rng as the dataset
-        set_tuning_rng!(model, rng)
-    end
+    isnothing(balancing) || (model = set_balancing(model, balancing, seed))
+    isnothing(tuning)    || (model = set_tuning(model, tuning, rng))
 
     mach = isnothing(w) ? MLJ.machine(model, X, y) : MLJ.machine(model, X, y, w)
     
@@ -339,7 +394,8 @@ end
         model=_DefaultModel(y),
         resampling=Holdout(fraction_train=0.7, shuffle=true),
         valid_ratio=0.0,
-        rng=TaskLocalRNG(),
+        seed=nothing,
+        balancing=nothing,
         tuning=nothing,
         win=AdaptiveWindow(nwindows=3, relative_overlap=0.1),
         features=(maximum, minimum),
@@ -618,7 +674,92 @@ TimeSeriesCV(; nfolds=4)
 ```
 
 `valid_ratio` is used with XGBoost early stop [technique](https://xgboost.readthedocs.io/en/stable/prediction.html).
-`rng` can be setted externally for convenience.
+`rng` can be setted externally (via seed, using internal Xoshiro algo) for convenience.
+
+## Balancing
+Balancing strategies are taken from the package [Imbalance](https://github.com/JuliaAI/Imbalance.jl).
+See official documentation [here](https://juliaai.github.io/Imbalance.jl/dev/).
+Available strategies:
+```
+BorderlineSMOTE1(
+  m = 5, 
+  k = 5, 
+  ratios = 1.0, 
+  rng = Random.TaskLocalRNG(), 
+  try_preserve_type = true, 
+  verbosity = 1)
+```
+```
+ClusterUndersampler(
+  mode = "nearest", 
+  ratios = 1.0, 
+  maxiter = 100, 
+  rng = Random.TaskLocalRNG(), 
+  try_preserve_type = true)
+```
+```
+ENNUndersampler(
+  k = 5, 
+  keep_condition = "mode", 
+  min_ratios = 1.0, 
+  force_min_ratios = false, 
+  rng = Random.TaskLocalRNG(), 
+  try_preserve_type = true)
+```
+```
+ROSE(
+  s = 1.0, 
+  ratios = 1.0, 
+  rng = Random.TaskLocalRNG(), 
+  try_preserve_type = true)
+```
+```
+RandomOversampler(
+  ratios = 1.0, 
+  rng = Random.TaskLocalRNG(), 
+  try_preserve_type = true)
+```
+```
+RandomUndersampler(
+  ratios = 1.0, 
+  rng = Random.TaskLocalRNG(), 
+  try_preserve_type = true)
+```
+```
+RandomWalkOversampler(
+  ratios = 1.0, 
+  rng = Random.TaskLocalRNG(), 
+  try_preserve_type = true)
+```
+```
+SMOTE(
+  k = 5, 
+  ratios = 1.0, 
+  rng = Random.TaskLocalRNG(), 
+  try_preserve_type = true)
+```
+```
+SMOTEN(
+  k = 5, 
+  ratios = 1.0, 
+  rng = Random.TaskLocalRNG(), 
+  try_preserve_type = true)
+```
+```
+SMOTENC(
+  k = 5, 
+  ratios = 1.0, 
+  knn_tree = "Brute", 
+  rng = Random.TaskLocalRNG(), 
+  try_preserve_type = true)
+```
+```
+TomekUndersampler(
+  min_ratios = 1.0, 
+  force_min_ratios = false, 
+  rng = Random.TaskLocalRNG(), 
+  try_preserve_type = true)
+```
 
 ## Tuning
 `tuning::MaybeTuning=nothing`: Hyperparameter tuning configuration,
@@ -746,7 +887,7 @@ dsc = setup_dataset(
 dsc = setup_dataset(
     Xc, yc;
     resampling=CV(nfolds=10, shuffle=true),
-    rng=Xoshiro(1)
+    seed=1
 )
 
 # tuning
@@ -755,7 +896,7 @@ dsc = setup_dataset(
     Xc, yc;
     model=ModalDecisionTree(),
     resampling=CV(nfolds=5, shuffle=true),
-    rng=Xoshiro(1),
+    seed=1,
     tuning=GridTuning(resolution=10, resampling=CV(nfolds=3), range=range, measure=accuracy, repeats=2)
 )
 
@@ -764,7 +905,7 @@ dts = setup_dataset(
     Xts, yts;
     model=ModalRandomForest(),
     resampling=Holdout(fraction_train=0.7, shuffle=true),
-    rng=Xoshiro(1),
+    seed=1,
     win=AdaptiveWindow(nwindows=3, relative_overlap=0.3),
     features=(minimum, maximum),
     modalreduce=mode

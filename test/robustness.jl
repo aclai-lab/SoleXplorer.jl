@@ -25,7 +25,7 @@ Xts, yts = SX.load(natopsloader)
                         Xc, yc;
                         model=DecisionTreeClassifier(;max_depth, min_purity_increase),
                         resampling=Holdout(; fraction_train, shuffle=true),
-                        rng=Xoshiro(seed),
+                        seed,
                         measures=(accuracy,)
                     )
                     sx_acc = model.measures.measures_values[1]
@@ -51,7 +51,7 @@ end
                         Xr, yr;
                         model=DecisionTreeRegressor(;max_depth, min_purity_increase),
                         resampling=Holdout(; fraction_train, shuffle=true),
-                        rng=Xoshiro(seed),
+                        seed,
                         measures=(rms,)
                     )
                     sx_rms = model.measures.measures_values[1]
@@ -77,7 +77,7 @@ end
                         Xc, yc;
                         model=RandomForestClassifier(;n_trees, sampling_fraction),
                         resampling=Holdout(; fraction_train, shuffle=true),
-                        rng=Xoshiro(seed),
+                        seed,
                         measures=(accuracy,)
                     )
                     sx_acc = model.measures.measures_values[1]
@@ -103,7 +103,7 @@ end
                         Xr, yr;
                         model=RandomForestRegressor(;n_trees, sampling_fraction),
                         resampling=Holdout(; fraction_train, shuffle=true),
-                        rng=Xoshiro(seed),
+                        seed,
                         measures=(rms,)
                     )
                     sx_rms = model.measures.measures_values[1]
@@ -129,7 +129,7 @@ end
                         Xc, yc;
                         model=AdaBoostStumpClassifier(;n_iter, feature_importance),
                         resampling=Holdout(; fraction_train=0.7, shuffle=true),
-                        rng=Xoshiro(seed),
+                        seed,
                         measures=(accuracy,)
                     )
                     sx_acc = model.measures.measures_values[1]
@@ -160,7 +160,7 @@ yb = MLJ.CategoricalArray{String,1,UInt32}(data["y"])
                         Xb, yb;
                         model=XGBoostClassifier(;eta, num_round),
                         resampling=Holdout(; fraction_train, shuffle=true),
-                        rng=Xoshiro(seed),
+                        seed,
                         measures=(accuracy,)
                     )
                     sx_acc = model.measures.measures_values[1]
@@ -186,7 +186,7 @@ end
                         Xc, yc;
                         model=XGBoostClassifier(;eta, num_round),
                         resampling=Holdout(; fraction_train, shuffle=true),
-                        rng=Xoshiro(seed),
+                        seed,
                         measures=(accuracy,)
                     )
                     sx_acc = model.measures.measures_values[1]
@@ -212,7 +212,7 @@ end
                         Xr, yr;
                         model=XGBoostRegressor(;eta, num_round),
                         resampling=Holdout(; fraction_train, shuffle=true),
-                        rng=Xoshiro(seed),
+                        seed,
                         measures=(rms,)
                     )
                     sxhat = solemodels(model)[1].info.supporting_predictions

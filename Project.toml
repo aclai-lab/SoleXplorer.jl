@@ -1,11 +1,12 @@
 name = "SoleXplorer"
 uuid = "5816ab97-8dbe-4a0a-b2fb-0334bd9876ed"
 authors = ["Lorenzo BALBONI", "Mauro MILELLA", "Giovanni PAGLIARINI", "Alberto PAPARELLA", "Riccardo PASINI", "Marco PERROTTA"]
-version = "0.2.5"
+version = "0.2.6"
 
 [deps]
 Catch22 = "acdeb78f-3d39-4310-8fdf-6d75c17c6d5a"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+Imbalance = "c709b415-507b-45b7-9a3d-1767c89fde68"
 MLJ = "add582a8-e3ab-11e8-2d5e-e98b27df1bc7"
 MLJDecisionTreeInterface = "c6f25543-311c-4c74-83dc-3ea6d1015661"
 MLJParticleSwarmOptimization = "17a086e9-ed03-4f30-ab88-8b63f0f6126c"
@@ -30,6 +31,7 @@ SolePostHoc = {rev = "PyCall_init", url = "https://github.com/aclai-lab/SolePost
 [compat]
 Catch22 = "0.4 - 0.7"
 DataFrames = "1"
+Imbalance = "0.1"
 MLJ = "0.20, 0.21"
 MLJDecisionTreeInterface = "0.4"
 MLJParticleSwarmOptimization = "0.1"
@@ -46,9 +48,8 @@ XGBoost = "2.5"
 julia = "1"
 
 [extras]
-Distributed = "8ba89e20-285c-5b6f-9357-94700520ee1b"
-Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Distributed", "Test", "JLD2"]
+test = ["JLD2", "Test"]

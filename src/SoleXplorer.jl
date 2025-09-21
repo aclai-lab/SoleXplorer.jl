@@ -35,6 +35,12 @@ using  MLJParticleSwarmOptimization
 const  PSO = MLJParticleSwarmOptimization
 using  MLJ
 using  MLJ: MLJBase, MLJTuning
+# balancing
+using Imbalance
+@reexport using Imbalance.MLJ:
+    BorderlineSMOTE1, ClusterUndersampler, ENNUndersampler, ROSE,
+    RandomOversampler, RandomUndersampler, RandomWalkOversampler,
+    SMOTE, SMOTEN, SMOTENC, TomekUndersampler
 
 # ---------------------------------------------------------------------------- #
 #                              external packages                               #
@@ -61,10 +67,11 @@ const MaybeNTuple = Maybe{NamedTuple}
 # ---------------------------------------------------------------------------- #
 # feature extraction via Catch22
 # export user friendly Catch22 nicknames
-export mode_5, mode_10, embedding_dist, acf_timescale, acf_first_min, ami2, trev, outlier_timing_pos
-export outlier_timing_neg, whiten_timescale, forecast_error, ami_timescale, high_fluctuation, stretch_decreasing
-export stretch_high, entropy_pairs, rs_range, dfa, low_freq_power, centroid_freq, transition_variance, periodicity
-export base_set, catch9, catch22_set, complete_set
+export mode_5, mode_10, embedding_dist, acf_timescale, acf_first_min, ami2,
+       trev, outlier_timing_pos, outlier_timing_neg, whiten_timescale,
+       forecast_error, ami_timescale, high_fluctuation, stretch_decreasing,
+       stretch_high, entropy_pairs, rs_range, dfa, low_freq_power, centroid_freq,
+       transition_variance, periodicity, base_set, catch9, catch22_set, complete_set
 using  Catch22
 include("featureset.jl")
 

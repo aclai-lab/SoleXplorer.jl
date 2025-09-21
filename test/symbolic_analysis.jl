@@ -31,7 +31,7 @@ dsc = setup_dataset(
     Xc, yc;
     model=DecisionTreeClassifier(),
     resampling=CV(nfolds=5, shuffle=true),
-    rng=Xoshiro(1),
+    seed=1,
     tuning=GridTuning(;range, resolution=10, resampling=CV(nfolds=3), measure=accuracy, repeats=2)    
 )
 solemc = train_test(dsc)
@@ -47,7 +47,7 @@ dsr = setup_dataset(
     Xr, yr;
     model=DecisionTreeRegressor(),
     resampling=CV(nfolds=5, shuffle=true),
-    rng=Xoshiro(1),
+    seed=1,
     tuning=GridTuning(resolution=20, resampling=CV(nfolds=3), range=range, repeats=2)    
 )
 solemr = train_test(dsr)
@@ -65,7 +65,7 @@ modelc = symbolic_analysis(
     Xc, yc;
     model=DecisionTreeClassifier(),
     resampling=CV(nfolds=5, shuffle=true),
-    rng=Xoshiro(1),
+    seed=1,
     tuning=GridTuning(resolution=10, resampling=CV(nfolds=3), range=range, measure=accuracy, repeats=2),
     extractor=InTreesRuleExtractor(),
     measures=(accuracy, log_loss, confusion_matrix, kappa)      
@@ -77,7 +77,7 @@ modelr = symbolic_analysis(
     Xr, yr;
     model=DecisionTreeRegressor(),
     resampling=CV(nfolds=5, shuffle=true),
-    rng=Xoshiro(1),
+    seed=1,
     tuning=GridTuning(; range, resolution=10, resampling=CV(nfolds=3), measure=rms, repeats=2),
     measures=(rms, l1, l2, mae, mav)
 )
@@ -90,7 +90,7 @@ dsts = setup_dataset(
     Xts, yts;
     model=ModalDecisionTree(),
     resampling=Holdout(fraction_train=0.7, shuffle=true),
-    rng=Xoshiro(1),
+    seed=1,
     features=()  
 )
 # ---------------------------------------------------------------------------- #
@@ -100,7 +100,7 @@ modelc = symbolic_analysis(
     Xc, yc;
     model=DecisionTreeClassifier(),
     resampling=Holdout(fraction_train=0.75, shuffle=true),
-    rng=Xoshiro(1),
+    seed=1,
     measures=(accuracy, log_loss, confusion_matrix, kappa)      
 )
 @test modelc isa SX.ModelSet
@@ -109,7 +109,7 @@ modelr = symbolic_analysis(
     Xr, yr;
     model=RandomForestRegressor(),
     resampling=CV(nfolds=5, shuffle=true),
-    rng=Xoshiro(1),
+    seed=1,
     measures=(rms, l1, l2, mae, mav)      
 )
 @test modelr isa SX.ModelSet
@@ -118,7 +118,7 @@ modelc = symbolic_analysis(
     Xc, yc;
     model=AdaBoostStumpClassifier(),
     resampling=StratifiedCV(nfolds=5, shuffle=true),
-    rng=Xoshiro(1),
+    seed=1,
     measures=(accuracy, log_loss, confusion_matrix, kappa)      
 )
 @test modelc isa SX.ModelSet
@@ -130,7 +130,7 @@ modelts = symbolic_analysis(
     Xts, yts;
     model=DecisionTreeClassifier(),
     resampling=Holdout(fraction_train=0.5, shuffle=true),
-    rng=Xoshiro(1),
+    seed=1,
     win=AdaptiveWindow(nwindows=3, relative_overlap=0.3),
     modalreduce=mean,
     features=(maximum, minimum),
@@ -142,7 +142,7 @@ modelts = symbolic_analysis(
     Xts, yts;
     model=RandomForestClassifier(),
     resampling=CV(nfolds=5, shuffle=true),
-    rng=Xoshiro(1),
+    seed=1,
     win=AdaptiveWindow(nwindows=3, relative_overlap=0.3),
     modalreduce=mean,
     features=(maximum, minimum),
@@ -154,7 +154,7 @@ modelts = symbolic_analysis(
     Xts, yts;
     model=AdaBoostStumpClassifier(),
     resampling=StratifiedCV(nfolds=5, shuffle=true),
-    rng=Xoshiro(1),
+    seed=1,
     win=AdaptiveWindow(nwindows=3, relative_overlap=0.3),
     modalreduce=mean,
     features=(maximum, minimum),
@@ -166,7 +166,7 @@ modelts = symbolic_analysis(
 # modelts = symbolic_analysis(
 #     Xts, yts;
 #     model=XGBoostClassifier(),
-#     resampling=(type=TimeSeriesCV(nfolds=5), rng=Xoshiro(1)),
+#     resampling=(type=TimeSeriesCV(nfolds=5), seed=1),
 #     win=AdaptiveWindow(nwindows=3, relative_overlap=0.3),
 #     modalreduce=mean,
 #     features=(maximum, minimum),
@@ -181,7 +181,7 @@ modelts = symbolic_analysis(
     Xts, yts;
     model=ModalDecisionTree(),
     resampling=CV(;nfolds=4),
-    rng=Xoshiro(1),
+    seed=1,
     measures=(accuracy,)
 )
 @test modelts isa SX.ModelSet
@@ -190,7 +190,7 @@ modelts = symbolic_analysis(
     Xts, yts;
     model=ModalRandomForest(),
     resampling=Holdout(fraction_train=0.75, shuffle=true),
-    rng=Xoshiro(1),
+    seed=1,
     features=(minimum, maximum),
     measures=(log_loss, accuracy, confusion_matrix, kappa)
 )
@@ -204,7 +204,7 @@ modelc = symbolic_analysis(
     model=XGBoostClassifier(early_stopping_rounds=20),
     resampling=CV(nfolds=5, shuffle=true),
     valid_ratio=0.2,
-    rng=Xoshiro(1),
+    seed=1,
     measures=(confusion_matrix,) 
 )
 @test modelc isa SX.ModelSet
@@ -215,7 +215,7 @@ modelr = symbolic_analysis(
     model=XGBoostRegressor(early_stopping_rounds=20),
     resampling=CV(nfolds=5, shuffle=true),
     valid_ratio=0.2,
-    rng=Xoshiro(1),
+    seed=1,
     tuning=GridTuning(; range, resolution=10, resampling=CV(nfolds=3), measure=rms, repeats=2),
     measures=(rms, l1, l2, mae, mav) 
 )
@@ -227,7 +227,7 @@ modelr = symbolic_analysis(
 modelts = symbolic_analysis(
     Xts, yts;
     model=DecisionTreeClassifier(),
-    rng=Xoshiro(1),
+    seed=1,
     features=(
         mode_5,
         mode_10,
@@ -259,7 +259,7 @@ modelts = symbolic_analysis(
 modelts = symbolic_analysis(
     Xts, yts;
     model=DecisionTreeClassifier(),
-    rng=Xoshiro(1),
+    seed=1,
     features=(base_set...,),
     measures=(accuracy,)
 )
@@ -268,7 +268,7 @@ modelts = symbolic_analysis(
 modelts = symbolic_analysis(
     Xts, yts;
     model=DecisionTreeClassifier(),
-    rng=Xoshiro(1),
+    seed=1,
     features=(catch9...,),
     measures=(accuracy,)
 )
@@ -277,7 +277,7 @@ modelts = symbolic_analysis(
 modelts = symbolic_analysis(
     Xts, yts;
     model=DecisionTreeClassifier(),
-    rng=Xoshiro(1),
+    seed=1,
     features=(catch22_set...,),
     measures=(accuracy,)
 )
@@ -286,14 +286,229 @@ modelts = symbolic_analysis(
 modelts = symbolic_analysis(
     Xts, yts;
     model=DecisionTreeClassifier(),
-    rng=Xoshiro(1),
+    seed=1,
     features=(complete_set...,),
     measures=(accuracy,)
 )
 @test modelts isa SX.ModelSet
 
 # ---------------------------------------------------------------------------- #
-#                                    tuning                                    #
+#                                  balancing                                   #
+# ---------------------------------------------------------------------------- #
+modelc = symbolic_analysis(
+    Xc, yc;
+    model=DecisionTreeClassifier(),
+    resampling=StratifiedCV(nfolds=5, shuffle=true),
+    seed=11,
+    balancing=(
+        oversampler=BorderlineSMOTE1(m=6, k=4),
+        undersampler=ClusterUndersampler()),
+    measures=(accuracy, )
+)
+@test modelc isa SX.ModelSet
+
+modelc = symbolic_analysis(
+    Xc, yc;
+    model=RandomForestClassifier(),
+    resampling=StratifiedCV(nfolds=5, shuffle=true),
+    balancing=(
+        oversampler=ENNUndersampler(k=7),
+        undersampler=ROSE()),
+    measures=(accuracy, )
+)
+@test modelc isa SX.ModelSet
+
+modelc = symbolic_analysis(
+    Xc, yc;
+    model=AdaBoostStumpClassifier(),
+    resampling=StratifiedCV(nfolds=5, shuffle=true),
+    balancing=(
+        oversampler=RandomOversampler(),
+        undersampler=RandomUndersampler()),
+    measures=(accuracy, )
+)
+@test modelc isa SX.ModelSet
+
+modelc = symbolic_analysis(
+    Xc, yc;
+    model=ModalDecisionTree(),
+    resampling=StratifiedCV(nfolds=5, shuffle=true),
+    balancing=(
+        oversampler=RandomWalkOversampler(),
+        undersampler=SMOTE()),
+    measures=(accuracy, )
+)
+@test modelc isa SX.ModelSet
+
+modelc = symbolic_analysis(
+    Xc, yc;
+    model=ModalRandomForest(),
+    resampling=StratifiedCV(nfolds=5, shuffle=true),
+    balancing=(
+        oversampler=SMOTE(),
+        undersampler=RandomUndersampler()),
+    measures=(accuracy, )
+)
+@test modelc isa SX.ModelSet
+
+modelc = symbolic_analysis(
+    Xc, yc;
+    model=ModalAdaBoost(),
+    resampling=StratifiedCV(nfolds=5, shuffle=true),
+    balancing=(
+        oversampler=SMOTENC(),
+        undersampler=TomekUndersampler()),
+    measures=(accuracy, )
+)
+@test modelc isa SX.ModelSet
+
+modelc = symbolic_analysis(
+    Xc, yc;
+    model=XGBoostClassifier(),
+    resampling=StratifiedCV(nfolds=5, shuffle=true),
+    balancing=(
+        oversampler=SMOTENC(),
+        undersampler=TomekUndersampler()),
+    measures=(accuracy, )
+)
+@test modelc isa SX.ModelSet
+
+@test_throws ArgumentError symbolic_analysis(
+    Xr, yr;
+    model=RandomForestRegressor(),
+    resampling=StratifiedCV(nfolds=5, shuffle=true),
+    balancing=(
+        oversampler=ENNUndersampler(k=7),
+        undersampler=ROSE()),
+    measures=(accuracy, )
+)
+
+# ---------------------------------------------------------------------------- #
+#                           balancing with tuning                              #
+# ---------------------------------------------------------------------------- #
+r1 = SX.range(:(oversampler.k), lower=3, upper=10)
+r2 = SX.range(:(undersampler.min_ratios), lower=0.1, upper=0.9)
+
+modelc = symbolic_analysis(
+    Xc, yc;
+    model=DecisionTreeClassifier(),
+    resampling=CV(nfolds=5, shuffle=true),
+    seed=11,
+    balancing=(
+        oversampler=SMOTENC(k=5, ratios=1.0),
+        undersampler=TomekUndersampler(min_ratios=0.5)),
+    tuning=GridTuning(goal=4, range=(r1,r2)),
+    measures=(accuracy, )
+)
+@test modelc isa SX.ModelSet
+
+modelc = symbolic_analysis(
+    Xc, yc;
+    model=RandomForestClassifier(),
+    resampling=CV(nfolds=5, shuffle=true),
+    seed=11,
+    balancing=(
+        oversampler=SMOTENC(k=5, ratios=1.0),
+        undersampler=TomekUndersampler(min_ratios=0.5)),
+    tuning=GridTuning(goal=4, range=(r1,r2)),
+    measures=(accuracy, )
+)
+@test modelc isa SX.ModelSet
+
+modelc = symbolic_analysis(
+    Xc, yc;
+    model=AdaBoostStumpClassifier(),
+    resampling=CV(nfolds=5, shuffle=true),
+    seed=11,
+    balancing=(
+        oversampler=SMOTENC(k=5, ratios=1.0),
+        undersampler=TomekUndersampler(min_ratios=0.5)),
+    tuning=GridTuning(goal=4, range=(r1,r2)),
+    measures=(accuracy, )
+)
+@test modelc isa SX.ModelSet
+
+modelc = symbolic_analysis(
+    Xc, yc;
+    model=ModalDecisionTree(),
+    resampling=CV(nfolds=5, shuffle=true),
+    seed=11,
+    balancing=(
+        oversampler=SMOTENC(k=5, ratios=1.0),
+        undersampler=TomekUndersampler(min_ratios=0.5)),
+    tuning=GridTuning(goal=4, range=(r1,r2)),
+    measures=(accuracy, )
+)
+@test modelc isa SX.ModelSet
+
+modelc = symbolic_analysis(
+    Xc, yc;
+    model=ModalRandomForest(),
+    resampling=CV(nfolds=5, shuffle=true),
+    seed=11,
+    balancing=(
+        oversampler=SMOTENC(k=5, ratios=1.0),
+        undersampler=TomekUndersampler(min_ratios=0.5)),
+    tuning=GridTuning(goal=4, range=(r1,r2)),
+    measures=(accuracy, )
+)
+@test modelc isa SX.ModelSet
+
+modelc = symbolic_analysis(
+    Xc, yc;
+    model=ModalAdaBoost(),
+    resampling=CV(nfolds=5, shuffle=true),
+    seed=11,
+    balancing=(
+        oversampler=SMOTENC(k=5, ratios=1.0),
+        undersampler=TomekUndersampler(min_ratios=0.5)),
+    tuning=GridTuning(goal=4, range=(r1,r2)),
+    measures=(accuracy, )
+)
+@test modelc isa SX.ModelSet
+
+modelc = symbolic_analysis(
+    Xc, yc;
+    model=XGBoostClassifier(),
+    resampling=CV(nfolds=5, shuffle=true),
+    seed=11,
+    balancing=(
+        oversampler=SMOTENC(k=5, ratios=1.0),
+        undersampler=TomekUndersampler(min_ratios=0.5)),
+    tuning=GridTuning(goal=4, range=(r1,r2)),
+    measures=(accuracy, )
+)
+@test modelc isa SX.ModelSet
+
+@test_throws ArgumentError symbolic_analysis(
+    Xr, yr;
+    model=XGBoostRegressor(),
+    resampling=CV(nfolds=5, shuffle=true),
+    seed=11,
+    balancing=(
+        oversampler=SMOTENC(k=5, ratios=1.0),
+        undersampler=TomekUndersampler(min_ratios=0.5)),
+    tuning=GridTuning(goal=4, range=(r1,r2)),
+    measures=(accuracy, )
+)
+
+# ds = setup_dataset(
+#     Xc, yc;
+#     model=XGBoostClassifier(),
+#     resampling=CV(nfolds=5, shuffle=true),
+#     seed=11,
+#     balancing=(
+#         oversampler=SMOTENC(k=5, ratios=1.0),
+#         undersampler=TomekUndersampler(min_ratios=0.5)),
+#     tuning=GridTuning(goal=4, range=(r1,r2)),
+# )
+# ds.pidxs[1].test
+# train = get_train(ds.pidxs[1])
+# MLJ.fit!(ds.mach, rows=train, verbosity=0)
+# m=ds.mach
+
+# ---------------------------------------------------------------------------- #
+#                                   tuning                                     #
 # ---------------------------------------------------------------------------- #
 range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
 modelc = symbolic_analysis(
@@ -352,7 +567,7 @@ wc = rand(length(yc))
 modelw = symbolic_analysis(
     Xc, yc, wc;
     model=XGBoostClassifier(),
-    rng=Xoshiro(1),
+    seed=1,
     measures=(accuracy,)
 )
 @test modelc isa SX.ModelSet
@@ -363,7 +578,7 @@ modelw = symbolic_analysis(
 modelts = symbolic_analysis(
     Xts, yts;
     model=DecisionTreeClassifier(),
-    rng=Xoshiro(1),
+    seed=1,
     win=AdaptiveWindow(nwindows=3, relative_overlap=0.3),
     measures=(accuracy, log_loss)      
 )
@@ -372,7 +587,7 @@ modelts = symbolic_analysis(
 modelts = symbolic_analysis(
     Xts, yts;
     model=DecisionTreeClassifier(),
-    rng=Xoshiro(1),
+    seed=1,
     win=WholeWindow(),
     measures=(accuracy, log_loss)      
 )
@@ -381,7 +596,7 @@ modelts = symbolic_analysis(
 modelts = symbolic_analysis(
     Xts, yts;
     model=DecisionTreeClassifier(),
-    rng=Xoshiro(1),
+    seed=1,
     win=SplitWindow(nwindows=2),
     measures=(accuracy, log_loss)      
 )
@@ -390,7 +605,7 @@ modelts = symbolic_analysis(
 modelts = symbolic_analysis(
     Xts, yts;
     model=DecisionTreeClassifier(),
-    rng=Xoshiro(1),
+    seed=1,
     win=MovingWindow(window_size=20, window_step=5),
     measures=(accuracy, log_loss)      
 )

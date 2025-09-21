@@ -14,7 +14,7 @@ dsc = setup_dataset(
     Xc, yc;
     model=DecisionTreeClassifier(),
     resampling=Holdout(;shuffle=true),
-    rng=Xoshiro(1),   
+    seed=1,   
 )
 solemc = train_test(dsc)
 
@@ -42,7 +42,7 @@ dsc = setup_dataset(
     Xc, yc;
     model=XGBoostClassifier(),
     resampling=Holdout(;shuffle=true),
-    rng=Xoshiro(1),   
+    seed=1,   
 )
 solemc = train_test(dsc)
 
@@ -67,7 +67,7 @@ dsc = setup_dataset(
     Xc, yc;
     model=RandomForestClassifier(n_trees=2),
     resampling=Holdout(;shuffle=true),
-    rng=Xoshiro(1),   
+    seed=1,   
 )
 solemc = train_test(dsc)
 
@@ -95,7 +95,7 @@ dsc = setup_dataset(
     Xc, yc;
     model=RandomForestClassifier(n_trees=2),
     resampling=Holdout(;shuffle=true),
-    rng=Xoshiro(1),   
+    seed=1,   
 )
 solemc = train_test(dsc)
 
@@ -123,7 +123,7 @@ dsc = setup_dataset(
     Xc, yc;
     model=RandomForestClassifier(n_trees=2),
     resampling=Holdout(;shuffle=true),
-    rng=Xoshiro(1),   
+    seed=1,   
 )
 solemc = train_test(dsc)
 
@@ -145,7 +145,7 @@ dsc = setup_dataset(
     Xc, yc;
     model=RandomForestClassifier(n_trees=2),
     resampling=Holdout(;shuffle=true),
-    rng=Xoshiro(1),   
+    seed=1,   
 )
 solemc = train_test(dsc)
 
@@ -167,7 +167,7 @@ dsc = setup_dataset(
     Xc, yc;
     model=RandomForestClassifier(n_trees=2),
     resampling=Holdout(;shuffle=true),
-    rng=Xoshiro(1),   
+    seed=1,   
 )
 solemc = train_test(dsc)
 
@@ -189,7 +189,7 @@ modelc = symbolic_analysis(
 #     Xc, yc;
 #     model=XGBoostClassifier(),
 #     resampling=Holdout(;shuffle=true),
-#     rng=Xoshiro(1),   
+#     seed=1,   
 # )
 # solemc = train_test(dsc)
 

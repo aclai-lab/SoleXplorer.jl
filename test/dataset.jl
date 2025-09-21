@@ -170,12 +170,12 @@ dsc = setup_dataset(
 @test dsc isa SX.PropositionalDataSet{DecisionTreeClassifier}
 
 # ---------------------------------------------------------------------------- #
-#                              rng propagation                                 #
+#                              seed propagation                                #
 # ---------------------------------------------------------------------------- #
 dsc = setup_dataset(
     Xc, yc;
     resampling=CV(nfolds=10, shuffle=true),
-    rng=Xoshiro(1)
+    seed=1
 )
 @test dsc isa SX.PropositionalDataSet{DecisionTreeClassifier}
 @test dsc.mach.model.rng isa Xoshiro
@@ -187,7 +187,7 @@ dsc = setup_dataset(
     Xc, yc;
     model=ModalDecisionTree(),
     resampling=CV(nfolds=5, shuffle=true),
-    rng=Xoshiro(1),
+    seed=1,
     tuning=GridTuning(resolution=10, resampling=CV(nfolds=3), range=range, measure=accuracy, repeats=2)
 )
 @test dsc.mach.model.model.rng isa Xoshiro
@@ -227,7 +227,7 @@ range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
 dsr = setup_dataset(
     Xr, yr;
     model=DecisionTreeRegressor(),
-    rng=Xoshiro(1234),
+    seed=1234,
     tuning=GridTuning(resolution=10, resampling=CV(nfolds=3), range=range, measure=rms)
 )
 @test dsr isa SX.PropositionalDataSet{<:MLJ.MLJTuning.DeterministicTunedModel}
@@ -237,7 +237,7 @@ range = (SX.range(:min_purity_increase, lower=0.001, upper=1.0, scale=:log),
 dsc = setup_dataset(
     Xc, yc;
     model=DecisionTreeClassifier(),
-    rng=Xoshiro(1234),
+    seed=1234,
     tuning=RandomTuning(range=range)
 )
 @test dsc isa SX.PropositionalDataSet{<:MLJ.MLJTuning.ProbabilisticTunedModel}
@@ -247,7 +247,7 @@ range = MLJ.range(selector, :features, values = [[:sepal_width,], [:sepal_length
 dsc = setup_dataset(
     Xc, yc;
     model=DecisionTreeClassifier(),
-    rng=Xoshiro(1234),
+    seed=1234,
     tuning=CubeTuning(resampling=CV(nfolds=3), range=range, measure=rms)
 )
 @test dsc isa SX.PropositionalDataSet{<:MLJ.MLJTuning.ProbabilisticTunedModel}  
@@ -256,7 +256,7 @@ range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
 dsr = setup_dataset(
     Xr, yr;
     model=DecisionTreeRegressor(),
-    rng=Xoshiro(1234),
+    seed=1234,
     tuning=ParticleTuning(n_particles=3, resampling=CV(nfolds=3), range=range, measure=rms)
 )
 @test dsr isa SX.PropositionalDataSet{<:MLJ.MLJTuning.DeterministicTunedModel}
@@ -266,7 +266,7 @@ range = (SX.range(:min_purity_increase, lower=0.001, upper=1.0, scale=:log),
 dsc = setup_dataset(
     Xc, yc;
     model=DecisionTreeClassifier(),
-    rng=Xoshiro(1234),
+    seed=1234,
     tuning=AdaptiveTuning(range=range)
 )
 @test dsc isa SX.PropositionalDataSet{<:MLJ.MLJTuning.ProbabilisticTunedModel}
