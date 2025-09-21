@@ -51,8 +51,8 @@ function _DefaultModel(y::AbstractVector)::MLJ.Model
         return DecisionTreeClassifier()
     elseif eltype(y) <: RLabel
         return DecisionTreeRegressor()
-    else
-        throw(ArgumentError("Unsupported type for y: $(eltype(y))"))
+    # else
+    #     throw(ArgumentError("Unsupported type for y: $(eltype(y))"))
     end
 end
 
@@ -101,7 +101,14 @@ In-place encoding of non-numeric columns in a DataFrame to numeric codes.
 function code_dataset(X::AbstractDataFrame)
     for (name, col) in pairs(eachcol(X))
         if !(eltype(col) <: Number)
-            X[!, name] = MLJ.levelcode.(categorical(col)) 
+            # handle mixed types by converting to string first
+            if eltype(col) == Any
+                # convert Any to String, handling missing values
+                string_col = string.(coalesce.(col, "missing"))
+                X[!, name] = MLJ.levelcode.(categorical(string_col))
+            else
+                X[!, name] = MLJ.levelcode.(categorical(col))
+            end
         end
     end
     
