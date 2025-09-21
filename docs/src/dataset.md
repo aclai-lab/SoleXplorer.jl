@@ -12,6 +12,7 @@ setup_dataset(X::AbstractDataFrame, y::Symbol)
 # [Dataset](@id dataset)
 ```@docs
 AbstractDataSet
+AbstractSoleModel
 PropositionalDataSet
 ModalDataSet
 DataSet
