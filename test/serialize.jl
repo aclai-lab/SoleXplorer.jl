@@ -48,6 +48,16 @@ solesave(modelc; path, name="test1")
 # ---------------------------------------------------------------------------- #
 #                             load dataset setup                               #
 # ---------------------------------------------------------------------------- #
-name="test1"
-path = @__DIR__
-dsc_load = load(path, )
+ds_name        = "soleds_test1"
+solemodel_name = "solemodel_test1.jld2"
+analysis_name  = "soleanalysis_test1"
+
+dsc_loaded      = soleload(path, ds_name)
+model_loaded    = soleload(path, solemodel_name)
+analysis_loaded = soleload(path, analysis_name)
+
+@test_throws ArgumentError soleload(path, "invalid")
+
+@test dsc_loaded      isa PropositionalDataSet
+@test model_loaded    isa SX.SoleModel
+@test analysis_loaded isa ModelSet
