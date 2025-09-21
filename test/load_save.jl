@@ -16,7 +16,7 @@ Xts, yts = SX.load(natopsloader)
 path = @__DIR__
 
 # ---------------------------------------------------------------------------- #
-#                          load/save dataset setup                             #
+#                             save dataset setup                               #
 # ---------------------------------------------------------------------------- #
 r1 = SX.range(:(oversampler.k), lower=3, upper=10)
 r2 = SX.range(:(undersampler.min_ratios), lower=0.1, upper=0.9)
@@ -43,6 +43,11 @@ modelc = symbolic_analysis(
 )
 solesave(modelc; path, name="test1")
 
-name="dsetup_test1"
+@test_throws ArgumentError solesave(modelc; path, name="test1")
+
+# ---------------------------------------------------------------------------- #
+#                             load dataset setup                               #
+# ---------------------------------------------------------------------------- #
+name="test1"
 path = @__DIR__
 dsc_load = load(path, )

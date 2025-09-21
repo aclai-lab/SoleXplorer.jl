@@ -13,10 +13,13 @@ function _save(
     path    :: AbstractString=@__DIR__,
     name    :: AbstractString
 )::Nothing
-    # check if name and path
+    # check name and path
     endswith(name, ".jld2") || (name = name * ".jld2")
     endswith(path, "/")     || (path = path * "/")
     filepath = joinpath(path, "$(prename)_$(name)")
+
+    # check if file exists
+    isfile(filepath) && throw(ArgumentError("File already exists: $filepath."))
     
     # save the item using JLD2
     jldsave(filepath; item=item)
