@@ -48,6 +48,7 @@ using Imbalance
 @reexport using SoleData: load_arff_dataset
 using  DataFrames
 using  Random
+using  JLD2
 
 # ---------------------------------------------------------------------------- #
 #                                 maybe types                                  #
@@ -133,5 +134,11 @@ export dsetup, solemodels, rules, associations
 export performance, measures, values
 export symbolic_analysis, symbolic_analysis!
 include("symbolic_analysis.jl")
+
+# ---------------------------------------------------------------------------- #
+#                                  load save                                   #
+# ---------------------------------------------------------------------------- #
+export soleload, solesave
+include("load_save.jl")
 
 end
