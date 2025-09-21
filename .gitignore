@@ -5,3 +5,5 @@ docs/site/
 abc.history
 forest.txt
 /*.jld2
+src/*.jld2
+test/*.jld2

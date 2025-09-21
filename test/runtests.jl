@@ -24,6 +24,7 @@ test_suites = [
     ("Solemodel robustness", ["robustness.jl"         ]),
     ("Rule extraction",      ["rule_extraction.jl"    ]),
     ("Association Rules",    ["associationrules.jl"   ]),
+    ("Serialization",        ["serialize.jl"          ]),
 ]
 
 @testset "SoleXplorer.jl" begin

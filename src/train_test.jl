@@ -1,7 +1,11 @@
 # ---------------------------------------------------------------------------- #
 #                               abstract types                                 #
 # ---------------------------------------------------------------------------- #
-# base abstract type for all symbolic model containers in SoleXplorer
+"""
+    AbstractSoleModel
+
+Base abstract type for all symbolic model containers in SoleXplorer.
+"""
 abstract type AbstractSoleModel end
 
 # ---------------------------------------------------------------------------- #
