@@ -83,7 +83,7 @@ end
 # ensures that the target variable `y` is properly formatted for use with MLJ
 # it handles automatic conversion to categorical format when needed for classification tasks
 function check_y(y::AbstractVector, model::MLJ.Model)::AbstractVector
-    return (eltype(y) <: Any) || ((eltype(y) <: RLabel) && (typeof(model) != Regression)) ?
+    return (eltype(y) === Any) || ((eltype(y) <: RLabel) && !(model isa Regression)) ?
         MLJ.categorical(string.(y)) :
         y
 end
@@ -360,6 +360,8 @@ function _setup_dataset(
 )::AbstractDataSet
     # check y special cases
     y = check_y(y, model)
+    eltype(y) <: Label || throw(ArgumentError("Target variable y must have elements of type Label, " *
+        "got eltype: $(eltype(y))"))
 
     # setup rng
     if !isnothing(seed)
