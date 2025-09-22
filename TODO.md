@@ -66,3 +66,7 @@ magari vedere di refattorizzarlo meglio per renderlo più elegante
 Bisogna pensare anche ai modelli non supervisionati: apply(m, X)
 
 controlla l'inglese grammarly
+
+# ---------------------------------------------------------------------------- #
+#                             automatizza y, quando il test non è di regressione                             #
+# ---------------------------------------------------------------------------- #

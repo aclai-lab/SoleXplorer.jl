@@ -104,6 +104,9 @@ using ModalDecisionTrees
     XGBoostClassifier, XGBoostRegressor
 using XGBoost, MLJXGBoostInterface
 
+const Regression = Union{DecisionTreeRegressor, RandomForestRegressor, XGBoostRegressor}
+const Modal  = Union{ModalDecisionTree, ModalRandomForest, ModalAdaBoost}
+
 # ---------------------------------------------------------------------------- #
 #                                   modules                                    #
 # ---------------------------------------------------------------------------- #

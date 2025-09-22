@@ -25,20 +25,11 @@ abstract type AbstractDataSet end
 # ---------------------------------------------------------------------------- #
 #                                   types                                      #
 # ---------------------------------------------------------------------------- #
-const Modal  = Union{ModalDecisionTree, ModalRandomForest, ModalAdaBoost}
-
 const MaybeInt             = Maybe{Int64}
 const MaybeAggregationInfo = Maybe{AggregationInfo}
 const MaybeBalancing       = Maybe{NamedTuple{<:Any, <:Tuple{MLJ.Model, MLJ.Model}}}
 const MaybeTuning          = Maybe{Tuning}
 const MaybeTreatInfo       = Maybe{TreatmentInfo}
-
-# warining for balancing classes
-const Regression = Union{
-    DecisionTreeRegressor,
-    RandomForestRegressor,
-    XGBoostRegressor
-}
 
 # ---------------------------------------------------------------------------- #
 #                                  defaults                                    #
@@ -47,13 +38,9 @@ const Regression = Union{
 # this function is used when no explicit model is provided to `setup_dataset`,
 # automatically selecting between classification and regression
 function _DefaultModel(y::AbstractVector)::MLJ.Model
-    if     eltype(y) <: CLabel
-        return DecisionTreeClassifier()
-    elseif eltype(y) <: RLabel
-        return DecisionTreeRegressor()
-    # else
-    #     throw(ArgumentError("Unsupported type for y: $(eltype(y))"))
-    end
+    return eltype(y) <: RLabel ?
+        DecisionTreeRegressor() :
+        DecisionTreeClassifier()
 end
 
 # ---------------------------------------------------------------------------- #
@@ -91,6 +78,28 @@ function set_conditions!(m::MLJ.Model, conditions::Tuple{Vararg{Base.Callable}})
 end
 
 # ---------------------------------------------------------------------------- #
+#                   dataset and targets check and conversion                   #
+# ---------------------------------------------------------------------------- #
+# ensures that the target variable `y` is properly formatted for use with MLJ
+# it handles automatic conversion to categorical format when needed for classification tasks
+function check_y(y::AbstractVector, model::MLJ.Model)::AbstractVector
+    return (eltype(y) <: Any) || ((eltype(y) <: RLabel) && (typeof(model) != Regression)) ?
+        MLJ.categorical(string.(y)) :
+        y
+end
+
+# convert all numeric columns in a DataFrame to Float64 type
+function to_float_dataset(X::AbstractDataFrame)::AbstractDataFrame
+    for (name, col) in pairs(eachcol(X))
+        if eltype(col) <: Number && eltype(col) != AbstractFloat
+            X[!, name] = Float64.(col)
+        end
+    end
+    
+    return X
+end
+
+# ---------------------------------------------------------------------------- #
 #                                 code dataset                                 #
 # ---------------------------------------------------------------------------- #
 """
@@ -102,13 +111,8 @@ function code_dataset(X::AbstractDataFrame)
     for (name, col) in pairs(eachcol(X))
         if !(eltype(col) <: Number)
             # handle mixed types by converting to string first
-            if eltype(col) == Any
-                # convert Any to String, handling missing values
-                string_col = string.(coalesce.(col, "missing"))
-                X[!, name] = MLJ.levelcode.(categorical(string_col))
-            else
-                X[!, name] = MLJ.levelcode.(categorical(col))
-            end
+            eltype(col) == AbstractString || (col = string.(coalesce.(col, "missing")))
+            X[!, name] = MLJ.levelcode.(categorical(col))
         end
     end
     
@@ -354,6 +358,9 @@ function _setup_dataset(
     features      :: Tuple{Vararg{Base.Callable}} = (maximum, minimum),
     modalreduce   :: Base.Callable                = mean
 )::AbstractDataSet
+    # check y special cases
+    y = check_y(y, model)
+
     # setup rng
     if !isnothing(seed)
         rng = Xoshiro(seed)
@@ -379,6 +386,8 @@ function _setup_dataset(
         X, tinfo = treatment(X, treat; features, win, modalreduce)
     else
         X = code_dataset(X)
+        # some algos, like xgboost, doesnt accept dataset with numeric values, only float
+        X = to_float_dataset(X)
         tinfo = nothing
     end
 
