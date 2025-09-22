@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Setup Dataset · SoleXplorer.jl</title><meta name="title" content="Setup Dataset · SoleXplorer.jl"/><meta property="og:title" content="Setup Dataset · SoleXplorer.jl"/><meta property="twitter:title" content="Setup Dataset · SoleXplorer.jl"/><meta name="description" content="Documentation for SoleXplorer.jl."/><meta property="og:description" content="Documentation for SoleXplorer.jl."/><meta property="twitter:description" content="Documentation for SoleXplorer.jl."/><meta property="og:url" content="https://aclai-lab.github.io/SoleXplorer.jl/dataset/"/><meta property="twitter:url" content="https://aclai-lab.github.io/SoleXplorer.jl/dataset/"/><link rel="canonical" href="https://aclai-lab.github.io/SoleXplorer.jl/dataset/"/><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../search_index.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../">SoleXplorer.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li><a class="tocitem" href="../symbolic_analysis/">Symbolic Analysis</a></li><li class="is-active"><a class="tocitem" href>Setup Dataset</a><ul class="internal"><li class="toplevel"><a class="tocitem" href="#dataset"><span>Dataset</span></a></li><li class="toplevel"><a class="tocitem" href="#utilities"><span>Utilities</span></a></li><li class="toplevel"><a class="tocitem" href="#train-test"><span>Train and Test Dataset</span></a></li></ul></li><li><a class="tocitem" href="../treatement/">Multi Dimensional Treatement</a></li><li><a class="tocitem" href="../tuning/">Tuning</a></li><li><a class="tocitem" href="../balancing/">Balancing</a></li><li><a class="tocitem" href="../serialize/">Serialization</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Setup Dataset</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Setup Dataset</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/aclai-lab/SoleXplorer.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/aclai-lab/SoleXplorer.jl/blob/main/docs/src/dataset.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="setup-dataset"><a class="docs-heading-anchor" href="#setup-dataset">Setup dataset</a><a id="setup-dataset-1"></a><a class="docs-heading-anchor-permalink" href="#setup-dataset" title="Permalink"></a></h1><article class="docstring"><header><a class="docstring-article-toggle-button fa-solid fa-chevron-down" href="javascript:;" title="Collapse docstring"></a><a class="docstring-binding" id="SoleXplorer.setup_dataset-Tuple{}" href="#SoleXplorer.setup_dataset-Tuple{}"><code>SoleXplorer.setup_dataset</code></a> — <span class="docstring-category">Method</span><span class="is-flex-grow-1 docstring-article-toggle-button" title="Collapse docstring"></span></header><section><div><pre><code class="language-julia hljs">setup_dataset(
+    X, y, w=nothing;
+    model=_DefaultModel(y),
+    resampling=Holdout(fraction_train=0.7, shuffle=true),
+    valid_ratio=0.0,
+    seed=nothing,
+    balancing=nothing,
+    tuning=nothing,
+    win=AdaptiveWindow(nwindows=3, relative_overlap=0.1),
+    features=(maximum, minimum),
+    modalreduce=mean,
+) -&gt; AbstractDataSet</code></pre><p>Creates and configures a dataset structure for machine learning.</p><p>This is the core implementation function that handles the complete dataset setup pipeline, including data preprocessing, model configuration, partitioning, hyperparameter tuning, and MLJ machine creation.</p><p><strong>Arguments</strong></p><ul><li><code>X::AbstractDataFrame</code>: Feature matrix/DataFrame</li><li><code>y::AbstractVector</code>: Target variable vector</li><li><code>w::MaybeVector=nothing</code>: Optional sample weights</li></ul><p><strong>Keyword Arguments</strong></p><p><strong>Model Configuration</strong></p><ul><li><code>model::MLJ.Model=_DefaultModel(y)</code>: Sole compatible MLJ model to use,   auto-selected based on target type, if no <code>model</code> is subbmitted</li></ul><p><strong>Available Models</strong></p><p>From package Bensadoun, R., et al. (2013). <a href="https://github.com/JuliaAI/DecisionTree.jl">DecisionTree.jl</a>:</p><pre><code class="nohighlight hljs">DecisionTreeClassifier(
+  max_depth = -1, 
+  min_samples_leaf = 1, 
+  min_samples_split = 2, 
+  min_purity_increase = 0.0, 
+  n_subfeatures = 0, 
+  post_prune = false, 
+  merge_purity_threshold = 1.0, 
+  display_depth = 5, 
+  feature_importance = :impurity, 
+  rng = Random.TaskLocalRNG())</code></pre><pre><code class="nohighlight hljs">DecisionTreeRegressor(
+  max_depth = -1, 
+  min_samples_leaf = 5, 
+  min_samples_split = 2, 
+  min_purity_increase = 0.0, 
+  n_subfeatures = 0, 
+  post_prune = false, 
+  merge_purity_threshold = 1.0, 
+  feature_importance = :impurity, 
+  rng = Random.TaskLocalRNG())</code></pre><pre><code class="nohighlight hljs">RandomForestClassifier(
+  max_depth = -1, 
+  min_samples_leaf = 1, 
+  min_samples_split = 2, 
+  min_purity_increase = 0.0, 
+  n_subfeatures = -1, 
+  n_trees = 100, 
+  sampling_fraction = 0.7, 
+  feature_importance = :impurity, 
+  rng = Random.TaskLocalRNG())</code></pre><pre><code class="nohighlight hljs">RandomForestRegressor(
+  max_depth = -1, 
+  min_samples_leaf = 1, 
+  min_samples_split = 2, 
+  min_purity_increase = 0.0, 
+  n_subfeatures = -1, 
+  n_trees = 100, 
+  sampling_fraction = 0.7, 
+  feature_importance = :impurity, 
+  rng = Random.TaskLocalRNG())</code></pre><pre><code class="nohighlight hljs">AdaBoostStumpClassifier(
+  n_iter = 10, 
+  feature_importance = :impurity, 
+  rng = Random.TaskLocalRNG())</code></pre><p>From package ACLAI Lab and G. Pagliarini (2023). <a href="https://github.com/aclai-lab/ModalDecisionTrees.jl">ModalDecisionTrees.jl</a>:</p><pre><code class="nohighlight hljs">ModalDecisionTree(
+  max_depth = nothing, 
+  min_samples_leaf = 4, 
+  min_purity_increase = 0.002, 
+  max_purity_at_leaf = Inf, 
+  max_modal_depth = nothing, 
+  relations = nothing, 
+  features = nothing, 
+  conditions = nothing, 
+  featvaltype = Float64, 
+  initconditions = nothing, 
+  downsize = SoleData.var&quot;#downsize#541&quot;(), 
+  force_i_variables = true, 
+  fixcallablenans = false, 
+  print_progress = false, 
+  rng = Random.TaskLocalRNG(), 
+  display_depth = nothing, 
+  min_samples_split = nothing, 
+  n_subfeatures = identity, 
+  post_prune = false, 
+  merge_purity_threshold = nothing, 
+  feature_importance = :split)</code></pre><pre><code class="nohighlight hljs">ModalRandomForest(
+  sampling_fraction = 0.7, 
+  ntrees = 10, 
+  max_depth = nothing, 
+  min_samples_leaf = 1, 
+  min_purity_increase = -Inf, 
+  max_purity_at_leaf = Inf, 
+  max_modal_depth = nothing, 
+  relations = nothing, 
+  features = nothing, 
+  conditions = nothing, 
+  featvaltype = Float64, 
+  initconditions = nothing, 
+  downsize = SoleData.var&quot;#downsize#542&quot;(), 
+  force_i_variables = true, 
+  fixcallablenans = false, 
+  print_progress = false, 
+  rng = Random.TaskLocalRNG(), 
+  display_depth = nothing, 
+  min_samples_split = nothing, 
+  n_subfeatures = ModalDecisionTrees.MLJInterface.sqrt_f, 
+  post_prune = false, 
+  merge_purity_threshold = nothing, 
+  feature_importance = :split)</code></pre><pre><code class="nohighlight hljs">ModalAdaBoost(
+  max_depth = 1, 
+  min_samples_leaf = 4, 
+  min_purity_increase = 0.002, 
+  max_purity_at_leaf = Inf, 
+  max_modal_depth = nothing, 
+  relations = :IA7, 
+  features = nothing, 
+  conditions = nothing, 
+  featvaltype = Float64, 
+  initconditions = nothing, 
+  downsize = SoleData.var&quot;#downsize#541&quot;(), 
+  force_i_variables = true, 
+  fixcallablenans = true, 
+  print_progress = false, 
+  display_depth = nothing, 
+  min_samples_split = nothing, 
+  n_subfeatures = identity, 
+  post_prune = false, 
+  merge_purity_threshold = nothing, 
+  n_iter = 10, 
+  feature_importance = :split, 
+  rng = Random.TaskLocalRNG())</code></pre><p>From package Chen, T., &amp; Guestrin, C. (2016). <a href="https://github.com/dmlc/XGBoost.jl">XGBoost.jl</a></p><pre><code class="nohighlight hljs">XGBoostClassifier(
+  test = 1, 
+  num_round = 100, 
+  booster = &quot;gbtree&quot;, 
+  disable_default_eval_metric = 0, 
+  eta = 0.3, 
+  num_parallel_tree = 1, 
+  gamma = 0.0, 
+  max_depth = 6, 
+  min_child_weight = 1.0, 
+  max_delta_step = 0.0, 
+  subsample = 1.0, 
+  colsample_bytree = 1.0, 
+  colsample_bylevel = 1.0, 
+  colsample_bynode = 1.0, 
+  lambda = 1.0, 
+  alpha = 0.0, 
+  tree_method = &quot;auto&quot;, 
+  sketch_eps = 0.03, 
+  scale_pos_weight = 1.0, 
+  updater = nothing, 
+  refresh_leaf = 1, 
+  process_type = &quot;default&quot;, 
+  grow_policy = &quot;depthwise&quot;, 
+  max_leaves = 0, 
+  max_bin = 256, 
+  predictor = &quot;cpu_predictor&quot;, 
+  sample_type = &quot;uniform&quot;, 
+  normalize_type = &quot;tree&quot;, 
+  rate_drop = 0.0, 
+  one_drop = 0, 
+  skip_drop = 0.0, 
+  feature_selector = &quot;cyclic&quot;, 
+  top_k = 0, 
+  tweedie_variance_power = 1.5, 
+  objective = &quot;automatic&quot;, 
+  base_score = 0.5, 
+  early_stopping_rounds = 0, 
+  watchlist = nothing, 
+  nthread = 1, 
+  importance_type = &quot;gain&quot;, 
+  seed = nothing, 
+  validate_parameters = false, 
+  eval_metric = String[], 
+  monotone_constraints = nothing)</code></pre><pre><code class="nohighlight hljs">XGBoostRegressor(
+  test = 1, 
+  num_round = 100, 
+  booster = &quot;gbtree&quot;, 
+  disable_default_eval_metric = 0, 
+  eta = 0.3, 
+  num_parallel_tree = 1, 
+  gamma = 0.0, 
+  max_depth = 6, 
+  min_child_weight = 1.0, 
+  max_delta_step = 0.0, 
+  subsample = 1.0, 
+  colsample_bytree = 1.0, 
+  colsample_bylevel = 1.0, 
+  colsample_bynode = 1.0, 
+  lambda = 1.0, 
+  alpha = 0.0, 
+  tree_method = &quot;auto&quot;, 
+  sketch_eps = 0.03, 
+  scale_pos_weight = 1.0, 
+  updater = nothing, 
+  refresh_leaf = 1, 
+  process_type = &quot;default&quot;, 
+  grow_policy = &quot;depthwise&quot;, 
+  max_leaves = 0, 
+  max_bin = 256, 
+  predictor = &quot;cpu_predictor&quot;, 
+  sample_type = &quot;uniform&quot;, 
+  normalize_type = &quot;tree&quot;, 
+  rate_drop = 0.0, 
+  one_drop = 0, 
+  skip_drop = 0.0, 
+  feature_selector = &quot;cyclic&quot;, 
+  top_k = 0, 
+  tweedie_variance_power = 1.5, 
+  objective = &quot;reg:squarederror&quot;, 
+  base_score = 0.5, 
+  early_stopping_rounds = 0, 
+  watchlist = nothing, 
+  nthread = 1, 
+  importance_type = &quot;gain&quot;, 
+  seed = nothing, 
+  validate_parameters = false, 
+  eval_metric = String[], 
+  monotone_constraints = nothing)</code></pre><p>Each model is fully parameterizable, see the original package reference documentation.</p><p><strong>Data resampling</strong></p><ul><li><code>resampling::ResamplingStrategy=Holdout(shuffle=true)</code>: Cross-validation strategy</li><li><code>valid_ratio::Real=0.0</code>: Validation set proportion</li><li><code>rng::AbstractRNG=TaskLocalRNG()</code>: Random number generator for reproducibility</li></ul><p>Resampling strategies are taken from the package <a href="https://juliaai.github.io/MLJ.jl/stable/">MLJ</a>. See official documentation <a href="https://juliaai.github.io/MLJBase.jl/stable/resampling/">here</a>. Available strategies:</p><pre><code class="nohighlight hljs">Holdout(; fraction_train=0.7, shuffle=true, rng=TaskLocalRNG())</code></pre><pre><code class="nohighlight hljs">CV(; nfolds=6,  shuffle=true, rng=TaskLocalRNG())</code></pre><pre><code class="nohighlight hljs">StratifiedCV(; nfolds=6, shuffle=true, rng=TaskLocalRNG())</code></pre><pre><code class="nohighlight hljs">TimeSeriesCV(; nfolds=4)</code></pre><p><code>valid_ratio</code> is used with XGBoost early stop <a href="https://xgboost.readthedocs.io/en/stable/prediction.html">technique</a>. <code>rng</code> can be setted externally (via seed, using internal Xoshiro algo) for convenience.</p><p><strong>Balancing</strong></p><p>Balancing strategies are taken from the package <a href="https://github.com/JuliaAI/Imbalance.jl">Imbalance</a>. See official documentation <a href="https://juliaai.github.io/Imbalance.jl/dev/">here</a>. Available strategies:</p><pre><code class="nohighlight hljs">BorderlineSMOTE1(
+  m = 5, 
+  k = 5, 
+  ratios = 1.0, 
+  rng = Random.TaskLocalRNG(), 
+  try_preserve_type = true, 
+  verbosity = 1)</code></pre><pre><code class="nohighlight hljs">ClusterUndersampler(
+  mode = &quot;nearest&quot;, 
+  ratios = 1.0, 
+  maxiter = 100, 
+  rng = Random.TaskLocalRNG(), 
+  try_preserve_type = true)</code></pre><pre><code class="nohighlight hljs">ENNUndersampler(
+  k = 5, 
+  keep_condition = &quot;mode&quot;, 
+  min_ratios = 1.0, 
+  force_min_ratios = false, 
+  rng = Random.TaskLocalRNG(), 
+  try_preserve_type = true)</code></pre><pre><code class="nohighlight hljs">ROSE(
+  s = 1.0, 
+  ratios = 1.0, 
+  rng = Random.TaskLocalRNG(), 
+  try_preserve_type = true)</code></pre><pre><code class="nohighlight hljs">RandomOversampler(
+  ratios = 1.0, 
+  rng = Random.TaskLocalRNG(), 
+  try_preserve_type = true)</code></pre><pre><code class="nohighlight hljs">RandomUndersampler(
+  ratios = 1.0, 
+  rng = Random.TaskLocalRNG(), 
+  try_preserve_type = true)</code></pre><pre><code class="nohighlight hljs">RandomWalkOversampler(
+  ratios = 1.0, 
+  rng = Random.TaskLocalRNG(), 
+  try_preserve_type = true)</code></pre><pre><code class="nohighlight hljs">SMOTE(
+  k = 5, 
+  ratios = 1.0, 
+  rng = Random.TaskLocalRNG(), 
+  try_preserve_type = true)</code></pre><pre><code class="nohighlight hljs">SMOTEN(
+  k = 5, 
+  ratios = 1.0, 
+  rng = Random.TaskLocalRNG(), 
+  try_preserve_type = true)</code></pre><pre><code class="nohighlight hljs">SMOTENC(
+  k = 5, 
+  ratios = 1.0, 
+  knn_tree = &quot;Brute&quot;, 
+  rng = Random.TaskLocalRNG(), 
+  try_preserve_type = true)</code></pre><pre><code class="nohighlight hljs">TomekUndersampler(
+  min_ratios = 1.0, 
+  force_min_ratios = false, 
+  rng = Random.TaskLocalRNG(), 
+  try_preserve_type = true)</code></pre><p><strong>Tuning</strong></p><p><code>tuning::MaybeTuning=nothing</code>: Hyperparameter tuning configuration, requires <code>range</code> vectors, i.e:</p><pre><code class="nohighlight hljs">range = SoleXplorer.range(:min_purity_increase; lower=0.1, upper=1.0, scale=:log)</code></pre><p>Tuning strategies are adapted from the package <a href="https://juliaai.github.io/MLJ.jl/stable/">MLJ</a> and package <a href="https://github.com/JuliaAI/MLJParticleSwarmOptimization.jl">MLJParticleSwarmOptimization</a>.</p><p>Available strategies:</p><pre><code class="nohighlight hljs">GridTuning(
+  goal = nothing, 
+  resolution = 10, 
+  shuffle = true, 
+  rng = Random.TaskLocalRNG(),
+  range = range,
+  resampling = nothing
+  measure = nothing
+  repeats = 1)</code></pre><pre><code class="nohighlight hljs">RandomTuning(
+  bounded = Distributions.Uniform, 
+  positive_unbounded = Distributions.Gamma, 
+  other = Distributions.Normal, 
+  rng = Random.TaskLocalRNG(),
+  range = range,
+  resampling = nothing
+  measure = nothing
+  repeats = 1)</code></pre><pre><code class="nohighlight hljs">CubeTuning(
+  gens = 1, 
+  popsize = 100, 
+  ntour = 2, 
+  ptour = 0.8, 
+  interSampleWeight = 1.0, 
+  ae_power = 2, 
+  periodic_ae = false, 
+  rng = Random.TaskLocalRNG(),
+  range = range,
+  resampling = nothing
+  measure = nothing
+  repeats = 1</code></pre><pre><code class="nohighlight hljs">ParticleTuning(
+  n_particles = 3, 
+  w = 1.0, 
+  c1 = 2.0, 
+  c2 = 2.0, 
+  prob_shift = 0.25, 
+  rng = Random.TaskLocalRNG(),
+  range = range,
+  resampling = nothing
+  measure = nothing
+  repeats = 1)</code></pre><pre><code class="nohighlight hljs">AdaptiveTuning(
+  n_particles = 3, 
+  c1 = 2.0, 
+  c2 = 2.0, 
+  prob_shift = 0.25, 
+  rng = Random.TaskLocalRNG(),
+  range = range,
+  resampling = nothing
+  measure = nothing
+  repeats = 1) </code></pre><p><strong>Multidimensional Data Processing</strong></p><p>These parameters are needed only if a time series dataset is used. With these parameters we can tweak size reduction, in case of <strong>modal</strong> analysis or aggregation strategy, in case of further <strong>propositional</strong> analysis. Parameters are the same, SoleXplorer will take care of automatically set the case, depending on the model choose.</p><ul><li><code>win::WinFunction=AdaptiveWindow(nwindows=3, relative_overlap=0.1)</code>: Windowing function</li></ul><p>Available windows strategies: <a href="../treatement/#SoleXplorer.MovingWindow">MovingWindow</a>, <a href="../treatement/#SoleXplorer.WholeWindow">WholeWindow</a>, <a href="../treatement/#SoleXplorer.SplitWindow">SplitWindow</a>, <a href="../treatement/#SoleXplorer.AdaptiveWindow">AdaptiveWindow</a>.</p><ul><li><code>features::Tuple{Vararg{Base.Callable}}=(maximum, minimum)</code>: Feature extraction functions</li></ul><p>Note that beyond standard reduction functions (e.g., maximum, minimum, mean, mode), <a href="https://time-series-features.gitbook.io/catch22">Catch22</a> time-series features are also available.</p><ul><li><code>modalreduce::Base.Callable=mean</code>: Reduction function for modal algorithms</li></ul><p><strong>Returns</strong></p><ul><li><code>PropositionalDataSet{M}</code>: For standard ML algorithms with tabular data</li><li><code>ModalDataSet{M}</code>: For modal logic algorithms with structured data</li></ul><p><strong>Examples:</strong></p><pre><code class="language-julia hljs">using SoleXplorer
+using MLJ
+using DataFrames, Random
+const SX = SoleXplorer
+
+Xc, yc = @load_iris
+Xc = DataFrame(Xc)
+
+Xr, yr = @load_boston
+Xr = DataFrame(Xr)
+
+natopsloader = NatopsLoader()
+Xts, yts = SX.load(natopsloader)
+
+# basic setup
+dsc = setup_dataset(Xc, yc)
+
+# model type specification
+dsc = setup_dataset(
+    Xc, yc;
+    model=AdaBoostStumpClassifier()
+)
+
+# resampling
+dsc = setup_dataset(
+    Xc, yc;
+    resampling=CV(nfolds=10),
+)
+
+dsc = setup_dataset(
+    Xc, yc;
+    resampling=CV(nfolds=10, shuffle=true),
+    seed=1
+)
+
+# tuning
+range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
+dsc = setup_dataset(
+    Xc, yc;
+    model=ModalDecisionTree(),
+    resampling=CV(nfolds=5, shuffle=true),
+    seed=1,
+    tuning=GridTuning(resolution=10, resampling=CV(nfolds=3), range=range, measure=accuracy, repeats=2)
+)
+
+# time-series
+dts = setup_dataset(
+    Xts, yts;
+    model=ModalRandomForest(),
+    resampling=Holdout(fraction_train=0.7, shuffle=true),
+    seed=1,
+    win=AdaptiveWindow(nwindows=3, relative_overlap=0.3),
+    features=(minimum, maximum),
+    modalreduce=mode
+)</code></pre><p><strong>See also: <a href="#SoleXplorer.DataSet"><code>DataSet</code></a>, <a href="#SoleXplorer.PropositionalDataSet"><code>PropositionalDataSet</code></a>, <a href="#SoleXplorer.ModalDataSet"><code>ModalDataSet</code></a>, <a href="../symbolic_analysis/#SoleXplorer.symbolic_analysis-Tuple{DataFrames.AbstractDataFrame, AbstractVector, Union{Nothing, AbstractVector}}"><code>symbolic_analysis</code></a></strong></p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/aclai-lab/SoleXplorer.jl/blob/f58050ae20222ca10797154d2b10d6f14b5c4600/src/dataset.jl#L409-L934">source</a></section></article><article class="docstring"><header><a class="docstring-article-toggle-button fa-solid fa-chevron-down" href="javascript:;" title="Collapse docstring"></a><a class="docstring-binding" id="SoleXplorer.setup_dataset-Tuple{DataFrames.AbstractDataFrame, Symbol}" href="#SoleXplorer.setup_dataset-Tuple{DataFrames.AbstractDataFrame, Symbol}"><code>SoleXplorer.setup_dataset</code></a> — <span class="docstring-category">Method</span><span class="is-flex-grow-1 docstring-article-toggle-button" title="Collapse docstring"></span></header><section><div><pre><code class="language-julia hljs">setup_dataset(X::AbstractDataFrame, y::Symbol; kwargs...)::AbstractDataSet</code></pre><p>Convenience method when target variable is a column in the feature DataFrame.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/aclai-lab/SoleXplorer.jl/blob/f58050ae20222ca10797154d2b10d6f14b5c4600/src/dataset.jl#L937-L941">source</a></section></article><h1 id="dataset"><a class="docs-heading-anchor" href="#dataset">Dataset</a><a id="dataset-1"></a><a class="docs-heading-anchor-permalink" href="#dataset" title="Permalink"></a></h1><article class="docstring"><header><a class="docstring-article-toggle-button fa-solid fa-chevron-down" href="javascript:;" title="Collapse docstring"></a><a class="docstring-binding" id="SoleXplorer.AbstractDataSet" href="#SoleXplorer.AbstractDataSet"><code>SoleXplorer.AbstractDataSet</code></a> — <span class="docstring-category">Type</span><span class="is-flex-grow-1 docstring-article-toggle-button" title="Collapse docstring"></span></header><section><div><pre><code class="language-julia hljs">AbstractDataSet</code></pre><p>Abstract supertype for all dataset structures in SoleXplorer.</p><p>Concrete subtypes include:</p><ul><li><a href="#SoleXplorer.PropositionalDataSet"><code>PropositionalDataSet</code></a>: for standard ML algorithms with aggregated features</li><li><a href="#SoleXplorer.ModalDataSet"><code>ModalDataSet</code></a>: for modal logic algorithms with temporal structure preservation</li></ul><p>See also: <a href="#SoleXplorer.setup_dataset-Tuple{}"><code>setup_dataset</code></a></p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/aclai-lab/SoleXplorer.jl/blob/f58050ae20222ca10797154d2b10d6f14b5c4600/src/dataset.jl#L12-L22">source</a></section></article><article class="docstring"><header><a class="docstring-article-toggle-button fa-solid fa-chevron-down" href="javascript:;" title="Collapse docstring"></a><a class="docstring-binding" id="SoleXplorer.AbstractSoleModel" href="#SoleXplorer.AbstractSoleModel"><code>SoleXplorer.AbstractSoleModel</code></a> — <span class="docstring-category">Type</span><span class="is-flex-grow-1 docstring-article-toggle-button" title="Collapse docstring"></span></header><section><div><pre><code class="language-julia hljs">AbstractSoleModel</code></pre><p>Base abstract type for all symbolic model containers in SoleXplorer.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/aclai-lab/SoleXplorer.jl/blob/f58050ae20222ca10797154d2b10d6f14b5c4600/src/train_test.jl#L4-L8">source</a></section></article><article class="docstring"><header><a class="docstring-article-toggle-button fa-solid fa-chevron-down" href="javascript:;" title="Collapse docstring"></a><a class="docstring-binding" id="SoleXplorer.PropositionalDataSet" href="#SoleXplorer.PropositionalDataSet"><code>SoleXplorer.PropositionalDataSet</code></a> — <span class="docstring-category">Type</span><span class="is-flex-grow-1 docstring-article-toggle-button" title="Collapse docstring"></span></header><section><div><pre><code class="language-julia hljs">PropositionalDataSet{M} &lt;: AbstractDataSet</code></pre><p>Dataset wrapper for standard machine learning algorithms that work with tabular/propositional data.</p><p>This dataset type encapsulates an MLJ machine along with partitioning information and optional aggregation metadata. It is used when working with traditional ML models that require flattened feature representations, typically created by aggregating multidimensional data.</p><p><strong>Fields</strong></p><ul><li><code>mach::MLJ.Machine</code>: MLJ machine containing the model, training data, and cache</li><li><code>pidxs::Vector{PartitionIdxs}</code>: Partition indices for train/test splits across folds</li><li><code>pinfo::PartitionInfo</code>: Metadata about the partitioning strategy used</li><li><code>ainfo::MaybeAggregationInfo</code>: Optional aggregation information for multidimensional data</li></ul><p><strong>Type Parameter</strong></p><ul><li><code>M</code>: The type of the MLJ model contained in the machine</li></ul><p>See also: <a href="#SoleXplorer.ModalDataSet"><code>ModalDataSet</code></a>, <a href="#SoleXplorer.setup_dataset-Tuple{}"><code>setup_dataset</code></a>, <a href="#SoleXplorer.AbstractDataSet"><code>AbstractDataSet</code></a></p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/aclai-lab/SoleXplorer.jl/blob/f58050ae20222ca10797154d2b10d6f14b5c4600/src/dataset.jl#L146-L165">source</a></section></article><article class="docstring"><header><a class="docstring-article-toggle-button fa-solid fa-chevron-down" href="javascript:;" title="Collapse docstring"></a><a class="docstring-binding" id="SoleXplorer.ModalDataSet" href="#SoleXplorer.ModalDataSet"><code>SoleXplorer.ModalDataSet</code></a> — <span class="docstring-category">Type</span><span class="is-flex-grow-1 docstring-article-toggle-button" title="Collapse docstring"></span></header><section><div><pre><code class="language-julia hljs">ModalDataSet{M} &lt;: AbstractDataSet</code></pre><p>Dataset wrapper for modal logic algorithms that preserve temporal/structural relationships.</p><p>This dataset type is designed for modal learning algorithms that can work directly with multidimensional time series or structured data without requiring feature aggregation. It maintains treatment information that describes how the original data structure is preserved.</p><p><strong>Fields</strong></p><ul><li><code>mach::MLJ.Machine</code>: MLJ machine containing the modal model, training data, and cache</li><li><code>pidxs::Vector{PartitionIdxs}</code>: Partition indices for train/test splits across folds</li><li><code>pinfo::PartitionInfo</code>: Metadata about the partitioning strategy used  </li><li><code>tinfo::TreatmentInfo</code>: Treatment information describing data structure preservation</li></ul><p><strong>Type Parameter</strong></p><ul><li><code>M</code>: The type of the modal MLJ model contained in the machine</li></ul><p>See also: <a href="#SoleXplorer.PropositionalDataSet"><code>PropositionalDataSet</code></a>, <a href="#SoleXplorer.setup_dataset-Tuple{}"><code>setup_dataset</code></a>, <a href="#SoleXplorer.AbstractDataSet"><code>AbstractDataSet</code></a></p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/aclai-lab/SoleXplorer.jl/blob/f58050ae20222ca10797154d2b10d6f14b5c4600/src/dataset.jl#L173-L192">source</a></section></article><article class="docstring"><header><a class="docstring-article-toggle-button fa-solid fa-chevron-down" href="javascript:;" title="Collapse docstring"></a><a class="docstring-binding" id="SoleXplorer.DataSet" href="#SoleXplorer.DataSet"><code>SoleXplorer.DataSet</code></a> — <span class="docstring-category">Function</span><span class="is-flex-grow-1 docstring-article-toggle-button" title="Collapse docstring"></span></header><section><div><pre><code class="language-julia hljs">DataSet(mach, pidxs, pinfo; tinfo=nothing) -&gt; AbstractDataSet</code></pre><p>Constructor function that creates the appropriate dataset type based on treatment information.</p><p>This function serves as a smart constructor that automatically determines whether to create a <code>PropositionalDataSet</code> or <code>ModalDataSet</code> based on the provided treatment information and the type of treatment specified.</p><p><strong>Arguments</strong></p><ul><li><code>mach::MLJ.Machine{M}</code>: MLJ machine containing model and data</li><li><code>pidxs::Vector{PartitionIdxs}</code>: Partition indices for cross-validation folds</li><li><code>pinfo::PartitionInfo</code>: Information about the partitioning strategy</li><li><code>tinfo::MaybeTreatInfo=nothing</code>: Optional treatment information for multidimensional data</li></ul><p><strong>Returns</strong></p><ul><li><code>PropositionalDataSet{M}</code>: When <code>tinfo</code> is <code>nothing</code> or treatment is not <code>:reducesize</code></li><li><code>ModalDataSet{M}</code>: When <code>tinfo</code> specifies <code>:reducesize</code> treatment</li></ul><p><strong>Decision Logic</strong></p><ol><li><strong>No treatment info</strong> (<code>tinfo = nothing</code>): Creates <code>PropositionalDataSet</code> with no aggregation info</li><li><strong>Reduce size treatment</strong> (<code>get_treatment(tinfo) == :reducesize</code>): Creates <code>ModalDataSet</code> preserving structure</li><li><strong>Other treatments</strong> (e.g., <code>:aggregate</code>): Creates <code>PropositionalDataSet</code> with aggregation info converted from treatment</li></ol><p><strong>Type Parameter</strong></p><ul><li><code>M &lt;: MLJ.Model</code>: The type of the model in the MLJ machine</li></ul><p>See also: <a href="#SoleXplorer.PropositionalDataSet"><code>PropositionalDataSet</code></a>, <a href="#SoleXplorer.ModalDataSet"><code>ModalDataSet</code></a>, <a href="#SoleXplorer.AbstractDataSet"><code>AbstractDataSet</code></a></p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/aclai-lab/SoleXplorer.jl/blob/f58050ae20222ca10797154d2b10d6f14b5c4600/src/dataset.jl#L200-L228">source</a></section></article><article class="docstring"><header><a class="docstring-article-toggle-button fa-solid fa-chevron-down" href="javascript:;" title="Collapse docstring"></a><a class="docstring-binding" id="SoleXplorer.get_X-Tuple{AbstractDataSet}" href="#SoleXplorer.get_X-Tuple{AbstractDataSet}"><code>SoleXplorer.get_X</code></a> — <span class="docstring-category">Method</span><span class="is-flex-grow-1 docstring-article-toggle-button" title="Collapse docstring"></span></header><section><div><pre><code class="language-julia hljs">get_X(ds::AbstractDataSet) -&gt; DataFrame</code></pre><p>Extract feature DataFrame from dataset&#39;s MLJ machine.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/aclai-lab/SoleXplorer.jl/blob/f58050ae20222ca10797154d2b10d6f14b5c4600/src/dataset.jl#L251-L255">source</a></section></article><article class="docstring"><header><a class="docstring-article-toggle-button fa-solid fa-chevron-down" href="javascript:;" title="Collapse docstring"></a><a class="docstring-binding" id="SoleXplorer.get_X-Tuple{AbstractDataSet, Symbol}" href="#SoleXplorer.get_X-Tuple{AbstractDataSet, Symbol}"><code>SoleXplorer.get_X</code></a> — <span class="docstring-category">Method</span><span class="is-flex-grow-1 docstring-article-toggle-button" title="Collapse docstring"></span></header><section><div><pre><code class="language-julia hljs">get_X(ds::AbstractDataSet, part::Symbol) -&gt; Vector{&lt;:AbstractDataFrame}</code></pre><p>Extract feature DataFrames for a specific partition (e.g., :train, :test or :valid) across all folds.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/aclai-lab/SoleXplorer.jl/blob/f58050ae20222ca10797154d2b10d6f14b5c4600/src/dataset.jl#L258-L262">source</a></section></article><article class="docstring"><header><a class="docstring-article-toggle-button fa-solid fa-chevron-down" href="javascript:;" title="Collapse docstring"></a><a class="docstring-binding" id="SoleXplorer.get_y-Tuple{AbstractDataSet}" href="#SoleXplorer.get_y-Tuple{AbstractDataSet}"><code>SoleXplorer.get_y</code></a> — <span class="docstring-category">Method</span><span class="is-flex-grow-1 docstring-article-toggle-button" title="Collapse docstring"></span></header><section><div><pre><code class="language-julia hljs">get_y(ds::AbstractDataSet) -&gt; Vector</code></pre><p>Extract target vector from dataset&#39;s MLJ machine.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/aclai-lab/SoleXplorer.jl/blob/f58050ae20222ca10797154d2b10d6f14b5c4600/src/dataset.jl#L266-L270">source</a></section></article><article class="docstring"><header><a class="docstring-article-toggle-button fa-solid fa-chevron-down" href="javascript:;" title="Collapse docstring"></a><a class="docstring-binding" id="SoleXplorer.get_y-Tuple{AbstractDataSet, Symbol}" href="#SoleXplorer.get_y-Tuple{AbstractDataSet, Symbol}"><code>SoleXplorer.get_y</code></a> — <span class="docstring-category">Method</span><span class="is-flex-grow-1 docstring-article-toggle-button" title="Collapse docstring"></span></header><section><div><pre><code class="language-julia hljs">get_y(ds::AbstractDataSet, part::Symbol) -&gt; Vector{&lt;:AbstractVector}</code></pre><p>Extract target values for a specific partition (e.g., :train, :test or :valid) across all folds.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/aclai-lab/SoleXplorer.jl/blob/f58050ae20222ca10797154d2b10d6f14b5c4600/src/dataset.jl#L273-L277">source</a></section></article><article class="docstring"><header><a class="docstring-article-toggle-button fa-solid fa-chevron-down" href="javascript:;" title="Collapse docstring"></a><a class="docstring-binding" id="SoleXplorer.get_mach-Tuple{AbstractDataSet}" href="#SoleXplorer.get_mach-Tuple{AbstractDataSet}"><code>SoleXplorer.get_mach</code></a> — <span class="docstring-category">Method</span><span class="is-flex-grow-1 docstring-article-toggle-button" title="Collapse docstring"></span></header><section><div><pre><code class="language-julia hljs">get_mach(ds::AbstractDataSet)::Machine</code></pre><p>Extract the MLJ machine from the dataset.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/aclai-lab/SoleXplorer.jl/blob/f58050ae20222ca10797154d2b10d6f14b5c4600/src/dataset.jl#L281-L285">source</a></section></article><article class="docstring"><header><a class="docstring-article-toggle-button fa-solid fa-chevron-down" href="javascript:;" title="Collapse docstring"></a><a class="docstring-binding" id="SoleXplorer.get_mach_model-Tuple{AbstractDataSet}" href="#SoleXplorer.get_mach_model-Tuple{AbstractDataSet}"><code>SoleXplorer.get_mach_model</code></a> — <span class="docstring-category">Method</span><span class="is-flex-grow-1 docstring-article-toggle-button" title="Collapse docstring"></span></header><section><div><pre><code class="language-julia hljs">get_mach_model(ds::AbstractDataSet)::MLJ.Model</code></pre><p>Extract the model from the dataset&#39;s MLJ machine.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/aclai-lab/SoleXplorer.jl/blob/f58050ae20222ca10797154d2b10d6f14b5c4600/src/dataset.jl#L288-L292">source</a></section></article><article class="docstring"><header><a class="docstring-article-toggle-button fa-solid fa-chevron-down" href="javascript:;" title="Collapse docstring"></a><a class="docstring-binding" id="SoleXplorer.get_logiset-Tuple{ModalDataSet}" href="#SoleXplorer.get_logiset-Tuple{ModalDataSet}"><code>SoleXplorer.get_logiset</code></a> — <span class="docstring-category">Method</span><span class="is-flex-grow-1 docstring-article-toggle-button" title="Collapse docstring"></span></header><section><div><pre><code class="language-julia hljs">get_logiset(ds::ModalDataSet)::SupportedLogiset</code></pre><p>Extract the logiset (if present) from the dataset&#39;s MLJ machine.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/aclai-lab/SoleXplorer.jl/blob/f58050ae20222ca10797154d2b10d6f14b5c4600/src/dataset.jl#L295-L299">source</a></section></article><h1 id="utilities"><a class="docs-heading-anchor" href="#utilities">Utilities</a><a id="utilities-1"></a><a class="docs-heading-anchor-permalink" href="#utilities" title="Permalink"></a></h1><article class="docstring"><header><a class="docstring-article-toggle-button fa-solid fa-chevron-down" href="javascript:;" title="Collapse docstring"></a><a class="docstring-binding" id="SoleXplorer.code_dataset-Tuple{DataFrames.AbstractDataFrame}" href="#SoleXplorer.code_dataset-Tuple{DataFrames.AbstractDataFrame}"><code>SoleXplorer.code_dataset</code></a> — <span class="docstring-category">Method</span><span class="is-flex-grow-1 docstring-article-toggle-button" title="Collapse docstring"></span></header><section><div><pre><code class="language-julia hljs">code_dataset(X::AbstractDataFrame)</code></pre><p>In-place encoding of non-numeric columns in a DataFrame to numeric codes.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/aclai-lab/SoleXplorer.jl/blob/f58050ae20222ca10797154d2b10d6f14b5c4600/src/dataset.jl#L105-L109">source</a></section></article><article class="docstring"><header><a class="docstring-article-toggle-button fa-solid fa-chevron-down" href="javascript:;" title="Collapse docstring"></a><a class="docstring-binding" id="SoleXplorer.code_dataset-Tuple{AbstractVector}" href="#SoleXplorer.code_dataset-Tuple{AbstractVector}"><code>SoleXplorer.code_dataset</code></a> — <span class="docstring-category">Method</span><span class="is-flex-grow-1 docstring-article-toggle-button" title="Collapse docstring"></span></header><section><div><pre><code class="language-julia hljs">code_dataset(y::AbstractVector)</code></pre><p>In-place encoding of non-numeric target vector to numeric codes.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/aclai-lab/SoleXplorer.jl/blob/f58050ae20222ca10797154d2b10d6f14b5c4600/src/dataset.jl#L122-L126">source</a></section></article><article class="docstring"><header><a class="docstring-article-toggle-button fa-solid fa-chevron-down" href="javascript:;" title="Collapse docstring"></a><a class="docstring-binding" id="SoleXplorer.code_dataset-Tuple{DataFrames.AbstractDataFrame, AbstractVector}" href="#SoleXplorer.code_dataset-Tuple{DataFrames.AbstractDataFrame, AbstractVector}"><code>SoleXplorer.code_dataset</code></a> — <span class="docstring-category">Method</span><span class="is-flex-grow-1 docstring-article-toggle-button" title="Collapse docstring"></span></header><section><div><pre><code class="language-julia hljs">code_dataset(X::AbstractDataFrame, y::AbstractVector)</code></pre><p>Convenience method to encode both features and target simultaneously.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/aclai-lab/SoleXplorer.jl/blob/f58050ae20222ca10797154d2b10d6f14b5c4600/src/dataset.jl#L136-L140">source</a></section></article><h1 id="train-test"><a class="docs-heading-anchor" href="#train-test">Train and Test Dataset</a><a id="train-test-1"></a><a class="docs-heading-anchor-permalink" href="#train-test" title="Permalink"></a></h1><article class="docstring"><header><a class="docstring-article-toggle-button fa-solid fa-chevron-down" href="javascript:;" title="Collapse docstring"></a><a class="docstring-binding" id="SoleXplorer.train_test-Tuple{AbstractDataSet}" href="#SoleXplorer.train_test-Tuple{AbstractDataSet}"><code>SoleXplorer.train_test</code></a> — <span class="docstring-category">Method</span><span class="is-flex-grow-1 docstring-article-toggle-button" title="Collapse docstring"></span></header><section><div><pre><code class="language-julia hljs">train_test(ds::AbstractDataSet) -&gt; SoleModel</code></pre><p>Direct training interface for pre-configured datasets. No additional parameters needed.</p><p>See also: <a href="../symbolic_analysis/#SoleXplorer.symbolic_analysis-Tuple{DataFrames.AbstractDataFrame, AbstractVector, Union{Nothing, AbstractVector}}"><code>symbolic_analysis</code></a>, <a href="#SoleXplorer.setup_dataset-Tuple{}"><code>setup_dataset</code></a></p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/aclai-lab/SoleXplorer.jl/blob/f58050ae20222ca10797154d2b10d6f14b5c4600/src/train_test.jl#L138-L145">source</a></section></article></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../symbolic_analysis/">« Symbolic Analysis</a><a class="docs-footer-nextpage" href="../treatement/">Multi Dimensional Treatement »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.14.1 on <span class="colophon-date" title="Monday 22 September 2025 20:02">Monday 22 September 2025</span>. Using Julia version 1.11.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
