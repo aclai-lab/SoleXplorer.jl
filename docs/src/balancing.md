@@ -23,7 +23,7 @@ SoleXplorer uses the following balancing strategies taken from package [Imbalanc
 balancing = (;
     oversample=strategy(; kwargs...),
     undersample=strategy(; kwargs...),
-) -> Balancing
+)::Balancing
 ```
 
 you can also tune balancing strategy parameters using tuning and ranges, i.e:

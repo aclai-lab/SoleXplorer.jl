@@ -102,6 +102,9 @@ end
 #                                   methods                                    #
 # ---------------------------------------------------------------------------- #
 # extract the vector of symbolic models from a SoleModel container
+# Kind of misleading to have a subtype of AbstractSoleModel called SoleModels that wraps a vector of AbstractModel.
+# and then a method `solemodels` taking a `SoleModel` and returning its `sole`?
+# As a starting point, we could think of better names than AbstractSoleModel and SoleModel! :D
 solemodels(solem::SoleModel) = solem.sole
 
 # ---------------------------------------------------------------------------- #
@@ -136,7 +139,7 @@ function train_test(args...; kwargs...)::SoleModel
 end
 
 """
-    train_test(ds::AbstractDataSet) -> SoleModel
+    train_test(ds::AbstractDataSet)::SoleModel
 
 Direct training interface for pre-configured datasets.
 No additional parameters needed.

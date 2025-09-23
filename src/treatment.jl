@@ -43,7 +43,7 @@ end
 (w::WinFunction)(npoints::Int; kwargs...) = w.func(npoints; w.params..., kwargs...)
 
 """
-    MovingWindow(; window_size::Int, window_step::Int) -> WinFunction
+    MovingWindow(; window_size::Int, window_step::Int)::WinFunction
 
 Create a moving window that slides across the time series.
 
@@ -65,7 +65,7 @@ function MovingWindow(;
 end
 
 """
-    WholeWindow() -> WinFunction
+    WholeWindow()::WinFunction
 
 Create a single window encompassing the entire time series.
 Useful for global feature extraction without temporal partitioning.
@@ -79,7 +79,7 @@ intervals = win(100)  # Returns [1:100]
 WholeWindow(;) = WinFunction(wholewindow, (;))
 
 """
-    SplitWindow(; nwindows::Int) -> WinFunction
+    SplitWindow(; nwindows::Int)::WinFunction
 
 Divide the time series into equal non-overlapping segments.
 
@@ -95,7 +95,7 @@ intervals = win(100)  # Four 25-point windows
 SplitWindow(;nwindows::Int) = WinFunction(splitwindow, (; nwindows))
 
 """
-    AdaptiveWindow(; nwindows::Int, relative_overlap::AbstractFloat) -> WinFunction
+    AdaptiveWindow(; nwindows::Int, relative_overlap::AbstractFloat)::WinFunction
 
 Create overlapping windows with adaptive sizing based on series length.
 
@@ -213,8 +213,13 @@ treat2aggr(t::TreatmentInfo)::AggregationInfo =
 function treatment end
 
 """
-    treatment(X::AbstractDataFrame; treat::Symbol, win::WinFunction, 
-             features::Tuple, modalreduce::Base.Callable) -> (DataFrame, TreatmentInfo)
+    treatment(
+        X::AbstractDataFrame;
+        treat::Symbol,
+        win::WinFunction, 
+        features::Tuple,
+        modalreduce::Base.Callable
+    )::Tuple{DataFrame, TreatmentInfo}
 
 Transform multidimensional dataset based on specified treatment strategy.
 
@@ -246,7 +251,7 @@ function treatment(
     win         :: WinFunction=AdaptiveWindow(nwindows=3, relative_overlap=0.1),
     features    :: Tuple{Vararg{Base.Callable}}=(maximum, minimum),
     modalreduce :: Base.Callable=mean
-)
+)::Tuple{DataFrame, TreatmentInfo}
     is_multidim_dataframe(X) || throw(ArgumentError("Input DataFrame " * 
         "does not contain multidimensional data."))
 

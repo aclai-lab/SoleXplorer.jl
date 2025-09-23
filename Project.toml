@@ -22,13 +22,6 @@ SoleModels = "4249d9c7-3290-4ddd-961c-e1d3ec2467f8"
 SolePostHoc = "cf1aa0c3-12c9-4ebe-9bdc-bd6c2ca79b72"
 XGBoost = "009559a3-9522-5dbb-924b-0b6ed2b22bb9"
 
-[sources]
-ModalAssociationRules = {rev = "main", url = "https://github.com/aclai-lab/ModalAssociationRules.jl"}
-ModalDecisionTrees = {rev = "64-modaladaboost", url = "https://github.com/aclai-lab/ModalDecisionTrees.jl"}
-SoleData = {rev = "main", url = "https://github.com/aclai-lab/SoleData.jl"}
-SoleModels = {rev = "devBestGuess", url = "https://github.com/aclai-lab/SoleModels.jl"}
-SolePostHoc = {rev = "PyCall_init", url = "https://github.com/aclai-lab/SolePostHoc.jl"}
-
 [compat]
 Catch22 = "0.4 - 0.7"
 DataFrames = "1"
@@ -54,6 +47,26 @@ DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 Downloads = "f43a241f-c20a-4ad4-852c-f6b1247861c6"
 JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[sources.ModalAssociationRules]
+rev = "main"
+url = "https://github.com/aclai-lab/ModalAssociationRules.jl"
+
+[sources.ModalDecisionTrees]
+rev = "64-modaladaboost"
+url = "https://github.com/aclai-lab/ModalDecisionTrees.jl"
+
+[sources.SoleData]
+rev = "main"
+url = "https://github.com/aclai-lab/SoleData.jl"
+
+[sources.SoleModels]
+rev = "devBestGuess"
+url = "https://github.com/aclai-lab/SoleModels.jl"
+
+[sources.SolePostHoc]
+rev = "PyCall_init"
+url = "https://github.com/aclai-lab/SolePostHoc.jl"
 
 [targets]
 test = ["DelimitedFiles", "Downloads", "JLD2", "Test"]

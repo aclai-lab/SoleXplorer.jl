@@ -23,67 +23,39 @@ const RangeSpec = Union{
     MLJBase.NominalRange
 }
 
-# ---------------------------------------------------------------------------- #
-#                                Tuning struct                                 #
-# ---------------------------------------------------------------------------- #
-# hyperparameter tuning configuration with strategy, ranges, and evaluation settings
+"""
+Hyperparameter tuning configuration with strategy, ranges, and evaluation settings.
+"""
 mutable struct Tuning{T} <: AbstractTuning
+    "Parameter range specification from a tuning configuration."
     strategy   :: T
+    "Tuning strategy from a tuning configuration."
     range      :: RangeSpec
+    "Resampling strategy from a tuning configuration."
     resampling :: MLJ.ResamplingStrategy
+    "Reference performance measure from a tuning configuration."
     measure    :: MaybeMeasure
+    "Number of repetitions from a tuning configuration."
     repeats    :: Int64
     
+    # convenience constructor for Tuning{T} that infers the type parameter
+    Tuning(strategy::T, range, resampling=nothing, measure=nothing, repeats=1) where T = 
+        Tuning{T}(strategy, range, resampling, measure, repeats)
+
     function Tuning{T}(strategy::T, range::RangeSpec, resampling, measure, repeats) where T
         repeats > 0 || throw(ArgumentError("repeats must be positive, got $repeats"))
         new{T}(strategy, range, resampling, measure, repeats)
     end
 end
 
-# convenience constructor for Tuning{T} that infers the type parameter
-Tuning(strategy::T, range, resampling=nothing, measure=nothing, repeats=1) where T = 
-    Tuning{T}(strategy, range, resampling, measure, repeats)
-
 # ---------------------------------------------------------------------------- #
 #                                   methods                                    #
 # ---------------------------------------------------------------------------- #
-Base.propertynames(::Tuning) = (:strategy, :range, :resampling, :measure, :repeats)
-Base.getproperty(t::Tuning, s::Symbol) = getfield(t, s)
-
-"""
-    get_range(t::Tuning) -> RangeSpec
-
-Extract the parameter range specification from a tuning configuration.
-"""
-get_range(t::Tuning) = t.range
-
-"""
-    get_strategy(t::Tuning) -> Any
-
-Extract the tuning strategy from a tuning configuration.
-"""
-get_strategy(t::Tuning) = t.strategy
-
-"""
-    get_resampling(t::Tuning) -> MaybeResampling
-
-Extract the resampling strategy from a tuning configuration.
-"""
-get_resampling(t::Tuning) = t.resampling
-
-"""
-    get_measure(t::Tuning) -> MaybeMeasure
-
-Extract the reference performance measure from a tuning configuration.
-"""
-get_measure(t::Tuning) = t.measure
-
-"""
-    get_repeats(t::Tuning) -> Int64
-
-Extract the number of repetitions from a tuning configuration.
-"""
-get_repeats(t::Tuning) = t.repeats
+get_range(t::Tuning)::RangeSpec = t.range
+get_strategy(t::Tuning)::Any = t.strategy
+get_resampling(t::Tuning)::MaybeResampling = t.resampling
+get_measure(t::Tuning)::MaybeMeasure = t.measure
+get_repeats(t::Tuning)::Int64 = t.repeats
 
 # convert a Tuning configuration to a NamedTuple suitable for MLJ TunedModel construction
 @inline tuning_params(t::Tuning) = (
@@ -130,7 +102,7 @@ Base.range(field::Union{Symbol,Expr}; kwargs...) = field, kwargs...
 end
 
 """
-    GridTuning(; kwargs...) -> Tuning
+    GridTuning(; kwargs...)::Tuning
 
 Create a grid search tuning configuration.
 Parameters reference: [MLJTuning.Grid](https://juliaai.github.io/MLJ.jl/dev/tuning_models/#MLJTuning.Grid)
@@ -138,7 +110,7 @@ Parameters reference: [MLJTuning.Grid](https://juliaai.github.io/MLJ.jl/dev/tuni
 const GridTuning(; kwargs...)::Tuning = setup_tuning(MLJ.Grid; kwargs...)
 
 """
-    RandomTuning(; kwargs...) -> Tuning
+    RandomTuning(; kwargs...)::Tuning
 
 Create a random search tuning configuration.
 Parameters reference: [MLJTuning.RandomSearch](https://juliaai.github.io/MLJ.jl/dev/tuning_models/#MLJTuning.RandomSearch)
@@ -146,7 +118,7 @@ Parameters reference: [MLJTuning.RandomSearch](https://juliaai.github.io/MLJ.jl/
 const RandomTuning(; kwargs...)::Tuning = setup_tuning(MLJ.RandomSearch; kwargs...)
 
 """
-    CubeTuning(; kwargs...) -> Tuning
+    CubeTuning(; kwargs...)::Tuning
 
 Create a Latin hypercube sampling tuning configuration.
 Parameters reference: [MLJTuning.LatinHypercube](https://juliaai.github.io/MLJ.jl/dev/tuning_models/#MLJTuning.LatinHypercube)
@@ -154,7 +126,7 @@ Parameters reference: [MLJTuning.LatinHypercube](https://juliaai.github.io/MLJ.j
 const CubeTuning(; kwargs...)::Tuning = setup_tuning(MLJ.LatinHypercube; kwargs...)
 
 """
-    ParticleTuning(; kwargs...) -> Tuning
+    ParticleTuning(; kwargs...)::Tuning
 
 Create a particle swarm optimization tuning configuration.
 Parameters reference: [MLJParticleSwarmOptimization](https://github.com/JuliaAI/MLJParticleSwarmOptimization.jl/)
@@ -162,7 +134,7 @@ Parameters reference: [MLJParticleSwarmOptimization](https://github.com/JuliaAI/
 const ParticleTuning(; kwargs...)::Tuning = setup_tuning(PSO.ParticleSwarm; kwargs...)
 
 """
-    AdaptiveTuning(; kwargs...) -> Tuning
+    AdaptiveTuning(; kwargs...)::Tuning
 
 Create an adaptive particle swarm optimization tuning configuration.
 Parameters reference: [MLJParticleSwarmOptimization](https://github.com/JuliaAI/MLJParticleSwarmOptimization.jl/)

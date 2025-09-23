@@ -198,7 +198,7 @@ mutable struct ModalDataSet{M} <: AbstractDataSet
 end
 
 """
-    DataSet(mach, pidxs, pinfo; tinfo=nothing) -> AbstractDataSet
+    DataSet(mach, pidxs, pinfo; tinfo=nothing)::AbstractDataSet
 
 Constructor function that creates the appropriate dataset type based on treatment information.
 
@@ -248,56 +248,28 @@ end
 # ---------------------------------------------------------------------------- #
 Base.length(ds::AbstractDataSet) = length(ds.pidxs)
 
-"""
-    get_X(ds::AbstractDataSet) -> DataFrame
+"Return the feature DataFrame from dataset's MLJ machine."
+get_X(ds::AbstractDataSet)::DataFrame = get_mach(ds).args[1].data
 
-Extract feature DataFrame from dataset's MLJ machine.
-"""
-get_X(ds::AbstractDataSet)::DataFrame = ds.mach.args[1].data
-
-"""
-    get_X(ds::AbstractDataSet, part::Symbol) -> Vector{<:AbstractDataFrame}
-
-Extract feature DataFrames for a specific partition (e.g., :train, :test or :valid) across all folds.
-"""
+"Return the feature DataFrames for a specific partition (e.g., :train, :test or :valid) across all folds."
 get_X(ds::AbstractDataSet, part::Symbol)::Vector{<:AbstractDataFrame} = 
     [@views get_X(ds)[getproperty(ds.pidxs[i], part), :] for i in 1:length(ds)]
 
-"""
-    get_y(ds::AbstractDataSet) -> Vector
+"Return the target vector from dataset's MLJ machine."
+get_y(ds::AbstractDataSet)::Vector = get_mach(ds).args[2].data
 
-Extract target vector from dataset's MLJ machine.
-"""
-get_y(ds::AbstractDataSet)::Vector = ds.mach.args[2].data
-
-"""
-    get_y(ds::AbstractDataSet, part::Symbol) -> Vector{<:AbstractVector}
-
-Extract target values for a specific partition (e.g., :train, :test or :valid) across all folds.
-"""
+"Return the target values for a specific partition (e.g., :train, :test or :valid) across all folds."
 get_y(ds::AbstractDataSet, part::Symbol)::AbstractVector = 
     [@views get_y(ds)[getproperty(ds.pidxs[i], part)] for i in 1:length(ds)]
 
-"""
-    get_mach(ds::AbstractDataSet)::Machine
-
-Extract the MLJ machine from the dataset.
-"""
+"Return the MLJ machine from the dataset."
 get_mach(ds::AbstractDataSet)::Machine = ds.mach
 
-"""
-    get_mach_model(ds::AbstractDataSet)::MLJ.Model
+"Return the model from the dataset's MLJ machine."
+get_mach_model(ds::AbstractDataSet)::MLJ.Model = get_mach(ds).model
 
-Extract the model from the dataset's MLJ machine.
-"""
-get_mach_model(ds::AbstractDataSet)::MLJ.Model = ds.mach.model
-
-"""
-    get_logiset(ds::ModalDataSet)::SupportedLogiset
-
-Extract the logiset (if present) from the dataset's MLJ machine.
-"""
-get_logiset(ds::ModalDataSet)::SupportedLogiset = ds.mach.data[1].modalities[1]
+"Return the logiset (if present) from the dataset's MLJ machine."
+get_logiset(ds::ModalDataSet)::SupportedLogiset = get_mach(ds).data[1].modalities[1]
 
 # ---------------------------------------------------------------------------- #
 #                           MLJ models's extra setup                           #
@@ -418,7 +390,7 @@ end
         win=AdaptiveWindow(nwindows=3, relative_overlap=0.1),
         features=(maximum, minimum),
         modalreduce=mean,
-    ) -> AbstractDataSet
+    )::AbstractDataSet
 
 Creates and configures a dataset structure for machine learning.
 

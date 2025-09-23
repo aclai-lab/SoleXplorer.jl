@@ -26,10 +26,7 @@ abstract type AbstractModelSet end
 #                                   types                                      #
 # ---------------------------------------------------------------------------- #
 const MaybeRules         = Maybe{Union{Vector{DecisionSet}, Vector{LumenResult}}}
-const MaybeMeasures      = Maybe{Measures}
 const MaybeAssociaRules  = Maybe{Vector{ARule}}
-const MaybeAssociation   = Maybe{AbstractAssociationRuleExtractor}
-const MaybeRuleExtractor = Maybe{RuleExtractor}
 
 # ---------------------------------------------------------------------------- #
 #                                  modelset                                    #
@@ -53,7 +50,7 @@ and performance measures.
 ### Optional
 - `rules::MaybeRules`: Extracted rules
 - `associations::MaybeAssociations`: Association rules between features
-- `measures::MaybeMeasures`: Performance evaluation measures
+- `measures::Maybe{Measures}`: Performance evaluation measures
 
 # Accessing Components
 - [`dsetup`](@ref): Extract dataset configuration
@@ -64,18 +61,18 @@ and performance measures.
 See also: [`symbolic_analysis`](@ref)
 """
 mutable struct ModelSet{S} <: AbstractModelSet
-    ds           :: AbstractDataSet
+    dsetup       :: AbstractDataSet
     sole         :: Vector{AbstractModel}
     rules        :: MaybeRules
     associations :: MaybeAssociaRules
-    measures     :: MaybeMeasures
+    measures     :: Maybe{Measures}
 
     function ModelSet(
-        ds       :: AbstractDataSet,
+        dsetup   :: AbstractDataSet,
         sole     :: SoleModel{S};
         rules    :: MaybeRules=nothing,
         miner    :: MaybeAssociaRules=nothing,
-        measures :: MaybeMeasures=nothing
+        measures :: Maybe{Measures}=nothing
     ) where S
         new{S}(ds, solemodels(sole), rules, miner, measures)
     end
@@ -84,70 +81,26 @@ end
 # ---------------------------------------------------------------------------- #
 #                                 constructors                                 #
 # ---------------------------------------------------------------------------- #
-"""
-    dsetup(m::ModelSet) -> AbstractDataSet
+"Return the dataset configuration from a ModelSet."
+dsetup(m::ModelSet)::AbstractDataSet = m.dsetup
 
-Returns the dataset configuration from a ModelSet.
+"Return the trained sole symbolic models from a ModelSet."
+solemodels(m::ModelSet)::Vector{AbstractModel} = m.sole
 
-See also: [`ModelSet`](@ref), [`symbolic_analysis`](@ref)
-"""
-dsetup(m::ModelSet) = m.ds
+"Return the rules extracted from a ModelSet, or `nothing` if rule extraction isn't yet performed."
+rules(m::ModelSet)::MaybeRules = m.rules
 
-"""
-    solemodels(m::ModelSet) -> Vector{AbstractModel}
+"Return the association rules extracted from a ModelSet, or `nothing` if rule extraction isn't yet performed."
+associations(m::ModelSet)::MaybeAssociaRules = m.associations
 
-Returns the trained sole symbolic models from a ModelSet.
+"Return the performance evaluation measures from a ModelSet."
+performance(m::ModelSet)::Maybe{Measures} = m.measures
 
-See also: [`ModelSet`](@ref), [`symbolic_analysis`](@ref)
-"""
-solemodels(m::ModelSet) = m.sole
+"Return the performance measure objects from a ModelSet."
+measures(m::ModelSet)::Vector = performance(m).measures
 
-"""
-    rules(m::ModelSet) -> MaybeRules
-
-Returns the rules extracted from a ModelSet.
-Returns nothing if rule extraction isn't yet performed.
-
-See also: [`ModelSet`](@ref), [`symbolic_analysis`](@ref)
-"""
-rules(m::ModelSet) = m.rules
-
-"""
-    associations(m::ModelSet) -> MaybeAssociaRules
-
-Returns the association rules extracted from a ModelSet.
-Returns nothing if association rules isn't yet performed.
-
-See also: [`ModelSet`](@ref), [`symbolic_analysis`](@ref)
-"""
-associations(m::ModelSet) = m.associations
-
-"""
-    performance(m::ModelSet) -> MaybeMeasures
-
-Extract the performance evaluation measures from a ModelSet.
-
-See also: [`ModelSet`](@ref), [`symbolic_analysis`](@ref)
-"""
-performance(m::ModelSet) = m.measures
-
-"""
-    measures(m::ModelSet) -> Vector
-
-Extract the performance measure objects from a ModelSet.
-
-# See also: [`performance`](@ref), [`ModelSet`](@ref)
-"""
-measures(m::ModelSet) = performance(m).measures
-
-"""
-    values(m::ModelSet) -> Vector
-
-Extract the computed performance measure values from a ModelSet.
-
-# See also: [`performance`](@ref), [`ModelSet`](@ref)
-"""
-values(m::ModelSet) = performance(m).measures_values
+"Return the computed performance measure values from a ModelSet."
+values(m::ModelSet)::Vector = performance(m).measures_values
 
 # ---------------------------------------------------------------------------- #
 #                                  base show                                   #
@@ -279,7 +232,7 @@ end
 # ---------------------------------------------------------------------------- #
 function _symbolic_analysis!(
     modelset::ModelSet;
-    extractor::Union{MaybeRuleExtractor,Tuple{RuleExtractor,NamedTuple}}=nothing,
+    extractor::Union{Maybe{RuleExtractor},Tuple{RuleExtractor,NamedTuple}}=nothing,
     association::MaybeAbstractAssociationRuleExtractor=nothing,
     measures::Tuple{Vararg{FussyMeasure}}=()
 )::ModelSet
@@ -348,11 +301,11 @@ symbolic_analysis!(modelset::ModelSet; kwargs...)::ModelSet = _symbolic_analysis
         X::AbstractDataFrame,
         y::AbstractVector,
         w::MaybeVector=nothing;
-        extractor::MaybeRuleExtractor=nothing,
+        extractor::Maybe{RuleExtractor}=nothing,
         association::Union{Nothing,AbstractAssociationRuleExtractor}=nothing,
         measures::Tuple{Vararg{FussyMeasure}}=(),
         kwargs...
-    ) -> ModelSet
+    )::ModelSet
 
 Complete end-to-end symbolic model analysis workflow.
 
@@ -421,7 +374,7 @@ function symbolic_analysis(
     X::AbstractDataFrame,
     y::AbstractVector,
     w::MaybeVector=nothing;
-    extractor::MaybeRuleExtractor=nothing,
+    extractor::Maybe{RuleExtractor}=nothing,
     association::Union{Nothing,AbstractAssociationRuleExtractor}=nothing,
     measures::Tuple{Vararg{FussyMeasure}}=(),
     kwargs...
@@ -432,7 +385,7 @@ function symbolic_analysis(
 end
 
 """
-    symbolic_analysis(ds::AbstractDataSet, solem::SoleModel; kwargs...) -> ModelSet
+    symbolic_analysis(ds::AbstractDataSet, solem::SoleModel; kwargs...)::ModelSet
 
 Perform complete symbolic analysis on pre-trained models.
 
@@ -468,7 +421,7 @@ function symbolic_analysis(
 end
 
 """
-    symbolic_analysis(X::Any, args...; kwargs...) -> ModelSet
+    symbolic_analysis(X::Any, args...; kwargs...)::ModelSet
 
 Convenience method that converts input data to DataFrame format.
 

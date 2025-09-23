@@ -150,7 +150,7 @@ end
 model_command = symbolic_analysis(X_have_command, y_have_command; model=ModalDecisionTree())
 @test modelts isa SX.ModelSet
 
-X2 = scalarlogiset(get_X(model_command.ds))
+X2 = scalarlogiset(get_X(model_command.dsetup))
 
 _MANUALEXP = EXPERIMENTS[5]
 

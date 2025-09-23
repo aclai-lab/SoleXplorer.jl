@@ -63,7 +63,7 @@ solesave(ds::AbstractModelSet; kwargs...)  = _save(ds, "soleanalysis"; kwargs...
 #                                 load model                                   #
 # ---------------------------------------------------------------------------- #
 """
-    soleload(path::AbstractString, name::AbstractString) -> Saveable
+    soleload(path::AbstractString, name::AbstractString)::Saveable
 
 Load a previously saved SoleXplorer object from disk.
 
