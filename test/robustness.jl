@@ -29,8 +29,8 @@ Xts, yts = SX.load(natopsloader)
                         measures=(accuracy,)
                     )
                     sx_acc = model.measures.measures_values[1]
-                    yhat = MLJ.predict_mode(model.ds.mach, model.ds.mach.args[1].data[model.ds.pidxs[1].test, :])
-                    mlj_acc = accuracy(yhat, model.ds.mach.args[2].data[model.ds.pidxs[1].test])
+                    yhat = MLJ.predict_mode(model.dsetup.mach, model.dsetup.mach.args[1].data[model.dsetup.pidxs[1].test, :])
+                    mlj_acc = accuracy(yhat, model.dsetup.mach.args[2].data[model.dsetup.pidxs[1].test])
 
                     @test sx_acc == mlj_acc
                 end
@@ -55,8 +55,8 @@ end
                         measures=(rms,)
                     )
                     sx_rms = model.measures.measures_values[1]
-                    yhat = MLJ.predict_mode(model.ds.mach, model.ds.mach.args[1].data[model.ds.pidxs[1].test, :])
-                    mlj_rms = rms(yhat, model.ds.mach.args[2].data[model.ds.pidxs[1].test])
+                    yhat = MLJ.predict_mode(model.dsetup.mach, model.dsetup.mach.args[1].data[model.dsetup.pidxs[1].test, :])
+                    mlj_rms = rms(yhat, model.dsetup.mach.args[2].data[model.dsetup.pidxs[1].test])
 
                     @test sx_rms == mlj_rms
                 end
@@ -81,8 +81,8 @@ end
                         measures=(accuracy,)
                     )
                     sx_acc = model.measures.measures_values[1]
-                    yhat = MLJ.predict_mode(model.ds.mach, model.ds.mach.args[1].data[model.ds.pidxs[1].test, :])
-                    mlj_acc = accuracy(yhat, model.ds.mach.args[2].data[model.ds.pidxs[1].test])
+                    yhat = MLJ.predict_mode(model.dsetup.mach, model.dsetup.mach.args[1].data[model.dsetup.pidxs[1].test, :])
+                    mlj_acc = accuracy(yhat, model.dsetup.mach.args[2].data[model.dsetup.pidxs[1].test])
 
                     @test sx_acc == mlj_acc
                 end
@@ -107,8 +107,8 @@ end
                         measures=(rms,)
                     )
                     sx_rms = model.measures.measures_values[1]
-                    yhat = MLJ.predict_mode(model.ds.mach, model.ds.mach.args[1].data[model.ds.pidxs[1].test, :])
-                    mlj_rms = rms(yhat, model.ds.mach.args[2].data[model.ds.pidxs[1].test])
+                    yhat = MLJ.predict_mode(model.dsetup.mach, model.dsetup.mach.args[1].data[model.dsetup.pidxs[1].test, :])
+                    mlj_rms = rms(yhat, model.dsetup.mach.args[2].data[model.dsetup.pidxs[1].test])
 
                     @test sx_rms == mlj_rms
                 end
@@ -133,8 +133,8 @@ end
                         measures=(accuracy,)
                     )
                     sx_acc = model.measures.measures_values[1]
-                    yhat = MLJ.predict_mode(model.ds.mach, model.ds.mach.args[1].data[model.ds.pidxs[1].test, :])
-                    mlj_acc = accuracy(yhat, model.ds.mach.args[2].data[model.ds.pidxs[1].test])
+                    yhat = MLJ.predict_mode(model.dsetup.mach, model.dsetup.mach.args[1].data[model.dsetup.pidxs[1].test, :])
+                    mlj_acc = accuracy(yhat, model.dsetup.mach.args[2].data[model.dsetup.pidxs[1].test])
 
                     @test sx_acc == mlj_acc
                 end
@@ -164,8 +164,8 @@ yb = MLJ.CategoricalArray{String,1,UInt32}(data["y"])
                         measures=(accuracy,)
                     )
                     sx_acc = model.measures.measures_values[1]
-                    yhat = MLJ.predict_mode(model.ds.mach, model.ds.mach.args[1].data[model.ds.pidxs[1].test, :])
-                    mlj_acc = accuracy(yhat, model.ds.mach.args[2].data[model.ds.pidxs[1].test])
+                    yhat = MLJ.predict_mode(model.dsetup.mach, model.dsetup.mach.args[1].data[model.dsetup.pidxs[1].test, :])
+                    mlj_acc = accuracy(yhat, model.dsetup.mach.args[2].data[model.dsetup.pidxs[1].test])
 
                     @test sx_acc == mlj_acc
                 end
@@ -190,8 +190,8 @@ end
                         measures=(accuracy,)
                     )
                     sx_acc = model.measures.measures_values[1]
-                    yhat = MLJ.predict_mode(model.ds.mach, model.ds.mach.args[1].data[model.ds.pidxs[1].test, :])
-                    mlj_acc = accuracy(yhat, model.ds.mach.args[2].data[model.ds.pidxs[1].test])
+                    yhat = MLJ.predict_mode(model.dsetup.mach, model.dsetup.mach.args[1].data[model.dsetup.pidxs[1].test, :])
+                    mlj_acc = accuracy(yhat, model.dsetup.mach.args[2].data[model.dsetup.pidxs[1].test])
 
                     @test sx_acc == mlj_acc
                 end
@@ -216,9 +216,9 @@ end
                         measures=(rms,)
                     )
                     sxhat = solemodels(model)[1].info.supporting_predictions
-                    yhat = MLJ.predict_mode(model.ds.mach, model.ds.mach.args[1].data[model.ds.pidxs[1].test, :])
+                    yhat = MLJ.predict_mode(model.dsetup.mach, model.dsetup.mach.args[1].data[model.dsetup.pidxs[1].test, :])
                     sx_rms = model.measures.measures_values[1]
-                    mlj_rms = rms(yhat, model.ds.mach.args[2].data[model.ds.pidxs[1].test])
+                    mlj_rms = rms(yhat, model.dsetup.mach.args[2].data[model.dsetup.pidxs[1].test])
 
                     @test isapprox(sxhat, yhat; rtol=1e-6)
                     @test isapprox(sx_rms, mlj_rms; rtol=1e-6)

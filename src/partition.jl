@@ -51,8 +51,11 @@ end
 # ---------------------------------------------------------------------------- #
 # container for train/validation/test index vectors
 struct PartitionIdxs{T<:Int} <: AbstractPartitionIdxs
+    "Extract training indices from partition."
     train :: Vector{T}
+    "Extract validation indices from partition."
     valid :: Vector{T}
+    "Extract test indices from partition."
     test  :: Vector{T}
 
     function PartitionIdxs(
@@ -95,28 +98,11 @@ end
 # ---------------------------------------------------------------------------- #
 #                                   methods                                    #
 # ---------------------------------------------------------------------------- #
-Base.length(t::PartitionIdxs) = length(t.train) + length(t.valid) + length(t.test)
-
-"""
-    get_train(t::PartitionIdxs) -> Vector{Int}
-
-Extract training indices from partition.
-"""
 get_train(t::PartitionIdxs) = t.train
-
-"""
-    get_valid(t::PartitionIdxs) -> Vector{Int}
-
-Extract validation indices from partition.
-"""
 get_valid(t::PartitionIdxs) = t.valid
-
-"""
-    get_test(t::PartitionIdxs) -> Vector{Int}
-
-Extract test indices from partition.
-"""
 get_test(t::PartitionIdxs)  = t.test
+
+Base.length(t::PartitionIdxs) = length(get_train(t)) + length(get_valid(t)) + length(get_test(t))
 
 # ---------------------------------------------------------------------------- #
 #                                  base show                                   #

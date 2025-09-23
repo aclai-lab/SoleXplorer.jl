@@ -13,7 +13,7 @@ strategy_type::Type{<:Any}(;
     measure::MaybeMeasure=nothing,
     repeats::Int64=1,
     strategy_kwargs...
-) -> Tuning
+)::Tuning
 ```
 
 # Arguments
