@@ -20,7 +20,7 @@ Key features:
 
 ```julia
 using Pkg
-Pkg.add SoleXplorer
+Pkg.add("SoleXplorer")
 ```
 
 ## Quick Start
