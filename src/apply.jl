@@ -130,7 +130,7 @@ function apply(
 )::DecisionEnsemble
     featurenames = MLJ.report(m).features
     classlabels  = m.fitresult[2][sortperm((m).fitresult[3])]
-    solem        = solemodel(MLJ.fitted_params(m).forest; featurenames, classlabels, dt_bestguess=true)
+    solem        = solemodel(MLJ.fitted_params(m).forest; featurenames, classlabels, tiebreaker=:alphanumeric)
     logiset      = scalarlogiset(X, allow_propositional=true)
     apply!(solem, logiset, y)
     return solem
@@ -157,7 +157,7 @@ function apply(
     featurenames = MLJ.report(m).model.features
     bm           = m.fitresult.interface.predict.machine
     classlabels  = bm.fitresult[2][sortperm((bm).fitresult[3])]
-    solem        = solemodel(MLJ.fitted_params(m).model.forest; featurenames, classlabels, dt_bestguess=true)
+    solem        = solemodel(MLJ.fitted_params(m).model.forest; featurenames, classlabels, tiebreaker=:alphanumeric)
     logiset      = scalarlogiset(X, allow_propositional=true)
     apply!(solem, logiset, y)
     return solem
