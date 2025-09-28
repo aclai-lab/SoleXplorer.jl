@@ -1,9 +1,10 @@
 using Test
 using SoleXplorer
+const SX = SoleXplorer
+
 using MLJ
 using DataFrames, Random
 using ModalAssociationRules
-const SX = SoleXplorer
 
 # ---------------------------------------------------------------------------- #
 #                                    natops                                    #

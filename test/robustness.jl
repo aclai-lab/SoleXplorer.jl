@@ -1,8 +1,9 @@
 using Test
 using SoleXplorer
+const SX = SoleXplorer
+
 using MLJ, DataFrames, Random
 using JLD2
-const SX = SoleXplorer
 
 Xc, yc = @load_iris
 Xc = DataFrame(Xc)
@@ -146,7 +147,7 @@ end
 # ---------------------------------------------------------------------------- #
 #                  xgboost binary classification robustness                    #
 # ---------------------------------------------------------------------------- #
-data_path = joinpath(@__DIR__, "respiratory_juliacon2025.jld2")
+data_path = joinpath(@__DIR__, "juliacon2025/respiratory_juliacon2025.jld2")
 data  = JLD2.load(data_path)
 Xb = data["X"]
 yb = MLJ.CategoricalArray{String,1,UInt32}(data["y"])

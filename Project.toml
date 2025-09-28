@@ -23,8 +23,7 @@ SolePostHoc = "cf1aa0c3-12c9-4ebe-9bdc-bd6c2ca79b72"
 XGBoost = "009559a3-9522-5dbb-924b-0b6ed2b22bb9"
 
 [sources]
-ModalDecisionTrees = {rev = "fixModal", url = "https://github.com/aclai-lab/ModalDecisionTrees.jl"}
-SolePostHoc = {rev = "PyCall_init", url = "https://github.com/aclai-lab/SolePostHoc.jl"}
+SolePostHoc = {rev = "main", url = "https://github.com/aclai-lab/SolePostHoc.jl"}
 
 [compat]
 Catch22 = "0.4 - 0.7"
