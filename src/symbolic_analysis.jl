@@ -185,6 +185,13 @@ function Base.show(io::IO, ::MIME"text/plain", m::ModelSet{S}) where S
         end
 end
 
+function show_measures(m::ModelSet)
+    println("Performance Measures:")
+    for (m, v) in zip(measures(m), values(m))
+        println("  $(m) = $(v)")
+    end
+end
+
 # ---------------------------------------------------------------------------- #
 #                                 utilities                                    #
 # ---------------------------------------------------------------------------- #
