@@ -5,7 +5,7 @@ using SoleXplorer
 # ---------------------------------------------------------------------------- #
 #                                  load data                                   #
 # ---------------------------------------------------------------------------- #
-data  = JLD2.load(joinpath(@__DIR__, "respiratory_juliacon2025.jld2"))
+data  = JLD2.load(joinpath(@__DIR__, "respiratory_pneumonioa.jld2"))
 Xc = data["X"]
 # this is imperative: some algos accept only categorical value
 # TODO automate in solexplorer if it's a CLabel ?

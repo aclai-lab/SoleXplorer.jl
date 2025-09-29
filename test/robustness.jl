@@ -147,7 +147,7 @@ end
 # ---------------------------------------------------------------------------- #
 #                  xgboost binary classification robustness                    #
 # ---------------------------------------------------------------------------- #
-data_path = joinpath(@__DIR__, "juliacon2025/respiratory_juliacon2025.jld2")
+data_path = joinpath(@__DIR__, "juliacon2025/respiratory_pneumonioa.jld2")
 data  = JLD2.load(data_path)
 Xb = data["X"]
 yb = MLJ.CategoricalArray{String,1,UInt32}(data["y"])

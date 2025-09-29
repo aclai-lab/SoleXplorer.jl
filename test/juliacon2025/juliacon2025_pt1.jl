@@ -97,7 +97,7 @@ jldsave("respiratory_juliacon2025_wav.jld2"; X=audio_only_df, y=merged_df.condit
 # ---------------------------------------------------------------------------- #
 #                                  load data                                   #
 # ---------------------------------------------------------------------------- #
-data          = JLD2.load("respiratory_juliacon2025_wav.jld2")
+data          = JLD2.load("_juliacon2025_wav.jld2")
 audio_ds      = data["X"]
 conditions_ds = data["y"]
 
@@ -121,12 +121,12 @@ audio_features_df = DataFrame(audio_features, ["$(freqs[i])hz" for i in 1:size(a
 #                              serialize result                                #
 # ---------------------------------------------------------------------------- #
 # save data using JLD2
-jldsave("respiratory_juliacon2025.jld2"; X=audio_features_df, y=conditions_ds)
+jldsave("_juliacon2025.jld2"; X=audio_features_df, y=conditions_ds)
 
 # ---------------------------------------------------------------------------- #
 #                                  test data                                   #
 # ---------------------------------------------------------------------------- #
-data  = JLD2.load(joinpath(@__DIR__, "respiratory_juliacon2025.jld2"))
+data  = JLD2.load(joinpath(@__DIR__, "respiratory_pneumonioa.jld2"))
 Xc = data["X"]
 # this is imperative: some algos accept only categorical value
 # TODO automate in solexplorer if it's a CLabel ?
