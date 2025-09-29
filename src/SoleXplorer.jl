@@ -11,6 +11,7 @@ using  SoleModels: AbstractModel, solemodel, weighted_aggregation, apply!
 using  SoleModels: RuleExtractor, DecisionSet
 
 @reexport using SoleData.Artifacts: NatopsLoader, load
+@reexport using SoleModels: readmetrics
 
 @reexport using SolePostHoc: InTreesRuleExtractor, LumenRuleExtractor, BATreesRuleExtractor
 @reexport using SolePostHoc: RULECOSIPLUSRuleExtractor, REFNERuleExtractor, TREPANRuleExtractor

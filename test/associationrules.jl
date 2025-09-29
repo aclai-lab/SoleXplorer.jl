@@ -130,6 +130,7 @@ for (nth,exp) in enumerate(EXPERIMENTS)
             exp.expkwargs...
             )
         )
+        @show exp.items, exp.itemsetmeasures, exp.rulemeasures
         sx_associations = associations(modelts)
 
         printstyled("Running experiment MAS $(nth), $(algo[2])\n", color=:green)

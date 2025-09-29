@@ -126,7 +126,7 @@ jldsave("_juliacon2025.jld2"; X=audio_features_df, y=conditions_ds)
 # ---------------------------------------------------------------------------- #
 #                                  test data                                   #
 # ---------------------------------------------------------------------------- #
-data  = JLD2.load(joinpath(@__DIR__, "respiratory_pneumonioa.jld2"))
+data  = JLD2.load(joinpath(@__DIR__, "respiratory_pneumonia.jld2"))
 Xc = data["X"]
 # this is imperative: some algos accept only categorical value
 # TODO automate in solexplorer if it's a CLabel ?

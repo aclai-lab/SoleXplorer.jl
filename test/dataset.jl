@@ -232,6 +232,9 @@ dsr = setup_dataset(
     tuning=GridTuning(resolution=10, resampling=CV(nfolds=3), range=range, measure=rms)
 )
 @test dsr isa SX.PropositionalDataSet{<:MLJ.MLJTuning.DeterministicTunedModel}
+model = dsr.mach.model
+@test model isa MLJ.MLJTuning.DeterministicTunedModel
+@test model.tuning isa MLJ.MLJTuning.Grid
 
 range = (SX.range(:min_purity_increase, lower=0.001, upper=1.0, scale=:log),
      SX.range(:max_depth, lower=1, upper=10))
@@ -242,6 +245,9 @@ dsc = setup_dataset(
     tuning=RandomTuning(range=range)
 )
 @test dsc isa SX.PropositionalDataSet{<:MLJ.MLJTuning.ProbabilisticTunedModel}
+model = dsc.mach.model
+@test model isa MLJ.MLJTuning.ProbabilisticTunedModel
+@test model.tuning isa MLJ.MLJTuning.RandomSearch
 
 selector = FeatureSelector()
 range = MLJ.range(selector, :features, values = [[:sepal_width,], [:sepal_length, :sepal_width]])
@@ -251,7 +257,10 @@ dsc = setup_dataset(
     seed=1234,
     tuning=CubeTuning(resampling=CV(nfolds=3), range=range, measure=rms)
 )
-@test dsc isa SX.PropositionalDataSet{<:MLJ.MLJTuning.ProbabilisticTunedModel}  
+@test dsc isa SX.PropositionalDataSet{<:MLJ.MLJTuning.ProbabilisticTunedModel}
+model = dsc.mach.model
+@test model isa MLJ.MLJTuning.ProbabilisticTunedModel
+@test model.tuning isa MLJ.MLJTuning.LatinHypercube
 
 range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
 dsr = setup_dataset(
@@ -261,6 +270,9 @@ dsr = setup_dataset(
     tuning=ParticleTuning(n_particles=3, resampling=CV(nfolds=3), range=range, measure=rms)
 )
 @test dsr isa SX.PropositionalDataSet{<:MLJ.MLJTuning.DeterministicTunedModel}
+model = dsr.mach.model
+@test model isa MLJ.MLJTuning.DeterministicTunedModel
+@test model.tuning isa SX.MLJParticleSwarmOptimization.ParticleSwarm
 
 range = (SX.range(:min_purity_increase, lower=0.001, upper=1.0, scale=:log),
      SX.range(:max_depth, lower=1, upper=10))
@@ -271,6 +283,9 @@ dsc = setup_dataset(
     tuning=AdaptiveTuning(range=range)
 )
 @test dsc isa SX.PropositionalDataSet{<:MLJ.MLJTuning.ProbabilisticTunedModel}
+model = dsc.mach.model
+@test model isa MLJ.MLJTuning.ProbabilisticTunedModel
+@test model.tuning isa SX.MLJParticleSwarmOptimization.AdaptiveParticleSwarm
 
 tuning=GridTuning(resolution=10, range=range)
 @test propertynames(tuning) == (:strategy, :range, :resampling, :measure, :repeats)
