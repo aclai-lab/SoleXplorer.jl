@@ -41,7 +41,7 @@ Reexport = "1.2"
 SoleBase = "0.13"
 SoleData = "0.16"
 SoleModels = "0.10"
-SolePostHoc = "0.2"
+SolePostHoc = "0.1"
 XGBoost = "2.5"
 julia = "1"
 
