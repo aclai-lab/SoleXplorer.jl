@@ -22,9 +22,6 @@ SoleModels = "4249d9c7-3290-4ddd-961c-e1d3ec2467f8"
 SolePostHoc = "cf1aa0c3-12c9-4ebe-9bdc-bd6c2ca79b72"
 XGBoost = "009559a3-9522-5dbb-924b-0b6ed2b22bb9"
 
-[sources]
-SolePostHoc = {rev = "main", url = "https://github.com/aclai-lab/SolePostHoc.jl"}
-
 [compat]
 Catch22 = "0.4 - 0.7"
 DataFrames = "1"
