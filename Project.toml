@@ -1,7 +1,7 @@
 name = "SoleXplorer"
 uuid = "5816ab97-8dbe-4a0a-b2fb-0334bd9876ed"
-authors = ["Lorenzo BALBONI", "Mauro MILELLA", "Giovanni PAGLIARINI", "Alberto PAPARELLA", "Riccardo PASINI", "Marco PERROTTA"]
 version = "0.1.0"
+authors = ["Lorenzo BALBONI", "Mauro MILELLA", "Giovanni PAGLIARINI", "Alberto PAPARELLA", "Riccardo PASINI", "Marco PERROTTA"]
 
 [deps]
 Catch22 = "acdeb78f-3d39-4310-8fdf-6d75c17c6d5a"
@@ -32,11 +32,11 @@ MLJDecisionTreeInterface = "0.4"
 MLJParticleSwarmOptimization = "0.1"
 MLJXGBoostInterface = "0.3"
 ModalAssociationRules = "0.2"
-ModalDecisionTrees = "0.5.2, 0.5"
+ModalDecisionTrees = "0.5"
 Random = "1"
 Reexport = "1.2"
 SoleBase = "0.13"
-SoleData = "0.16"
+SoleData = "0.16.5"
 SoleModels = "0.10"
 SolePostHoc = "0.1"
 XGBoost = "2.5"
