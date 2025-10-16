@@ -59,14 +59,21 @@ le rebilancia coi pesi, per non buttare via istanze).
 #                                       rng                                    #
 # ---------------------------------------------------------------------------- #
 magari vedere di refattorizzarlo meglio per renderlo più elegante
+rivederne la propagazione: ad oggi non è ancora formalmente testata
 
 # ---------------------------------------------------------------------------- #
 #                             apply e extractrules                             #
 # ---------------------------------------------------------------------------- #
 Bisogna pensare anche ai modelli non supervisionati: apply(m, X)
 
-controlla l'inglese grammarly
+# ---------------------------------------------------------------------------- #
+#                                   timeout                                    #
+# ---------------------------------------------------------------------------- #
+l'algoritmo è pronto, sia il mio che quello mio di perry
+il più performante vince
+ma lo sviluppo sarà su un altra repo.
 
 # ---------------------------------------------------------------------------- #
-#                             automatizza y, quando il test non è di regressione                             #
+#                                multi thread                                  #
 # ---------------------------------------------------------------------------- #
+si-può-fare-!!!
