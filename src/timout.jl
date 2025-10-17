@@ -21,9 +21,9 @@ function TimeOut(;
     associations :: Number=Inf,    
 )
     TimeOut(;
-        training=Float64(training),
-        rules=Float64(rules),
-        associations=Float64(associations))
+        training     = Float64(training),
+        rules        = Float64(rules),
+        associations = Float64(associations))
 end
 
 # example:

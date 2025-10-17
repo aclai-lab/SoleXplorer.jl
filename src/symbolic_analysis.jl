@@ -300,6 +300,11 @@ function _symbolic_analysis!(
         else
             params = NamedTuple(;)
         end
+        # questo è il punto dove valutare timeout
+        # quasi sicuramente con una macro
+        # il problema è che non posso scrivere SoleXplorer qui,
+        # ma devo per forza invocare extractrule con SoleXplorer?
+        # magari nella macro, visto che carico solo SoleXplorer non dovrei avere problemi di duplicazione nomi
         extractrules(extractor, params, ds, solem)
     end)
 
