@@ -37,8 +37,8 @@ const  PSO = MLJParticleSwarmOptimization
 using  MLJ
 using  MLJ: MLJBase, MLJTuning
 # balancing
-using Imbalance
-@reexport using Imbalance.MLJ:
+using MLJBalancing
+@reexport using MLJBalancing:
     BorderlineSMOTE1, ClusterUndersampler, ENNUndersampler, ROSE,
     RandomOversampler, RandomUndersampler, RandomWalkOversampler,
     SMOTE, SMOTEN, SMOTENC, TomekUndersampler
