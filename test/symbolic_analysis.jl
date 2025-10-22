@@ -5,6 +5,9 @@ const SX = SoleXplorer
 using MLJ
 using DataFrames, Random
 
+# ---------------------------------------------------------------------------- #
+#                                load dataset                                  #
+# ---------------------------------------------------------------------------- #
 Xc, yc = @load_iris
 Xc = DataFrame(Xc)
 
@@ -14,7 +17,9 @@ Xr = DataFrame(Xr)
 natopsloader = NatopsLoader()
 Xts, yts = SX.load(natopsloader)
 
-# I'm easy like sunday morning
+# ---------------------------------------------------------------------------- #
+#                        I'm easy like sunday morning                          #
+# ---------------------------------------------------------------------------- #
 modelc = symbolic_analysis(Xc, yc)
 @test modelc isa SX.ModelSet
 
