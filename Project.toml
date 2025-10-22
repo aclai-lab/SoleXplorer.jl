@@ -1,7 +1,7 @@
 name = "SoleXplorer"
 uuid = "5816ab97-8dbe-4a0a-b2fb-0334bd9876ed"
 version = "0.1.0"
-authors = ["Lorenzo BALBONI", "Mauro MILELLA", "Giovanni PAGLIARINI", "Alberto PAPARELLA", "Riccardo PASINI", "Marco PERROTTA"]
+authors = ["Lorenzo BALBONI", "Federico MANZELLA", "Mauro MILELLA", "Giovanni PAGLIARINI", "Alberto PAPARELLA", "Riccardo PASINI", "Marco PERROTTA"]
 
 [deps]
 Catch22 = "acdeb78f-3d39-4310-8fdf-6d75c17c6d5a"
