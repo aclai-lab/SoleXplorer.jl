@@ -18,12 +18,12 @@ abstract type AbstractPartitionIdxs end
 struct PartitionInfo{T} <: AbstractPartitionInfo
     type        :: T
     valid_ratio :: Real
-    rng         :: AbstractRNG
+    rng         :: Random.AbstractRNG
 
     function PartitionInfo(
         type        :: T,
         valid_ratio :: Real,
-        rng         :: AbstractRNG,
+        rng         :: Random.AbstractRNG,
     )::PartitionInfo where {T<:MLJ.ResamplingStrategy}
         0 ≤ valid_ratio ≤ 1 || throw(ArgumentError("valid_ratio must be between 0 and 1"))
 
@@ -63,7 +63,7 @@ struct PartitionIdxs{T<:Int} <: AbstractPartitionIdxs
     new{T}(
         train isa UnitRange ? collect(train) : train, 
         valid isa UnitRange ? collect(valid) : valid, 
-        test  isa UnitRange ? collect(test) : test
+        test  isa UnitRange ? collect(test)  : test
     )
     end
 end
@@ -78,7 +78,7 @@ function partition(
     y           :: AbstractVector{<:Label};
     resampling  :: MLJ.ResamplingStrategy,
     valid_ratio :: Real,
-    rng         :: AbstractRNG
+    rng         :: Random.AbstractRNG
 )::Tuple{Vector{PartitionIdxs}, PartitionInfo}
     pinfo = PartitionInfo(resampling, valid_ratio, rng)
 

@@ -25,9 +25,11 @@ abstract type AbstractDataSet end
 # ---------------------------------------------------------------------------- #
 #                                   types                                      #
 # ---------------------------------------------------------------------------- #
+const Balancing = NamedTuple{(:oversampler, :undersampler), <:Tuple{<:MLJ.Model, <:MLJ.Model}}
+
 const MaybeInt             = Maybe{Int64}
 const MaybeAggregationInfo = Maybe{AggregationInfo}
-const MaybeBalancing       = Maybe{NamedTuple{<:Any, <:Tuple{MLJ.Model, MLJ.Model}}}
+const MaybeBalancing       = Maybe{Balancing}
 const MaybeTuning          = Maybe{Tuning}
 const MaybeTreatInfo       = Maybe{TreatmentInfo}
 
@@ -47,18 +49,18 @@ end
 #                                   set rng                                    #
 # ---------------------------------------------------------------------------- #
 # Set the random number generator for a model that supports it
-function set_rng!(m::MLJ.Model, rng::AbstractRNG)::MLJ.Model
+function set_rng!(m::MLJ.Model, rng::Random.AbstractRNG)::MLJ.Model
     m.rng = rng
     return m
 end
 
 # set the random number generator for a resampling strategy
-function set_rng(r::MLJ.ResamplingStrategy, rng::AbstractRNG)::ResamplingStrategy
+function set_rng(r::MLJ.ResamplingStrategy, rng::Random.AbstractRNG)::ResamplingStrategy
     typeof(r)(merge(MLJ.params(r), (rng=rng,))...)
 end
 
 # set random number generators for tuning-related components of a model
-function set_tuning_rng!(m::MLJ.Model, rng::AbstractRNG)::MLJ.Model
+function set_tuning_rng!(m::MLJ.Model, rng::Random.AbstractRNG)::MLJ.Model
     hasproperty(m.tuning, :rng) && (m.tuning.rng = rng)
     hasproperty(m.resampling, :rng) && (m.resampling = set_rng(m.resampling, rng))
     return m
@@ -304,19 +306,14 @@ get_logiset(ds::ModalDataSet)::SupportedLogiset = ds.mach.data[1].modalities[1]
 # ---------------------------------------------------------------------------- #
 function set_balancing(
     model     :: MLJ.Model,
-    balancing :: NamedTuple{<:Any, <:Tuple{MLJ.Model, MLJ.Model}},
-    seed      :: MaybeInt
+    balancing :: Balancing,
+    seed      :: Int64=17
 )::MLJ.Model
     # regression models don't support balancing
     model isa Regression &&
         throw(ArgumentError("Balancing is not supported for regression models."))
 
-    balancing isa NamedTuple{(:oversampler, :undersampler), <:Tuple{MLJ.Model, MLJ.Model}} ||
-        throw(ArgumentError("Invalid balancing parameter, usage: " * 
-                        "balancing(oversampler=..., undersample=...)"))
-
-    # set the model to use the same seed as the dataset
-    isnothing(seed) && (seed = 17)
+    # set the model to use the same seed
     balancing = map(b -> set_balancing_seed(b, seed), balancing)
 
     model = MLJ.BalancedModel(model; balancing...)
@@ -325,7 +322,7 @@ end
 function set_tuning(
     model  :: MLJ.Model,
     tuning :: Tuning,
-    rng    :: AbstractRNG
+    rng    :: Random.AbstractRNG
 )::MLJ.Model
     t_range = get_range(tuning)
     if !(t_range isa MLJ.NominalRange)
@@ -673,7 +670,7 @@ Each model is fully parameterizable, see the original package reference document
 ## Data resampling
 - `resampling::ResamplingStrategy=Holdout(shuffle=true)`: Cross-validation strategy
 - `valid_ratio::Real=0.0`: Validation set proportion
-- `rng::AbstractRNG=TaskLocalRNG()`: Random number generator for reproducibility
+- `rng::Random.AbstractRNG=TaskLocalRNG()`: Random number generator for reproducibility
 
 Resampling strategies are taken from the package [MLJ](https://juliaai.github.io/MLJ.jl/stable/).
 See official documentation [here](https://juliaai.github.io/MLJBase.jl/stable/resampling/).

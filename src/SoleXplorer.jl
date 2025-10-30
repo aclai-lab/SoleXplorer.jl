@@ -1,4 +1,5 @@
 module SoleXplorer
+using  ThreadsX
 using  Reexport
 
 using  SoleBase: Label, CLabel, RLabel, XGLabel
@@ -37,8 +38,8 @@ const  PSO = MLJParticleSwarmOptimization
 using  MLJ
 using  MLJ: MLJBase, MLJTuning
 # balancing
-using MLJBalancing
-@reexport using MLJBalancing:
+using Imbalance
+@reexport using Imbalance.MLJ:
     BorderlineSMOTE1, ClusterUndersampler, ENNUndersampler, ROSE,
     RandomOversampler, RandomUndersampler, RandomWalkOversampler,
     SMOTE, SMOTEN, SMOTENC, TomekUndersampler

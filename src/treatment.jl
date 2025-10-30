@@ -126,7 +126,7 @@ function apply_vectorized!(
     feature_func::Function,
     col_name::Symbol
 )::Vector{<:Real}
-    X[!, col_name] = collect(feature_func(@views X_col[i]) for i in 1:length(X_col))
+    @views @inbounds X[!, col_name] = collect(feature_func(col) for col in X_col)
 end
 
 # apply a feature function to a specific time interval within each time-series
@@ -138,7 +138,7 @@ function apply_vectorized!(
     col_name::Symbol,
     interval::UnitRange{Int64}
 )::Vector{<:Real}
-    X[!, col_name] = collect(feature_func(@views X_col[i][interval]) for i in 1:length(X_col))
+    @views @inbounds X[!, col_name] = collect(feature_func(col[interval]) for col in X_col)
 end
 
 # apply a reduction function across multiple intervals for modal algorithm preparation
@@ -261,12 +261,12 @@ function treatment(
         for f in features, v in vnames
             if length(intervals) == 1
                 # single window: apply to whole time series
-                col_name = Symbol(f, "(", v, ")")
+                col_name = Symbol("$(f)($(v))")
                 apply_vectorized!(_X, X[!, v], f, col_name)
             else
                 # multiple windows: apply to each interval
                 for (i, interval) in enumerate(intervals)
-                    col_name = Symbol(f, "(", v, ")w", i)
+                    col_name = Symbol("$(f)($(v))w$(i)")
                     apply_vectorized!(_X, X[!, v], f, col_name, interval)
                 end
             end
