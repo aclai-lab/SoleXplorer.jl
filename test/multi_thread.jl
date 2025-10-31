@@ -2,7 +2,7 @@ using Test
 using SoleXplorer
 const SX = SoleXplorer
 
-using MLJ, Random
+using MLJ, Random, DataFrames
 
 # ---------------------------------------------------------------------------- #
 #                                load dataset                                  #
@@ -28,6 +28,61 @@ model = symbolic_analysis(Xts, yts, seed=11)
 model = DecisionTreeClassifier()
 balancing = (oversampler=BorderlineSMOTE1(m=6, k=4), undersampler=ClusterUndersampler())
 seed = 11
+
+
+function treatment(
+    X           :: AbstractDataFrame,
+    treat       :: Symbol;
+    win         :: WinFunction=AdaptiveWindow(nwindows=3, relative_overlap=0.1),
+    features    :: Tuple{Vararg{Base.Callable}}=(maximum, minimum),
+    modalreduce :: Base.Callable=mean
+)
+    vnames, intervals = propertynames(X), win(length(X[1,1]))
+    nvnames, nfeatures, nintervals = length(vnames), length(features), length(intervals)
+
+    # calculate number of cols after treatment
+    treatcols  = nvnames * nfeatures * nintervals
+    treatnames, treatX = Vector{Symbol}(undef, treatcols), Matrix{Float64}(undef, nrow(X), treatcols)
+
+    # if treat == :aggregate
+        Threads.@threads for f in eachindex(features)
+            Threads.@threads for v in eachindex(vnames)
+                if nintervals == 1
+                    # single window: apply to whole time series
+                    idx = (f - 1) * nvnames * nintervals + (v - 1) * nintervals
+                    treatnames[idx] = Symbol("$(f)($(v))")
+                    # apply_vectorized!(_X, X[!, v], f, col_name)
+                else
+                    # multiple windows: apply to each interval
+                    for i in eachindex(intervals)
+                        idx = (f - 1) * nvnames * nintervals + (v - 1) * nintervals + i
+                        treatnames[idx] = Symbol("$(f)($(v))w$(i)")
+                        # apply_vectorized(treatX, X[!, v], f, col_name, interval)
+                        Threads.@threads for row in 1:nrow(X)
+                            treatX[row,v] = features[f](@views X[row,v][intervals[i]])
+                        end
+                    end
+                end
+            end
+        end
+treatnames
+end
+
+function apply_vectorized(
+    X::Matrix{Float64},
+    X_col::Vector{<:Vector{<:Real}},
+    feature_func::Function,
+    col_name::Symbol,
+    interval::UnitRange{Int64}
+)::Vector{<:Real}
+    @views @inbounds X[!, col_name] = collect(feature_func(col[interval]) for col in X_col)
+end
+
+treatment(Xts, :aggregate)
+# 70.648 μs (2630 allocations: 105.38 KiB)
+# 36.336 μs (2575 allocations: 107.94 KiB)
+# 20.913 μs (2747 allocations: 120.25 KiB)
+# 880.870 μs (119099 allocations: 11.46 MiB)
 
 function partition(
     y           :: AbstractVector,

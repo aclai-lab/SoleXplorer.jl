@@ -1,5 +1,4 @@
 module SoleXplorer
-using  ThreadsX
 using  Reexport
 
 using  SoleBase: Label, CLabel, RLabel, XGLabel
