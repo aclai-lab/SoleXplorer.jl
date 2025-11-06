@@ -59,6 +59,7 @@ get_repeats(t::Tuning)::Int64 = t.repeats
 
 # convert a Tuning configuration to a NamedTuple suitable for MLJ TunedModel construction
 @inline tuning_params(t::Tuning) = (
+    tuning     = get_strategy(t),
     range      = get_range(t), 
     resampling = get_resampling(t),
     measure    = get_measure(t),

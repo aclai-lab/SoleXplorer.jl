@@ -1,10 +1,10 @@
 using Test
 using SoleXplorer
+const SX = SoleXplorer
+
 using MLJ
 using DataFrames, Random
 using Downloads, DelimitedFiles
-
-const SX = SoleXplorer
 
 # datasets to tests
 datasets = [

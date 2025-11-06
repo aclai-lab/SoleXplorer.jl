@@ -11,6 +11,7 @@ using  SoleModels: AbstractModel, solemodel, weighted_aggregation, apply!
 using  SoleModels: RuleExtractor, DecisionSet
 
 @reexport using SoleData.Artifacts: NatopsLoader, load
+@reexport using SoleModels: readmetrics
 
 @reexport using SolePostHoc: InTreesRuleExtractor, LumenRuleExtractor, BATreesRuleExtractor
 @reexport using SolePostHoc: RULECOSIPLUSRuleExtractor, REFNERuleExtractor, TREPANRuleExtractor
@@ -36,8 +37,8 @@ const  PSO = MLJParticleSwarmOptimization
 using  MLJ
 using  MLJ: MLJBase, MLJTuning
 # balancing
-using Imbalance
-@reexport using Imbalance.MLJ:
+using MLJBalancing
+@reexport using MLJBalancing:
     BorderlineSMOTE1, ClusterUndersampler, ENNUndersampler, ROSE,
     RandomOversampler, RandomUndersampler, RandomWalkOversampler,
     SMOTE, SMOTEN, SMOTENC, TomekUndersampler
@@ -49,6 +50,13 @@ using Imbalance
 using  DataFrames
 using  Random
 using  JLD2
+
+# ---------------------------------------------------------------------------- #
+#                                   timeout                                    #
+# ---------------------------------------------------------------------------- #
+# using TimeOut
+
+const preprocess = "using SoleXplorer\n"
 
 # ---------------------------------------------------------------------------- #
 #                                 maybe types                                  #
@@ -135,6 +143,7 @@ include("associationrules.jl")
 export AbstractModelSet, ModelSet
 export dsetup, solemodels, rules, associations
 export performance, measures, values
+export show_measures
 export symbolic_analysis, symbolic_analysis!
 include("symbolic_analysis.jl")
 

@@ -138,6 +138,13 @@ function Base.show(io::IO, ::MIME"text/plain", m::ModelSet{S}) where S
         end
 end
 
+function show_measures(m::ModelSet)
+    println("Performance Measures:")
+    for (m, v) in zip(measures(m), values(m))
+        v isa Real ? println("  $(m) = $(round(v, digits=2))") : println("  $(m) = $(v)")
+    end
+end
+
 # ---------------------------------------------------------------------------- #
 #                                 utilities                                    #
 # ---------------------------------------------------------------------------- #
@@ -246,6 +253,11 @@ function _symbolic_analysis!(
         else
             params = NamedTuple(;)
         end
+        # questo è il punto dove valutare timeout
+        # quasi sicuramente con una macro
+        # il problema è che non posso scrivere SoleXplorer qui,
+        # ma devo per forza invocare extractrule con SoleXplorer?
+        # magari nella macro, visto che carico solo SoleXplorer non dovrei avere problemi di duplicazione nomi
         extractrules(extractor, params, ds, solem)
     end)
 

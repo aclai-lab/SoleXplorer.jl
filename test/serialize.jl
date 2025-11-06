@@ -1,8 +1,9 @@
 using Test
 using SoleXplorer
+const SX = SoleXplorer
+
 using MLJ
 using DataFrames, Random
-const SX = SoleXplorer
 
 Xc, yc = @load_iris
 Xc = DataFrame(Xc)
