@@ -49,9 +49,9 @@ solesave(modelc; path, name="test1")
 # ---------------------------------------------------------------------------- #
 #                                 load model                                   #
 # ---------------------------------------------------------------------------- #
-ds_name        = "soleds_test1"
+ds_name        = "soleds_test1.jld2"
 solemodel_name = "solemodel_test1.jld2"
-analysis_name  = "soleanalysis_test1"
+analysis_name  = "soleanalysis_test1.jld2"
 
 dsc_loaded      = soleload(path, ds_name)
 model_loaded    = soleload(path, solemodel_name)
@@ -62,3 +62,23 @@ analysis_loaded = soleload(path, analysis_name)
 @test dsc_loaded      isa PropositionalDataSet
 @test model_loaded    isa SX.SoleModel
 @test analysis_loaded isa ModelSet
+
+# ---------------------------------------------------------------------------- #
+#                                 cleanup                                      #
+# ---------------------------------------------------------------------------- #
+# Delete created test files
+test_files = [
+    joinpath(path, ds_name),
+    joinpath(path, solemodel_name),
+    joinpath(path, analysis_name)
+]
+
+for file in test_files
+    if isfile(file)
+        rm(file; force=true)
+        @info "Deleted test file: $file"
+    elseif isdir(file)
+        rm(file; recursive=true, force=true)
+        @info "Deleted test directory: $file"
+    end
+end

@@ -392,6 +392,7 @@ function _setup_dataset(
 
     ttpairs, pinfo = partition(y; resampling, valid_ratio, rng)
 
+    isnothing(seed)      && (seed = 1)
     isnothing(balancing) || (model = set_balancing(model, balancing, seed))
     isnothing(tuning)    || (model = set_tuning(model, tuning, rng))
 

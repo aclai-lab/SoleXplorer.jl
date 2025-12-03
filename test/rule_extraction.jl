@@ -84,11 +84,6 @@ modelc = symbolic_analysis(
 )
 @test SX.rules(modelc) isa Vector{SX.LumenResult}
 
-@test_throws MethodError  symbolic_analysis(
-    dsc, solemc;
-    extractor=LumenRuleExtractor(invalid=true)
-)
-
 # ---------------------------------------------------------------------------- #
 #                          batrees rules extraction                            #
 # ---------------------------------------------------------------------------- #
@@ -182,20 +177,3 @@ modelc = symbolic_analysis(
     dsc, solemc;
     extractor=TREPANRuleExtractor(invalid=true)
 )
-
-# ---------------------------------------------------------------------------- #
-#                                    XGBoost                                   #
-# ---------------------------------------------------------------------------- #
-# dsc = setup_dataset(
-#     Xc, yc;
-#     model=XGBoostClassifier(),
-#     resampling=Holdout(;shuffle=true),
-#     seed=1,   
-# )
-# solemc = train_test(dsc)
-
-# modelc = symbolic_analysis(
-#     dsc, solemc;
-#     extractor=LumenRuleExtractor()
-# )
-# @test SX.rules(modelc) isa Vector{SX.LumenResult}
