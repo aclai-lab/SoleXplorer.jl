@@ -1,11 +1,3 @@
-# dataset.jl
-
-# dataset construction and management utilities for SoleXplorer
-
-# this module handles the creation of specialized dataset structures that encapsulate
-# MLJ machines, partitioning information for propositional sets, including also
-# treatment details for modal learning sets
-
 # ---------------------------------------------------------------------------- #
 #                               abstract types                                 #
 # ---------------------------------------------------------------------------- #
@@ -17,13 +9,11 @@ Abstract supertype for all dataset structures in SoleXplorer.
 Concrete subtypes include:
 - [`PropositionalDataSet`](@ref): for standard ML algorithms with aggregated features
 - [`ModalDataSet`](@ref): for modal logic algorithms with temporal structure preservation
-
-See also: [`setup_dataset`](@ref)
 """
 abstract type AbstractDataSet end
 
 # ---------------------------------------------------------------------------- #
-#                                   types                                      #
+#                                    types                                     #
 # ---------------------------------------------------------------------------- #
 const Balancing = NamedTuple{(:oversampler, :undersampler), <:Tuple{<:MLJ.Model, <:MLJ.Model}}
 
@@ -68,9 +58,9 @@ end
 
 # set the seed for balancing-related components of a model
 # originally broken in case you pass a RNG method (lenth mismatch during MLJ.fit!)
-function set_balancing_seed(b::MLJ.Model, seed::Int64)::MLJ.Model
-    hasproperty(b, :rng) && (b = typeof(b).name.wrapper(merge(MLJ.params(b), (rng=seed,))...))
-    return b
+function set_balancing_seed(m::MLJ.Model, seed::Int64)::MLJ.Model
+    hasproperty(m, :rng) && (m = typeof(m).name.wrapper(merge(MLJ.params(m), (rng=seed,))...))
+    return m
 end
 
 # set logical conditions (features) for modal models
@@ -166,10 +156,10 @@ feature representations, typically created by aggregating multidimensional data.
 See also: [`ModalDataSet`](@ref), [`setup_dataset`](@ref), [`AbstractDataSet`](@ref)
 """
 mutable struct PropositionalDataSet{M} <: AbstractDataSet
-    mach    :: MLJ.Machine
-    pidxs   :: Vector{PartitionIdxs}
-    pinfo   :: PartitionInfo
-    ainfo   :: MaybeAggregationInfo
+    mach  :: MLJ.Machine
+    pidxs :: Vector{PartitionIdxs}
+    pinfo :: PartitionInfo
+    ainfo :: MaybeAggregationInfo
 end
 
 """
@@ -193,10 +183,10 @@ It maintains treatment information that describes how the original data structur
 See also: [`PropositionalDataSet`](@ref), [`setup_dataset`](@ref), [`AbstractDataSet`](@ref)
 """
 mutable struct ModalDataSet{M} <: AbstractDataSet
-    mach    :: MLJ.Machine
-    pidxs   :: Vector{PartitionIdxs}
-    pinfo   :: PartitionInfo
-    tinfo   :: TreatmentInfo
+    mach  :: MLJ.Machine
+    pidxs :: Vector{PartitionIdxs}
+    pinfo :: PartitionInfo
+    tinfo :: TreatmentInfo
 end
 
 """
@@ -229,10 +219,10 @@ the type of treatment specified.
 See also: [`PropositionalDataSet`](@ref), [`ModalDataSet`](@ref), [`AbstractDataSet`](@ref)
 """
 function DataSet(
-    mach    :: MLJ.Machine{M},
-    pidxs   :: Vector{PartitionIdxs},
-    pinfo   :: PartitionInfo;
-    tinfo   :: MaybeTreatInfo=nothing
+    mach  :: MLJ.Machine{M},
+    pidxs :: Vector{PartitionIdxs},
+    pinfo :: PartitionInfo;
+    tinfo :: MaybeTreatInfo=nothing
 ) where {M<:MLJ.Model}
     isnothing(tinfo) ?
         PropositionalDataSet{M}(mach, pidxs, pinfo, nothing) : begin
@@ -435,239 +425,6 @@ and MLJ machine creation.
 - `model::MLJ.Model=_DefaultModel(y)`: Sole compatible MLJ model to use, 
    auto-selected based on target type, if no `model` is subbmitted
 
-## Available Models
-
-From package Bensadoun, R., et al. (2013). [DecisionTree.jl](https://github.com/JuliaAI/DecisionTree.jl):
-```
-DecisionTreeClassifier(
-  max_depth = -1, 
-  min_samples_leaf = 1, 
-  min_samples_split = 2, 
-  min_purity_increase = 0.0, 
-  n_subfeatures = 0, 
-  post_prune = false, 
-  merge_purity_threshold = 1.0, 
-  display_depth = 5, 
-  feature_importance = :impurity, 
-  rng = Random.TaskLocalRNG())
-```
-```
-DecisionTreeRegressor(
-  max_depth = -1, 
-  min_samples_leaf = 5, 
-  min_samples_split = 2, 
-  min_purity_increase = 0.0, 
-  n_subfeatures = 0, 
-  post_prune = false, 
-  merge_purity_threshold = 1.0, 
-  feature_importance = :impurity, 
-  rng = Random.TaskLocalRNG())
-```
-```
-RandomForestClassifier(
-  max_depth = -1, 
-  min_samples_leaf = 1, 
-  min_samples_split = 2, 
-  min_purity_increase = 0.0, 
-  n_subfeatures = -1, 
-  n_trees = 100, 
-  sampling_fraction = 0.7, 
-  feature_importance = :impurity, 
-  rng = Random.TaskLocalRNG())
-```
-```
-RandomForestRegressor(
-  max_depth = -1, 
-  min_samples_leaf = 1, 
-  min_samples_split = 2, 
-  min_purity_increase = 0.0, 
-  n_subfeatures = -1, 
-  n_trees = 100, 
-  sampling_fraction = 0.7, 
-  feature_importance = :impurity, 
-  rng = Random.TaskLocalRNG())
-```
-```
-AdaBoostStumpClassifier(
-  n_iter = 10, 
-  feature_importance = :impurity, 
-  rng = Random.TaskLocalRNG())
-```
-
-From package ACLAI Lab and G. Pagliarini (2023). [ModalDecisionTrees.jl](https://github.com/aclai-lab/ModalDecisionTrees.jl):
-```
-ModalDecisionTree(
-  max_depth = nothing, 
-  min_samples_leaf = 4, 
-  min_purity_increase = 0.002, 
-  max_purity_at_leaf = Inf, 
-  max_modal_depth = nothing, 
-  relations = nothing, 
-  features = nothing, 
-  conditions = nothing, 
-  featvaltype = Float64, 
-  initconditions = nothing, 
-  downsize = SoleData.var"#downsize#541"(), 
-  force_i_variables = true, 
-  fixcallablenans = false, 
-  print_progress = false, 
-  rng = Random.TaskLocalRNG(), 
-  display_depth = nothing, 
-  min_samples_split = nothing, 
-  n_subfeatures = identity, 
-  post_prune = false, 
-  merge_purity_threshold = nothing, 
-  feature_importance = :split)
-```
-```
-ModalRandomForest(
-  sampling_fraction = 0.7, 
-  ntrees = 10, 
-  max_depth = nothing, 
-  min_samples_leaf = 1, 
-  min_purity_increase = -Inf, 
-  max_purity_at_leaf = Inf, 
-  max_modal_depth = nothing, 
-  relations = nothing, 
-  features = nothing, 
-  conditions = nothing, 
-  featvaltype = Float64, 
-  initconditions = nothing, 
-  downsize = SoleData.var"#downsize#542"(), 
-  force_i_variables = true, 
-  fixcallablenans = false, 
-  print_progress = false, 
-  rng = Random.TaskLocalRNG(), 
-  display_depth = nothing, 
-  min_samples_split = nothing, 
-  n_subfeatures = ModalDecisionTrees.MLJInterface.sqrt_f, 
-  post_prune = false, 
-  merge_purity_threshold = nothing, 
-  feature_importance = :split)
-```
-```
-ModalAdaBoost(
-  max_depth = 1, 
-  min_samples_leaf = 4, 
-  min_purity_increase = 0.002, 
-  max_purity_at_leaf = Inf, 
-  max_modal_depth = nothing, 
-  relations = :IA7, 
-  features = nothing, 
-  conditions = nothing, 
-  featvaltype = Float64, 
-  initconditions = nothing, 
-  downsize = SoleData.var"#downsize#541"(), 
-  force_i_variables = true, 
-  fixcallablenans = true, 
-  print_progress = false, 
-  display_depth = nothing, 
-  min_samples_split = nothing, 
-  n_subfeatures = identity, 
-  post_prune = false, 
-  merge_purity_threshold = nothing, 
-  n_iter = 10, 
-  feature_importance = :split, 
-  rng = Random.TaskLocalRNG())
-```
-From package Chen, T., & Guestrin, C. (2016). [XGBoost.jl](https://github.com/dmlc/XGBoost.jl)
-```
-XGBoostClassifier(
-  test = 1, 
-  num_round = 100, 
-  booster = "gbtree", 
-  disable_default_eval_metric = 0, 
-  eta = 0.3, 
-  num_parallel_tree = 1, 
-  gamma = 0.0, 
-  max_depth = 6, 
-  min_child_weight = 1.0, 
-  max_delta_step = 0.0, 
-  subsample = 1.0, 
-  colsample_bytree = 1.0, 
-  colsample_bylevel = 1.0, 
-  colsample_bynode = 1.0, 
-  lambda = 1.0, 
-  alpha = 0.0, 
-  tree_method = "auto", 
-  sketch_eps = 0.03, 
-  scale_pos_weight = 1.0, 
-  updater = nothing, 
-  refresh_leaf = 1, 
-  process_type = "default", 
-  grow_policy = "depthwise", 
-  max_leaves = 0, 
-  max_bin = 256, 
-  predictor = "cpu_predictor", 
-  sample_type = "uniform", 
-  normalize_type = "tree", 
-  rate_drop = 0.0, 
-  one_drop = 0, 
-  skip_drop = 0.0, 
-  feature_selector = "cyclic", 
-  top_k = 0, 
-  tweedie_variance_power = 1.5, 
-  objective = "automatic", 
-  base_score = 0.5, 
-  early_stopping_rounds = 0, 
-  watchlist = nothing, 
-  nthread = 1, 
-  importance_type = "gain", 
-  seed = nothing, 
-  validate_parameters = false, 
-  eval_metric = String[], 
-  monotone_constraints = nothing)
-```
-```
-XGBoostRegressor(
-  test = 1, 
-  num_round = 100, 
-  booster = "gbtree", 
-  disable_default_eval_metric = 0, 
-  eta = 0.3, 
-  num_parallel_tree = 1, 
-  gamma = 0.0, 
-  max_depth = 6, 
-  min_child_weight = 1.0, 
-  max_delta_step = 0.0, 
-  subsample = 1.0, 
-  colsample_bytree = 1.0, 
-  colsample_bylevel = 1.0, 
-  colsample_bynode = 1.0, 
-  lambda = 1.0, 
-  alpha = 0.0, 
-  tree_method = "auto", 
-  sketch_eps = 0.03, 
-  scale_pos_weight = 1.0, 
-  updater = nothing, 
-  refresh_leaf = 1, 
-  process_type = "default", 
-  grow_policy = "depthwise", 
-  max_leaves = 0, 
-  max_bin = 256, 
-  predictor = "cpu_predictor", 
-  sample_type = "uniform", 
-  normalize_type = "tree", 
-  rate_drop = 0.0, 
-  one_drop = 0, 
-  skip_drop = 0.0, 
-  feature_selector = "cyclic", 
-  top_k = 0, 
-  tweedie_variance_power = 1.5, 
-  objective = "reg:squarederror", 
-  base_score = 0.5, 
-  early_stopping_rounds = 0, 
-  watchlist = nothing, 
-  nthread = 1, 
-  importance_type = "gain", 
-  seed = nothing, 
-  validate_parameters = false, 
-  eval_metric = String[], 
-  monotone_constraints = nothing)
-```
-
-Each model is fully parameterizable, see the original package reference documentation.
-
 ## Data resampling
 - `resampling::ResamplingStrategy=Holdout(shuffle=true)`: Cross-validation strategy
 - `valid_ratio::Real=0.0`: Validation set proportion
@@ -675,19 +432,6 @@ Each model is fully parameterizable, see the original package reference document
 
 Resampling strategies are taken from the package [MLJ](https://juliaai.github.io/MLJ.jl/stable/).
 See official documentation [here](https://juliaai.github.io/MLJBase.jl/stable/resampling/).
-Available strategies:
-```
-Holdout(; fraction_train=0.7, shuffle=true, rng=TaskLocalRNG())
-```
-```
-CV(; nfolds=6,  shuffle=true, rng=TaskLocalRNG())
-```
-```
-StratifiedCV(; nfolds=6, shuffle=true, rng=TaskLocalRNG())
-```
-```
-TimeSeriesCV(; nfolds=4)
-```
 
 `valid_ratio` is used with XGBoost early stop [technique](https://xgboost.readthedocs.io/en/stable/prediction.html).
 `rng` can be setted externally (via seed, using internal Xoshiro algo) for convenience.
@@ -695,87 +439,6 @@ TimeSeriesCV(; nfolds=4)
 ## Balancing
 Balancing strategies are taken from the package [Imbalance](https://github.com/JuliaAI/Imbalance.jl).
 See official documentation [here](https://juliaai.github.io/Imbalance.jl/dev/).
-Available strategies:
-```
-BorderlineSMOTE1(
-  m = 5, 
-  k = 5, 
-  ratios = 1.0, 
-  rng = Random.TaskLocalRNG(), 
-  try_preserve_type = true, 
-  verbosity = 1)
-```
-```
-ClusterUndersampler(
-  mode = "nearest", 
-  ratios = 1.0, 
-  maxiter = 100, 
-  rng = Random.TaskLocalRNG(), 
-  try_preserve_type = true)
-```
-```
-ENNUndersampler(
-  k = 5, 
-  keep_condition = "mode", 
-  min_ratios = 1.0, 
-  force_min_ratios = false, 
-  rng = Random.TaskLocalRNG(), 
-  try_preserve_type = true)
-```
-```
-ROSE(
-  s = 1.0, 
-  ratios = 1.0, 
-  rng = Random.TaskLocalRNG(), 
-  try_preserve_type = true)
-```
-```
-RandomOversampler(
-  ratios = 1.0, 
-  rng = Random.TaskLocalRNG(), 
-  try_preserve_type = true)
-```
-```
-RandomUndersampler(
-  ratios = 1.0, 
-  rng = Random.TaskLocalRNG(), 
-  try_preserve_type = true)
-```
-```
-RandomWalkOversampler(
-  ratios = 1.0, 
-  rng = Random.TaskLocalRNG(), 
-  try_preserve_type = true)
-```
-```
-SMOTE(
-  k = 5, 
-  ratios = 1.0, 
-  rng = Random.TaskLocalRNG(), 
-  try_preserve_type = true)
-```
-```
-SMOTEN(
-  k = 5, 
-  ratios = 1.0, 
-  rng = Random.TaskLocalRNG(), 
-  try_preserve_type = true)
-```
-```
-SMOTENC(
-  k = 5, 
-  ratios = 1.0, 
-  knn_tree = "Brute", 
-  rng = Random.TaskLocalRNG(), 
-  try_preserve_type = true)
-```
-```
-TomekUndersampler(
-  min_ratios = 1.0, 
-  force_min_ratios = false, 
-  rng = Random.TaskLocalRNG(), 
-  try_preserve_type = true)
-```
 
 ## Tuning
 `tuning::MaybeTuning=nothing`: Hyperparameter tuning configuration,
@@ -787,69 +450,6 @@ range = SoleXplorer.range(:min_purity_increase; lower=0.1, upper=1.0, scale=:log
 Tuning strategies are adapted from the package [MLJ](https://juliaai.github.io/MLJ.jl/stable/)
 and package [MLJParticleSwarmOptimization](https://github.com/JuliaAI/MLJParticleSwarmOptimization.jl).
 
-Available strategies:
-```
-GridTuning(
-  goal = nothing, 
-  resolution = 10, 
-  shuffle = true, 
-  rng = Random.TaskLocalRNG(),
-  range = range,
-  resampling = nothing
-  measure = nothing
-  repeats = 1)
-```
-```
-RandomTuning(
-  bounded = Distributions.Uniform, 
-  positive_unbounded = Distributions.Gamma, 
-  other = Distributions.Normal, 
-  rng = Random.TaskLocalRNG(),
-  range = range,
-  resampling = nothing
-  measure = nothing
-  repeats = 1)
-```
-```
-CubeTuning(
-  gens = 1, 
-  popsize = 100, 
-  ntour = 2, 
-  ptour = 0.8, 
-  interSampleWeight = 1.0, 
-  ae_power = 2, 
-  periodic_ae = false, 
-  rng = Random.TaskLocalRNG(),
-  range = range,
-  resampling = nothing
-  measure = nothing
-  repeats = 1
-```
-```
-ParticleTuning(
-  n_particles = 3, 
-  w = 1.0, 
-  c1 = 2.0, 
-  c2 = 2.0, 
-  prob_shift = 0.25, 
-  rng = Random.TaskLocalRNG(),
-  range = range,
-  resampling = nothing
-  measure = nothing
-  repeats = 1)
-```
-```
-AdaptiveTuning(
-  n_particles = 3, 
-  c1 = 2.0, 
-  c2 = 2.0, 
-  prob_shift = 0.25, 
-  rng = Random.TaskLocalRNG(),
-  range = range,
-  resampling = nothing
-  measure = nothing
-  repeats = 1) 
-```
 
 ## Multidimensional Data Processing
 These parameters are needed only if a time series dataset is used.

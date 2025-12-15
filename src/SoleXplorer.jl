@@ -1,7 +1,6 @@
 module SoleXplorer
 using  Reexport
 
-using  SoleBase: movingwindow, wholewindow, splitwindow, adaptivewindow
 using  SoleData: scalarlogiset
 using  SoleData.Artifacts
 
@@ -47,7 +46,9 @@ using Imbalance
 # ---------------------------------------------------------------------------- #
 #                              external packages                               #
 # ---------------------------------------------------------------------------- #
-@reexport using SoleData: load_arff_dataset
+@reexport using DataTreatments: movingwindow, wholewindow, splitwindow, adaptivewindow
+using  DataTreatments
+
 using  DataFrames
 using  Random
 using  JLD2
@@ -70,13 +71,12 @@ const MaybeNTuple = Maybe{NamedTuple}
 # ---------------------------------------------------------------------------- #
 # feature extraction via Catch22
 # export user friendly Catch22 nicknames
-export mode_5, mode_10, embedding_dist, acf_timescale, acf_first_min, ami2,
-       trev, outlier_timing_pos, outlier_timing_neg, whiten_timescale,
-       forecast_error, ami_timescale, high_fluctuation, stretch_decreasing,
-       stretch_high, entropy_pairs, rs_range, dfa, low_freq_power, centroid_freq,
-       transition_variance, periodicity, base_set, catch9, catch22_set, complete_set
-using  Catch22
-include("featureset.jl")
+@reexport using DataTreatments: mode_5, mode_10, embedding_dist, acf_timescale,
+        acf_first_min, ami2, trev, outlier_timing_pos, outlier_timing_neg,
+        whiten_timescale, forecast_error, ami_timescale, high_fluctuation,
+        stretch_decreasing, stretch_high, entropy_pairs, rs_range, dfa,
+        low_freq_power, centroid_freq, transition_variance, periodicity, base_set
+@reexport using DataTreatments: catch9, catch22_set, complete_set
 
 # ---------------------------------------------------------------------------- #
 #                                 interfaces                                   #
