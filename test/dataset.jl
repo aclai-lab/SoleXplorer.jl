@@ -19,70 +19,70 @@ Xts, yts = SX.load(natopsloader)
 # ---------------------------------------------------------------------------- #
 # basic setup
 dsc = setup_dataset(Xc, yc)
-@test dsc isa SX.PropositionalDataSet{DecisionTreeClassifier}
+@test dsc isa SX.PropositionalDataSet{SX.DecisionTreeClassifier}
 dsr = setup_dataset(Xr, yr)
-@test dsr isa SX.PropositionalDataSet{DecisionTreeRegressor}
+@test dsr isa SX.PropositionalDataSet{SX.DecisionTreeRegressor}
 
 # model type specification
 dsc = setup_dataset(
     Xc, yc;
-    model=DecisionTreeClassifier()
+    model=SX.DecisionTreeClassifier()
 )
-@test dsc isa SX.PropositionalDataSet{DecisionTreeClassifier}
+@test dsc isa SX.PropositionalDataSet{SX.DecisionTreeClassifier}
 
 dsc = setup_dataset(
     Xc, yc;
-    model=RandomForestClassifier()
+    model=SX.RandomForestClassifier()
 )
-@test dsc isa SX.PropositionalDataSet{RandomForestClassifier}
+@test dsc isa SX.PropositionalDataSet{SX.RandomForestClassifier}
 
 dsc = setup_dataset(
     Xc, yc;
-    model=AdaBoostStumpClassifier()
+    model=SX.AdaBoostStumpClassifier()
 )
-@test dsc isa SX.PropositionalDataSet{AdaBoostStumpClassifier}
+@test dsc isa SX.PropositionalDataSet{SX.AdaBoostStumpClassifier}
 
 dsr = setup_dataset(
     Xr, yr;
-    model=DecisionTreeRegressor()
+    model=SX.DecisionTreeRegressor()
 )
-@test dsr isa SX.PropositionalDataSet{DecisionTreeRegressor}
+@test dsr isa SX.PropositionalDataSet{SX.DecisionTreeRegressor}
 
 dsr = setup_dataset(
     Xr, yr;
-    model=RandomForestRegressor()
+    model=SX.RandomForestRegressor()
 )
-@test dsr isa SX.PropositionalDataSet{RandomForestRegressor}
+@test dsr isa SX.PropositionalDataSet{SX.RandomForestRegressor}
 
 dsts = setup_dataset(
     Xts, yts;
-    model=ModalDecisionTree()
+    model=SX.ModalDecisionTree()
 )
-@test dsts isa SX.ModalDataSet{ModalDecisionTree}
+@test dsts isa SX.ModalDataSet{SX.ModalDecisionTree}
 
 dsts = setup_dataset(
     Xts, yts;
-    model=ModalRandomForest()
+    model=SX.ModalRandomForest()
 )
-@test dsts isa SX.ModalDataSet{ModalRandomForest}
+@test dsts isa SX.ModalDataSet{SX.ModalRandomForest}
 
 dsts = setup_dataset(
     Xts, yts;
-    model=ModalAdaBoost()
+    model=SX.ModalAdaBoost()
 )
-@test dsts isa SX.ModalDataSet{ModalAdaBoost}
+@test dsts isa SX.ModalDataSet{SX.ModalAdaBoost}
 
 dsc = setup_dataset(
     Xc, yc;
-    model=XGBoostClassifier()
+    model=SX.XGBoostClassifier()
 )
-@test dsc isa SX.PropositionalDataSet{XGBoostClassifier}
+@test dsc isa SX.PropositionalDataSet{SX.XGBoostClassifier}
 
 dsr = setup_dataset(
     Xr, yr;
-    model=XGBoostRegressor()
+    model=SX.XGBoostRegressor()
 )
-@test dsr isa SX.PropositionalDataSet{XGBoostRegressor}
+@test dsr isa SX.PropositionalDataSet{SX.XGBoostRegressor}
 
 # ---------------------------------------------------------------------------- #
 #                                 code dataset                                 #
@@ -119,7 +119,7 @@ coded_ds  = code_dataset(Xcd, ydc)
 # ---------------------------------------------------------------------------- #
 y_symbol = :petal_width
 dsc = setup_dataset(Xc, y_symbol)
-@test dsc isa SX.PropositionalDataSet{DecisionTreeRegressor}
+@test dsc isa SX.PropositionalDataSet{SX.DecisionTreeRegressor}
 
 
 # dataset is composed also of non numeric columns
@@ -131,7 +131,7 @@ dsc = setup_dataset(
     resampling=Holdout(fraction_train=0.5, shuffle=true),
     modalreduce=maximum
 )
-@test dsc isa SX.PropositionalDataSet{DecisionTreeClassifier}
+@test dsc isa SX.PropositionalDataSet{SX.DecisionTreeClassifier}
 
 # ---------------------------------------------------------------------------- #
 #                                 resamplig                                    #
@@ -140,35 +140,35 @@ dsc = setup_dataset(
     Xc, yc;
     resampling=CV(),
 )
-@test dsc isa SX.PropositionalDataSet{DecisionTreeClassifier}
+@test dsc isa SX.PropositionalDataSet{SX.DecisionTreeClassifier}
 @test dsc.pinfo.type isa MLJ.CV
 
 dsc = setup_dataset(
     Xc, yc;
     resampling=Holdout(),
 )
-@test dsc isa SX.PropositionalDataSet{DecisionTreeClassifier}
+@test dsc isa SX.PropositionalDataSet{SX.DecisionTreeClassifier}
 @test dsc.pinfo.type isa MLJ.Holdout
 
 dsc = setup_dataset(
     Xc, yc;
     resampling=StratifiedCV(),
 )
-@test dsc isa SX.PropositionalDataSet{DecisionTreeClassifier}
+@test dsc isa SX.PropositionalDataSet{SX.DecisionTreeClassifier}
 @test dsc.pinfo.type isa MLJ.StratifiedCV
 
 dsc = setup_dataset(
     Xc, yc;
     resampling=TimeSeriesCV(),
 )
-@test dsc isa SX.PropositionalDataSet{DecisionTreeClassifier}
+@test dsc isa SX.PropositionalDataSet{SX.DecisionTreeClassifier}
 @test dsc.pinfo.type isa MLJ.TimeSeriesCV
 
 dsc = setup_dataset(
     Xc, yc;
     resampling=CV(nfolds=10, shuffle=true),
 )
-@test dsc isa SX.PropositionalDataSet{DecisionTreeClassifier}
+@test dsc isa SX.PropositionalDataSet{SX.DecisionTreeClassifier}
 
 # ---------------------------------------------------------------------------- #
 #                              seed propagation                                #
@@ -178,7 +178,7 @@ dsc = setup_dataset(
     resampling=CV(nfolds=10, shuffle=true),
     seed=1
 )
-@test dsc isa SX.PropositionalDataSet{DecisionTreeClassifier}
+@test dsc isa SX.PropositionalDataSet{SX.DecisionTreeClassifier}
 @test dsc.mach.model.rng isa Xoshiro
 @test dsc.pinfo.rng isa Xoshiro
 
@@ -186,10 +186,10 @@ range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
 
 dsc = setup_dataset(
     Xc, yc;
-    model=ModalDecisionTree(),
+    model=SX.ModalDecisionTree(),
     resampling=CV(nfolds=5, shuffle=true),
     seed=1,
-    tuning=GridTuning(resolution=10, resampling=CV(nfolds=3), range=range, measure=accuracy, repeats=2)
+    tuning=GridTuning(resolution=10, resampling=CV(nfolds=3), range=range, measure=SX.accuracy, repeats=2)
 )
 @test dsc.mach.model.model.rng isa Xoshiro
 @test dsc.mach.model.tuning.rng isa Xoshiro
@@ -200,9 +200,9 @@ dsc = setup_dataset(
 # ---------------------------------------------------------------------------- #
 dsc = setup_dataset(
     Xc, yc;
-    model=DecisionTreeClassifier(;max_depth=5)
+    model=SX.DecisionTreeClassifier(;max_depth=5)
 )
-@test dsc isa SX.PropositionalDataSet{DecisionTreeClassifier}
+@test dsc isa SX.PropositionalDataSet{SX.DecisionTreeClassifier}
 @test dsc.mach.model.max_depth == 5
 
 @test_throws UndefVarError setup_dataset(
@@ -212,7 +212,7 @@ dsc = setup_dataset(
 
 @test_throws MethodError setup_dataset(
     Xc, yc;
-    model=DecisionTreeClassifier(;invalid=5)
+    model=SX.DecisionTreeClassifier(;invalid=5)
 )
 
 @test_throws MethodError setup_dataset(
@@ -227,7 +227,7 @@ dsc = setup_dataset(
 range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
 dsr = setup_dataset(
     Xr, yr;
-    model=DecisionTreeRegressor(),
+    model=SX.DecisionTreeRegressor(),
     seed=1234,
     tuning=GridTuning(resolution=10, resampling=CV(nfolds=3), range=range, measure=rms)
 )
@@ -240,7 +240,7 @@ range = (SX.range(:min_purity_increase, lower=0.001, upper=1.0, scale=:log),
      SX.range(:max_depth, lower=1, upper=10))
 dsc = setup_dataset(
     Xc, yc;
-    model=DecisionTreeClassifier(),
+    model=SX.DecisionTreeClassifier(),
     seed=1234,
     tuning=RandomTuning(range=range)
 )
@@ -253,7 +253,7 @@ selector = FeatureSelector()
 range = MLJ.range(selector, :features, values = [[:sepal_width,], [:sepal_length, :sepal_width]])
 dsc = setup_dataset(
     Xc, yc;
-    model=DecisionTreeClassifier(),
+    model=SX.DecisionTreeClassifier(),
     seed=1234,
     tuning=CubeTuning(resampling=CV(nfolds=3), range=range, measure=rms)
 )
@@ -265,7 +265,7 @@ model = dsc.mach.model
 range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
 dsr = setup_dataset(
     Xr, yr;
-    model=DecisionTreeRegressor(),
+    model=SX.DecisionTreeRegressor(),
     seed=1234,
     tuning=ParticleTuning(n_particles=3, resampling=CV(nfolds=3), range=range, measure=rms)
 )
@@ -278,7 +278,7 @@ range = (SX.range(:min_purity_increase, lower=0.001, upper=1.0, scale=:log),
      SX.range(:max_depth, lower=1, upper=10))
 dsc = setup_dataset(
     Xc, yc;
-    model=DecisionTreeClassifier(),
+    model=SX.DecisionTreeClassifier(),
     seed=1234,
     tuning=AdaptiveTuning(range=range)
 )
@@ -306,7 +306,7 @@ dsc = setup_dataset(Xc, yc)
 
 @test SX.get_X(dsc, :train) isa Vector{<:AbstractDataFrame}
 @test SX.get_y(dsc, :test) isa Vector{<:AbstractVector{<:SX.CLabel}}
-@test SX.get_mach_model(dsc) isa DecisionTreeClassifier
+@test SX.get_mach_model(dsc) isa SX.DecisionTreeClassifier
 
 @test_nowarn dsc.pinfo
 @test_nowarn dsc.pidxs
@@ -470,7 +470,7 @@ end
     # Create a test tuning configuration
     tuning = GridTuning(
         range=(:max_depth, 1:10),
-        measure=accuracy,
+        measure=SX.accuracy,
         repeats=2
     )
     

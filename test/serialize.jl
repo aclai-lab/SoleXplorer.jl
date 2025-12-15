@@ -24,7 +24,7 @@ r2 = SX.range(:(undersampler.min_ratios), lower=0.1, upper=0.9)
 
 dsc = setup_dataset(
     Xc, yc;
-    model=DecisionTreeClassifier(max_depth=3),
+    model=SX.DecisionTreeClassifier(max_depth=3),
     resampling=StratifiedCV(nfolds=5, shuffle=true),
     seed=11,
     balancing=(
@@ -40,7 +40,7 @@ solesave(solemc; path, name="test1.jld2")
 modelc = symbolic_analysis(
     dsc, solemc,
     extractor=LumenRuleExtractor(minimization_scheme=:mitespresso),
-    measures=(accuracy, log_loss, kappa)
+    measures=(SX.accuracy, log_loss, kappa)
 )
 solesave(modelc; path, name="test1")
 

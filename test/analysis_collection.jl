@@ -55,10 +55,10 @@ datay = [d[:, datasets[i][3]] for (i,d) in enumerate(data)]
 analysis_collection = [
     symbolic_analysis(
         X, y;
-        model=XGBoostClassifier(max_depth=3, early_stopping_rounds=20),
+        model=SX.XGBoostClassifier(max_depth=3, early_stopping_rounds=20),
         seed=11,
         valid_ratio=0.2,
-        measures=(accuracy,)
+        measures=(SX.accuracy,)
     ) for (X, y) in zip(dataX, datay)
 ]
 

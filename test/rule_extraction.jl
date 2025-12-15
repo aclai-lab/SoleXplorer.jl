@@ -13,7 +13,7 @@ Xc = DataFrame(Xc)
 # ---------------------------------------------------------------------------- #
 dsc = setup_dataset(
     Xc, yc;
-    model=DecisionTreeClassifier(),
+    model=SX.DecisionTreeClassifier(),
     resampling=Holdout(;shuffle=true),
     seed=1,   
 )
@@ -41,7 +41,7 @@ modelc = symbolic_analysis(
 # ---------------------------------------------------------------------------- #
 dsc = setup_dataset(
     Xc, yc;
-    model=XGBoostClassifier(),
+    model=SX.XGBoostClassifier(),
     resampling=Holdout(;shuffle=true),
     seed=1,   
 )
@@ -66,7 +66,7 @@ modelc = symbolic_analysis(
 
 dsc = setup_dataset(
     Xc, yc;
-    model=RandomForestClassifier(n_trees=2),
+    model=SX.RandomForestClassifier(n_trees=2),
     resampling=Holdout(;shuffle=true),
     seed=1,   
 )
@@ -89,7 +89,7 @@ modelc = symbolic_analysis(
 # ---------------------------------------------------------------------------- #
 dsc = setup_dataset(
     Xc, yc;
-    model=RandomForestClassifier(n_trees=2),
+    model=SX.RandomForestClassifier(n_trees=2),
     resampling=Holdout(;shuffle=true),
     seed=1,   
 )
@@ -117,7 +117,7 @@ modelc = symbolic_analysis(
 # ---------------------------------------------------------------------------- #
 dsc = setup_dataset(
     Xc, yc;
-    model=RandomForestClassifier(n_trees=2),
+    model=SX.RandomForestClassifier(n_trees=2),
     resampling=Holdout(;shuffle=true),
     seed=1,   
 )
@@ -139,7 +139,7 @@ modelc = symbolic_analysis(
 # ---------------------------------------------------------------------------- #
 dsc = setup_dataset(
     Xc, yc;
-    model=RandomForestClassifier(n_trees=2),
+    model=SX.RandomForestClassifier(n_trees=2),
     resampling=Holdout(;shuffle=true),
     seed=1,   
 )
@@ -161,7 +161,7 @@ modelc = symbolic_analysis(
 # ---------------------------------------------------------------------------- #
 dsc = setup_dataset(
     Xc, yc;
-    model=RandomForestClassifier(n_trees=2),
+    model=SX.RandomForestClassifier(n_trees=2),
     resampling=Holdout(;shuffle=true),
     seed=1,   
 )

@@ -1,10 +1,11 @@
 module SoleXplorer
 using  Reexport
 
-using  SoleBase: Label, CLabel, RLabel, XGLabel
 using  SoleBase: movingwindow, wholewindow, splitwindow, adaptivewindow
 using  SoleData: scalarlogiset
 using  SoleData.Artifacts
+
+using  SoleModels: Label, CLabel, RLabel, XGLabel
 using  SoleModels: Branch, ConstantModel
 using  SoleModels: DecisionEnsemble, DecisionTree, DecisionXGBoost
 using  SoleModels: AbstractModel, solemodel, weighted_aggregation, apply!
@@ -50,13 +51,6 @@ using Imbalance
 using  DataFrames
 using  Random
 using  JLD2
-
-# ---------------------------------------------------------------------------- #
-#                                   timeout                                    #
-# ---------------------------------------------------------------------------- #
-# using TimeOut
-
-const preprocess = "using SoleXplorer\n"
 
 # ---------------------------------------------------------------------------- #
 #                                 maybe types                                  #

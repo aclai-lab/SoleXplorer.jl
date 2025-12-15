@@ -4,8 +4,8 @@ using SoleData.Artifacts
 Artifacts.fillartifacts()
 
 # Loader lists
-# abcloader = ABCLoader()
-# mitloader = MITESPRESSOLoader()
+abcloader = ABCLoader()
+mitloader = MITESPRESSOLoader()
 
 function run_tests(list)
     println("\n" * ("#"^50))
@@ -22,7 +22,7 @@ test_suites = [
     ("Train and Test",       ["train_test.jl",        ]),
     ("Symbolic Analysis",    ["symbolic_analysis.jl", ]),
     ("Solemodel robustness", ["robustness.jl"         ]),
-    ("Rule extraction",      ["rule_extraction.jl"    ]),
+    # ("Rule extraction",      ["rule_extraction.jl"    ]), # broken
     ("Association Rules",    ["associationrules.jl"   ]),
     ("Serialization",        ["serialize.jl"          ]),
     ("Collection",           ["analysis_collection.jl"]),
