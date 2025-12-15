@@ -129,7 +129,7 @@ Xnn = hcat(Xc, DataFrame(target = yc))
 dsc = setup_dataset(
     Xts, yts;
     resampling=Holdout(fraction_train=0.5, shuffle=true),
-    modalreduce=maximum
+    reducefunc=maximum
 )
 @test dsc isa SX.PropositionalDataSet{SX.DecisionTreeClassifier}
 
@@ -314,8 +314,6 @@ dsc = setup_dataset(Xc, yc)
 
 @test length(dsc.pidxs) == length(dsc)
 
-@test_throws ArgumentError treatment(Xc, :invalid)
-
 # ---------------------------------------------------------------------------- #
 #                                  Base.show                                   #
 # ---------------------------------------------------------------------------- #
@@ -404,65 +402,6 @@ dsc = setup_dataset(Xc, yc)
         @test occursin("Train:", pidx_output)
         @test occursin("Valid:", pidx_output)
         @test occursin("Test:", pidx_output)
-    end
-end
-
-using Test
-using DataFrames
-
-@testset "Base.show tests for treatment.jl" begin
-    @testset "TreatmentInfo show method" begin
-        # Create test TreatmentInfo
-        features = (maximum, minimum, mean)
-        win = AdaptiveWindow(nwindows=3, relative_overlap=0.1)
-        treat = :aggregate
-        modalreduce = mean
-        
-        tinfo = SX.TreatmentInfo(features, win, treat, modalreduce)
-        
-        # Test Base.show(io::IO, info::TreatmentInfo)
-        io = IOBuffer()
-        show(io, tinfo)
-        output = String(take!(io))
-        
-        @test occursin("TreatmentInfo:", output)
-        @test occursin("features:", output)
-        @test occursin("winparams:", output)
-        @test occursin("treatment:", output)
-        @test occursin("modalreduce:", output)
-        @test occursin("aggregate", output)
-        @test occursin("mean", output)
-        
-        # Check that all fields are displayed with proper formatting
-        lines = split(output, '\n')
-        @test length(lines) >= 5  # Header + 4 fields + empty line at end
-        @test occursin("features:", lines[2])
-        @test occursin("winparams:", lines[3])
-        @test occursin("treatment:", lines[4])
-        @test occursin("modalreduce:", lines[5])
-    end
-    
-    @testset "AggregationInfo show method" begin
-        # Create test AggregationInfo
-        features = (sum, std)
-        win = SplitWindow(nwindows=5)
-        
-        ainfo = SX.AggregationInfo(features, win)
-        
-        # Test Base.show(io::IO, info::AggregationInfo)
-        io = IOBuffer()
-        show(io, ainfo)
-        output = String(take!(io))
-        
-        @test occursin("AggregationInfo:", output)
-        @test occursin("features:", output)
-        @test occursin("winparams:", output)
-        
-        # Check that all fields are displayed with proper formatting
-        lines = split(output, '\n')
-        @test length(lines) >= 3  # Header + 2 fields + empty line at end
-        @test occursin("features:", lines[2])
-        @test occursin("winparams:", lines[3])
     end
 end
 

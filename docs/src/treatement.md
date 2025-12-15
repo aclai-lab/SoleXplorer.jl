@@ -24,7 +24,7 @@ Windowing strategies availables for reduce/aggregation time-series datasets.
 MovingWindow
 WholeWindow
 SplitWindow
-AdaptiveWindow
+adaptivewindow
 AbstractWinFunction
 WinFunction
 ```

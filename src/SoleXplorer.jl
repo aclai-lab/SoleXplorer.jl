@@ -4,7 +4,7 @@ using  Reexport
 using  SoleData: scalarlogiset
 using  SoleData.Artifacts
 
-using  SoleModels: Label, CLabel, RLabel, XGLabel
+@reexport using SoleModels: Label, CLabel, RLabel, XGLabel
 using  SoleModels: Branch, ConstantModel
 using  SoleModels: DecisionEnsemble, DecisionTree, DecisionXGBoost
 using  SoleModels: AbstractModel, solemodel, weighted_aggregation, apply!
@@ -83,11 +83,6 @@ const MaybeNTuple = Maybe{NamedTuple}
 # ---------------------------------------------------------------------------- #
 export get_X, get_y, get_train, get_test
 include("partition.jl")
-
-export AbstractWinFunction, WinFunction
-export MovingWindow, WholeWindow, SplitWindow, AdaptiveWindow
-export treatment
-include("treatment.jl")
 
 # ---------------------------------------------------------------------------- #
 #                                   models                                     #

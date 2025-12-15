@@ -1,6 +1,8 @@
 # ---------------------------------------------------------------------------- #
 #                               abstract types                                 #
 # ---------------------------------------------------------------------------- #
+abstract type AbstractTreatmentInfo end
+
 """
     AbstractDataSet
 
@@ -16,12 +18,26 @@ abstract type AbstractDataSet end
 #                                    types                                     #
 # ---------------------------------------------------------------------------- #
 const Balancing = NamedTuple{(:oversampler, :undersampler), <:Tuple{<:MLJ.Model, <:MLJ.Model}}
+const WinFunc   = Union{Base.Callable, Tuple{Vararg{Base.Callable}}}
+
+# metadata container for dataset preprocessing operations.
+struct ReductionInfo <: AbstractTreatmentInfo
+    features   :: Tuple{Vararg{Base.Callable}}
+    winparams  :: WinFunc
+    reducefunc :: Base.Callable
+end
+
+# simplified metadata for aggregation-only preprocessing.
+struct AggregationInfo <: AbstractTreatmentInfo
+    features   :: Tuple{Vararg{Base.Callable}}
+    winparams  :: WinFunc
+end
 
 const MaybeInt             = Maybe{Int64}
 const MaybeAggregationInfo = Maybe{AggregationInfo}
 const MaybeBalancing       = Maybe{Balancing}
 const MaybeTuning          = Maybe{Tuning}
-const MaybeTreatInfo       = Maybe{TreatmentInfo}
+const MaybeTreatInfo       = Maybe{AbstractTreatmentInfo}
 
 # ---------------------------------------------------------------------------- #
 #                                  defaults                                    #
@@ -70,7 +86,7 @@ function set_conditions!(m::MLJ.Model, conditions::Tuple{Vararg{Base.Callable}})
 end
 
 # ---------------------------------------------------------------------------- #
-#                   dataset and targets check and conversion                   #
+#                                    utils                                     #
 # ---------------------------------------------------------------------------- #
 # ensures that the target variable `y` is properly formatted for use with MLJ
 # it handles automatic conversion to categorical format when needed for classification tasks
@@ -175,7 +191,7 @@ It maintains treatment information that describes how the original data structur
 - `mach::MLJ.Machine`: MLJ machine containing the modal model, training data, and cache
 - `pidxs::Vector{PartitionIdxs}`: Partition indices for train/test splits across folds
 - `pinfo::PartitionInfo`: Metadata about the partitioning strategy used  
-- `tinfo::TreatmentInfo`: Treatment information describing data structure preservation
+- `tinfo::AbstractTreatmentInfo`: Treatment information describing data structure preservation
 
 # Type Parameter
 - `M`: The type of the modal MLJ model contained in the machine
@@ -186,7 +202,7 @@ mutable struct ModalDataSet{M} <: AbstractDataSet
     mach  :: MLJ.Machine
     pidxs :: Vector{PartitionIdxs}
     pinfo :: PartitionInfo
-    tinfo :: TreatmentInfo
+    tinfo :: AbstractTreatmentInfo
 end
 
 """
@@ -226,11 +242,10 @@ function DataSet(
 ) where {M<:MLJ.Model}
     isnothing(tinfo) ?
         PropositionalDataSet{M}(mach, pidxs, pinfo, nothing) : begin
-        if get_treatment(tinfo) == :reducesize
+        if tinfo isa ReductionInfo
             ModalDataSet{M}(mach, pidxs, pinfo, tinfo)
         else
-            ainfo = treat2aggr(tinfo)
-            PropositionalDataSet{M}(mach, pidxs, pinfo, ainfo)
+            PropositionalDataSet{M}(mach, pidxs, pinfo, tinfo)
         end
     end
 end
@@ -332,24 +347,19 @@ end
 #                            internal setup dataset                            #
 # ---------------------------------------------------------------------------- #
 function _setup_dataset(
-    X             :: AbstractDataFrame,
-    y             :: AbstractVector,
-    w             :: MaybeVector                  = nothing;
-    model         :: MLJ.Model                    = _DefaultModel(y),
-    resampling    :: ResamplingStrategy           = Holdout(fraction_train=0.7, shuffle=true),
-    valid_ratio   :: Real                         = 0.0,
-    seed          :: MaybeInt                     = nothing,
-    balancing     :: MaybeBalancing               = nothing,
-    tuning        :: MaybeTuning                  = nothing,
-    win           :: WinFunction                  = AdaptiveWindow(nwindows=3, relative_overlap=0.1),
-    features      :: Tuple{Vararg{Base.Callable}} = (maximum, minimum),
-    modalreduce   :: Base.Callable                = mean
+    X           :: AbstractDataFrame,
+    y           :: AbstractVector{<:Label},
+    w           :: MaybeVector                  = nothing;
+    model       :: MLJ.Model                    = _DefaultModel(y),
+    resampling  :: ResamplingStrategy           = Holdout(fraction_train=0.7, shuffle=true),
+    valid_ratio :: Real                         = 0.0,
+    seed        :: MaybeInt                     = nothing,
+    balancing   :: MaybeBalancing               = nothing,
+    tuning      :: MaybeTuning                  = nothing,
+    win         :: WinFunc                      = adaptivewindow(nwindows=3, overlap=0.1),
+    features    :: Tuple{Vararg{Base.Callable}} = (maximum, minimum),
+    reducefunc  :: Base.Callable                = mean
 )::AbstractDataSet
-    # check y special cases
-    y = check_y(y, model)
-    eltype(y) <: Label || throw(ArgumentError("Target variable y must have elements of type Label, " *
-        "got eltype: $(eltype(y))"))
-
     # setup rng
     if !isnothing(seed)
         rng = Xoshiro(seed)
@@ -370,9 +380,16 @@ function _setup_dataset(
     # handle multidimensional datasets:
     # propositional models requiring feature aggregation
     # modal models requiring reducing data size
-    if is_multidim_dataframe(X)
-        treat = model isa Modal ? :reducesize : :aggregate
-        X, tinfo = treatment(X, treat; features, win, modalreduce)
+    if DataTreatments.is_multidim_dataset(X)
+        if model isa Modal
+            t = DataTreatment(X, :reducesize; win, features, reducefunc)
+            X = DataFrame(get_dataset(t), Symbol.(get_featureid(t)))
+            tinfo = ReductionInfo(features, win, reducefunc)
+        else
+            t = DataTreatment(X, :aggregate; win, features)
+            X = DataFrame(get_dataset(t), Symbol.(get_featureid(t)))
+            tinfo = AggregationInfo(features, win)
+        end
     else
         X = code_dataset(X)
         # some algos, like xgboost, doesnt accept dataset with numeric values, only float
@@ -403,9 +420,9 @@ end
         seed=nothing,
         balancing=nothing,
         tuning=nothing,
-        win=AdaptiveWindow(nwindows=3, relative_overlap=0.1),
+        win=adaptivewindow(nwindows=3, overlap=0.1),
         features=(maximum, minimum),
-        modalreduce=mean,
+        reducefunc=mean,
     ) -> AbstractDataSet
 
 Creates and configures a dataset structure for machine learning.
@@ -458,12 +475,12 @@ or aggregation strategy, in case of further **propositional** analysis.
 Parameters are the same, SoleXplorer will take care of automatically set the case,
 depending on the model choose.
 
-- `win::WinFunction=AdaptiveWindow(nwindows=3, relative_overlap=0.1)`: Windowing function
-Available windows strategies: [MovingWindow](@ref), [WholeWindow](@ref), [SplitWindow](@ref), [AdaptiveWindow](@ref).
+- `win::WinFunc=adaptivewindow(nwindows=3, overlap=0.1)`: Windowing function
+Available windows strategies: [MovingWindow](@ref), [WholeWindow](@ref), [SplitWindow](@ref), [adaptivewindow](@ref).
 
 - `features::Tuple{Vararg{Base.Callable}}=(maximum, minimum)`: Feature extraction functions
 Note that beyond standard reduction functions (e.g., maximum, minimum, mean, mode), [Catch22](https://time-series-features.gitbook.io/catch22) time-series features are also available.
-- `modalreduce::Base.Callable=mean`: Reduction function for modal algorithms
+- `reducefunc::Base.Callable=mean`: Reduction function for modal algorithms
 
 # Returns
 - `PropositionalDataSet{M}`: For standard ML algorithms with tabular data
@@ -522,15 +539,29 @@ dts = setup_dataset(
     model=ModalRandomForest(),
     resampling=Holdout(fraction_train=0.7, shuffle=true),
     seed=1,
-    win=AdaptiveWindow(nwindows=3, relative_overlap=0.3),
+    win=adaptivewindow(nwindows=3, overlap=0.3),
     features=(minimum, maximum),
-    modalreduce=mode
+    reducefunc=mode
 )
 ```
 
 # See also: [`DataSet`](@ref), [`PropositionalDataSet`](@ref), [`ModalDataSet`](@ref), [`symbolic_analysis`](@ref)
 """
-setup_dataset(args...; kwargs...) = _setup_dataset(args...; kwargs...)
+# setup_dataset(args...; kwargs...) = _setup_dataset(args...; kwargs...)
+
+function setup_dataset(
+    X::AbstractDataFrame,
+    y::AbstractVector{<:Label},
+    args...;
+    model :: MLJ.Model = _DefaultModel(y),
+    kwargs...
+)
+    _setup_dataset(X, check_y(y, model), args...; model, kwargs...)
+end
+
+function setup_dataset(X::AbstractDataFrame, y::AbstractVector, args...; kwargs...)
+    throw(ArgumentError("Target variable y must have elements of type Label, " * "got eltype: $(eltype(y))"))
+end
 
 """
     setup_dataset(X::AbstractDataFrame, y::Symbol; kwargs...)::AbstractDataSet

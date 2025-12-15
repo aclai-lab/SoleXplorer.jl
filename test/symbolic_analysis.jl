@@ -137,8 +137,8 @@ modelts = symbolic_analysis(
     model=SX.DecisionTreeClassifier(),
     resampling=Holdout(fraction_train=0.5, shuffle=true),
     seed=1,
-    win=AdaptiveWindow(nwindows=3, relative_overlap=0.3),
-    modalreduce=mean,
+    win=adaptivewindow(nwindows=3, overlap=0.3),
+    reducefunc=mean,
     features=(maximum, minimum),
     measures=(SX.accuracy, log_loss, confusion_matrix, kappa)      
 )
@@ -149,8 +149,8 @@ modelts = symbolic_analysis(
     model=SX.RandomForestClassifier(),
     resampling=CV(nfolds=5, shuffle=true),
     seed=1,
-    win=AdaptiveWindow(nwindows=3, relative_overlap=0.3),
-    modalreduce=mean,
+    win=adaptivewindow(nwindows=3, overlap=0.3),
+    reducefunc=mean,
     features=(maximum, minimum),
     measures=(SX.accuracy, log_loss, confusion_matrix, kappa)      
 )
@@ -161,8 +161,8 @@ modelts = symbolic_analysis(
     model=SX.AdaBoostStumpClassifier(),
     resampling=StratifiedCV(nfolds=5, shuffle=true),
     seed=1,
-    win=AdaptiveWindow(nwindows=3, relative_overlap=0.3),
-    modalreduce=mean,
+    win=adaptivewindow(nwindows=3, overlap=0.3),
+    reducefunc=mean,
     features=(maximum, minimum),
     measures=(SX.accuracy, log_loss, confusion_matrix, kappa)      
 )
@@ -173,8 +173,8 @@ modelts = symbolic_analysis(
 #     Xts, yts;
 #     model=SX.XGBoostClassifier(),
 #     resampling=(type=TimeSeriesCV(nfolds=5), seed=1),
-#     win=AdaptiveWindow(nwindows=3, relative_overlap=0.3),
-#     modalreduce=mean,
+#     win=adaptivewindow(nwindows=3, overlap=0.3),
+#     reducefunc=mean,
 #     features=(maximum, minimum),
 #     measures=(SX.accuracy, log_loss, confusion_matrix, kappa)
 # )
@@ -585,7 +585,7 @@ modelts = symbolic_analysis(
     Xts, yts;
     model=SX.DecisionTreeClassifier(),
     seed=1,
-    win=AdaptiveWindow(nwindows=3, relative_overlap=0.3),
+    win=adaptivewindow(nwindows=3, overlap=0.3),
     measures=(SX.accuracy, log_loss)      
 )
 @test modelts isa SX.ModelSet

@@ -33,9 +33,9 @@ seed = 11
 function treatment(
     X           :: AbstractDataFrame,
     treat       :: Symbol;
-    win         :: WinFunction=AdaptiveWindow(nwindows=3, relative_overlap=0.1),
+    win         :: WinFunc=adaptivewindow(nwindows=3, overlap=0.1),
     features    :: Tuple{Vararg{Base.Callable}}=(maximum, minimum),
-    modalreduce :: Base.Callable=mean
+    reducefunc :: Base.Callable=mean
 )
     vnames, intervals = propertynames(X), win(length(X[1,1]))
     nvnames, nfeatures, nintervals = length(vnames), length(features), length(intervals)

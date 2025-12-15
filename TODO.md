@@ -13,8 +13,8 @@ resultsts = symbolic_analysis(
     Xts, yts;
     model=XGBoostClassifier(),
     resampling=(type=TimeSeriesCV(nfolds=5), rng=Xoshiro(1)),
-    win=AdaptiveWindow(nwindows=3, relative_overlap=0.3),
-    modalreduce=mean,
+    win=adaptivewindow(nwindows=3, overlap=0.3),
+    reducefunc=mean,
     features=[maximum, minimum],
     measures=(accuracy, log_loss, confusion_matrix, kappa)
 )
