@@ -22,7 +22,7 @@ test_suites = [
     ("Train and Test",       ["train_test.jl",        ]),
     ("Symbolic Analysis",    ["symbolic_analysis.jl", ]),
     ("Solemodel robustness", ["robustness.jl"         ]),
-    # ("Rule extraction",      ["rule_extraction.jl"    ]), # broken
+    ("Rule extraction",      ["rule_extraction.jl"    ]),
     ("Association Rules",    ["associationrules.jl"   ]),
     ("Serialization",        ["serialize.jl"          ]),
     ("Collection",           ["analysis_collection.jl"]),
