@@ -10,7 +10,7 @@ using MLJ, Random, DataFrames
 Xc, yc = @load_iris
 Xr, yr = @load_boston
 
-natopsloader = NatopsLoader()
+natopsloader = SX.NatopsLoader()
 Xts, yts = try
     SX.load(natopsloader)
 catch

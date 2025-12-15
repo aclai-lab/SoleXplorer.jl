@@ -59,7 +59,7 @@ modelc = symbolic_analysis(
 ### Temporal association rules
 ```julia
 # Load a temporal dataset
-natopsloader = NatopsLoader()
+natopsloader = SoleXplorer.NatopsLoader()
 Xts, yts = SoleXplorer.load(natopsloader)
 
 # Train a modal decision tree

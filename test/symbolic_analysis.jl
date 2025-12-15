@@ -14,7 +14,7 @@ Xc = DataFrame(Xc)
 Xr, yr = @load_boston
 Xr = DataFrame(Xr)
 
-natopsloader = NatopsLoader()
+natopsloader = SX.NatopsLoader()
 Xts, yts = SX.load(natopsloader)
 
 # ---------------------------------------------------------------------------- #

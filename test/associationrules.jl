@@ -9,7 +9,7 @@ using ModalAssociationRules
 # ---------------------------------------------------------------------------- #
 #                                    natops                                    #
 # ---------------------------------------------------------------------------- #
-natopsloader = NatopsLoader()
+natopsloader = SX.NatopsLoader()
 Xts, yts = SX.load(natopsloader)
 X_have_command, y_have_command = Xts[1:30, :], yts[1:30]
 
