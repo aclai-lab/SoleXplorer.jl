@@ -36,6 +36,8 @@ using  MLJParticleSwarmOptimization
 const  PSO = MLJParticleSwarmOptimization
 using  MLJ
 using  MLJ: MLJBase, MLJTuning
+# custom resampling strategy
+import MLJ.MLJBase: train_test_pairs
 # balancing
 using Imbalance
 @reexport using Imbalance.MLJ:
@@ -81,7 +83,7 @@ const MaybeNTuple = Maybe{NamedTuple}
 # ---------------------------------------------------------------------------- #
 #                                 interfaces                                   #
 # ---------------------------------------------------------------------------- #
-export partition
+export partition, pCV
 export get_X, get_y, get_train, get_test
 include("partition.jl")
 

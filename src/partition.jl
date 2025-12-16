@@ -153,3 +153,61 @@ end
 function Base.show(io::IO, ::MIME"text/plain", pidx::PartitionIdxs{T}) where T
     show(io, pidx)
 end
+
+# ---------------------------------------------------------------------------- #
+#                        parametrized cross validation                         #
+# ---------------------------------------------------------------------------- #
+"""
+    pCV <: MLJ.ResamplingStrategy
+
+Custom MLJ resampling strategy for parametrized cross-validation with configurable train/test split ratio.
+
+Unlike standard k-fold cross-validation where the train/test split is determined by the number of folds,
+`pCV` allows you to specify both the number of folds and the exact fraction of data allocated to training
+in each fold.
+
+Fields
+- `nfolds::Int`: Number of folds (must be > 1).
+- `fraction_train::Float64`: Fraction of data to use for training in each fold (0.0–1.0).
+- `shuffle::Bool`: Whether to shuffle the data before partitioning.
+- `rng::Union{Int,AbstractRNG}`: Random number generator or seed for reproducibility.
+
+Constructor
+    pCV(; nfolds=6, fraction_train=0.7, shuffle=nothing, rng=nothing)
+
+Example
+```julia
+using MLJ, Random
+
+# Create a pCV resampling strategy with 10 folds, 60% training data
+resampling = pCV(nfolds=10, fraction_train=0.6, shuffle=true, rng=Xoshiro(42))
+
+# Use with SoleXplorer.partition
+partition_idxs, info = SoleXplorer.partition(y; resampling, valid_ratio=0.0, rng=Xoshiro(42))
+```
+
+Notes
+- Each fold produces a different random train/test split with the specified ratio.
+- This differs from standard CV where test sets are disjoint partitions of the data.
+- Useful for scenarios requiring repeated random splits with a specific train/test ratio.
+"""
+struct pCV <: ResamplingStrategy
+    nfolds::Int
+    fraction_train::Float64
+    shuffle::Bool
+    rng::Union{Int,AbstractRNG}
+    function pCV(nfolds, fraction_train, shuffle, rng)
+        nfolds > 1 || throw(ArgumentError("Must have nfolds > 1. "))
+        return new(nfolds, fraction_train, shuffle, rng)
+    end
+end
+
+# Constructor with keywords
+pCV(; nfolds::Int=6, fraction_train::Float64=0.7, shuffle=nothing, rng=nothing) =
+    pCV(nfolds, fraction_train, MLJBase.shuffle_and_rng(shuffle, rng)...)
+
+function MLJBase.train_test_pairs(pcv::pCV, rows)
+    return map(1:pcv.nfolds) do _
+        MLJBase.partition(rows, pcv.fraction_train, shuffle=pcv.shuffle, rng=pcv.rng)
+    end
+end
