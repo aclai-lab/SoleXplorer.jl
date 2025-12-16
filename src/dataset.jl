@@ -344,73 +344,12 @@ function set_tuning(
 end
 
 # ---------------------------------------------------------------------------- #
-#                            internal setup dataset                            #
-# ---------------------------------------------------------------------------- #
-function _setup_dataset(
-    X           :: AbstractDataFrame,
-    y           :: AbstractVector{<:Label},
-    w           :: MaybeVector                  = nothing;
-    model       :: MLJ.Model                    = _DefaultModel(y),
-    resampling  :: ResamplingStrategy           = Holdout(fraction_train=0.7, shuffle=true),
-    valid_ratio :: Real                         = 0.0,
-    seed        :: MaybeInt                     = nothing,
-    balancing   :: MaybeBalancing               = nothing,
-    tuning      :: MaybeTuning                  = nothing,
-    win         :: WinFunc                      = adaptivewindow(nwindows=3, overlap=0.1),
-    features    :: Tuple{Vararg{Base.Callable}} = (maximum, minimum),
-    reducefunc  :: Base.Callable                = mean
-)::AbstractDataSet
-    # setup rng
-    if !isnothing(seed)
-        rng = Xoshiro(seed)
-        # propagate user rng to every field that needs it
-        hasproperty(model, :rng)      && set_rng!(model, rng)
-        hasproperty(resampling, :rng) && (resampling = set_rng(resampling, rng))
-    else
-        rng = TaskLocalRNG()
-    end
-
-    # Modal models need features to be passed in model params
-    hasproperty(model, :features) && set_conditions!(model, features)
-    # MLJ.TunedModels can't automatically assigns measure to Modal models
-    if model isa Modal && !isnothing(tuning)
-        isnothing(get_measure(tuning)) && (tuning.measure = LogLoss())
-    end
-
-    # handle multidimensional datasets:
-    # propositional models requiring feature aggregation
-    # modal models requiring reducing data size
-    if DataTreatments.is_multidim_dataset(X)
-        if model isa Modal
-            t = DataTreatment(X, :reducesize; win, features, reducefunc)
-            X = DataFrame(get_dataset(t), Symbol.(get_featureid(t)))
-            tinfo = ReductionInfo(features, win, reducefunc)
-        else
-            t = DataTreatment(X, :aggregate; win, features)
-            X = DataFrame(get_dataset(t), Symbol.(get_featureid(t)))
-            tinfo = AggregationInfo(features, win)
-        end
-    else
-        X = code_dataset(X)
-        # some algos, like xgboost, doesnt accept dataset with numeric values, only float
-        X = to_float_dataset(X)
-        tinfo = nothing
-    end
-
-    ttpairs, pinfo = partition(y; resampling, valid_ratio, rng)
-
-    isnothing(seed)      && (seed = 1)
-    isnothing(balancing) || (model = set_balancing(model, balancing, seed))
-    isnothing(tuning)    || (model = set_tuning(model, tuning, rng))
-
-    mach = isnothing(w) ? MLJ.machine(model, X, y) : MLJ.machine(model, X, y, w)
-    
-    DataSet(mach, ttpairs, pinfo; tinfo)
-end
-
-# ---------------------------------------------------------------------------- #
 #                                setup dataset                                 #
 # ---------------------------------------------------------------------------- #
+function setup_dataset(X::AbstractDataFrame, y::AbstractVector, args...; kwargs...)
+    throw(ArgumentError("Target variable y must have elements of type Label, " * "got eltype: $(eltype(y))"))
+end
+
 """
     setup_dataset(
         X, y, w=nothing;
@@ -547,20 +486,68 @@ dts = setup_dataset(
 
 # See also: [`DataSet`](@ref), [`PropositionalDataSet`](@ref), [`ModalDataSet`](@ref), [`symbolic_analysis`](@ref)
 """
-# setup_dataset(args...; kwargs...) = _setup_dataset(args...; kwargs...)
-
 function setup_dataset(
-    X::AbstractDataFrame,
-    y::AbstractVector{<:Label},
-    args...;
-    model :: MLJ.Model = _DefaultModel(y),
-    kwargs...
-)
-    _setup_dataset(X, check_y(y, model), args...; model, kwargs...)
-end
+    X           :: AbstractDataFrame,
+    y           :: AbstractVector{<:Label},
+    w           :: MaybeVector                  = nothing;
+    model       :: MLJ.Model                    = _DefaultModel(y),
+    resampling  :: ResamplingStrategy           = Holdout(fraction_train=0.7, shuffle=true),
+    valid_ratio :: Real                         = 0.0,
+    seed        :: MaybeInt                     = nothing,
+    balancing   :: MaybeBalancing               = nothing,
+    tuning      :: MaybeTuning                  = nothing,
+    win         :: WinFunc                      = adaptivewindow(nwindows=3, overlap=0.1),
+    features    :: Tuple{Vararg{Base.Callable}} = (maximum, minimum),
+    reducefunc  :: Base.Callable                = mean
+)::AbstractDataSet
+    y = check_y(y, model)
 
-function setup_dataset(X::AbstractDataFrame, y::AbstractVector, args...; kwargs...)
-    throw(ArgumentError("Target variable y must have elements of type Label, " * "got eltype: $(eltype(y))"))
+    # setup rng
+    if !isnothing(seed)
+        rng = Xoshiro(seed)
+        # propagate user rng to every field that needs it
+        hasproperty(model, :rng)      && set_rng!(model, rng)
+        hasproperty(resampling, :rng) && (resampling = set_rng(resampling, rng))
+    else
+        rng = TaskLocalRNG()
+    end
+
+    # Modal models need features to be passed in model params
+    hasproperty(model, :features) && set_conditions!(model, features)
+    # MLJ.TunedModels can't automatically assigns measure to Modal models
+    if model isa Modal && !isnothing(tuning)
+        isnothing(get_measure(tuning)) && (tuning.measure = LogLoss())
+    end
+
+    # handle multidimensional datasets:
+    # propositional models requiring feature aggregation
+    # modal models requiring reducing data size
+    if DataTreatments.is_multidim_dataset(X)
+        if model isa Modal
+            t = DataTreatment(X, :reducesize; win, features, reducefunc)
+            X = DataFrame(get_dataset(t), Symbol.(get_featureid(t)))
+            tinfo = ReductionInfo(features, win, reducefunc)
+        else
+            t = DataTreatment(X, :aggregate; win, features)
+            X = DataFrame(get_dataset(t), Symbol.(get_featureid(t)))
+            tinfo = AggregationInfo(features, win)
+        end
+    else
+        X = code_dataset(X)
+        # some algos, like xgboost, doesnt accept dataset with numeric values, only float
+        X = to_float_dataset(X)
+        tinfo = nothing
+    end
+
+    ttpairs, pinfo = partition(y; resampling, valid_ratio, rng)
+
+    isnothing(seed)      && (seed = 1)
+    isnothing(balancing) || (model = set_balancing(model, balancing, seed))
+    isnothing(tuning)    || (model = set_tuning(model, tuning, rng))
+
+    mach = isnothing(w) ? MLJ.machine(model, X, y) : MLJ.machine(model, X, y, w)
+    
+    DataSet(mach, ttpairs, pinfo; tinfo)
 end
 
 """
@@ -570,8 +557,9 @@ Convenience method when target variable is a column in the feature DataFrame.
 """
 function setup_dataset(
     X::AbstractDataFrame,
-    y::Symbol;
+    y::Symbol,
+    args...;
     kwargs...
 )::AbstractDataSet
-    setup_dataset(X[!, Not(y)], X[!, y]; kwargs...)
+    setup_dataset(X[!, Not(y)], X[!, y], args...; kwargs...)
 end
