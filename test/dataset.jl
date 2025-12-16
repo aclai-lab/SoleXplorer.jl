@@ -437,3 +437,47 @@ end
     @test_nowarn println(tuning)
     @test_nowarn display(tuning)
 end
+
+@testset "pCV Tests" begin
+    # Test constructor validation
+    @test_throws ArgumentError pCV(nfolds=1, fraction_train=0.7)
+    @test_throws ArgumentError pCV(nfolds=0, fraction_train=0.7)
+    
+    # Test default constructor
+    cv = pCV()
+    @test cv.nfolds == 6
+    @test cv.fraction_train == 0.7
+    
+    # Test custom parameters
+    cv = pCV(nfolds=10, fraction_train=0.6, shuffle=true, rng=Xoshiro(42))
+    @test cv.nfolds == 10
+    @test cv.fraction_train == 0.6
+    @test cv.shuffle == true
+    
+    # Test train_test_pairs
+    rows = 1:100
+    pairs = MLJ.MLJBase.train_test_pairs(cv, rows)
+    
+    @test length(pairs) == 10  # nfolds
+    
+    for (train, test) in pairs
+        # Check sizes roughly match fraction_train
+        @test length(train) ≈ 60 atol=5
+        @test length(test) ≈ 40 atol=5
+        
+        # Check no overlap
+        @test isempty(intersect(train, test))
+        
+        # Check all indices covered
+        @test length(union(train, test)) == 100
+    end
+    
+    # Test reproducibility with same RNG
+    cv1 = pCV(nfolds=5, fraction_train=0.7, shuffle=true, rng=Xoshiro(123))
+    cv2 = pCV(nfolds=5, fraction_train=0.7, shuffle=true, rng=Xoshiro(123))
+    
+    pairs1 = MLJ.MLJBase.train_test_pairs(cv1, rows)
+    pairs2 = MLJ.MLJBase.train_test_pairs(cv2, rows)
+    
+    @test pairs1 == pairs2
+end
