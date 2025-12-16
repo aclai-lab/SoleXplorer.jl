@@ -71,9 +71,28 @@ end
 # ---------------------------------------------------------------------------- #
 #                                 constructors                                 #
 # ---------------------------------------------------------------------------- #
-function partition end
+"""
+    partition(y; resampling, valid_ratio, rng) -> (parts::Vector{PartitionIdxs}, info::PartitionInfo)
 
-# create data partitions using MLJ resampling strategies
+Create data partitions from labels `y` using an MLJ `resampling` strategy.
+
+Arguments
+- `y::AbstractVector{<:Label}`: Labels used for stratification where applicable.
+- `resampling::MLJ.ResamplingStrategy`: MLJ resampling strategy (e.g., `CV`, `Holdout`, `StratifiedCV`).
+- `valid_ratio::Real`: Fraction of the training split to allocate to validation (0.0–1.0). If `0.0`,
+  no validation indices are produced.
+- `rng::Random.AbstractRNG`: RNG controlling reproducibility of the MLJ partitioning.
+
+Returns
+- `parts::Vector{PartitionIdxs}`: One `PartitionIdxs` per train/test (and optional validation) split.
+  Validation indices are empty when `valid_ratio == 0.0`.
+- `info::PartitionInfo`: Captures the resampling strategy, `valid_ratio`, and `rng` used.
+
+Notes
+- Train/test indices are obtained via `MLJBase.train_test_pairs`.
+- When `valid_ratio > 0`, each train split is further split by `MLJ.partition(train, 1 - valid_ratio)`
+  to produce validation indices.
+"""
 function partition(
     y           :: AbstractVector{<:Label};
     resampling  :: MLJ.ResamplingStrategy,

@@ -81,6 +81,7 @@ const MaybeNTuple = Maybe{NamedTuple}
 # ---------------------------------------------------------------------------- #
 #                                 interfaces                                   #
 # ---------------------------------------------------------------------------- #
+export partition
 export get_X, get_y, get_train, get_test
 include("partition.jl")
 
