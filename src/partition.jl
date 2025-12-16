@@ -147,7 +147,7 @@ function Base.show(io::IO, pidx::PartitionIdxs{T}) where T
     total   = n_train + n_valid + n_test
     
     print(io, "PartitionIdxs{$T}")
-    print(io, "\n  Total samples: $total, Train: $n_train,Valid: $n_valid, Test: $n_test.")
+    print(io, "\n  Total samples: $total, Train: $n_train, Valid: $n_valid, Test: $n_test.")
 end
 
 function Base.show(io::IO, ::MIME"text/plain", pidx::PartitionIdxs{T}) where T
