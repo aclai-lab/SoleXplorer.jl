@@ -434,7 +434,7 @@ function symbolic_analysis(
     measures::Tuple{Vararg{FussyMeasure}}=(),
     kwargs...
 )::ModelSet
-    ds = _setup_dataset(X, y, w; kwargs...)
+    ds = setup_dataset(X, y, w; kwargs...)
     solem = _train_test(ds)
     _symbolic_analysis(ds, solem; extractor, association, measures)
 end
