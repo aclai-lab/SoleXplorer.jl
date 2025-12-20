@@ -27,11 +27,15 @@ function extractrules(
     ds        :: AbstractDataSet,
     solem     :: Vector{AbstractModel}
 )::Vector{DecisionSet}
-    params = to_namedtuple(extractor)
     map(enumerate(solem)) do (i, model)
         test = get_test(ds.pidxs[i])
         X_test, y_test = get_X(ds)[test, :], get_y(ds)[test]
-        RuleExtraction.modalextractrules(extractor, model, X_test, y_test; params...)
+        RuleExtraction.modalextractrules(
+            extractor;
+            model,
+            X=SoleData.scalarlogiset(X_test; allow_propositional = true),
+            y=y_test
+        )
     end
 end
 
