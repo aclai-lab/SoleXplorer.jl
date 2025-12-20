@@ -306,6 +306,8 @@ Extract the logiset (if present) from the dataset's MLJ machine.
 """
 get_logiset(ds::ModalDataSet)::SupportedLogiset = ds.mach.data[1].modalities[1]
 
+get_rng(ds::AbstractDataSet) = get_rng(ds.pinfo)
+
 # ---------------------------------------------------------------------------- #
 #                           MLJ models's extra setup                           #
 # ---------------------------------------------------------------------------- #

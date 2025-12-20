@@ -218,6 +218,18 @@ function sole_predict(solem::AbstractModel, y_test::AbstractVector{<:Label})
         preds
 end
 
+# set the random number generator for a rule extraction strategy
+function set_rng(r::RuleExtractor, rng::Random.AbstractRNG)::RuleExtractor
+    T = typeof(r)
+
+    fnames = fieldnames(T)
+    fvalues = map(fnames) do fn
+        fn === :rng ? rng : getfield(r, fn)
+    end
+    
+    return T(; NamedTuple{fnames}(fvalues)...)
+end
+
 # ---------------------------------------------------------------------------- #
 #                                eval measures                                 #
 # ---------------------------------------------------------------------------- #
@@ -285,10 +297,11 @@ end
 #                         internal symbolic_analysis                           #
 # ---------------------------------------------------------------------------- #
 function _symbolic_analysis!(
-    modelset::ModelSet;
-    extractor::Union{MaybeRuleExtractor,Tuple{RuleExtractor,NamedTuple}}=nothing,
-    association::MaybeAbstractAssociationRuleExtractor=nothing,
-    measures::Tuple{Vararg{FussyMeasure}}=()
+    modelset    :: AbstractModelSet;
+    extractor   :: Union{MaybeRuleExtractor,Tuple{RuleExtractor,NamedTuple}}=nothing,
+    # extractor::MaybeRuleExtractor=nothing,
+    association :: MaybeAbstractAssociationRuleExtractor=nothing,
+    measures    :: Tuple{Vararg{FussyMeasure}}=()
 )::ModelSet
     ds    = dsetup(modelset)
     solem = solemodels(modelset)
@@ -300,7 +313,8 @@ function _symbolic_analysis!(
         else
             params = NamedTuple(;)
         end
-        
+
+        :rng ∈ fieldnames(typeof(extractor)) && (extractor = set_rng(extractor, get_rng(ds)))
         extractrules(extractor, params, ds, solem)
     end)
 

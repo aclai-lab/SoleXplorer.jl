@@ -32,8 +32,10 @@ struct PartitionInfo{T} <: AbstractPartitionInfo
 end
 
 # ---------------------------------------------------------------------------- #
-#                                  base show                                   #
+#                                   methods                                    #
 # ---------------------------------------------------------------------------- #
+get_rng(p::PartitionInfo) = p.rng
+
 function Base.show(io::IO, info::PartitionInfo)
     println(io, "PartitionInfo:")
     for field in fieldnames(PartitionInfo)

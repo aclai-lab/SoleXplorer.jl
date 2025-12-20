@@ -23,7 +23,7 @@ to_namedtuple(x) = NamedTuple{fieldnames(typeof(x))}(ntuple(i -> getfield(x, i),
 # ---------------------------------------------------------------------------- #
 function extractrules(
     extractor :: InTreesRuleExtractor,
-    params    :: NamedTuple,
+    _         :: NamedTuple,
     ds        :: AbstractDataSet,
     solem     :: Vector{AbstractModel}
 )::Vector{DecisionSet}
