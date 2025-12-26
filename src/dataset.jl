@@ -38,6 +38,7 @@ const MaybeAggregationInfo = Maybe{AggregationInfo}
 const MaybeBalancing       = Maybe{Balancing}
 const MaybeTuning          = Maybe{Tuning}
 const MaybeTreatInfo       = Maybe{AbstractTreatmentInfo}
+const MaybeCallable        = Maybe{Base.Callable}
 
 # ---------------------------------------------------------------------------- #
 #                                  defaults                                    #
@@ -500,6 +501,7 @@ function setup_dataset(
     tuning      :: MaybeTuning                  = nothing,
     win         :: WinFunc                      = adaptivewindow(nwindows=3, overlap=0.1),
     features    :: Tuple{Vararg{Base.Callable}} = (maximum, minimum),
+    norm        :: MaybeCallable                = nothing,
     reducefunc  :: Base.Callable                = mean
 )::AbstractDataSet
     y = check_y(y, model)
@@ -526,11 +528,11 @@ function setup_dataset(
     # modal models requiring reducing data size
     if DataTreatments.is_multidim_dataset(X)
         if model isa Modal
-            t = DataTreatment(X, :reducesize; win, features, reducefunc)
+            t = DataTreatment(X, :reducesize; win, features, reducefunc, norm)
             X = DataFrame(get_dataset(t), Symbol.(get_featureid(t)))
             tinfo = ReductionInfo(features, win, reducefunc)
         else
-            t = DataTreatment(X, :aggregate; win, features)
+            t = DataTreatment(X, :aggregate; win, features, norm)
             X = DataFrame(get_dataset(t), Symbol.(get_featureid(t)))
             tinfo = AggregationInfo(features, win)
         end
