@@ -49,6 +49,7 @@ using Imbalance
 #                              external packages                               #
 # ---------------------------------------------------------------------------- #
 @reexport using DataTreatments: movingwindow, wholewindow, splitwindow, adaptivewindow
+@reexport using DataTreatments: zscore, sigmoid, pnorm, scale, minmax, center, unitpower, outliersuppress
 using  DataTreatments
 
 using  DataFrames
