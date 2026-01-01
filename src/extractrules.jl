@@ -28,13 +28,12 @@ function extractrules(
     solem     :: Vector{AbstractModel}
 )::Vector{DecisionSet}
     map(enumerate(solem)) do (i, model)
-        test = get_test(ds.pidxs[i])
-        X_test, y_test = get_X(ds)[test, :], get_y(ds)[test]
+        X_test, y_test = get_X(ds, :test)[i], get_y(ds, :test)[i]
         RuleExtraction.modalextractrules(
-            extractor;
-            model,
-            X=SoleData.scalarlogiset(X_test; allow_propositional = true),
-            y=y_test
+            extractor,
+            SoleData.scalarlogiset(X_test; allow_propositional = true),
+            y_test,
+            model
         )
     end
 end
@@ -45,10 +44,10 @@ end
 function extractrules(
     extractor :: LumenRuleExtractor,
     params    :: NamedTuple,
-    ds        :: AbstractDataSet,
+    _         :: AbstractDataSet,
     solem     :: Vector{AbstractModel}
 )::Vector{LumenResult}
-    map(enumerate(solem)) do (i, model)
+    map(enumerate(solem)) do (_, model)
         RuleExtraction.modalextractrules(extractor, model; params...)
     end
 end
@@ -59,10 +58,10 @@ end
 function extractrules(
     extractor :: BATreesRuleExtractor,
     params    :: NamedTuple,
-    ds        :: AbstractDataSet,
+    _         :: AbstractDataSet,
     solem     :: Vector{AbstractModel}
 )::Vector{DecisionSet}
-    map(enumerate(solem)) do (i, model)
+    map(enumerate(solem)) do (_, model)
         RuleExtraction.modalextractrules(extractor, model; params...)
     end
 end
@@ -77,8 +76,7 @@ function extractrules(
     solem     :: Vector{AbstractModel}
 )::Vector{DecisionSet}
     map(enumerate(solem)) do (i, model)
-        test = get_test(ds.pidxs[i])
-        X_test, y_test = get_X(ds)[test, :], get_y(ds)[test]
+        X_test, y_test = get_X(ds, :test)[i], get_y(ds, :test)[i]
         RuleExtraction.modalextractrules(extractor, model, X_test, y_test; params...)
     end
 end
@@ -93,8 +91,7 @@ function extractrules(
     solem     :: Vector{AbstractModel}
 )::Vector{DecisionSet}
     map(enumerate(solem)) do (i, model)
-        test = get_test(ds.pidxs[i])
-        X_test = get_X(ds)[test, :]
+        X_test = get_X(ds, :test)[i]
         Xmin = map(minimum, eachcol(X_test))
         Xmax = map(maximum, eachcol(X_test))
         RuleExtraction.modalextractrules(extractor, model, Xmin, Xmax; params...)
@@ -111,8 +108,7 @@ function extractrules(
     solem     :: Vector{AbstractModel}
 )::Vector{DecisionSet}
     map(enumerate(solem)) do (i, model)
-        test = get_test(ds.pidxs[i])
-        X_test = get_X(ds)[test, :]
+        X_test = get_X(ds, :test)[i]
         RuleExtraction.modalextractrules(extractor, model, X_test; params...)
     end
 end
