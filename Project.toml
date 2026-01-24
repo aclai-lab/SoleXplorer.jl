@@ -22,7 +22,7 @@ SolePostHoc = "cf1aa0c3-12c9-4ebe-9bdc-bd6c2ca79b72"
 XGBoost = "009559a3-9522-5dbb-924b-0b6ed2b22bb9"
 
 [sources]
-SolePostHoc = {rev = "devPaso", url = "/home/paso/Documents/Aclai/Sole/SolePostHoc.jl"}
+SolePostHoc = {rev = "devPaso", url = "https://github.com/aclai-lab/SolePostHoc.jl"}
 
 [compat]
 DataFrames = "1"
