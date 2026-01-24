@@ -13,9 +13,10 @@ using  SoleModels: RuleExtractor, DecisionSet
 @reexport using SoleData.Artifacts: NatopsLoader, load
 @reexport using SoleModels: readmetrics
 
-@reexport using SolePostHoc: InTreesRuleExtractor, LumenRuleExtractor, BATreesRuleExtractor
-@reexport using SolePostHoc: RULECOSIPLUSRuleExtractor, REFNERuleExtractor, TREPANRuleExtractor
-using  SolePostHoc
+@reexport using SolePostHoc.RuleExtraction: InTreesRuleExtractor, LumenRuleExtractor, BATreesRuleExtractor
+# @reexport using SolePostHoc.RuleExtraction: RULECOSIPLUSRuleExtractor
+@reexport using SolePostHoc.RuleExtraction: REFNERuleExtractor, TREPANRuleExtractor
+using  SolePostHoc.RuleExtraction
 
 @reexport using ModalAssociationRules: Item, Atom, ScalarCondition, VariableMin, VariableMax
 @reexport using ModalAssociationRules: IA_L, box, diamond

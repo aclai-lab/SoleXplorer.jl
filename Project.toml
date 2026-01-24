@@ -1,7 +1,16 @@
 name = "SoleXplorer"
 uuid = "5816ab97-8dbe-4a0a-b2fb-0334bd9876ed"
 version = "0.1.0"
-authors = ["Lorenzo BALBONI", "Michele GHIOTTI", "Federico MANZELLA", "Mauro MILELLA", "Giovanni PAGLIARINI", "Alberto PAPARELLA", "Riccardo PASINI", "Marco PERROTTA"]
+authors = [
+    "Lorenzo BALBONI",
+    "Michele GHIOTTI",
+    "Federico MANZELLA",
+    "Mauro MILELLA",
+    "Giovanni PAGLIARINI",
+    "Alberto PAPARELLA",
+    "Riccardo PASINI",
+    "Marco PERROTTA"
+]
 
 [deps]
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
@@ -23,6 +32,7 @@ SolePostHoc = "cf1aa0c3-12c9-4ebe-9bdc-bd6c2ca79b72"
 XGBoost = "009559a3-9522-5dbb-924b-0b6ed2b22bb9"
 
 [sources]
+SolePostHoc = {rev = "devPaso", url = "/home/paso/Documents/Aclai/Sole/SolePostHoc.jl"}
 ModalAssociationRules = {rev = "main", url = "/home/paso/Documents/Aclai/Sole/ModalAssociationRules.jl"}
 
 [compat]
