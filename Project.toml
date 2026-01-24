@@ -27,7 +27,7 @@ DataTreatments = {rev = "main", url = "https://github.com/PasoStudio73/DataTreat
 
 [compat]
 DataFrames = "1"
-DataTreatments = "0.1"
+DataTreatments = "0.2"
 DimensionalData = "0.29"
 Imbalance = "0.1"
 JLD2 = "0.6"
