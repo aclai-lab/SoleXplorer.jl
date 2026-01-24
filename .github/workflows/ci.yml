@@ -26,7 +26,7 @@ jobs:
           - '1'
           - 'lts'
         os:
-          # - ubuntu-latest Conda issue
+          - ubuntu-latest # Conda issue
           - ubuntu-24.04
         arch:
           - x64
@@ -38,11 +38,11 @@ jobs:
           arch: ${{ matrix.arch }}
       - uses: julia-actions/cache@v2
       - uses: julia-actions/julia-buildpkg@v1
-        env:
-          PYTHON: ""
+        # env:
+        #   PYTHON: ""
       - uses: julia-actions/julia-runtest@v1
-        env:
-          PYTHON: ""
+        # env:
+        #   PYTHON: ""
       - uses: julia-actions/julia-processcoverage@v1
       - uses: codecov/codecov-action@v5
         with:
