@@ -19,13 +19,12 @@ println("Julia version: ", VERSION)
 
 test_suites = [
     ("Setup Dataset",        ["dataset.jl",           ]),
-    # ("Train and Test",       ["train_test.jl",        ]),
-    # ("Symbolic Analysis",    ["symbolic_analysis.jl", ]),
-    # ("Solemodel robustness", ["robustness.jl"         ]),
-    # ("Rule extraction",      ["rule_extraction.jl"    ]),
+    ("Train and Test",       ["train_test.jl",        ]),
+    ("Symbolic Analysis",    ["symbolic_analysis.jl", ]),
+    ("Solemodel robustness", ["robustness.jl"         ]),
+    ("Rule extraction",      ["rule_extraction.jl"    ]),
     # ("Association Rules",    ["associationrules.jl"   ]),
-    # ("Serialization",        ["serialize.jl"          ]),
-    # ("Collection",           ["analysis_collection.jl"]),
+    ("Serialization",        ["serialize.jl"          ]),
 ]
 
 @testset "SoleXplorer.jl" begin

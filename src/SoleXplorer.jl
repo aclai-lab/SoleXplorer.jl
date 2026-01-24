@@ -18,10 +18,10 @@ using  SoleModels: RuleExtractor, DecisionSet
 @reexport using SolePostHoc.RuleExtraction: REFNERuleExtractor, TREPANRuleExtractor
 using  SolePostHoc.RuleExtraction
 
-@reexport using ModalAssociationRules: Item, Atom, ScalarCondition, VariableMin, VariableMax
-@reexport using ModalAssociationRules: IA_L, box, diamond
-@reexport using ModalAssociationRules: gsupport, gconfidence, glift, gconviction, gleverage
-using ModalAssociationRules
+# @reexport using ModalAssociationRules: Item, Atom, ScalarCondition, VariableMin, VariableMax
+# @reexport using ModalAssociationRules: IA_L, box, diamond
+# @reexport using ModalAssociationRules: gsupport, gconfidence, glift, gconviction, gleverage
+# using ModalAssociationRules
 
 # ---------------------------------------------------------------------------- #
 #                                     MLJ                                      #
@@ -131,8 +131,8 @@ include("train_test.jl")
 
 include("extractrules.jl")
 
-export Apriori, FPGrowth, Eclat
-include("associationrules.jl")
+# export Apriori, FPGrowth, Eclat
+# include("associationrules.jl")
 
 export AbstractModelSet, ModelSet
 export dsetup, solemodels, rules, associations

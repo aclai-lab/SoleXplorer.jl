@@ -594,7 +594,7 @@ modelts = symbolic_analysis(
     Xts, yts;
     model=SX.DecisionTreeClassifier(),
     seed=1,
-    win=WholeWindow(),
+    win=wholewindow(),
     measures=(SX.accuracy, log_loss)      
 )
 @test modelts isa SX.ModelSet
@@ -603,7 +603,7 @@ modelts = symbolic_analysis(
     Xts, yts;
     model=SX.DecisionTreeClassifier(),
     seed=1,
-    win=SplitWindow(nwindows=2),
+    win=splitwindow(nwindows=2),
     measures=(SX.accuracy, log_loss)      
 )
 @test modelts isa SX.ModelSet
@@ -612,7 +612,7 @@ modelts = symbolic_analysis(
     Xts, yts;
     model=SX.DecisionTreeClassifier(),
     seed=1,
-    win=MovingWindow(window_size=20, window_step=5),
+    win=movingwindow(winsize=20, winstep=5),
     measures=(SX.accuracy, log_loss)      
 )
 @test modelts isa SX.ModelSet

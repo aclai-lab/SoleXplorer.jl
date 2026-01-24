@@ -31,7 +31,7 @@ function extractrules(
         X_test, y_test = get_X(ds, :test)[i], get_y(ds, :test)[i]
         RuleExtraction.modalextractrules(
             extractor,
-            SoleData.scalarlogiset(X_test; allow_propositional = true),
+            scalarlogiset(X_test; allow_propositional = true),
             y_test,
             model
         )
