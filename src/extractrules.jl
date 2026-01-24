@@ -69,17 +69,17 @@ end
 # ---------------------------------------------------------------------------- #
 #                          RULECOSIPLUSRuleExtractor                           #
 # ---------------------------------------------------------------------------- #
-function extractrules(
-    extractor :: RULECOSIPLUSRuleExtractor,
-    params    :: NamedTuple,
-    ds        :: AbstractDataSet,
-    solem     :: Vector{AbstractModel}
-)::Vector{DecisionSet}
-    map(enumerate(solem)) do (i, model)
-        X_test, y_test = get_X(ds, :test)[i], get_y(ds, :test)[i]
-        RuleExtraction.modalextractrules(extractor, model, X_test, y_test; params...)
-    end
-end
+# function extractrules(
+#     extractor :: RULECOSIPLUSRuleExtractor,
+#     params    :: NamedTuple,
+#     ds        :: AbstractDataSet,
+#     solem     :: Vector{AbstractModel}
+# )::Vector{DecisionSet}
+#     map(enumerate(solem)) do (i, model)
+#         X_test, y_test = get_X(ds, :test)[i], get_y(ds, :test)[i]
+#         RuleExtraction.modalextractrules(extractor, model, X_test, y_test; params...)
+#     end
+# end
 
 # ---------------------------------------------------------------------------- #
 #                              REFNERuleExtractor                              #

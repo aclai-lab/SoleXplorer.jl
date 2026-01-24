@@ -115,24 +115,24 @@ modelc = symbolic_analysis(
 # ---------------------------------------------------------------------------- #
 #                         rulecosi rules extraction                            #
 # ---------------------------------------------------------------------------- #
-dsc = setup_dataset(
-    Xc, yc;
-    model=SX.RandomForestClassifier(n_trees=2),
-    resampling=Holdout(;shuffle=true),
-    seed=1,   
-)
-solemc = train_test(dsc)
+# dsc = setup_dataset(
+#     Xc, yc;
+#     model=SX.RandomForestClassifier(n_trees=2),
+#     resampling=Holdout(;shuffle=true),
+#     seed=1,   
+# )
+# solemc = train_test(dsc)
 
-modelc = symbolic_analysis(
-    dsc, solemc;
-    extractor=RULECOSIPLUSRuleExtractor()
-)
-@test SX.rules(modelc) isa Vector{SX.DecisionSet}
+# modelc = symbolic_analysis(
+#     dsc, solemc;
+#     extractor=RULECOSIPLUSRuleExtractor()
+# )
+# @test SX.rules(modelc) isa Vector{SX.DecisionSet}
 
-@test_throws MethodError  symbolic_analysis(
-    dsc, solemc;
-    extractor=RULECOSIPLUSRuleExtractor(invalid=true)
-)
+# @test_throws MethodError  symbolic_analysis(
+#     dsc, solemc;
+#     extractor=RULECOSIPLUSRuleExtractor(invalid=true)
+# )
 
 # ---------------------------------------------------------------------------- #
 #                           refne rules extraction                             #
