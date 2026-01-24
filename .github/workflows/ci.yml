@@ -24,9 +24,9 @@ jobs:
       matrix:
         version:
           - '1'
-          - 'lts'
+          # - 'lts' # julia lts unsupported
         os:
-          - ubuntu-latest # Conda issue
+          - ubuntu-latest
           - ubuntu-24.04
         arch:
           - x64
