@@ -53,6 +53,7 @@ using Imbalance
 @reexport using DataTreatments: zscore, sigmoid, pnorm, scale, minmax, center, unitpower, outliersuppress
 using  DataTreatments
 
+using  CategoricalArrays
 using  DataFrames
 using  Random
 using  JLD2

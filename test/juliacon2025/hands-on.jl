@@ -3,11 +3,11 @@
 # I have a dataset composed of a matrix (or dataframe) of measures, and a vector of labels.
 # I don't know if there's something interesting there, let's check it out...
 
-using SoleXplorer, MLJ, JLD2
+using SoleXplorer, MLJ, JLD2, CategoricalArrays
 
 data_path = joinpath(@__DIR__, "respiratory_pneumonia.jld2")
 data  = JLD2.load(data_path)
-X, y = data["X"], MLJ.CategoricalArray{String,1,UInt32}(data["y"])
+X, y = data["X"], CategoricalArrays.CategoricalArray{String,1,UInt32}(data["y"])
 
 model = symbolic_analysis(X, y, seed=123);
 show_measures(model)

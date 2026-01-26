@@ -150,7 +150,7 @@ end
 data_path = joinpath(@__DIR__, "juliacon2025/respiratory_pneumonia.jld2")
 data  = JLD2.load(data_path)
 Xb = data["X"]
-yb = MLJ.CategoricalArray{String,1,UInt32}(data["y"])
+yb = CategoricalArrays.CategoricalArray{String,1,UInt32}(data["y"])
 
 @testset "xgboost binary classification data validation" begin
     for fraction_train in 0.5:0.1:0.9

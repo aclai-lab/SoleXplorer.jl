@@ -276,7 +276,7 @@ get_X(ds::AbstractDataSet, part::Symbol)::Vector{<:AbstractDataFrame} =
 
 Extract target vector from dataset's MLJ machine.
 """
-get_y(ds::AbstractDataSet)::Vector = ds.mach.args[2].data
+get_y(ds::AbstractDataSet)::AbstractVector = ds.mach.args[2].data
 
 """
     get_y(ds::AbstractDataSet, part::Symbol) -> Vector{<:AbstractVector}

@@ -1,5 +1,6 @@
 using CSV, JLD2, DataFrames
 using StatsBase, Random, MLJ
+using CategoricalArrays
 using SoleXplorer
 
 # ---------------------------------------------------------------------------- #
@@ -9,7 +10,7 @@ data  = JLD2.load(joinpath(@__DIR__, "respiratory_pneumonia.jld2"))
 Xc = data["X"]
 # this is imperative: some algos accept only categorical value
 # TODO automate in solexplorer if it's a CLabel ?
-yc = MLJ.CategoricalArray{String,1,UInt32}(data["y"])
+yc = CategoricalArrays.CategoricalArray{String,1,UInt32}(data["y"])
 
 Xlight = Xc[:, 3:18]
 Xlumen = Xc[:, 3:10]

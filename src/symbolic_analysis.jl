@@ -212,7 +212,7 @@ function sole_predict(solem::AbstractModel, y_test::AbstractVector{<:Label})
     return eltype(preds) <: CLabel ?
         begin
             classes_seen = unique(y_test)
-            eltype(preds) <: MLJ.CategoricalValue ||
+            eltype(preds) <: CategoricalArrays.CategoricalValue ||
                 (preds = categorical(preds, levels=levels(classes_seen)))
             [UnivariateFinite([p], [1.0]) for p in preds]
         end :
@@ -442,7 +442,7 @@ See also: [`ModelSet`](@ref), [`setup_dataset`](@Ref), [`train_test`](@Ref)
 """
 function symbolic_analysis(
     X::AbstractDataFrame,
-    y::AbstractVector,
+    y::AbstractVector{<:Label},
     w::MaybeVector=nothing;
     extractor::MaybeRuleExtractor=nothing,
     # association::Union{Nothing,AbstractAssociationRuleExtractor}=nothing,

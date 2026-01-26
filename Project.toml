@@ -4,6 +4,7 @@ version = "0.1.0"
 authors = ["Lorenzo BALBONI", "Michele GHIOTTI", "Federico MANZELLA", "Mauro MILELLA", "Giovanni PAGLIARINI", "Alberto PAPARELLA", "Riccardo PASINI", "Marco PERROTTA"]
 
 [deps]
+CategoricalArrays = "324d7699-5711-5eae-9e2f-1d82baa6b597"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 DataTreatments = "1b3ff5f2-9b56-42a2-b38a-76a033f741ca"
 DimensionalData = "0703355e-b756-11e9-17c0-8b28908087d0"
@@ -25,12 +26,13 @@ XGBoost = "009559a3-9522-5dbb-924b-0b6ed2b22bb9"
 SolePostHoc = {rev = "devPaso", url = "https://github.com/aclai-lab/SolePostHoc.jl"}
 
 [compat]
+CategoricalArrays = "1"
 DataFrames = "1"
 DataTreatments = "0.2"
 DimensionalData = "0.29"
 Imbalance = "0.1"
 JLD2 = "0.6"
-MLJ = "0.20, 0.21, 0.22"
+MLJ = "0.22"
 MLJDecisionTreeInterface = "0.4"
 MLJParticleSwarmOptimization = "0.1"
 MLJXGBoostInterface = "0.3"
