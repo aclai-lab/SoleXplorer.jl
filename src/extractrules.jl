@@ -23,17 +23,21 @@ to_namedtuple(x) = NamedTuple{fieldnames(typeof(x))}(ntuple(i -> getfield(x, i),
 # ---------------------------------------------------------------------------- #
 function extractrules(
     extractor :: InTreesRuleExtractor,
-    params    :: NamedTuple,
+    _         :: NamedTuple,
     ds        :: AbstractDataSet,
     solem     :: Vector{AbstractModel}
 )::Vector{DecisionSet}
-    params = to_namedtuple(extractor)
     map(enumerate(solem)) do (i, model)
-        test = get_test(ds.pidxs[i])
-        X_test, y_test = get_X(ds)[test, :], get_y(ds)[test]
-        RuleExtraction.modalextractrules(extractor, model, X_test, y_test; params...)
+        X_test, y_test = get_X(ds, :test)[i], get_y(ds, :test)[i]
+        RuleExtraction.modalextractrules(
+            extractor,
+            model,
+            scalarlogiset(X_test; allow_propositional = true),
+            y_test
+        )
     end
 end
+# TODO swap model and y_test as soon as we introduce new algo in PostHoc
 
 # ---------------------------------------------------------------------------- #
 #                              LumenRuleExtractor                              #
@@ -41,10 +45,10 @@ end
 function extractrules(
     extractor :: LumenRuleExtractor,
     params    :: NamedTuple,
-    ds        :: AbstractDataSet,
+    _         :: AbstractDataSet,
     solem     :: Vector{AbstractModel}
 )::Vector{LumenResult}
-    map(enumerate(solem)) do (i, model)
+    map(enumerate(solem)) do (_, model)
         RuleExtraction.modalextractrules(extractor, model; params...)
     end
 end
@@ -55,10 +59,10 @@ end
 function extractrules(
     extractor :: BATreesRuleExtractor,
     params    :: NamedTuple,
-    ds        :: AbstractDataSet,
+    _         :: AbstractDataSet,
     solem     :: Vector{AbstractModel}
 )::Vector{DecisionSet}
-    map(enumerate(solem)) do (i, model)
+    map(enumerate(solem)) do (_, model)
         RuleExtraction.modalextractrules(extractor, model; params...)
     end
 end
@@ -66,18 +70,17 @@ end
 # ---------------------------------------------------------------------------- #
 #                          RULECOSIPLUSRuleExtractor                           #
 # ---------------------------------------------------------------------------- #
-function extractrules(
-    extractor :: RULECOSIPLUSRuleExtractor,
-    params    :: NamedTuple,
-    ds        :: AbstractDataSet,
-    solem     :: Vector{AbstractModel}
-)::Vector{DecisionSet}
-    map(enumerate(solem)) do (i, model)
-        test = get_test(ds.pidxs[i])
-        X_test, y_test = get_X(ds)[test, :], get_y(ds)[test]
-        RuleExtraction.modalextractrules(extractor, model, X_test, y_test; params...)
-    end
-end
+# function extractrules(
+#     extractor :: RULECOSIPLUSRuleExtractor,
+#     params    :: NamedTuple,
+#     ds        :: AbstractDataSet,
+#     solem     :: Vector{AbstractModel}
+# )::Vector{DecisionSet}
+#     map(enumerate(solem)) do (i, model)
+#         X_test, y_test = get_X(ds, :test)[i], get_y(ds, :test)[i]
+#         RuleExtraction.modalextractrules(extractor, model, X_test, y_test; params...)
+#     end
+# end
 
 # ---------------------------------------------------------------------------- #
 #                              REFNERuleExtractor                              #
@@ -89,8 +92,7 @@ function extractrules(
     solem     :: Vector{AbstractModel}
 )::Vector{DecisionSet}
     map(enumerate(solem)) do (i, model)
-        test = get_test(ds.pidxs[i])
-        X_test = get_X(ds)[test, :]
+        X_test = get_X(ds, :test)[i]
         Xmin = map(minimum, eachcol(X_test))
         Xmax = map(maximum, eachcol(X_test))
         RuleExtraction.modalextractrules(extractor, model, Xmin, Xmax; params...)
@@ -107,8 +109,8 @@ function extractrules(
     solem     :: Vector{AbstractModel}
 )::Vector{DecisionSet}
     map(enumerate(solem)) do (i, model)
-        test = get_test(ds.pidxs[i])
-        X_test = get_X(ds)[test, :]
+        X_test = DataFrame(get_X(ds, :test)[i])
         RuleExtraction.modalextractrules(extractor, model, X_test; params...)
     end
 end
+# TODO open a PR to let Trepan accepts AbstractDataFrame

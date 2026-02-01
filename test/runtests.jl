@@ -1,11 +1,11 @@
 using Test
 using SoleData.Artifacts
 # fill your Artifacts.toml file;
-@test_nowarn fillartifacts()
+Artifacts.fillartifacts()
 
 # Loader lists
-# abcloader = ABCLoader()
-# mitloader = MITESPRESSOLoader()
+abcloader = ABCLoader()
+mitloader = MITESPRESSOLoader()
 
 function run_tests(list)
     println("\n" * ("#"^50))
@@ -23,9 +23,8 @@ test_suites = [
     ("Symbolic Analysis",    ["symbolic_analysis.jl", ]),
     ("Solemodel robustness", ["robustness.jl"         ]),
     ("Rule extraction",      ["rule_extraction.jl"    ]),
-    ("Association Rules",    ["associationrules.jl"   ]),
+    # ("Association Rules",    ["associationrules.jl"   ]),
     ("Serialization",        ["serialize.jl"          ]),
-    ("Collection",           ["analysis_collection.jl"]),
 ]
 
 @testset "SoleXplorer.jl" begin

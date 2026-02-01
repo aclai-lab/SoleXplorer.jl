@@ -3,7 +3,7 @@ using SoleXplorer
 const SX = SoleXplorer
 
 using MLJ, DataFrames, Random
-using JLD2
+using CategoricalArrays, JLD2
 
 Xc, yc = @load_iris
 Xc = DataFrame(Xc)
@@ -11,7 +11,7 @@ Xc = DataFrame(Xc)
 Xr, yr = @load_boston
 Xr = DataFrame(Xr)
 
-natopsloader = NatopsLoader()
+natopsloader = SX.NatopsLoader()
 Xts, yts = SX.load(natopsloader)
 
 # ---------------------------------------------------------------------------- #
@@ -150,7 +150,7 @@ end
 data_path = joinpath(@__DIR__, "juliacon2025/respiratory_pneumonia.jld2")
 data  = JLD2.load(data_path)
 Xb = data["X"]
-yb = MLJ.CategoricalArray{String,1,UInt32}(data["y"])
+yb = CategoricalArrays.CategoricalArray{String,1,UInt32}(data["y"])
 
 @testset "xgboost binary classification data validation" begin
     for fraction_train in 0.5:0.1:0.9

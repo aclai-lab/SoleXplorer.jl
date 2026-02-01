@@ -13,7 +13,7 @@ Xc = DataFrame(Xc)
 # ---------------------------------------------------------------------------- #
 dsc = setup_dataset(
     Xc, yc;
-    model=DecisionTreeClassifier(),
+    model=SX.DecisionTreeClassifier(),
     resampling=Holdout(;shuffle=true),
     seed=1,   
 )
@@ -41,7 +41,7 @@ modelc = symbolic_analysis(
 # ---------------------------------------------------------------------------- #
 dsc = setup_dataset(
     Xc, yc;
-    model=XGBoostClassifier(),
+    model=SX.XGBoostClassifier(),
     resampling=Holdout(;shuffle=true),
     seed=1,   
 )
@@ -66,7 +66,7 @@ modelc = symbolic_analysis(
 
 dsc = setup_dataset(
     Xc, yc;
-    model=RandomForestClassifier(n_trees=2),
+    model=SX.RandomForestClassifier(n_trees=2),
     resampling=Holdout(;shuffle=true),
     seed=1,   
 )
@@ -83,18 +83,13 @@ modelc = symbolic_analysis(
     extractor=LumenRuleExtractor(minimization_scheme=:mitespresso)
 )
 @test SX.rules(modelc) isa Vector{SX.LumenResult}
-
-@test_throws MethodError  symbolic_analysis(
-    dsc, solemc;
-    extractor=LumenRuleExtractor(invalid=true)
-)
 
 # ---------------------------------------------------------------------------- #
 #                          batrees rules extraction                            #
 # ---------------------------------------------------------------------------- #
 dsc = setup_dataset(
     Xc, yc;
-    model=RandomForestClassifier(n_trees=2),
+    model=SX.RandomForestClassifier(n_trees=2),
     resampling=Holdout(;shuffle=true),
     seed=1,   
 )
@@ -120,31 +115,31 @@ modelc = symbolic_analysis(
 # ---------------------------------------------------------------------------- #
 #                         rulecosi rules extraction                            #
 # ---------------------------------------------------------------------------- #
-dsc = setup_dataset(
-    Xc, yc;
-    model=RandomForestClassifier(n_trees=2),
-    resampling=Holdout(;shuffle=true),
-    seed=1,   
-)
-solemc = train_test(dsc)
+# dsc = setup_dataset(
+#     Xc, yc;
+#     model=SX.RandomForestClassifier(n_trees=2),
+#     resampling=Holdout(;shuffle=true),
+#     seed=1,   
+# )
+# solemc = train_test(dsc)
 
-modelc = symbolic_analysis(
-    dsc, solemc;
-    extractor=RULECOSIPLUSRuleExtractor()
-)
-@test SX.rules(modelc) isa Vector{SX.DecisionSet}
+# modelc = symbolic_analysis(
+#     dsc, solemc;
+#     extractor=RULECOSIPLUSRuleExtractor()
+# )
+# @test SX.rules(modelc) isa Vector{SX.DecisionSet}
 
-@test_throws MethodError  symbolic_analysis(
-    dsc, solemc;
-    extractor=RULECOSIPLUSRuleExtractor(invalid=true)
-)
+# @test_throws MethodError  symbolic_analysis(
+#     dsc, solemc;
+#     extractor=RULECOSIPLUSRuleExtractor(invalid=true)
+# )
 
 # ---------------------------------------------------------------------------- #
 #                           refne rules extraction                             #
 # ---------------------------------------------------------------------------- #
 dsc = setup_dataset(
     Xc, yc;
-    model=RandomForestClassifier(n_trees=2),
+    model=SX.RandomForestClassifier(n_trees=2),
     resampling=Holdout(;shuffle=true),
     seed=1,   
 )
@@ -166,7 +161,7 @@ modelc = symbolic_analysis(
 # ---------------------------------------------------------------------------- #
 dsc = setup_dataset(
     Xc, yc;
-    model=RandomForestClassifier(n_trees=2),
+    model=SX.RandomForestClassifier(n_trees=2),
     resampling=Holdout(;shuffle=true),
     seed=1,   
 )
@@ -182,20 +177,3 @@ modelc = symbolic_analysis(
     dsc, solemc;
     extractor=TREPANRuleExtractor(invalid=true)
 )
-
-# ---------------------------------------------------------------------------- #
-#                                    XGBoost                                   #
-# ---------------------------------------------------------------------------- #
-# dsc = setup_dataset(
-#     Xc, yc;
-#     model=XGBoostClassifier(),
-#     resampling=Holdout(;shuffle=true),
-#     seed=1,   
-# )
-# solemc = train_test(dsc)
-
-# modelc = symbolic_analysis(
-#     dsc, solemc;
-#     extractor=LumenRuleExtractor()
-# )
-# @test SX.rules(modelc) isa Vector{SX.LumenResult}

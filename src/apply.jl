@@ -72,7 +72,7 @@ get_classlabels(encoding)  = [string(encoding[i]) for i in sort(keys(encoding) |
 function apply(
     m :: Machine{DecisionTreeClassifier},
     X :: AbstractDataFrame,
-    y :: AbstractVector
+    y :: AbstractVector{<:CLabel}
 )::DecisionTree
     featurenames = MLJ.report(m).features
     classlabels  = sort(MLJ.report(m).classes_seen)

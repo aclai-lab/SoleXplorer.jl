@@ -131,7 +131,7 @@ end
 #                                  train_test                                  #
 # ---------------------------------------------------------------------------- #
 function train_test(args...; kwargs...)::SoleModel
-    ds = _setup_dataset(args...; kwargs...)
+    ds = setup_dataset(args...; kwargs...)
     _train_test(ds)
 end
 

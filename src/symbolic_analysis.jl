@@ -27,8 +27,8 @@ abstract type AbstractModelSet end
 # ---------------------------------------------------------------------------- #
 const MaybeRules         = Maybe{Union{Vector{DecisionSet}, Vector{LumenResult}}}
 const MaybeMeasures      = Maybe{Measures}
-const MaybeAssociaRules  = Maybe{Vector{ARule}}
-const MaybeAssociation   = Maybe{AbstractAssociationRuleExtractor}
+# const MaybeAssociaRules  = Maybe{Vector{ARule}}
+# const MaybeAssociation   = Maybe{AbstractAssociationRuleExtractor}
 const MaybeRuleExtractor = Maybe{RuleExtractor}
 
 # ---------------------------------------------------------------------------- #
@@ -67,17 +67,18 @@ mutable struct ModelSet{S} <: AbstractModelSet
     ds           :: AbstractDataSet
     sole         :: Vector{AbstractModel}
     rules        :: MaybeRules
-    associations :: MaybeAssociaRules
+    # associations :: MaybeAssociaRules
     measures     :: MaybeMeasures
 
     function ModelSet(
         ds       :: AbstractDataSet,
         sole     :: SoleModel{S};
         rules    :: MaybeRules=nothing,
-        miner    :: MaybeAssociaRules=nothing,
+        # miner    :: MaybeAssociaRules=nothing,
         measures :: MaybeMeasures=nothing
     ) where S
-        new{S}(ds, solemodels(sole), rules, miner, measures)
+        # new{S}(ds, solemodels(sole), rules, miner, measures)
+        new{S}(ds, solemodels(sole), rules, measures)
     end
 end
 
@@ -112,15 +113,15 @@ See also: [`ModelSet`](@ref), [`symbolic_analysis`](@ref)
 """
 rules(m::ModelSet) = m.rules
 
-"""
-    associations(m::ModelSet) -> MaybeAssociaRules
+# """
+#     associations(m::ModelSet) -> MaybeAssociaRules
 
-Returns the association rules extracted from a ModelSet.
-Returns nothing if association rules isn't yet performed.
+# Returns the association rules extracted from a ModelSet.
+# Returns nothing if association rules isn't yet performed.
 
-See also: [`ModelSet`](@ref), [`symbolic_analysis`](@ref)
-"""
-associations(m::ModelSet) = m.associations
+# See also: [`ModelSet`](@ref), [`symbolic_analysis`](@ref)
+# """
+# associations(m::ModelSet) = m.associations
 
 """
     performance(m::ModelSet) -> MaybeMeasures
@@ -157,7 +158,7 @@ function Base.show(io::IO, m::ModelSet{S}) where S
     print(io, "models=$(length(solemodels(m)))")
 
     isnothing(rules(m))        || print(io, ", rules=$(length(rules(m)))")
-    isnothing(associations(m)) || print(io, ", associations=$(length(associations(m)))")
+    # isnothing(associations(m)) || print(io, ", associations=$(length(associations(m)))")
     isnothing(measures(m))     || print(io, ", measures=$(length(measures(m)))")
 
     print(io, ")")
@@ -172,9 +173,9 @@ function Base.show(io::IO, ::MIME"text/plain", m::ModelSet{S}) where S
         println(io, "  Rules: none") :
         println(io, "  Rules: $(length(first(rules(m)))) extracted rules per model")
 
-    isnothing(associations(m)) ?
-        println(io, "  Associations: none") :
-        println(io, "  Associations: $(length(associations(m))) associated rules per model")
+    # isnothing(associations(m)) ?
+    #     println(io, "  Associations: none") :
+    #     println(io, "  Associations: $(length(associations(m))) associated rules per model")
     
     isnothing(performance(m)) ?
         println(io, "  Measures: none") : begin
@@ -211,11 +212,23 @@ function sole_predict(solem::AbstractModel, y_test::AbstractVector{<:Label})
     return eltype(preds) <: CLabel ?
         begin
             classes_seen = unique(y_test)
-            eltype(preds) <: MLJ.CategoricalValue ||
+            eltype(preds) <: CategoricalArrays.CategoricalValue ||
                 (preds = categorical(preds, levels=levels(classes_seen)))
             [UnivariateFinite([p], [1.0]) for p in preds]
         end :
         preds
+end
+
+# set the random number generator for a rule extraction strategy
+function set_rng(r::RuleExtractor, rng::Random.AbstractRNG)::RuleExtractor
+    T = typeof(r)
+
+    fnames = fieldnames(T)
+    fvalues = map(fnames) do fn
+        fn === :rng ? rng : getfield(r, fn)
+    end
+    
+    return T(; NamedTuple{fnames}(fvalues)...)
 end
 
 # ---------------------------------------------------------------------------- #
@@ -285,10 +298,11 @@ end
 #                         internal symbolic_analysis                           #
 # ---------------------------------------------------------------------------- #
 function _symbolic_analysis!(
-    modelset::ModelSet;
-    extractor::Union{MaybeRuleExtractor,Tuple{RuleExtractor,NamedTuple}}=nothing,
-    association::MaybeAbstractAssociationRuleExtractor=nothing,
-    measures::Tuple{Vararg{FussyMeasure}}=()
+    modelset    :: AbstractModelSet;
+    extractor   :: Union{MaybeRuleExtractor,Tuple{RuleExtractor,NamedTuple}}=nothing,
+    # extractor::MaybeRuleExtractor=nothing,
+    # association :: MaybeAbstractAssociationRuleExtractor=nothing,
+    measures    :: Tuple{Vararg{FussyMeasure}}=()
 )::ModelSet
     ds    = dsetup(modelset)
     solem = solemodels(modelset)
@@ -300,15 +314,12 @@ function _symbolic_analysis!(
         else
             params = NamedTuple(;)
         end
-        # questo è il punto dove valutare timeout
-        # quasi sicuramente con una macro
-        # il problema è che non posso scrivere SoleXplorer qui,
-        # ma devo per forza invocare extractrule con SoleXplorer?
-        # magari nella macro, visto che carico solo SoleXplorer non dovrei avere problemi di duplicazione nomi
+
+        :rng ∈ fieldnames(typeof(extractor)) && (extractor = set_rng(extractor, get_rng(ds)))
         extractrules(extractor, params, ds, solem)
     end)
 
-    !isnothing(association) && (modelset.associations = mas_caller(ds, association))
+    # !isnothing(association) && (modelset.associations = mas_caller(ds, association))
 
     y_test = get_y(ds, :test)
     isempty(measures) && (measures = _DefaultMeasures(first(y_test)))
@@ -431,16 +442,17 @@ See also: [`ModelSet`](@ref), [`setup_dataset`](@Ref), [`train_test`](@Ref)
 """
 function symbolic_analysis(
     X::AbstractDataFrame,
-    y::AbstractVector,
+    y::AbstractVector{<:Label},
     w::MaybeVector=nothing;
     extractor::MaybeRuleExtractor=nothing,
-    association::Union{Nothing,AbstractAssociationRuleExtractor}=nothing,
+    # association::Union{Nothing,AbstractAssociationRuleExtractor}=nothing,
     measures::Tuple{Vararg{FussyMeasure}}=(),
     kwargs...
 )::ModelSet
-    ds = _setup_dataset(X, y, w; kwargs...)
+    ds = setup_dataset(X, y, w; kwargs...)
     solem = _train_test(ds)
-    _symbolic_analysis(ds, solem; extractor, association, measures)
+    # _symbolic_analysis(ds, solem; extractor, association, measures)
+    _symbolic_analysis(ds, solem; extractor, measures)
 end
 
 """

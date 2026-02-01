@@ -1,14 +1,8 @@
-# dataset.jl
-
-# dataset construction and management utilities for SoleXplorer
-
-# this module handles the creation of specialized dataset structures that encapsulate
-# MLJ machines, partitioning information for propositional sets, including also
-# treatment details for modal learning sets
-
 # ---------------------------------------------------------------------------- #
 #                               abstract types                                 #
 # ---------------------------------------------------------------------------- #
+abstract type AbstractTreatmentInfo end
+
 """
     AbstractDataSet
 
@@ -17,19 +11,34 @@ Abstract supertype for all dataset structures in SoleXplorer.
 Concrete subtypes include:
 - [`PropositionalDataSet`](@ref): for standard ML algorithms with aggregated features
 - [`ModalDataSet`](@ref): for modal logic algorithms with temporal structure preservation
-
-See also: [`setup_dataset`](@ref)
 """
 abstract type AbstractDataSet end
 
 # ---------------------------------------------------------------------------- #
-#                                   types                                      #
+#                                    types                                     #
 # ---------------------------------------------------------------------------- #
+const Balancing = NamedTuple{(:oversampler, :undersampler), <:Tuple{<:MLJ.Model, <:MLJ.Model}}
+const WinFunc   = Union{Base.Callable, Tuple{Vararg{Base.Callable}}}
+
+# metadata container for dataset preprocessing operations.
+struct ReductionInfo <: AbstractTreatmentInfo
+    features   :: Tuple{Vararg{Base.Callable}}
+    winparams  :: WinFunc
+    reducefunc :: Base.Callable
+end
+
+# simplified metadata for aggregation-only preprocessing.
+struct AggregationInfo <: AbstractTreatmentInfo
+    features   :: Tuple{Vararg{Base.Callable}}
+    winparams  :: WinFunc
+end
+
 const MaybeInt             = Maybe{Int64}
 const MaybeAggregationInfo = Maybe{AggregationInfo}
-const MaybeBalancing       = Maybe{NamedTuple{<:Any, <:Tuple{MLJ.Model, MLJ.Model}}}
+const MaybeBalancing       = Maybe{Balancing}
 const MaybeTuning          = Maybe{Tuning}
-const MaybeTreatInfo       = Maybe{TreatmentInfo}
+const MaybeTreatInfo       = Maybe{AbstractTreatmentInfo}
+const MaybeCallable        = Maybe{Base.Callable}
 
 # ---------------------------------------------------------------------------- #
 #                                  defaults                                    #
@@ -47,18 +56,18 @@ end
 #                                   set rng                                    #
 # ---------------------------------------------------------------------------- #
 # Set the random number generator for a model that supports it
-function set_rng!(m::MLJ.Model, rng::AbstractRNG)::MLJ.Model
+function set_rng!(m::MLJ.Model, rng::Random.AbstractRNG)::MLJ.Model
     m.rng = rng
     return m
 end
 
 # set the random number generator for a resampling strategy
-function set_rng(r::MLJ.ResamplingStrategy, rng::AbstractRNG)::ResamplingStrategy
+function set_rng(r::MLJ.ResamplingStrategy, rng::Random.AbstractRNG)::ResamplingStrategy
     typeof(r)(merge(MLJ.params(r), (rng=rng,))...)
 end
 
 # set random number generators for tuning-related components of a model
-function set_tuning_rng!(m::MLJ.Model, rng::AbstractRNG)::MLJ.Model
+function set_tuning_rng!(m::MLJ.Model, rng::Random.AbstractRNG)::MLJ.Model
     hasproperty(m.tuning, :rng) && (m.tuning.rng = rng)
     hasproperty(m.resampling, :rng) && (m.resampling = set_rng(m.resampling, rng))
     return m
@@ -66,9 +75,9 @@ end
 
 # set the seed for balancing-related components of a model
 # originally broken in case you pass a RNG method (lenth mismatch during MLJ.fit!)
-function set_balancing_seed(b::MLJ.Model, seed::Int64)::MLJ.Model
-    hasproperty(b, :rng) && (b = typeof(b).name.wrapper(merge(MLJ.params(b), (rng=seed,))...))
-    return b
+function set_balancing_seed(m::MLJ.Model, seed::Int64)::MLJ.Model
+    hasproperty(m, :rng) && (m = typeof(m).name.wrapper(merge(MLJ.params(m), (rng=seed,))...))
+    return m
 end
 
 # set logical conditions (features) for modal models
@@ -78,7 +87,7 @@ function set_conditions!(m::MLJ.Model, conditions::Tuple{Vararg{Base.Callable}})
 end
 
 # ---------------------------------------------------------------------------- #
-#                   dataset and targets check and conversion                   #
+#                                    utils                                     #
 # ---------------------------------------------------------------------------- #
 # ensures that the target variable `y` is properly formatted for use with MLJ
 # it handles automatic conversion to categorical format when needed for classification tasks
@@ -164,10 +173,10 @@ feature representations, typically created by aggregating multidimensional data.
 See also: [`ModalDataSet`](@ref), [`setup_dataset`](@ref), [`AbstractDataSet`](@ref)
 """
 mutable struct PropositionalDataSet{M} <: AbstractDataSet
-    mach    :: MLJ.Machine
-    pidxs   :: Vector{PartitionIdxs}
-    pinfo   :: PartitionInfo
-    ainfo   :: MaybeAggregationInfo
+    mach  :: MLJ.Machine
+    pidxs :: Vector{PartitionIdxs}
+    pinfo :: PartitionInfo
+    ainfo :: MaybeAggregationInfo
 end
 
 """
@@ -183,7 +192,7 @@ It maintains treatment information that describes how the original data structur
 - `mach::MLJ.Machine`: MLJ machine containing the modal model, training data, and cache
 - `pidxs::Vector{PartitionIdxs}`: Partition indices for train/test splits across folds
 - `pinfo::PartitionInfo`: Metadata about the partitioning strategy used  
-- `tinfo::TreatmentInfo`: Treatment information describing data structure preservation
+- `tinfo::AbstractTreatmentInfo`: Treatment information describing data structure preservation
 
 # Type Parameter
 - `M`: The type of the modal MLJ model contained in the machine
@@ -191,10 +200,10 @@ It maintains treatment information that describes how the original data structur
 See also: [`PropositionalDataSet`](@ref), [`setup_dataset`](@ref), [`AbstractDataSet`](@ref)
 """
 mutable struct ModalDataSet{M} <: AbstractDataSet
-    mach    :: MLJ.Machine
-    pidxs   :: Vector{PartitionIdxs}
-    pinfo   :: PartitionInfo
-    tinfo   :: TreatmentInfo
+    mach  :: MLJ.Machine
+    pidxs :: Vector{PartitionIdxs}
+    pinfo :: PartitionInfo
+    tinfo :: AbstractTreatmentInfo
 end
 
 """
@@ -227,18 +236,17 @@ the type of treatment specified.
 See also: [`PropositionalDataSet`](@ref), [`ModalDataSet`](@ref), [`AbstractDataSet`](@ref)
 """
 function DataSet(
-    mach    :: MLJ.Machine{M},
-    pidxs   :: Vector{PartitionIdxs},
-    pinfo   :: PartitionInfo;
-    tinfo   :: MaybeTreatInfo=nothing
+    mach  :: MLJ.Machine{M},
+    pidxs :: Vector{PartitionIdxs},
+    pinfo :: PartitionInfo;
+    tinfo :: MaybeTreatInfo=nothing
 ) where {M<:MLJ.Model}
     isnothing(tinfo) ?
         PropositionalDataSet{M}(mach, pidxs, pinfo, nothing) : begin
-        if get_treatment(tinfo) == :reducesize
+        if tinfo isa ReductionInfo
             ModalDataSet{M}(mach, pidxs, pinfo, tinfo)
         else
-            ainfo = treat2aggr(tinfo)
-            PropositionalDataSet{M}(mach, pidxs, pinfo, ainfo)
+            PropositionalDataSet{M}(mach, pidxs, pinfo, tinfo)
         end
     end
 end
@@ -268,7 +276,7 @@ get_X(ds::AbstractDataSet, part::Symbol)::Vector{<:AbstractDataFrame} =
 
 Extract target vector from dataset's MLJ machine.
 """
-get_y(ds::AbstractDataSet)::Vector = ds.mach.args[2].data
+get_y(ds::AbstractDataSet)::AbstractVector = ds.mach.args[2].data
 
 """
     get_y(ds::AbstractDataSet, part::Symbol) -> Vector{<:AbstractVector}
@@ -299,24 +307,21 @@ Extract the logiset (if present) from the dataset's MLJ machine.
 """
 get_logiset(ds::ModalDataSet)::SupportedLogiset = ds.mach.data[1].modalities[1]
 
+get_rng(ds::AbstractDataSet) = get_rng(ds.pinfo)
+
 # ---------------------------------------------------------------------------- #
 #                           MLJ models's extra setup                           #
 # ---------------------------------------------------------------------------- #
 function set_balancing(
     model     :: MLJ.Model,
-    balancing :: NamedTuple{<:Any, <:Tuple{MLJ.Model, MLJ.Model}},
-    seed      :: MaybeInt
+    balancing :: Balancing,
+    seed      :: Int64=17
 )::MLJ.Model
     # regression models don't support balancing
     model isa Regression &&
         throw(ArgumentError("Balancing is not supported for regression models."))
 
-    balancing isa NamedTuple{(:oversampler, :undersampler), <:Tuple{MLJ.Model, MLJ.Model}} ||
-        throw(ArgumentError("Invalid balancing parameter, usage: " * 
-                        "balancing(oversampler=..., undersample=...)"))
-
-    # set the model to use the same seed as the dataset
-    isnothing(seed) && (seed = 17)
+    # set the model to use the same seed
     balancing = map(b -> set_balancing_seed(b, seed), balancing)
 
     model = MLJ.BalancedModel(model; balancing...)
@@ -325,7 +330,7 @@ end
 function set_tuning(
     model  :: MLJ.Model,
     tuning :: Tuning,
-    rng    :: AbstractRNG
+    rng    :: Random.AbstractRNG
 )::MLJ.Model
     t_range = get_range(tuning)
     if !(t_range isa MLJ.NominalRange)
@@ -342,70 +347,12 @@ function set_tuning(
 end
 
 # ---------------------------------------------------------------------------- #
-#                            internal setup dataset                            #
-# ---------------------------------------------------------------------------- #
-function _setup_dataset(
-    X             :: AbstractDataFrame,
-    y             :: AbstractVector,
-    w             :: MaybeVector                  = nothing;
-    model         :: MLJ.Model                    = _DefaultModel(y),
-    resampling    :: ResamplingStrategy           = Holdout(fraction_train=0.7, shuffle=true),
-    valid_ratio   :: Real                         = 0.0,
-    seed          :: MaybeInt                     = nothing,
-    balancing     :: MaybeBalancing               = nothing,
-    tuning        :: MaybeTuning                  = nothing,
-    win           :: WinFunction                  = AdaptiveWindow(nwindows=3, relative_overlap=0.1),
-    features      :: Tuple{Vararg{Base.Callable}} = (maximum, minimum),
-    modalreduce   :: Base.Callable                = mean
-)::AbstractDataSet
-    # check y special cases
-    y = check_y(y, model)
-    eltype(y) <: Label || throw(ArgumentError("Target variable y must have elements of type Label, " *
-        "got eltype: $(eltype(y))"))
-
-    # setup rng
-    if !isnothing(seed)
-        rng = Xoshiro(seed)
-        # propagate user rng to every field that needs it
-        hasproperty(model, :rng)      && set_rng!(model, rng)
-        hasproperty(resampling, :rng) && (resampling = set_rng(resampling, rng))
-    else
-        rng = TaskLocalRNG()
-    end
-
-    # Modal models need features to be passed in model params
-    hasproperty(model, :features) && set_conditions!(model, features)
-    # MLJ.TunedModels can't automatically assigns measure to Modal models
-    if model isa Modal && !isnothing(tuning)
-        isnothing(get_measure(tuning)) && (tuning.measure = LogLoss())
-    end
-
-    # handle multidimensional datasets:
-    # propositional models requiring feature aggregation
-    # modal models requiring reducing data size
-    if is_multidim_dataframe(X)
-        treat = model isa Modal ? :reducesize : :aggregate
-        X, tinfo = treatment(X, treat; features, win, modalreduce)
-    else
-        X = code_dataset(X)
-        # some algos, like xgboost, doesnt accept dataset with numeric values, only float
-        X = to_float_dataset(X)
-        tinfo = nothing
-    end
-
-    ttpairs, pinfo = partition(y; resampling, valid_ratio, rng)
-
-    isnothing(balancing) || (model = set_balancing(model, balancing, seed))
-    isnothing(tuning)    || (model = set_tuning(model, tuning, rng))
-
-    mach = isnothing(w) ? MLJ.machine(model, X, y) : MLJ.machine(model, X, y, w)
-    
-    DataSet(mach, ttpairs, pinfo; tinfo)
-end
-
-# ---------------------------------------------------------------------------- #
 #                                setup dataset                                 #
 # ---------------------------------------------------------------------------- #
+function setup_dataset(X::AbstractDataFrame, y::AbstractVector, args...; kwargs...)
+    throw(ArgumentError("Target variable y must have elements of type Label, " * "got eltype: $(eltype(y))"))
+end
+
 """
     setup_dataset(
         X, y, w=nothing;
@@ -415,9 +362,9 @@ end
         seed=nothing,
         balancing=nothing,
         tuning=nothing,
-        win=AdaptiveWindow(nwindows=3, relative_overlap=0.1),
+        win=adaptivewindow(nwindows=3, overlap=0.1),
         features=(maximum, minimum),
-        modalreduce=mean,
+        reducefunc=mean,
     ) -> AbstractDataSet
 
 Creates and configures a dataset structure for machine learning.
@@ -437,259 +384,13 @@ and MLJ machine creation.
 - `model::MLJ.Model=_DefaultModel(y)`: Sole compatible MLJ model to use, 
    auto-selected based on target type, if no `model` is subbmitted
 
-## Available Models
-
-From package Bensadoun, R., et al. (2013). [DecisionTree.jl](https://github.com/JuliaAI/DecisionTree.jl):
-```
-DecisionTreeClassifier(
-  max_depth = -1, 
-  min_samples_leaf = 1, 
-  min_samples_split = 2, 
-  min_purity_increase = 0.0, 
-  n_subfeatures = 0, 
-  post_prune = false, 
-  merge_purity_threshold = 1.0, 
-  display_depth = 5, 
-  feature_importance = :impurity, 
-  rng = Random.TaskLocalRNG())
-```
-```
-DecisionTreeRegressor(
-  max_depth = -1, 
-  min_samples_leaf = 5, 
-  min_samples_split = 2, 
-  min_purity_increase = 0.0, 
-  n_subfeatures = 0, 
-  post_prune = false, 
-  merge_purity_threshold = 1.0, 
-  feature_importance = :impurity, 
-  rng = Random.TaskLocalRNG())
-```
-```
-RandomForestClassifier(
-  max_depth = -1, 
-  min_samples_leaf = 1, 
-  min_samples_split = 2, 
-  min_purity_increase = 0.0, 
-  n_subfeatures = -1, 
-  n_trees = 100, 
-  sampling_fraction = 0.7, 
-  feature_importance = :impurity, 
-  rng = Random.TaskLocalRNG())
-```
-```
-RandomForestRegressor(
-  max_depth = -1, 
-  min_samples_leaf = 1, 
-  min_samples_split = 2, 
-  min_purity_increase = 0.0, 
-  n_subfeatures = -1, 
-  n_trees = 100, 
-  sampling_fraction = 0.7, 
-  feature_importance = :impurity, 
-  rng = Random.TaskLocalRNG())
-```
-```
-AdaBoostStumpClassifier(
-  n_iter = 10, 
-  feature_importance = :impurity, 
-  rng = Random.TaskLocalRNG())
-```
-
-From package ACLAI Lab and G. Pagliarini (2023). [ModalDecisionTrees.jl](https://github.com/aclai-lab/ModalDecisionTrees.jl):
-```
-ModalDecisionTree(
-  max_depth = nothing, 
-  min_samples_leaf = 4, 
-  min_purity_increase = 0.002, 
-  max_purity_at_leaf = Inf, 
-  max_modal_depth = nothing, 
-  relations = nothing, 
-  features = nothing, 
-  conditions = nothing, 
-  featvaltype = Float64, 
-  initconditions = nothing, 
-  downsize = SoleData.var"#downsize#541"(), 
-  force_i_variables = true, 
-  fixcallablenans = false, 
-  print_progress = false, 
-  rng = Random.TaskLocalRNG(), 
-  display_depth = nothing, 
-  min_samples_split = nothing, 
-  n_subfeatures = identity, 
-  post_prune = false, 
-  merge_purity_threshold = nothing, 
-  feature_importance = :split)
-```
-```
-ModalRandomForest(
-  sampling_fraction = 0.7, 
-  ntrees = 10, 
-  max_depth = nothing, 
-  min_samples_leaf = 1, 
-  min_purity_increase = -Inf, 
-  max_purity_at_leaf = Inf, 
-  max_modal_depth = nothing, 
-  relations = nothing, 
-  features = nothing, 
-  conditions = nothing, 
-  featvaltype = Float64, 
-  initconditions = nothing, 
-  downsize = SoleData.var"#downsize#542"(), 
-  force_i_variables = true, 
-  fixcallablenans = false, 
-  print_progress = false, 
-  rng = Random.TaskLocalRNG(), 
-  display_depth = nothing, 
-  min_samples_split = nothing, 
-  n_subfeatures = ModalDecisionTrees.MLJInterface.sqrt_f, 
-  post_prune = false, 
-  merge_purity_threshold = nothing, 
-  feature_importance = :split)
-```
-```
-ModalAdaBoost(
-  max_depth = 1, 
-  min_samples_leaf = 4, 
-  min_purity_increase = 0.002, 
-  max_purity_at_leaf = Inf, 
-  max_modal_depth = nothing, 
-  relations = :IA7, 
-  features = nothing, 
-  conditions = nothing, 
-  featvaltype = Float64, 
-  initconditions = nothing, 
-  downsize = SoleData.var"#downsize#541"(), 
-  force_i_variables = true, 
-  fixcallablenans = true, 
-  print_progress = false, 
-  display_depth = nothing, 
-  min_samples_split = nothing, 
-  n_subfeatures = identity, 
-  post_prune = false, 
-  merge_purity_threshold = nothing, 
-  n_iter = 10, 
-  feature_importance = :split, 
-  rng = Random.TaskLocalRNG())
-```
-From package Chen, T., & Guestrin, C. (2016). [XGBoost.jl](https://github.com/dmlc/XGBoost.jl)
-```
-XGBoostClassifier(
-  test = 1, 
-  num_round = 100, 
-  booster = "gbtree", 
-  disable_default_eval_metric = 0, 
-  eta = 0.3, 
-  num_parallel_tree = 1, 
-  gamma = 0.0, 
-  max_depth = 6, 
-  min_child_weight = 1.0, 
-  max_delta_step = 0.0, 
-  subsample = 1.0, 
-  colsample_bytree = 1.0, 
-  colsample_bylevel = 1.0, 
-  colsample_bynode = 1.0, 
-  lambda = 1.0, 
-  alpha = 0.0, 
-  tree_method = "auto", 
-  sketch_eps = 0.03, 
-  scale_pos_weight = 1.0, 
-  updater = nothing, 
-  refresh_leaf = 1, 
-  process_type = "default", 
-  grow_policy = "depthwise", 
-  max_leaves = 0, 
-  max_bin = 256, 
-  predictor = "cpu_predictor", 
-  sample_type = "uniform", 
-  normalize_type = "tree", 
-  rate_drop = 0.0, 
-  one_drop = 0, 
-  skip_drop = 0.0, 
-  feature_selector = "cyclic", 
-  top_k = 0, 
-  tweedie_variance_power = 1.5, 
-  objective = "automatic", 
-  base_score = 0.5, 
-  early_stopping_rounds = 0, 
-  watchlist = nothing, 
-  nthread = 1, 
-  importance_type = "gain", 
-  seed = nothing, 
-  validate_parameters = false, 
-  eval_metric = String[], 
-  monotone_constraints = nothing)
-```
-```
-XGBoostRegressor(
-  test = 1, 
-  num_round = 100, 
-  booster = "gbtree", 
-  disable_default_eval_metric = 0, 
-  eta = 0.3, 
-  num_parallel_tree = 1, 
-  gamma = 0.0, 
-  max_depth = 6, 
-  min_child_weight = 1.0, 
-  max_delta_step = 0.0, 
-  subsample = 1.0, 
-  colsample_bytree = 1.0, 
-  colsample_bylevel = 1.0, 
-  colsample_bynode = 1.0, 
-  lambda = 1.0, 
-  alpha = 0.0, 
-  tree_method = "auto", 
-  sketch_eps = 0.03, 
-  scale_pos_weight = 1.0, 
-  updater = nothing, 
-  refresh_leaf = 1, 
-  process_type = "default", 
-  grow_policy = "depthwise", 
-  max_leaves = 0, 
-  max_bin = 256, 
-  predictor = "cpu_predictor", 
-  sample_type = "uniform", 
-  normalize_type = "tree", 
-  rate_drop = 0.0, 
-  one_drop = 0, 
-  skip_drop = 0.0, 
-  feature_selector = "cyclic", 
-  top_k = 0, 
-  tweedie_variance_power = 1.5, 
-  objective = "reg:squarederror", 
-  base_score = 0.5, 
-  early_stopping_rounds = 0, 
-  watchlist = nothing, 
-  nthread = 1, 
-  importance_type = "gain", 
-  seed = nothing, 
-  validate_parameters = false, 
-  eval_metric = String[], 
-  monotone_constraints = nothing)
-```
-
-Each model is fully parameterizable, see the original package reference documentation.
-
 ## Data resampling
 - `resampling::ResamplingStrategy=Holdout(shuffle=true)`: Cross-validation strategy
 - `valid_ratio::Real=0.0`: Validation set proportion
-- `rng::AbstractRNG=TaskLocalRNG()`: Random number generator for reproducibility
+- `rng::Random.AbstractRNG=TaskLocalRNG()`: Random number generator for reproducibility
 
 Resampling strategies are taken from the package [MLJ](https://juliaai.github.io/MLJ.jl/stable/).
 See official documentation [here](https://juliaai.github.io/MLJBase.jl/stable/resampling/).
-Available strategies:
-```
-Holdout(; fraction_train=0.7, shuffle=true, rng=TaskLocalRNG())
-```
-```
-CV(; nfolds=6,  shuffle=true, rng=TaskLocalRNG())
-```
-```
-StratifiedCV(; nfolds=6, shuffle=true, rng=TaskLocalRNG())
-```
-```
-TimeSeriesCV(; nfolds=4)
-```
 
 `valid_ratio` is used with XGBoost early stop [technique](https://xgboost.readthedocs.io/en/stable/prediction.html).
 `rng` can be setted externally (via seed, using internal Xoshiro algo) for convenience.
@@ -697,87 +398,6 @@ TimeSeriesCV(; nfolds=4)
 ## Balancing
 Balancing strategies are taken from the package [Imbalance](https://github.com/JuliaAI/Imbalance.jl).
 See official documentation [here](https://juliaai.github.io/Imbalance.jl/dev/).
-Available strategies:
-```
-BorderlineSMOTE1(
-  m = 5, 
-  k = 5, 
-  ratios = 1.0, 
-  rng = Random.TaskLocalRNG(), 
-  try_preserve_type = true, 
-  verbosity = 1)
-```
-```
-ClusterUndersampler(
-  mode = "nearest", 
-  ratios = 1.0, 
-  maxiter = 100, 
-  rng = Random.TaskLocalRNG(), 
-  try_preserve_type = true)
-```
-```
-ENNUndersampler(
-  k = 5, 
-  keep_condition = "mode", 
-  min_ratios = 1.0, 
-  force_min_ratios = false, 
-  rng = Random.TaskLocalRNG(), 
-  try_preserve_type = true)
-```
-```
-ROSE(
-  s = 1.0, 
-  ratios = 1.0, 
-  rng = Random.TaskLocalRNG(), 
-  try_preserve_type = true)
-```
-```
-RandomOversampler(
-  ratios = 1.0, 
-  rng = Random.TaskLocalRNG(), 
-  try_preserve_type = true)
-```
-```
-RandomUndersampler(
-  ratios = 1.0, 
-  rng = Random.TaskLocalRNG(), 
-  try_preserve_type = true)
-```
-```
-RandomWalkOversampler(
-  ratios = 1.0, 
-  rng = Random.TaskLocalRNG(), 
-  try_preserve_type = true)
-```
-```
-SMOTE(
-  k = 5, 
-  ratios = 1.0, 
-  rng = Random.TaskLocalRNG(), 
-  try_preserve_type = true)
-```
-```
-SMOTEN(
-  k = 5, 
-  ratios = 1.0, 
-  rng = Random.TaskLocalRNG(), 
-  try_preserve_type = true)
-```
-```
-SMOTENC(
-  k = 5, 
-  ratios = 1.0, 
-  knn_tree = "Brute", 
-  rng = Random.TaskLocalRNG(), 
-  try_preserve_type = true)
-```
-```
-TomekUndersampler(
-  min_ratios = 1.0, 
-  force_min_ratios = false, 
-  rng = Random.TaskLocalRNG(), 
-  try_preserve_type = true)
-```
 
 ## Tuning
 `tuning::MaybeTuning=nothing`: Hyperparameter tuning configuration,
@@ -789,69 +409,6 @@ range = SoleXplorer.range(:min_purity_increase; lower=0.1, upper=1.0, scale=:log
 Tuning strategies are adapted from the package [MLJ](https://juliaai.github.io/MLJ.jl/stable/)
 and package [MLJParticleSwarmOptimization](https://github.com/JuliaAI/MLJParticleSwarmOptimization.jl).
 
-Available strategies:
-```
-GridTuning(
-  goal = nothing, 
-  resolution = 10, 
-  shuffle = true, 
-  rng = Random.TaskLocalRNG(),
-  range = range,
-  resampling = nothing
-  measure = nothing
-  repeats = 1)
-```
-```
-RandomTuning(
-  bounded = Distributions.Uniform, 
-  positive_unbounded = Distributions.Gamma, 
-  other = Distributions.Normal, 
-  rng = Random.TaskLocalRNG(),
-  range = range,
-  resampling = nothing
-  measure = nothing
-  repeats = 1)
-```
-```
-CubeTuning(
-  gens = 1, 
-  popsize = 100, 
-  ntour = 2, 
-  ptour = 0.8, 
-  interSampleWeight = 1.0, 
-  ae_power = 2, 
-  periodic_ae = false, 
-  rng = Random.TaskLocalRNG(),
-  range = range,
-  resampling = nothing
-  measure = nothing
-  repeats = 1
-```
-```
-ParticleTuning(
-  n_particles = 3, 
-  w = 1.0, 
-  c1 = 2.0, 
-  c2 = 2.0, 
-  prob_shift = 0.25, 
-  rng = Random.TaskLocalRNG(),
-  range = range,
-  resampling = nothing
-  measure = nothing
-  repeats = 1)
-```
-```
-AdaptiveTuning(
-  n_particles = 3, 
-  c1 = 2.0, 
-  c2 = 2.0, 
-  prob_shift = 0.25, 
-  rng = Random.TaskLocalRNG(),
-  range = range,
-  resampling = nothing
-  measure = nothing
-  repeats = 1) 
-```
 
 ## Multidimensional Data Processing
 These parameters are needed only if a time series dataset is used.
@@ -860,12 +417,12 @@ or aggregation strategy, in case of further **propositional** analysis.
 Parameters are the same, SoleXplorer will take care of automatically set the case,
 depending on the model choose.
 
-- `win::WinFunction=AdaptiveWindow(nwindows=3, relative_overlap=0.1)`: Windowing function
-Available windows strategies: [MovingWindow](@ref), [WholeWindow](@ref), [SplitWindow](@ref), [AdaptiveWindow](@ref).
+- `win::WinFunc=adaptivewindow(nwindows=3, overlap=0.1)`: Windowing function
+Available windows strategies: [MovingWindow](@ref), [WholeWindow](@ref), [SplitWindow](@ref), [adaptivewindow](@ref).
 
 - `features::Tuple{Vararg{Base.Callable}}=(maximum, minimum)`: Feature extraction functions
 Note that beyond standard reduction functions (e.g., maximum, minimum, mean, mode), [Catch22](https://time-series-features.gitbook.io/catch22) time-series features are also available.
-- `modalreduce::Base.Callable=mean`: Reduction function for modal algorithms
+- `reducefunc::Base.Callable=mean`: Reduction function for modal algorithms
 
 # Returns
 - `PropositionalDataSet{M}`: For standard ML algorithms with tabular data
@@ -884,7 +441,7 @@ Xc = DataFrame(Xc)
 Xr, yr = @load_boston
 Xr = DataFrame(Xr)
 
-natopsloader = NatopsLoader()
+natopsloader = SX.NatopsLoader()
 Xts, yts = SX.load(natopsloader)
 
 # basic setup
@@ -924,15 +481,78 @@ dts = setup_dataset(
     model=ModalRandomForest(),
     resampling=Holdout(fraction_train=0.7, shuffle=true),
     seed=1,
-    win=AdaptiveWindow(nwindows=3, relative_overlap=0.3),
+    win=adaptivewindow(nwindows=3, overlap=0.3),
     features=(minimum, maximum),
-    modalreduce=mode
+    reducefunc=mode
 )
 ```
 
 # See also: [`DataSet`](@ref), [`PropositionalDataSet`](@ref), [`ModalDataSet`](@ref), [`symbolic_analysis`](@ref)
 """
-setup_dataset(args...; kwargs...) = _setup_dataset(args...; kwargs...)
+function setup_dataset(
+    X           :: AbstractDataFrame,
+    y           :: AbstractVector{<:Label},
+    w           :: MaybeVector                  = nothing;
+    model       :: MLJ.Model                    = _DefaultModel(y),
+    resampling  :: ResamplingStrategy           = Holdout(fraction_train=0.7, shuffle=true),
+    valid_ratio :: Real                         = 0.0,
+    seed        :: MaybeInt                     = nothing,
+    balancing   :: MaybeBalancing               = nothing,
+    tuning      :: MaybeTuning                  = nothing,
+    win         :: WinFunc                      = adaptivewindow(nwindows=3, overlap=0.1),
+    features    :: Tuple{Vararg{Base.Callable}} = (maximum, minimum),
+    norm        :: MaybeCallable                = nothing,
+    reducefunc  :: Base.Callable                = mean
+)::AbstractDataSet
+    y = check_y(y, model)
+
+    # setup rng
+    if !isnothing(seed)
+        rng = Xoshiro(seed)
+        # propagate user rng to every field that needs it
+        hasproperty(model, :rng)      && set_rng!(model, rng)
+        hasproperty(resampling, :rng) && (resampling = set_rng(resampling, rng))
+    else
+        rng = TaskLocalRNG()
+    end
+
+    # Modal models need features to be passed in model params
+    hasproperty(model, :features) && set_conditions!(model, features)
+    # MLJ.TunedModels can't automatically assigns measure to Modal models
+    if model isa Modal && !isnothing(tuning)
+        isnothing(get_measure(tuning)) && (tuning.measure = LogLoss())
+    end
+
+    # handle multidimensional datasets:
+    # propositional models requiring feature aggregation
+    # modal models requiring reducing data size
+    if DataTreatments.is_multidim_dataset(X)
+        if model isa Modal
+            t = DataTreatment(X, :reducesize; win, features, reducefunc, norm)
+            X = DataFrame(get_dataset(t), Symbol.(get_featureid(t)))
+            tinfo = ReductionInfo(features, win, reducefunc)
+        else
+            t = DataTreatment(X, :aggregate; win, features, norm)
+            X = DataFrame(get_dataset(t), Symbol.(get_featureid(t)))
+            tinfo = AggregationInfo(features, win)
+        end
+    else
+        X = code_dataset(X)
+        # some algos, like xgboost, doesnt accept dataset with numeric values, only float
+        X = to_float_dataset(X)
+        tinfo = nothing
+    end
+
+    ttpairs, pinfo = partition(y; resampling, valid_ratio, rng)
+
+    isnothing(seed)      && (seed = 1)
+    isnothing(balancing) || (model = set_balancing(model, balancing, seed))
+    isnothing(tuning)    || (model = set_tuning(model, tuning, rng))
+
+    mach = isnothing(w) ? MLJ.machine(model, X, y) : MLJ.machine(model, X, y, w)
+    
+    DataSet(mach, ttpairs, pinfo; tinfo)
+end
 
 """
     setup_dataset(X::AbstractDataFrame, y::Symbol; kwargs...)::AbstractDataSet
@@ -941,8 +561,9 @@ Convenience method when target variable is a column in the feature DataFrame.
 """
 function setup_dataset(
     X::AbstractDataFrame,
-    y::Symbol;
+    y::Symbol,
+    args...;
     kwargs...
 )::AbstractDataSet
-    setup_dataset(X[!, Not(y)], X[!, y]; kwargs...)
+    setup_dataset(X[!, Not(y)], X[!, y], args...; kwargs...)
 end

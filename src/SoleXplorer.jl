@@ -1,10 +1,10 @@
 module SoleXplorer
 using  Reexport
 
-using  SoleBase: Label, CLabel, RLabel, XGLabel
-using  SoleBase: movingwindow, wholewindow, splitwindow, adaptivewindow
 using  SoleData: scalarlogiset
 using  SoleData.Artifacts
+
+@reexport using SoleModels: Label, CLabel, RLabel, XGLabel
 using  SoleModels: Branch, ConstantModel
 using  SoleModels: DecisionEnsemble, DecisionTree, DecisionXGBoost
 using  SoleModels: AbstractModel, solemodel, weighted_aggregation, apply!
@@ -13,14 +13,15 @@ using  SoleModels: RuleExtractor, DecisionSet
 @reexport using SoleData.Artifacts: NatopsLoader, load
 @reexport using SoleModels: readmetrics
 
-@reexport using SolePostHoc: InTreesRuleExtractor, LumenRuleExtractor, BATreesRuleExtractor
-@reexport using SolePostHoc: RULECOSIPLUSRuleExtractor, REFNERuleExtractor, TREPANRuleExtractor
-using  SolePostHoc
+@reexport using SolePostHoc.RuleExtraction: InTreesRuleExtractor, LumenRuleExtractor, BATreesRuleExtractor
+# @reexport using SolePostHoc.RuleExtraction: RULECOSIPLUSRuleExtractor
+@reexport using SolePostHoc.RuleExtraction: REFNERuleExtractor, TREPANRuleExtractor
+using  SolePostHoc.RuleExtraction
 
-@reexport using ModalAssociationRules: Item, Atom, ScalarCondition, VariableMin, VariableMax
-@reexport using ModalAssociationRules: IA_L, box, diamond
-@reexport using ModalAssociationRules: gsupport, gconfidence, glift, gconviction, gleverage
-using ModalAssociationRules
+# @reexport using ModalAssociationRules: Item, Atom, ScalarCondition, VariableMin, VariableMax
+# @reexport using ModalAssociationRules: IA_L, box, diamond
+# @reexport using ModalAssociationRules: gsupport, gconfidence, glift, gconviction, gleverage
+# using ModalAssociationRules
 
 # ---------------------------------------------------------------------------- #
 #                                     MLJ                                      #
@@ -36,9 +37,11 @@ using  MLJParticleSwarmOptimization
 const  PSO = MLJParticleSwarmOptimization
 using  MLJ
 using  MLJ: MLJBase, MLJTuning
+# custom resampling strategy
+import MLJ.MLJBase: train_test_pairs
 # balancing
-using MLJBalancing
-@reexport using MLJBalancing:
+using Imbalance
+@reexport using Imbalance.MLJ:
     BorderlineSMOTE1, ClusterUndersampler, ENNUndersampler, ROSE,
     RandomOversampler, RandomUndersampler, RandomWalkOversampler,
     SMOTE, SMOTEN, SMOTENC, TomekUndersampler
@@ -46,17 +49,14 @@ using MLJBalancing
 # ---------------------------------------------------------------------------- #
 #                              external packages                               #
 # ---------------------------------------------------------------------------- #
-@reexport using SoleData: load_arff_dataset
+@reexport using DataTreatments: movingwindow, wholewindow, splitwindow, adaptivewindow
+@reexport using DataTreatments: zscore, sigmoid, pnorm, scale, minmax, center, unitpower, outliersuppress
+using  DataTreatments
+
+using  CategoricalArrays
 using  DataFrames
 using  Random
 using  JLD2
-
-# ---------------------------------------------------------------------------- #
-#                                   timeout                                    #
-# ---------------------------------------------------------------------------- #
-# using TimeOut
-
-const preprocess = "using SoleXplorer\n"
 
 # ---------------------------------------------------------------------------- #
 #                                 maybe types                                  #
@@ -76,24 +76,19 @@ const MaybeNTuple = Maybe{NamedTuple}
 # ---------------------------------------------------------------------------- #
 # feature extraction via Catch22
 # export user friendly Catch22 nicknames
-export mode_5, mode_10, embedding_dist, acf_timescale, acf_first_min, ami2,
-       trev, outlier_timing_pos, outlier_timing_neg, whiten_timescale,
-       forecast_error, ami_timescale, high_fluctuation, stretch_decreasing,
-       stretch_high, entropy_pairs, rs_range, dfa, low_freq_power, centroid_freq,
-       transition_variance, periodicity, base_set, catch9, catch22_set, complete_set
-using  Catch22
-include("featureset.jl")
+@reexport using DataTreatments: mode_5, mode_10, embedding_dist, acf_timescale,
+        acf_first_min, ami2, trev, outlier_timing_pos, outlier_timing_neg,
+        whiten_timescale, forecast_error, ami_timescale, high_fluctuation,
+        stretch_decreasing, stretch_high, entropy_pairs, rs_range, dfa,
+        low_freq_power, centroid_freq, transition_variance, periodicity, base_set
+@reexport using DataTreatments: catch9, catch22_set, complete_set
 
 # ---------------------------------------------------------------------------- #
 #                                 interfaces                                   #
 # ---------------------------------------------------------------------------- #
+export partition, pCV
 export get_X, get_y, get_train, get_test
 include("partition.jl")
-
-export AbstractWinFunction, WinFunction
-export MovingWindow, WholeWindow, SplitWindow, AdaptiveWindow
-export treatment
-include("treatment.jl")
 
 # ---------------------------------------------------------------------------- #
 #                                   models                                     #
@@ -137,8 +132,8 @@ include("train_test.jl")
 
 include("extractrules.jl")
 
-export Apriori, FPGrowth, Eclat
-include("associationrules.jl")
+# export Apriori, FPGrowth, Eclat
+# include("associationrules.jl")
 
 export AbstractModelSet, ModelSet
 export dsetup, solemodels, rules, associations

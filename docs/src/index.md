@@ -15,8 +15,8 @@ Key features:
 * Works also on time-series based datasets using modal logic.
 * View rules and their metrics.
 * Inspect logical formulas and their evaluation.
-* View modal rule associations.
-* Integrated GUI.
+<!-- * View modal rule associations. -->
+<!-- * Integrated GUI. -->
 
 ## Installation
 ```julia
@@ -59,7 +59,7 @@ modelc = symbolic_analysis(
 ### Temporal association rules
 ```julia
 # Load a temporal dataset
-natopsloader = NatopsLoader()
+natopsloader = SoleXplorer.NatopsLoader()
 Xts, yts = SoleXplorer.load(natopsloader)
 
 # Train a modal decision tree
@@ -78,7 +78,7 @@ SoleXplorer extensively uses the following packages:
 * [`SoleLogics`](https://github.com/aclai-lab/SoleLogics.jl): modal and temporal logic systems.
 * [`MLJ`](https://github.com/JuliaAI/MLJ.jl): provides all machine learning frameworks.
 * [`SolePostHoc`](https://github.com/aclai-lab/SolePostHoc.jl): for rule extraction.
-* [`ModalAssociationRules`](https://github.com/aclai-lab/ModalAssociationRules.jl): for mining association rules.
+<!-- * [`ModalAssociationRules`](https://github.com/aclai-lab/ModalAssociationRules.jl): for mining association rules. -->
 
 ## About
 The package is developed by the [ACLAI Lab](https://aclai.unife.it/en/) @ University of Ferrara.

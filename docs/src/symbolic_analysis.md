@@ -20,7 +20,7 @@ ModelSet
 dsetup(m::ModelSet)
 solemodels(m::ModelSet)
 rules(m::ModelSet)
-associations(m::ModelSet)
+<!-- associations(m::ModelSet) -->
 performance(m::ModelSet)
 ```
 
