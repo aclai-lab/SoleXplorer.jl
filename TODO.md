@@ -67,13 +67,6 @@ rivederne la propagazione: ad oggi non è ancora formalmente testata
 Bisogna pensare anche ai modelli non supervisionati: apply(m, X)
 
 # ---------------------------------------------------------------------------- #
-#                                   timeout                                    #
-# ---------------------------------------------------------------------------- #
-l'algoritmo è pronto, sia il mio che quello mio di perry
-il più performante vince
-ma lo sviluppo sarà su un altra repo.
-
-# ---------------------------------------------------------------------------- #
 #                                multi thread                                  #
 # ---------------------------------------------------------------------------- #
 si-può-fare-!!!

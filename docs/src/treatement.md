@@ -18,7 +18,7 @@ With multidimensional datasets there are two possible types of work:
 treatment(X::AbstractDataFrame, treat::Symbol)
 ```
 
-Windowing strategies availables for reduce/aggregation time-series datasets.
+<!-- Windowing strategies availables for reduce/aggregation time-series datasets.
 
 ```@docs
 MovingWindow
@@ -27,21 +27,21 @@ SplitWindow
 adaptivewindow
 AbstractWinFunction
 WinFunction
-```
+``` -->
 
 # [Featuresets](@id featuresets)
 
 ### Basic Statistics
 Standard statistical measures: `maximum`, `minimum`, `mean`, `median`, `std`, `cov`
 
-### Catch22 Features
+<!-- ### Catch22 Features
 Canonical time-series characteristics covering:
 - Distribution properties and extreme events
 - Linear and nonlinear autocorrelation structures  
 - Forecasting performance and scaling properties
-- Symbolic dynamics and transition patterns
+- Symbolic dynamics and transition patterns -->
 
-### Predefined Feature Sets
+<!-- ### Predefined Feature Sets
 
 - [`base_set`](@ref): Minimal statistical features (4 features)
 - [`catch9`](@ref): Curated subset combining statistics + key Catch22 (9 features)  
@@ -52,20 +52,20 @@ Canonical time-series characteristics covering:
 
 The Catch22 features are based on the Canonical Time-series Characteristics:
 - **Repository**: https://github.com/DynamicsAndNeuralSystems/catch22
-- **Paper**: Lubba, C.H., Sethi, S.S., Knaute, P. et al. "catch22: CAnonical Time-series CHaracteristics." *Data Min Knowl Disc* 33, 1821–1852 (2019). https://doi.org/10.1007/s10618-019-00647-x
+- **Paper**: Lubba, C.H., Sethi, S.S., Knaute, P. et al. "catch22: CAnonical Time-series CHaracteristics." *Data Min Knowl Disc* 33, 1821–1852 (2019). https://doi.org/10.1007/s10618-019-00647-x -->
 
-```@docs
+<!-- ```@docs
 base_set
 catch9
 catch22_set
 complete_set
-```
+``` -->
 
 See also: [`treatment`](@ref), [`setup_dataset`](@ref)
 
 ## All Catch22 Features
 
-```@docs
+<!-- ```@docs
 mode_5
 mode_10  
 embedding_dist
@@ -88,4 +88,4 @@ low_freq_power
 centroid_freq
 transition_variance
 periodicity
-```
+``` -->

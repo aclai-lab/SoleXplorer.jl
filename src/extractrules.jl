@@ -31,12 +31,13 @@ function extractrules(
         X_test, y_test = get_X(ds, :test)[i], get_y(ds, :test)[i]
         RuleExtraction.modalextractrules(
             extractor,
+            model,
             scalarlogiset(X_test; allow_propositional = true),
-            y_test,
-            model
+            y_test
         )
     end
 end
+# TODO swap model and y_test as soon as we introduce new algo in PostHoc
 
 # ---------------------------------------------------------------------------- #
 #                              LumenRuleExtractor                              #
@@ -108,7 +109,8 @@ function extractrules(
     solem     :: Vector{AbstractModel}
 )::Vector{DecisionSet}
     map(enumerate(solem)) do (i, model)
-        X_test = get_X(ds, :test)[i]
+        X_test = DataFrame(get_X(ds, :test)[i])
         RuleExtraction.modalextractrules(extractor, model, X_test; params...)
     end
 end
+# TODO open a PR to let Trepan accepts AbstractDataFrame

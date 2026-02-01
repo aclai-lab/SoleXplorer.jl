@@ -3,7 +3,7 @@ using SoleXplorer
 const SX = SoleXplorer
 
 using MLJ, DataFrames, Random
-using JLD2
+using CategoricalArrays, JLD2
 
 Xc, yc = @load_iris
 Xc = DataFrame(Xc)
