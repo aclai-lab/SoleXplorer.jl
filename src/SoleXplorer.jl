@@ -50,7 +50,7 @@ using Imbalance
 #                              external packages                               #
 # ---------------------------------------------------------------------------- #
 @reexport using DataTreatments: movingwindow, wholewindow, splitwindow, adaptivewindow
-@reexport using DataTreatments: zscore, sigmoid, pnorm, scale, minmax, center, unitpower, outliersuppress
+@reexport using DataTreatments: ZScore, Sigmoid, PNorm, Scale, MinMax, Center, UnitPower, UnitEnergy
 using  DataTreatments
 
 using  CategoricalArrays
