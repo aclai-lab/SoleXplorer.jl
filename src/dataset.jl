@@ -33,12 +33,12 @@ struct AggregationInfo <: AbstractTreatmentInfo
     winparams  :: WinFunc
 end
 
-const MaybeInt             = Maybe{Int64}
+const MaybeInt = Maybe{Int64}
 const MaybeAggregationInfo = Maybe{AggregationInfo}
-const MaybeBalancing       = Maybe{Balancing}
-const MaybeTuning          = Maybe{Tuning}
-const MaybeTreatInfo       = Maybe{AbstractTreatmentInfo}
-const MaybeCallable        = Maybe{Base.Callable}
+const MaybeBalancing = Maybe{Balancing}
+const MaybeTuning = Maybe{Tuning}
+const MaybeTreatInfo = Maybe{AbstractTreatmentInfo}
+const MaybeNorm = Maybe{Union{DataTreatments.AbstractNormalization, DataTreatments.NormSpec}}
 
 # ---------------------------------------------------------------------------- #
 #                                  defaults                                    #
@@ -490,19 +490,19 @@ dts = setup_dataset(
 # See also: [`DataSet`](@ref), [`PropositionalDataSet`](@ref), [`ModalDataSet`](@ref), [`symbolic_analysis`](@ref)
 """
 function setup_dataset(
-    X           :: AbstractDataFrame,
-    y           :: AbstractVector{<:Label},
-    w           :: MaybeVector                  = nothing;
-    model       :: MLJ.Model                    = _DefaultModel(y),
-    resampling  :: ResamplingStrategy           = Holdout(fraction_train=0.7, shuffle=true),
-    valid_ratio :: Real                         = 0.0,
-    seed        :: MaybeInt                     = nothing,
-    balancing   :: MaybeBalancing               = nothing,
-    tuning      :: MaybeTuning                  = nothing,
-    win         :: WinFunc                      = adaptivewindow(nwindows=3, overlap=0.1),
-    features    :: Tuple{Vararg{Base.Callable}} = (maximum, minimum),
-    norm        :: MaybeCallable                = nothing,
-    reducefunc  :: Base.Callable                = mean
+    X::AbstractDataFrame,
+    y::AbstractVector{<:Label},
+    w::MaybeVector=nothing;
+    model::MLJ.Model=_DefaultModel(y),
+    resampling::ResamplingStrategy=Holdout(fraction_train=0.7, shuffle=true),
+    valid_ratio::Real=0.0,
+    seed::MaybeInt=nothing,
+    balancing::MaybeBalancing=nothing,
+    tuning::MaybeTuning=nothing,
+    win::WinFunc=adaptivewindow(nwindows=3, overlap=0.1),
+    features::Tuple{Vararg{Base.Callable}}=(maximum, minimum),
+    norm::MaybeNorm=nothing,
+    reducefunc::Base.Callable=mean
 )::AbstractDataSet
     y = check_y(y, model)
 
