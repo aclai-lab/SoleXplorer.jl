@@ -38,7 +38,7 @@ const MaybeAggregationInfo = Maybe{AggregationInfo}
 const MaybeBalancing = Maybe{Balancing}
 const MaybeTuning = Maybe{Tuning}
 const MaybeTreatInfo = Maybe{AbstractTreatmentInfo}
-const MaybeNorm = Maybe{Union{DataTreatments.NormSpec, Type{<:DataTreatments.AbstractNormalization}}}
+const MaybeNorm = Maybe{Type{<:DataTreatments.AbstractNormalization}}
 
 # ---------------------------------------------------------------------------- #
 #                                  defaults                                    #

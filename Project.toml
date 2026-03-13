@@ -26,7 +26,7 @@ XGBoost = "009559a3-9522-5dbb-924b-0b6ed2b22bb9"
 [compat]
 CategoricalArrays = "0.10, 1.0"
 DataFrames = "1.8"
-DataTreatments = "0.2"
+DataTreatments = "0.3"
 DimensionalData = "0.29"
 Imbalance = "0.1"
 JLD2 = "0.6"
