@@ -29,7 +29,7 @@ function extractrules(
 )::Vector{DecisionSet}
     map(enumerate(solem)) do (i, model)
         X_test, y_test = get_X(ds, :test)[i], get_y(ds, :test)[i]
-        RuleExtraction.modalextractrules(
+        RuleExtraction.extractrules(
             extractor,
             scalarlogiset(X_test; allow_propositional = true),
             y_test,
@@ -49,7 +49,7 @@ function extractrules(
     solem     :: Vector{AbstractModel}
 )::Vector{LumenResult}
     map(enumerate(solem)) do (_, model)
-        RuleExtraction.modalextractrules(extractor, model; params...)
+        RuleExtraction.extractrules(extractor, model; params...)
     end
 end
 
@@ -63,7 +63,7 @@ function extractrules(
     solem     :: Vector{AbstractModel}
 )::Vector{DecisionSet}
     map(enumerate(solem)) do (_, model)
-        RuleExtraction.modalextractrules(extractor, model; params...)
+        RuleExtraction.extractrules(extractor, model; params...)
     end
 end
 
@@ -78,7 +78,7 @@ end
 # )::Vector{DecisionSet}
 #     map(enumerate(solem)) do (i, model)
 #         X_test, y_test = get_X(ds, :test)[i], get_y(ds, :test)[i]
-#         RuleExtraction.modalextractrules(extractor, model, X_test, y_test; params...)
+#         RuleExtraction.extractrules(extractor, model, X_test, y_test; params...)
 #     end
 # end
 
@@ -95,7 +95,7 @@ function extractrules(
         X_test = get_X(ds, :test)[i]
         Xmin = map(minimum, eachcol(X_test))
         Xmax = map(maximum, eachcol(X_test))
-        RuleExtraction.modalextractrules(extractor, model, Xmin, Xmax; params...)
+        RuleExtraction.extractrules(extractor, model, Xmin, Xmax; params...)
     end
 end
 
@@ -110,7 +110,7 @@ function extractrules(
 )::Vector{DecisionSet}
     map(enumerate(solem)) do (i, model)
         X_test = DataFrame(get_X(ds, :test)[i])
-        RuleExtraction.modalextractrules(extractor, model, X_test; params...)
+        RuleExtraction.extractrules(extractor, model, X_test; params...)
     end
 end
 # TODO open a PR to let Trepan accepts AbstractDataFrame

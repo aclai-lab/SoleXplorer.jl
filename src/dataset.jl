@@ -38,7 +38,6 @@ const MaybeAggregationInfo = Maybe{AggregationInfo}
 const MaybeBalancing = Maybe{Balancing}
 const MaybeTuning = Maybe{Tuning}
 const MaybeTreatInfo = Maybe{AbstractTreatmentInfo}
-const MaybeNorm = Maybe{Type{<:DataTreatments.AbstractNormalization}}
 
 # ---------------------------------------------------------------------------- #
 #                                  defaults                                    #
@@ -501,7 +500,6 @@ function setup_dataset(
     tuning::MaybeTuning=nothing,
     win::WinFunc=adaptivewindow(nwindows=3, overlap=0.1),
     features::Tuple{Vararg{Base.Callable}}=(maximum, minimum),
-    norm::MaybeNorm=nothing,
     reducefunc::Base.Callable=mean
 )::AbstractDataSet
     y = check_y(y, model)
@@ -526,13 +524,13 @@ function setup_dataset(
     # handle multidimensional datasets:
     # propositional models requiring feature aggregation
     # modal models requiring reducing data size
-    if DataTreatments.is_multidim_dataset(X)
+    if DT.is_multidim_dataset(X)
         if model isa Modal
-            t = DataTreatment(X, :reducesize; win, features, reducefunc, norm)
+            t = DT.DataTreatment(X, DT.TreatmentGroup(reducesize; win, features, reducefunc))
             X = DataFrame(get_dataset(t), Symbol.(get_featureid(t)))
             tinfo = ReductionInfo(features, win, reducefunc)
         else
-            t = DataTreatment(X, :aggregate; win, features, norm)
+            t = DT.DataTreatment(X, DT.TreatmentGroup(aggregate; win, features))
             X = DataFrame(get_dataset(t), Symbol.(get_featureid(t)))
             tinfo = AggregationInfo(features, win)
         end
@@ -566,4 +564,11 @@ function setup_dataset(
     kwargs...
 )::AbstractDataSet
     setup_dataset(X[!, Not(y)], X[!, y], args...; kwargs...)
+end
+
+function setup_dataset(
+    X::DT.AbstractDataset,
+    y::Union{Nothing,AbstractVector}
+)
+
 end

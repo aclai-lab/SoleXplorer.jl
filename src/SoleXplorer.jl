@@ -1,27 +1,24 @@
 module SoleXplorer
-using  Reexport
+using Reexport
 
-using  SoleData: scalarlogiset
-using  SoleData.Artifacts
+using SoleData: scalarlogiset
+using SoleData.Artifacts
 
 @reexport using SoleModels: Label, CLabel, RLabel, XGLabel
-using  SoleModels: Branch, ConstantModel
-using  SoleModels: DecisionEnsemble, DecisionTree, DecisionXGBoost
-using  SoleModels: AbstractModel, solemodel, weighted_aggregation, apply!
-using  SoleModels: RuleExtractor, DecisionSet
+using SoleModels: Branch, ConstantModel
+using SoleModels: DecisionEnsemble, DecisionTree, DecisionXGBoost
+using SoleModels: AbstractModel, solemodel, weighted_aggregation, apply!
+using SoleModels: RuleExtractor, DecisionSet
 
 @reexport using SoleData.Artifacts: NatopsLoader, load
 @reexport using SoleModels: readmetrics
 
-@reexport using SolePostHoc.RuleExtraction: InTreesRuleExtractor, LumenRuleExtractor, BATreesRuleExtractor
+@reexport using SolePostHoc.RuleExtraction:
+    InTreesRuleExtractor, LumenRuleExtractor, BATreesRuleExtractor
 # @reexport using SolePostHoc.RuleExtraction: RULECOSIPLUSRuleExtractor
-@reexport using SolePostHoc.RuleExtraction: REFNERuleExtractor, TREPANRuleExtractor
-using  SolePostHoc.RuleExtraction
-
-# @reexport using ModalAssociationRules: Item, Atom, ScalarCondition, VariableMin, VariableMax
-# @reexport using ModalAssociationRules: IA_L, box, diamond
-# @reexport using ModalAssociationRules: gsupport, gconfidence, glift, gconviction, gleverage
-# using ModalAssociationRules
+@reexport using SolePostHoc.RuleExtraction:
+    REFNERuleExtractor, TREPANRuleExtractor
+using SolePostHoc.RuleExtraction
 
 # ---------------------------------------------------------------------------- #
 #                                     MLJ                                      #
@@ -33,10 +30,11 @@ using  SolePostHoc.RuleExtraction
 # cross-validation
 @reexport using MLJ: Holdout, CV, StratifiedCV, TimeSeriesCV
 # tuning
-using  MLJParticleSwarmOptimization
-const  PSO = MLJParticleSwarmOptimization
-using  MLJ
-using  MLJ: MLJBase, MLJTuning
+using MLJParticleSwarmOptimization
+const PSO = MLJParticleSwarmOptimization
+
+using MLJ
+using MLJ: MLJBase, MLJTuning
 # custom resampling strategy
 import MLJ.MLJBase: train_test_pairs
 # balancing
@@ -49,14 +47,16 @@ using Imbalance
 # ---------------------------------------------------------------------------- #
 #                              external packages                               #
 # ---------------------------------------------------------------------------- #
-@reexport using DataTreatments: movingwindow, wholewindow, splitwindow, adaptivewindow
-@reexport using DataTreatments: ZScore, Sigmoid, PNorm, Scale, MinMax, Center, UnitPower, UnitEnergy
-using  DataTreatments
+@reexport using DataTreatments:
+    movingwindow, wholewindow, splitwindow, adaptivewindow,
+    TreatmentGroup, aggregate, reducesize
+using DataTreatments
+const DT = DataTreatments
 
-using  CategoricalArrays
-using  DataFrames
-using  Random
-using  JLD2
+using CategoricalArrays
+using DataFrames
+using Random
+using JLD2
 
 # ---------------------------------------------------------------------------- #
 #                                 maybe types                                  #
@@ -66,7 +66,7 @@ using  JLD2
 
 Type alias for `Union{T, Nothing}`.
 """
-const Maybe{T} = Union{T, Nothing}
+const Maybe{T} = Union{T,Nothing}
 
 const MaybeVector = Maybe{AbstractVector}
 const MaybeNTuple = Maybe{NamedTuple}
@@ -76,11 +76,12 @@ const MaybeNTuple = Maybe{NamedTuple}
 # ---------------------------------------------------------------------------- #
 # feature extraction via Catch22
 # export user friendly Catch22 nicknames
-@reexport using DataTreatments: mode_5, mode_10, embedding_dist, acf_timescale,
-        acf_first_min, ami2, trev, outlier_timing_pos, outlier_timing_neg,
-        whiten_timescale, forecast_error, ami_timescale, high_fluctuation,
-        stretch_decreasing, stretch_high, entropy_pairs, rs_range, dfa,
-        low_freq_power, centroid_freq, transition_variance, periodicity, base_set
+@reexport using DataTreatments:
+    mode_5, mode_10, embedding_dist, acf_timescale,
+    acf_first_min, ami2, trev, outlier_timing_pos, outlier_timing_neg,
+    whiten_timescale, forecast_error, ami_timescale, high_fluctuation,
+    stretch_decreasing, stretch_high, entropy_pairs, rs_range, dfa,
+    low_freq_power, centroid_freq, transition_variance, periodicity, base_set
 @reexport using DataTreatments: catch9, catch22_set, complete_set
 
 # ---------------------------------------------------------------------------- #
@@ -93,22 +94,24 @@ include("partition.jl")
 # ---------------------------------------------------------------------------- #
 #                                   models                                     #
 # ---------------------------------------------------------------------------- #
-@reexport using MLJDecisionTreeInterface: 
+@reexport using MLJDecisionTreeInterface:
     DecisionTreeClassifier, DecisionTreeRegressor,
     RandomForestClassifier, RandomForestRegressor,
     AdaBoostStumpClassifier
 using MLJDecisionTreeInterface
 
-@reexport using ModalDecisionTrees: 
+@reexport using ModalDecisionTrees:
     ModalDecisionTree, ModalRandomForest, ModalAdaBoost
 using ModalDecisionTrees
 
-@reexport using MLJXGBoostInterface: 
+@reexport using MLJXGBoostInterface:
     XGBoostClassifier, XGBoostRegressor
 using XGBoost, MLJXGBoostInterface
 
-const Regression = Union{DecisionTreeRegressor, RandomForestRegressor, XGBoostRegressor}
-const Modal  = Union{ModalDecisionTree, ModalRandomForest, ModalAdaBoost}
+const Regression =
+    Union{DecisionTreeRegressor,RandomForestRegressor,XGBoostRegressor}
+const Modal =
+    Union{ModalDecisionTree,ModalRandomForest,ModalAdaBoost}
 
 # ---------------------------------------------------------------------------- #
 #                                   modules                                    #
@@ -131,9 +134,6 @@ include("apply.jl")
 include("train_test.jl")
 
 include("extractrules.jl")
-
-# export Apriori, FPGrowth, Eclat
-# include("associationrules.jl")
 
 export AbstractModelSet, ModelSet
 export dsetup, solemodels, rules, associations
