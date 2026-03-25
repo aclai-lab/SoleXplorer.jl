@@ -370,7 +370,7 @@ symbolic_analysis!(modelset::ModelSet; kwargs...)::ModelSet = _symbolic_analysis
     symbolic_analysis(
         X::AbstractDataFrame,
         y::AbstractVector,
-        w::MaybeVector=nothing;
+        w::Union{Nothing,Vector}=nothing;
         extractor::MaybeRuleExtractor=nothing,
         association::Union{Nothing,AbstractAssociationRuleExtractor}=nothing,
         measures::Tuple{Vararg{FussyMeasure}}=(),
@@ -391,7 +391,7 @@ It performs the complete workflow:
 # Arguments
 - `X::AbstractDataFrame`: Feature matrix with observations as rows
 - `y::AbstractVector`: Target variable (labels for classification)
-- `w::MaybeVector`: Sample weights (optional)
+- `w::Union{Nothing,Vector}`: Sample weights (optional)
 
 ## Analysis Options
 - `extractor`: Rule extraction method:
@@ -443,7 +443,7 @@ See also: [`ModelSet`](@ref), [`setup_dataset`](@Ref), [`train_test`](@Ref)
 function symbolic_analysis(
     X::AbstractDataFrame,
     y::AbstractVector{<:Label},
-    w::MaybeVector=nothing;
+    w::Union{Nothing,Vector}=nothing;
     extractor::MaybeRuleExtractor=nothing,
     # association::Union{Nothing,AbstractAssociationRuleExtractor}=nothing,
     measures::Tuple{Vararg{FussyMeasure}}=(),

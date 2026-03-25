@@ -59,19 +59,6 @@ using Random
 using JLD2
 
 # ---------------------------------------------------------------------------- #
-#                                 maybe types                                  #
-# ---------------------------------------------------------------------------- #
-"""
-    Maybe{T}
-
-Type alias for `Union{T, Nothing}`.
-"""
-const Maybe{T} = Union{T,Nothing}
-
-const MaybeVector = Maybe{AbstractVector}
-const MaybeNTuple = Maybe{NamedTuple}
-
-# ---------------------------------------------------------------------------- #
 #                                    utils                                     #
 # ---------------------------------------------------------------------------- #
 # feature extraction via Catch22

@@ -375,7 +375,7 @@ and MLJ machine creation.
 # Arguments
 - `X::AbstractDataFrame`: Feature matrix/DataFrame
 - `y::AbstractVector`: Target variable vector
-- `w::MaybeVector=nothing`: Optional sample weights
+- `w::Union{Nothing,Vector}=nothing`: Optional sample weights
 
 # Keyword Arguments
 
@@ -489,20 +489,21 @@ dts = setup_dataset(
 # See also: [`DataSet`](@ref), [`PropositionalDataSet`](@ref), [`ModalDataSet`](@ref), [`symbolic_analysis`](@ref)
 """
 function setup_dataset(
-    X::AbstractDataFrame,
-    y::AbstractVector{<:Label},
-    w::MaybeVector=nothing;
+    # X::AbstractDataFrame,
+    # y::AbstractVector{<:Label},
+    X::DT.DataTreatment,
+    w::Union{Nothing,Vector}=nothing;
     model::MLJ.Model=_DefaultModel(y),
     resampling::ResamplingStrategy=Holdout(fraction_train=0.7, shuffle=true),
     valid_ratio::Real=0.0,
     seed::MaybeInt=nothing,
     balancing::MaybeBalancing=nothing,
     tuning::MaybeTuning=nothing,
-    win::WinFunc=adaptivewindow(nwindows=3, overlap=0.1),
-    features::Tuple{Vararg{Base.Callable}}=(maximum, minimum),
-    reducefunc::Base.Callable=mean
+    # win::WinFunc=adaptivewindow(nwindows=3, overlap=0.1),
+    # features::Tuple{Vararg{Base.Callable}}=(maximum, minimum),
+    # reducefunc::Base.Callable=mean
 )::AbstractDataSet
-    y = check_y(y, model)
+    y = check_y(y, model) # classification or regression
 
     # setup rng
     if !isnothing(seed)
@@ -566,8 +567,19 @@ function setup_dataset(
     setup_dataset(X[!, Not(y)], X[!, y], args...; kwargs...)
 end
 
+function load_dataset(
+    X::Matrix,
+    vnames::Vector{String}=["V$i" for i in 1:size(data, 2)],
+    y::Union{Nothing,AbstractVector}=nothing,
+    treatments::Vararg{Base.Callable}=DefaultTreatmentGroup;
+    treatment_ds::Bool=true,
+    leftover_ds::Bool=true,
+    float_type::Type=Float64
+)
+
+end
 function setup_dataset(
-    X::DT.AbstractDataset,
+    X::DT.DataTreatment,
     y::Union{Nothing,AbstractVector}
 )
 
