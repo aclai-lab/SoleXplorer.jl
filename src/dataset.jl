@@ -33,12 +33,6 @@ struct AggregationInfo <: AbstractTreatmentInfo
     winparams  :: WinFunc
 end
 
-const MaybeInt = Maybe{Int64}
-const MaybeAggregationInfo = Maybe{AggregationInfo}
-const MaybeBalancing = Maybe{Balancing}
-const MaybeTuning = Maybe{Tuning}
-const MaybeTreatInfo = Maybe{AbstractTreatmentInfo}
-
 # ---------------------------------------------------------------------------- #
 #                                  defaults                                    #
 # ---------------------------------------------------------------------------- #
@@ -164,7 +158,7 @@ feature representations, typically created by aggregating multidimensional data.
 - `mach::MLJ.Machine`: MLJ machine containing the model, training data, and cache
 - `pidxs::Vector{PartitionIdxs}`: Partition indices for train/test splits across folds
 - `pinfo::PartitionInfo`: Metadata about the partitioning strategy used
-- `ainfo::MaybeAggregationInfo`: Optional aggregation information for multidimensional data
+- `ainfo::Union{Nothing,AggregationInfo}`: Optional aggregation information for multidimensional data
 
 # Type Parameter
 - `M`: The type of the MLJ model contained in the machine
@@ -175,7 +169,7 @@ mutable struct PropositionalDataSet{M} <: AbstractDataSet
     mach  :: MLJ.Machine
     pidxs :: Vector{PartitionIdxs}
     pinfo :: PartitionInfo
-    ainfo :: MaybeAggregationInfo
+    ainfo :: Union{Nothing,AggregationInfo}
 end
 
 """
@@ -218,7 +212,7 @@ the type of treatment specified.
 - `mach::MLJ.Machine{M}`: MLJ machine containing model and data
 - `pidxs::Vector{PartitionIdxs}`: Partition indices for cross-validation folds
 - `pinfo::PartitionInfo`: Information about the partitioning strategy
-- `tinfo::MaybeTreatInfo=nothing`: Optional treatment information for multidimensional data
+- `tinfo::Union{Nothing,AbstractTreatInfo}=nothing`: Optional treatment information for multidimensional data
 
 # Returns
 - `PropositionalDataSet{M}`: When `tinfo` is `nothing` or treatment is not `:reducesize`
@@ -238,7 +232,7 @@ function DataSet(
     mach  :: MLJ.Machine{M},
     pidxs :: Vector{PartitionIdxs},
     pinfo :: PartitionInfo;
-    tinfo :: MaybeTreatInfo=nothing
+    tinfo :: Union{Nothing,AbstractTreatInfo}=nothing
 ) where {M<:MLJ.Model}
     isnothing(tinfo) ?
         PropositionalDataSet{M}(mach, pidxs, pinfo, nothing) : begin
@@ -399,7 +393,7 @@ Balancing strategies are taken from the package [Imbalance](https://github.com/J
 See official documentation [here](https://juliaai.github.io/Imbalance.jl/dev/).
 
 ## Tuning
-`tuning::MaybeTuning=nothing`: Hyperparameter tuning configuration,
+`tuning::Union{Nothing,Tuning}=nothing`: Hyperparameter tuning configuration,
 requires `range` vectors, i.e:
 ```
 range = SoleXplorer.range(:min_purity_increase; lower=0.1, upper=1.0, scale=:log)
@@ -491,19 +485,19 @@ dts = setup_dataset(
 function setup_dataset(
     # X::AbstractDataFrame,
     # y::AbstractVector{<:Label},
-    X::DT.DataTreatment,
+    dt::DT.DataTreatment,
     w::Union{Nothing,Vector}=nothing;
     model::MLJ.Model=_DefaultModel(y),
     resampling::ResamplingStrategy=Holdout(fraction_train=0.7, shuffle=true),
     valid_ratio::Real=0.0,
-    seed::MaybeInt=nothing,
-    balancing::MaybeBalancing=nothing,
-    tuning::MaybeTuning=nothing,
+    seed::Union{Nothing,Int}=nothing,
+    balancing::Union{Nothing,Balancing}=nothing,
+    tuning::Union{Nothing,Tuning}=nothing,
     # win::WinFunc=adaptivewindow(nwindows=3, overlap=0.1),
     # features::Tuple{Vararg{Base.Callable}}=(maximum, minimum),
     # reducefunc::Base.Callable=mean
-)::AbstractDataSet
-    y = check_y(y, model) # classification or regression
+)
+    y = check_y(get_target(dt), model) # classification or regression
 
     # setup rng
     if !isnothing(seed)
@@ -553,34 +547,48 @@ function setup_dataset(
     DataSet(mach, ttpairs, pinfo; tinfo)
 end
 
+function setup_dataset(
+    X::Matrix,
+    vnames::Vector{String}=["V$i" for i in 1:size(data, 2)],
+    y::Union{Nothing,AbstractVector{<:Label}}=nothing,
+    treatments::Vararg{Base.Callable}=DT.DefaultTreatmentGroup,
+    args...;
+    treatment_ds::Bool=true,
+    leftover_ds::Bool=true,
+    float_type::Type=Float64,
+    kwargs...
+)
+    dt = load_dataset(
+        X,
+        vnames,
+        y,
+        treatments;
+        treatment_ds,
+        leftover_ds,
+        float_type
+    )
+
+    setup_dataset(dt, args...; kwargs...)
+end
+
+setup_dataset(
+    X::AbstractDataFrame,
+    y::Union{Nothing,AbstractVector{<:Label}}=nothing,
+    args...;
+    kwargs...
+) = setup_dataset(Matrix(df), names(df), y, args...; kwargs...)
+
+setup_dataset(X::AbstractDataFrame, args...; kwargs...) =
+    setup_dataset(Matrix(df), names(df), nothing, args...; kwargs...)
+
 """
     setup_dataset(X::AbstractDataFrame, y::Symbol; kwargs...)::AbstractDataSet
 
 Convenience method when target variable is a column in the feature DataFrame.
 """
-function setup_dataset(
+setup_dataset(
     X::AbstractDataFrame,
     y::Symbol,
     args...;
     kwargs...
-)::AbstractDataSet
-    setup_dataset(X[!, Not(y)], X[!, y], args...; kwargs...)
-end
-
-function load_dataset(
-    X::Matrix,
-    vnames::Vector{String}=["V$i" for i in 1:size(data, 2)],
-    y::Union{Nothing,AbstractVector}=nothing,
-    treatments::Vararg{Base.Callable}=DefaultTreatmentGroup;
-    treatment_ds::Bool=true,
-    leftover_ds::Bool=true,
-    float_type::Type=Float64
-)
-
-end
-function setup_dataset(
-    X::DT.DataTreatment,
-    y::Union{Nothing,AbstractVector}
-)
-
-end
+) = setup_dataset(X[!, Not(y)], X[!, y], args...; kwargs...)

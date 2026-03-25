@@ -23,15 +23,6 @@ See also: [`symbolic_analysis`](@ref)
 abstract type AbstractModelSet end
 
 # ---------------------------------------------------------------------------- #
-#                                   types                                      #
-# ---------------------------------------------------------------------------- #
-const MaybeRules         = Maybe{Union{Vector{DecisionSet}, Vector{LumenResult}}}
-const MaybeMeasures      = Maybe{Measures}
-# const MaybeAssociaRules  = Maybe{Vector{ARule}}
-# const MaybeAssociation   = Maybe{AbstractAssociationRuleExtractor}
-const MaybeRuleExtractor = Maybe{RuleExtractor}
-
-# ---------------------------------------------------------------------------- #
 #                                  modelset                                    #
 # ---------------------------------------------------------------------------- #
 """
@@ -51,9 +42,9 @@ and performance measures.
    plus all settings needed by modal analysis.
 - `sole::Vector{AbstractModel}`: Vector of trained symbolic models (one per CV fold)
 ### Optional
-- `rules::MaybeRules`: Extracted rules
+- `rules::Union{Nothing,Vector{DecisionSet},Vector{LumenResult}}`: Extracted rules
 - `associations::MaybeAssociations`: Association rules between features
-- `measures::MaybeMeasures`: Performance evaluation measures
+- `measures::Union{Nothing,Measures}`: Performance evaluation measures
 
 # Accessing Components
 - [`dsetup`](@ref): Extract dataset configuration
@@ -66,16 +57,16 @@ See also: [`symbolic_analysis`](@ref)
 mutable struct ModelSet{S} <: AbstractModelSet
     ds           :: AbstractDataSet
     sole         :: Vector{AbstractModel}
-    rules        :: MaybeRules
+    rules        :: Union{Nothing,Vector{DecisionSet},Vector{LumenResult}}
     # associations :: MaybeAssociaRules
-    measures     :: MaybeMeasures
+    measures     :: Union{Nothing,Measures}
 
     function ModelSet(
         ds       :: AbstractDataSet,
         sole     :: SoleModel{S};
-        rules    :: MaybeRules=nothing,
+        rules    :: Union{Nothing,Vector{DecisionSet},Vector{LumenResult}}=nothing,
         # miner    :: MaybeAssociaRules=nothing,
-        measures :: MaybeMeasures=nothing
+        measures :: Union{Nothing,Measures}=nothing
     ) where S
         # new{S}(ds, solemodels(sole), rules, miner, measures)
         new{S}(ds, solemodels(sole), rules, measures)
@@ -104,7 +95,7 @@ See also: [`ModelSet`](@ref), [`symbolic_analysis`](@ref)
 solemodels(m::ModelSet) = m.sole
 
 """
-    rules(m::ModelSet) -> MaybeRules
+    rules(m::ModelSet) -> Union{Nothing,Vector{DecisionSet},Vector{LumenResult}}
 
 Returns the rules extracted from a ModelSet.
 Returns nothing if rule extraction isn't yet performed.
@@ -124,7 +115,7 @@ rules(m::ModelSet) = m.rules
 # associations(m::ModelSet) = m.associations
 
 """
-    performance(m::ModelSet) -> MaybeMeasures
+    performance(m::ModelSet) -> Union{Nothing,Measures}
 
 Extract the performance evaluation measures from a ModelSet.
 
@@ -299,9 +290,7 @@ end
 # ---------------------------------------------------------------------------- #
 function _symbolic_analysis!(
     modelset    :: AbstractModelSet;
-    extractor   :: Union{MaybeRuleExtractor,Tuple{RuleExtractor,NamedTuple}}=nothing,
-    # extractor::MaybeRuleExtractor=nothing,
-    # association :: MaybeAbstractAssociationRuleExtractor=nothing,
+    extractor   :: Union{Nothintg,RuleExtractor,Tuple{RuleExtractor,NamedTuple}}=nothing,
     measures    :: Tuple{Vararg{FussyMeasure}}=()
 )::ModelSet
     ds    = dsetup(modelset)
@@ -371,7 +360,7 @@ symbolic_analysis!(modelset::ModelSet; kwargs...)::ModelSet = _symbolic_analysis
         X::AbstractDataFrame,
         y::AbstractVector,
         w::Union{Nothing,Vector}=nothing;
-        extractor::MaybeRuleExtractor=nothing,
+        extractor::Nothintg,RuleExtractor=nothing,
         association::Union{Nothing,AbstractAssociationRuleExtractor}=nothing,
         measures::Tuple{Vararg{FussyMeasure}}=(),
         kwargs...
@@ -444,7 +433,7 @@ function symbolic_analysis(
     X::AbstractDataFrame,
     y::AbstractVector{<:Label},
     w::Union{Nothing,Vector}=nothing;
-    extractor::MaybeRuleExtractor=nothing,
+    extractor::Nothintg,RuleExtractor=nothing,
     # association::Union{Nothing,AbstractAssociationRuleExtractor}=nothing,
     measures::Tuple{Vararg{FussyMeasure}}=(),
     kwargs...
