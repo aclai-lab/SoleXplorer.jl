@@ -290,7 +290,7 @@ end
 # ---------------------------------------------------------------------------- #
 function _symbolic_analysis!(
     modelset    :: AbstractModelSet;
-    extractor   :: Union{Nothintg,RuleExtractor,Tuple{RuleExtractor,NamedTuple}}=nothing,
+    extractor   :: Union{Nothing,RuleExtractor,Tuple{RuleExtractor,NamedTuple}}=nothing,
     measures    :: Tuple{Vararg{FussyMeasure}}=()
 )::ModelSet
     ds    = dsetup(modelset)
@@ -360,7 +360,7 @@ symbolic_analysis!(modelset::ModelSet; kwargs...)::ModelSet = _symbolic_analysis
         X::AbstractDataFrame,
         y::AbstractVector,
         w::Union{Nothing,Vector}=nothing;
-        extractor::Nothintg,RuleExtractor=nothing,
+        extractor::Nothing,RuleExtractor=nothing,
         association::Union{Nothing,AbstractAssociationRuleExtractor}=nothing,
         measures::Tuple{Vararg{FussyMeasure}}=(),
         kwargs...
@@ -433,7 +433,7 @@ function symbolic_analysis(
     X::AbstractDataFrame,
     y::AbstractVector{<:Label},
     w::Union{Nothing,Vector}=nothing;
-    extractor::Nothintg,RuleExtractor=nothing,
+    extractor::Nothing,RuleExtractor=nothing,
     # association::Union{Nothing,AbstractAssociationRuleExtractor}=nothing,
     measures::Tuple{Vararg{FussyMeasure}}=(),
     kwargs...

@@ -39,10 +39,11 @@ end
 # return a default model appropriate for the target variable type
 # this function is used when no explicit model is provided to `setup_dataset`,
 # automatically selecting between classification and regression
-function _DefaultModel(y::AbstractVector)::MLJ.Model
-    return eltype(y) <: RLabel ?
-        DecisionTreeRegressor() :
-        DecisionTreeClassifier()
+# no supervised (y==nothing) is treated as regression as it is.
+function _default_model(y::AbstractVector)::MLJ.Model
+    return eltype(y) <: CLabel ?
+        DecisionTreeClassifier() :
+        DecisionTreeRegressor()
 end
 
 # ---------------------------------------------------------------------------- #
@@ -70,12 +71,6 @@ end
 # originally broken in case you pass a RNG method (lenth mismatch during MLJ.fit!)
 function set_balancing_seed(m::MLJ.Model, seed::Int64)::MLJ.Model
     hasproperty(m, :rng) && (m = typeof(m).name.wrapper(merge(MLJ.params(m), (rng=seed,))...))
-    return m
-end
-
-# set logical conditions (features) for modal models
-function set_conditions!(m::MLJ.Model, conditions::Tuple{Vararg{Base.Callable}})::MLJ.Model
-    m.conditions = Function[conditions...]
     return m
 end
 
@@ -212,7 +207,7 @@ the type of treatment specified.
 - `mach::MLJ.Machine{M}`: MLJ machine containing model and data
 - `pidxs::Vector{PartitionIdxs}`: Partition indices for cross-validation folds
 - `pinfo::PartitionInfo`: Information about the partitioning strategy
-- `tinfo::Union{Nothing,AbstractTreatInfo}=nothing`: Optional treatment information for multidimensional data
+- `tinfo::Union{Nothing,AbstractTreatmentInfo}=nothing`: Optional treatment information for multidimensional data
 
 # Returns
 - `PropositionalDataSet{M}`: When `tinfo` is `nothing` or treatment is not `:reducesize`
@@ -232,7 +227,7 @@ function DataSet(
     mach  :: MLJ.Machine{M},
     pidxs :: Vector{PartitionIdxs},
     pinfo :: PartitionInfo;
-    tinfo :: Union{Nothing,AbstractTreatInfo}=nothing
+    tinfo :: Union{Nothing,AbstractTreatmentInfo}=nothing
 ) where {M<:MLJ.Model}
     isnothing(tinfo) ?
         PropositionalDataSet{M}(mach, pidxs, pinfo, nothing) : begin
@@ -349,7 +344,7 @@ end
 """
     setup_dataset(
         X, y, w=nothing;
-        model=_DefaultModel(y),
+        model=_default_model(y),
         resampling=Holdout(fraction_train=0.7, shuffle=true),
         valid_ratio=0.0,
         seed=nothing,
@@ -374,7 +369,7 @@ and MLJ machine creation.
 # Keyword Arguments
 
 ## Model Configuration
-- `model::MLJ.Model=_DefaultModel(y)`: Sole compatible MLJ model to use, 
+- `model::MLJ.Model=_default_model(y)`: Sole compatible MLJ model to use, 
    auto-selected based on target type, if no `model` is subbmitted
 
 ## Data resampling
@@ -485,9 +480,9 @@ dts = setup_dataset(
 function setup_dataset(
     # X::AbstractDataFrame,
     # y::AbstractVector{<:Label},
-    dt::DT.DataTreatment,
-    w::Union{Nothing,Vector}=nothing;
-    model::MLJ.Model=_DefaultModel(y),
+    dt::DT.DataTreatment;
+    w::Union{Nothing,Vector}=nothing,
+    model::MLJ.Model=_default_model(get_target(dt)),
     resampling::ResamplingStrategy=Holdout(fraction_train=0.7, shuffle=true),
     valid_ratio::Real=0.0,
     seed::Union{Nothing,Int}=nothing,
@@ -509,8 +504,6 @@ function setup_dataset(
         rng = TaskLocalRNG()
     end
 
-    # Modal models need features to be passed in model params
-    hasproperty(model, :features) && set_conditions!(model, features)
     # MLJ.TunedModels can't automatically assigns measure to Modal models
     if model isa Modal && !isnothing(tuning)
         isnothing(get_measure(tuning)) && (tuning.measure = LogLoss())
@@ -551,34 +544,33 @@ function setup_dataset(
     X::Matrix,
     vnames::Vector{String}=["V$i" for i in 1:size(data, 2)],
     y::Union{Nothing,AbstractVector{<:Label}}=nothing,
-    treatments::Vararg{Base.Callable}=DT.DefaultTreatmentGroup,
-    args...;
+    treatments::Vararg{Base.Callable}=DT.DefaultTreatmentGroup;
     treatment_ds::Bool=true,
     leftover_ds::Bool=true,
     float_type::Type=Float64,
     kwargs...
 )
-    dt = load_dataset(
+    dt = DT.load_dataset(
         X,
         vnames,
         y,
-        treatments;
+        treatments...;
         treatment_ds,
         leftover_ds,
         float_type
     )
 
-    setup_dataset(dt, args...; kwargs...)
+    setup_dataset(dt; kwargs...)
 end
 
 setup_dataset(
-    X::AbstractDataFrame,
+    df::AbstractDataFrame,
     y::Union{Nothing,AbstractVector{<:Label}}=nothing,
     args...;
     kwargs...
 ) = setup_dataset(Matrix(df), names(df), y, args...; kwargs...)
 
-setup_dataset(X::AbstractDataFrame, args...; kwargs...) =
+setup_dataset(df::AbstractDataFrame, args...; kwargs...) =
     setup_dataset(Matrix(df), names(df), nothing, args...; kwargs...)
 
 """
