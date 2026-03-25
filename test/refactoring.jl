@@ -32,4 +32,4 @@ dt = DT.load_dataset(Xts, yts, TreatmentGroup(aggrfunc=reducesize(win=(splitwind
 @test is_tabular(dt) == false
 @test is_multidim(dt) == true
 # ---------------------------------------------------------------------------- #
-# setup_dataset(Xc, yc)
+setup_dataset(Xc, yc)

@@ -20,18 +20,18 @@ abstract type AbstractDataSet end
 const Balancing = NamedTuple{(:oversampler, :undersampler), <:Tuple{<:MLJ.Model, <:MLJ.Model}}
 const WinFunc   = Union{Base.Callable, Tuple{Vararg{Base.Callable}}}
 
-# metadata container for dataset preprocessing operations.
-struct ReductionInfo <: AbstractTreatmentInfo
-    features   :: Tuple{Vararg{Base.Callable}}
-    winparams  :: WinFunc
-    reducefunc :: Base.Callable
-end
+# # metadata container for dataset preprocessing operations.
+# struct ReductionInfo <: AbstractTreatmentInfo
+#     features   :: Tuple{Vararg{Base.Callable}}
+#     winparams  :: WinFunc
+#     reducefunc :: Base.Callable
+# end
 
-# simplified metadata for aggregation-only preprocessing.
-struct AggregationInfo <: AbstractTreatmentInfo
-    features   :: Tuple{Vararg{Base.Callable}}
-    winparams  :: WinFunc
-end
+# # simplified metadata for aggregation-only preprocessing.
+# struct AggregationInfo <: AbstractTreatmentInfo
+#     features   :: Tuple{Vararg{Base.Callable}}
+#     winparams  :: WinFunc
+# end
 
 # ---------------------------------------------------------------------------- #
 #                                  defaults                                    #
@@ -40,7 +40,7 @@ end
 # this function is used when no explicit model is provided to `setup_dataset`,
 # automatically selecting between classification and regression
 # no supervised (y==nothing) is treated as regression as it is.
-function _default_model(y::AbstractVector)::MLJ.Model
+function _default_model(y::Union{Nothing,AbstractVector})::MLJ.Model
     return eltype(y) <: CLabel ?
         DecisionTreeClassifier() :
         DecisionTreeRegressor()
@@ -79,11 +79,11 @@ end
 # ---------------------------------------------------------------------------- #
 # ensures that the target variable `y` is properly formatted for use with MLJ
 # it handles automatic conversion to categorical format when needed for classification tasks
-function check_y(y::AbstractVector, model::MLJ.Model)::AbstractVector
-    return (eltype(y) === Any) || ((eltype(y) <: RLabel) && !(model isa Regression)) ?
-        MLJ.categorical(string.(y)) :
-        y
-end
+# function check_y(y::AbstractVector, model::MLJ.Model)::AbstractVector
+#     return (eltype(y) === Any) || ((eltype(y) <: RLabel) && !(model isa Regression)) ?
+#         MLJ.categorical(string.(y)) :
+#         y
+# end
 
 # convert all numeric columns in a DataFrame to Float64 type
 function to_float_dataset(X::AbstractDataFrame)::AbstractDataFrame
@@ -153,7 +153,6 @@ feature representations, typically created by aggregating multidimensional data.
 - `mach::MLJ.Machine`: MLJ machine containing the model, training data, and cache
 - `pidxs::Vector{PartitionIdxs}`: Partition indices for train/test splits across folds
 - `pinfo::PartitionInfo`: Metadata about the partitioning strategy used
-- `ainfo::Union{Nothing,AggregationInfo}`: Optional aggregation information for multidimensional data
 
 # Type Parameter
 - `M`: The type of the MLJ model contained in the machine
@@ -164,7 +163,7 @@ mutable struct PropositionalDataSet{M} <: AbstractDataSet
     mach  :: MLJ.Machine
     pidxs :: Vector{PartitionIdxs}
     pinfo :: PartitionInfo
-    ainfo :: Union{Nothing,AggregationInfo}
+    # ainfo :: Union{Nothing,AggregationInfo}
 end
 
 """
@@ -478,8 +477,6 @@ dts = setup_dataset(
 # See also: [`DataSet`](@ref), [`PropositionalDataSet`](@ref), [`ModalDataSet`](@ref), [`symbolic_analysis`](@ref)
 """
 function setup_dataset(
-    # X::AbstractDataFrame,
-    # y::AbstractVector{<:Label},
     dt::DT.DataTreatment;
     w::Union{Nothing,Vector}=nothing,
     model::MLJ.Model=_default_model(get_target(dt)),
@@ -487,12 +484,20 @@ function setup_dataset(
     valid_ratio::Real=0.0,
     seed::Union{Nothing,Int}=nothing,
     balancing::Union{Nothing,Balancing}=nothing,
-    tuning::Union{Nothing,Tuning}=nothing,
-    # win::WinFunc=adaptivewindow(nwindows=3, overlap=0.1),
-    # features::Tuple{Vararg{Base.Callable}}=(maximum, minimum),
-    # reducefunc::Base.Callable=mean
+    tuning::Union{Nothing,Tuning}=nothing
 )
-    y = check_y(get_target(dt), model) # classification or regression
+    # get the dataset if type is appropriate for the chosen model
+    data = if is_tabular(dt) && !(model isa Modal)
+        get_tabular(dt)
+    elseif is_multidim(dt) && (model isa Modal)
+        get_multidim(dt)
+    else
+        error("Incompatible dataset and model types: " *
+        "use a modal model for multidimensional data, " *
+        "and a non-modal model for tabular data.")
+    end
+
+    y = get_target(dt)
 
     # setup rng
     if !isnothing(seed)
@@ -509,27 +514,9 @@ function setup_dataset(
         isnothing(get_measure(tuning)) && (tuning.measure = LogLoss())
     end
 
-    # handle multidimensional datasets:
-    # propositional models requiring feature aggregation
-    # modal models requiring reducing data size
-    if DT.is_multidim_dataset(X)
-        if model isa Modal
-            t = DT.DataTreatment(X, DT.TreatmentGroup(reducesize; win, features, reducefunc))
-            X = DataFrame(get_dataset(t), Symbol.(get_featureid(t)))
-            tinfo = ReductionInfo(features, win, reducefunc)
-        else
-            t = DT.DataTreatment(X, DT.TreatmentGroup(aggregate; win, features))
-            X = DataFrame(get_dataset(t), Symbol.(get_featureid(t)))
-            tinfo = AggregationInfo(features, win)
-        end
-    else
-        X = code_dataset(X)
-        # some algos, like xgboost, doesnt accept dataset with numeric values, only float
-        X = to_float_dataset(X)
-        tinfo = nothing
-    end
+    ttpairs, pinfo = partition(DT.nrows(dt), y; resampling, valid_ratio, rng)
 
-    ttpairs, pinfo = partition(y; resampling, valid_ratio, rng)
+    return ttpairs, pinfo
 
     isnothing(seed)      && (seed = 1)
     isnothing(balancing) || (model = set_balancing(model, balancing, seed))
