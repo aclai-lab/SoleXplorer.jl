@@ -24,7 +24,7 @@ to_namedtuple(x) = NamedTuple{fieldnames(typeof(x))}(ntuple(i -> getfield(x, i),
 function extractrules(
     extractor :: InTreesRuleExtractor,
     _         :: NamedTuple,
-    ds        :: AbstractDataSet,
+    ds        :: DataSet,
     solem     :: Vector{AbstractModel}
 )::Vector{DecisionSet}
     map(enumerate(solem)) do (i, model)
@@ -45,7 +45,7 @@ end
 function extractrules(
     extractor :: LumenRuleExtractor,
     params    :: NamedTuple,
-    _         :: AbstractDataSet,
+    _         :: DataSet,
     solem     :: Vector{AbstractModel}
 )::Vector{LumenResult}
     map(enumerate(solem)) do (_, model)
@@ -59,7 +59,7 @@ end
 function extractrules(
     extractor :: BATreesRuleExtractor,
     params    :: NamedTuple,
-    _         :: AbstractDataSet,
+    _         :: DataSet,
     solem     :: Vector{AbstractModel}
 )::Vector{DecisionSet}
     map(enumerate(solem)) do (_, model)
@@ -73,7 +73,7 @@ end
 # function extractrules(
 #     extractor :: RULECOSIPLUSRuleExtractor,
 #     params    :: NamedTuple,
-#     ds        :: AbstractDataSet,
+#     ds        :: DataSet,
 #     solem     :: Vector{AbstractModel}
 # )::Vector{DecisionSet}
 #     map(enumerate(solem)) do (i, model)
@@ -88,7 +88,7 @@ end
 function extractrules(
     extractor :: REFNERuleExtractor,
     params    :: NamedTuple,
-    ds        :: AbstractDataSet,
+    ds        :: DataSet,
     solem     :: Vector{AbstractModel}
 )::Vector{DecisionSet}
     map(enumerate(solem)) do (i, model)
@@ -105,7 +105,7 @@ end
 function extractrules(
     extractor :: TREPANRuleExtractor,
     params    :: NamedTuple,
-    ds        :: AbstractDataSet,
+    ds        :: DataSet,
     solem     :: Vector{AbstractModel}
 )::Vector{DecisionSet}
     map(enumerate(solem)) do (i, model)

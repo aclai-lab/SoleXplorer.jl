@@ -18,17 +18,17 @@ const XGBoostModel = Union{XGBoostClassifier, XGBoostRegressor}
 # ---------------------------------------------------------------------------- #
 # check if dataset or model uses XGBoost
 # used to determine if XGBoost-specific setup (watchlist) is needed
-has_xgboost_model(ds::AbstractDataSet) = has_xgboost_model(ds.mach.model)
+has_xgboost_model(ds::DataSet) = has_xgboost_model(ds.mach.model)
 has_xgboost_model(model::MLJTuning.EitherTunedModel) = has_xgboost_model(model.model)
 has_xgboost_model(::XGBoostModel) = true
 has_xgboost_model(::Any) = false
 
 # Check if dataset uses hyperparameter tuning
-is_tuned_model(ds::AbstractDataSet) = is_tuned_model(ds.mach.model)
+is_tuned_model(ds::DataSet) = is_tuned_model(ds.mach.model)
 is_tuned_model(::MLJTuning.EitherTunedModel) = true
 is_tuned_model(::Any) = false
 
-function get_early_stopping_rounds(ds::AbstractDataSet)
+function get_early_stopping_rounds(ds::DataSet)
     return is_tuned_model(ds) ?
         ds.mach.model.model.early_stopping_rounds :
         ds.mach.model.early_stopping_rounds
@@ -37,7 +37,7 @@ end
 
 # create XGBoost watchlist for early stopping validation
 # throws `ArgumentError` if validation set is empty
-function makewatchlist!(ds::AbstractDataSet, train::Vector{Int}, valid::Vector{Int})
+function makewatchlist!(ds::DataSet, train::Vector{Int}, valid::Vector{Int})
     isempty(valid) && throw(ArgumentError("No validation data provided, use preprocess valid_ratio parameter"))
 
     X = get_X(ds)
@@ -62,7 +62,7 @@ function makewatchlist!(ds::AbstractDataSet, train::Vector{Int}, valid::Vector{I
 end
 
 # configure XGBoost watchlist for fold `i` if early stopping is enabled
-function set_watchlist!(ds::AbstractDataSet, i::Int)
+function set_watchlist!(ds::DataSet, i::Int)
     # XGBoost supports early stopping. This requires configuring a watchlist and validation ratio
     if get_early_stopping_rounds(ds) > 0
         train = get_train(ds.pidxs[i])
@@ -78,7 +78,7 @@ end
 mutable struct SoleModel{D} <: AbstractSoleModel
     sole   :: Vector{AbstractModel}
 
-    function SoleModel(::D, sole::Vector{AbstractModel}) where D<:AbstractDataSet
+    function SoleModel(::D, sole::Vector{AbstractModel}) where D<:DataSet
         new{D}(sole)
     end
 end
@@ -88,7 +88,7 @@ end
 # ---------------------------------------------------------------------------- #
 function Base.show(io::IO, solem::SoleModel{D}) where D
     n_models = length(solem.sole)
-    dataset_type = D <: AbstractDataSet ? string(D) : "Unknown"
+    dataset_type = D <: DataSet ? string(D) : "Unknown"
     
     print(io, "SoleModel{$dataset_type}")
     print(io, "\n  Number of models: $n_models")
@@ -108,7 +108,7 @@ solemodels(solem::SoleModel) = solem.sole
 #                             internal train_test                              #
 # ---------------------------------------------------------------------------- #
 # internal cross-validation training implementation
-function _train_test(ds::AbstractDataSet)::SoleModel
+function _train_test(ds::DataSet)::SoleModel
     n_folds   = length(ds.pidxs)
     solemodel = Vector{AbstractModel}(undef, n_folds)
 
@@ -136,11 +136,11 @@ function train_test(args...; kwargs...)::SoleModel
 end
 
 """
-    train_test(ds::AbstractDataSet) -> SoleModel
+    train_test(ds::DataSet) -> SoleModel
 
 Direct training interface for pre-configured datasets.
 No additional parameters needed.
 
 See also: [`symbolic_analysis`](@ref), [`setup_dataset`](@ref)
 """
-train_test(ds::AbstractDataSet)::SoleModel = _train_test(ds)
+train_test(ds::DataSet)::SoleModel = _train_test(ds)

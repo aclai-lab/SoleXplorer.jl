@@ -38,7 +38,7 @@ and performance measures.
 - `S`: The sole model type (e.g., DecisionTreeClassifier)
 
 # Fields
-- `ds::AbstractDataSet`: Dataset configuration with cross-validation setup,
+- `ds::DataSet`: Dataset configuration with cross-validation setup,
    plus all settings needed by modal analysis.
 - `sole::Vector{AbstractModel}`: Vector of trained symbolic models (one per CV fold)
 ### Optional
@@ -55,14 +55,14 @@ and performance measures.
 See also: [`symbolic_analysis`](@ref)
 """
 mutable struct ModelSet{S} <: AbstractModelSet
-    ds           :: AbstractDataSet
+    ds           :: DataSet
     sole         :: Vector{AbstractModel}
     rules        :: Union{Nothing,Vector{DecisionSet},Vector{LumenResult}}
     # associations :: MaybeAssociaRules
     measures     :: Union{Nothing,Measures}
 
     function ModelSet(
-        ds       :: AbstractDataSet,
+        ds       :: DataSet,
         sole     :: SoleModel{S};
         rules    :: Union{Nothing,Vector{DecisionSet},Vector{LumenResult}}=nothing,
         # miner    :: MaybeAssociaRules=nothing,
@@ -77,7 +77,7 @@ end
 #                                 constructors                                 #
 # ---------------------------------------------------------------------------- #
 """
-    dsetup(m::ModelSet) -> AbstractDataSet
+    dsetup(m::ModelSet) -> DataSet
 
 Returns the dataset configuration from a ModelSet.
 
@@ -227,7 +227,7 @@ end
 # ---------------------------------------------------------------------------- #
 # Adapted from MLJ's evaluate
 function eval_measures(
-    ds::AbstractDataSet,
+    ds::DataSet,
     solem::Vector{AbstractModel},
     measures::Tuple{Vararg{FussyMeasure}},
     y_test::Vector{<:AbstractVector{<:Label}}
@@ -319,7 +319,7 @@ function _symbolic_analysis!(
 end
 
 function _symbolic_analysis(
-    ds::AbstractDataSet,
+    ds::DataSet,
     solem::SoleModel;
     kwargs...
 )::ModelSet
@@ -445,12 +445,12 @@ function symbolic_analysis(
 end
 
 """
-    symbolic_analysis(ds::AbstractDataSet, solem::SoleModel; kwargs...) -> ModelSet
+    symbolic_analysis(ds::DataSet, solem::SoleModel; kwargs...) -> ModelSet
 
 Perform complete symbolic analysis on pre-trained models.
 
 # Arguments  
-- `ds::AbstractDataSet`: Dataset used for training the models.
+- `ds::DataSet`: Dataset used for training the models.
 - `solem::SoleModel`: Trained sole symbolic models.
 - `kwargs...`: Analysis options (extractor, association, measures).
 
@@ -473,7 +473,7 @@ results = symbolic_analysis(
 See also: [`symbolic_analysis!`](@ref), [`setup_dataset`](@ref), [`train_test`](@ref)
 """
 function symbolic_analysis(
-    ds::AbstractDataSet,
+    ds::DataSet,
     solem::SoleModel;
     kwargs...
 )::ModelSet
