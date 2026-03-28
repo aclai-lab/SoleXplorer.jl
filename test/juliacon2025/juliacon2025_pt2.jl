@@ -18,7 +18,7 @@ Xlumen = Xc[:, 3:10]
 # ---------------------------------------------------------------------------- #
 #                                sole xplorer                                  #
 # ---------------------------------------------------------------------------- #
-dtc = symbolic_analysis(
+dtc = solexplorer(
     Xc, yc;
     model=DecisionTreeClassifier(),
     resampling=StratifiedCV(nfolds=20, shuffle=true),
@@ -27,7 +27,7 @@ dtc = symbolic_analysis(
     measures=(accuracy,)      
 )
 
-rfc = symbolic_analysis(
+rfc = solexplorer(
     Xlight, yc;
     model=RandomForestClassifier(n_trees=30),
     resampling=StratifiedCV(nfolds=20, shuffle=true),
@@ -39,7 +39,7 @@ rfc = symbolic_analysis(
 # ---------------------------------------------------------------------------- #
 #                                   lumen                                      #
 # ---------------------------------------------------------------------------- #
-lfc = symbolic_analysis(
+lfc = solexplorer(
     Xlumen, yc;
     model=RandomForestClassifier(n_trees=2),
     resampling=Holdout(fraction_train=0.7, shuffle=true),
@@ -48,7 +48,7 @@ lfc = symbolic_analysis(
     measures=(accuracy,)      
 )
 
-lXc = symbolic_analysis(
+lXc = solexplorer(
     Xlight, yc;
     model=XGBoostClassifier(num_round=4),
     resampling=Holdout(fraction_train=0.7, shuffle=true),

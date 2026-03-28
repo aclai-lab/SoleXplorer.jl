@@ -1,7 +1,7 @@
 # ---------------------------------------------------------------------------- #
 #                                 bug di MLJ #1                                #
 # ---------------------------------------------------------------------------- #
-modelts = symbolic_analysis(
+modelts = solexplorer(
     Xts, yts;
     model=ModalDecisionTree(),
     resampling=(type=CV(;nfolds=4), rng=Xoshiro(1)),
@@ -9,7 +9,7 @@ modelts = symbolic_analysis(
 )
 @test modelts isa SX.ModelSet
 
-resultsts = symbolic_analysis(
+resultsts = solexplorer(
     Xts, yts;
     model=XGBoostClassifier(),
     resampling=(type=TimeSeriesCV(nfolds=5), rng=Xoshiro(1)),
@@ -49,7 +49,7 @@ Da parlarne col Balbo
 #                              peso delle istanze                              #
 # ---------------------------------------------------------------------------- #
 in MLJ si usa X, y, w. da implementare? verifica come funziona, magari viene messo da MLJ
-direttamente dalla mach. Però bisogna implementarlo in setup_dataset e symbolic_analysis.
+direttamente dalla mach. Però bisogna implementarlo in setup_dataset e solexplorer.
 Vedi anche se MLJ oppure i modelli (Decision Tree...) usano un default nei pesi.
 Prova con dei pesi a caso a vedere se cambia qualcosa.
 Prova a guardare anche se c'è il modo di settare il peso sulle classi (tipo class rebalance, che se hai sbilanciate,

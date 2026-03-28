@@ -19,19 +19,19 @@ dsc = setup_dataset(
 )
 solemc = train_test(dsc)
 
-modelc = symbolic_analysis(
+modelc = solexplorer(
     dsc, solemc;
     extractor=InTreesRuleExtractor()
 )
 @test SX.rules(modelc) isa Vector{SX.DecisionSet}
 
-modelc = symbolic_analysis(
+modelc = solexplorer(
     dsc, solemc;
     extractor=InTreesRuleExtractor(min_coverage=1.0)
 )
 @test SX.rules(modelc) isa Vector{SX.DecisionSet}
 
-@test_throws MethodError  symbolic_analysis(
+@test_throws MethodError  solexplorer(
     dsc, solemc;
     extractor=InTreesRuleExtractor(;invalid=true)
 )
@@ -47,19 +47,19 @@ dsc = setup_dataset(
 )
 solemc = train_test(dsc)
 
-modelc = symbolic_analysis(
+modelc = solexplorer(
     dsc, solemc;
     extractor=LumenRuleExtractor()
 )
 @test SX.rules(modelc) isa Vector{SX.LumenResult}
 
-modelc = symbolic_analysis(
+modelc = solexplorer(
     dsc, solemc;
     extractor=LumenRuleExtractor(minimization_scheme=:mitespresso)
 )
 @test SX.rules(modelc) isa Vector{SX.LumenResult}
 
-@test_throws MethodError  symbolic_analysis(
+@test_throws MethodError  solexplorer(
     dsc, solemc;
     extractor=LumenRuleExtractor(invalid=true)
 )
@@ -72,13 +72,13 @@ dsc = setup_dataset(
 )
 solemc = train_test(dsc)
 
-modelc = symbolic_analysis(
+modelc = solexplorer(
     dsc, solemc;
     extractor=LumenRuleExtractor()
 )
 @test SX.rules(modelc) isa Vector{SX.LumenResult}
 
-modelc = symbolic_analysis(
+modelc = solexplorer(
     dsc, solemc;
     extractor=LumenRuleExtractor(minimization_scheme=:mitespresso)
 )
@@ -95,19 +95,19 @@ dsc = setup_dataset(
 )
 solemc = train_test(dsc)
 
-modelc = symbolic_analysis(
+modelc = solexplorer(
     dsc, solemc;
     extractor=BATreesRuleExtractor(dataset_name="Sole_Analysis")
 )
 @test SX.rules(modelc) isa Vector{SX.DecisionSet}
 
-modelc = symbolic_analysis(
+modelc = solexplorer(
     dsc, solemc;
     extractor=BATreesRuleExtractor(dataset_name="Sole_Analysis", num_trees=5)
 )
 @test SX.rules(modelc) isa Vector{SX.DecisionSet}
 
-@test_throws MethodError  symbolic_analysis(
+@test_throws MethodError  solexplorer(
     dsc, solemc;
     extractor=BATreesRuleExtractor(invalid=true)
 )
@@ -123,13 +123,13 @@ modelc = symbolic_analysis(
 # )
 # solemc = train_test(dsc)
 
-# modelc = symbolic_analysis(
+# modelc = solexplorer(
 #     dsc, solemc;
 #     extractor=RULECOSIPLUSRuleExtractor()
 # )
 # @test SX.rules(modelc) isa Vector{SX.DecisionSet}
 
-# @test_throws MethodError  symbolic_analysis(
+# @test_throws MethodError  solexplorer(
 #     dsc, solemc;
 #     extractor=RULECOSIPLUSRuleExtractor(invalid=true)
 # )
@@ -145,13 +145,13 @@ dsc = setup_dataset(
 )
 solemc = train_test(dsc)
 
-modelc = symbolic_analysis(
+modelc = solexplorer(
     dsc, solemc;
     extractor=REFNERuleExtractor(L=2)
 )
 @test SX.rules(modelc) isa Vector{SX.DecisionSet}
 
-@test_throws MethodError  symbolic_analysis(
+@test_throws MethodError  solexplorer(
     dsc, solemc;
     extractor=REFNERuleExtractor(invalid=true)
 )
@@ -167,13 +167,13 @@ dsc = setup_dataset(
 )
 solemc = train_test(dsc)
 
-modelc = symbolic_analysis(
+modelc = solexplorer(
     dsc, solemc;
     extractor=TREPANRuleExtractor()
 )
 @test SX.rules(modelc) isa Vector{SX.DecisionSet}
 
-@test_throws MethodError  symbolic_analysis(
+@test_throws MethodError  solexplorer(
     dsc, solemc;
     extractor=TREPANRuleExtractor(invalid=true)
 )

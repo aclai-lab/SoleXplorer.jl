@@ -141,6 +141,6 @@ end
 Direct training interface for pre-configured datasets.
 No additional parameters needed.
 
-See also: [`symbolic_analysis`](@ref), [`setup_dataset`](@ref)
+See also: [`solexplorer`](@ref), [`setup_dataset`](@ref)
 """
 train_test(ds::DataSet)::SoleModel = _train_test(ds)

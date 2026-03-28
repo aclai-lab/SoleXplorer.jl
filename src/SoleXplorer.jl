@@ -126,8 +126,8 @@ export AbstractModelSet, ModelSet
 export dsetup, solemodels, rules, associations
 export performance, measures, values
 export show_measures
-export symbolic_analysis, symbolic_analysis!
-include("symbolic_analysis.jl")
+export solexplorer, solexplorer!
+include("solexplorer.jl")
 
 # ---------------------------------------------------------------------------- #
 #                                  load save                                   #

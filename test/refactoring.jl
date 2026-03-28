@@ -70,13 +70,19 @@ t_classif = ["classA", "classB", "classC", "classA", "classB"]
 t_regress = [1.2, 3.4, 2.2, 4.8, 0.9]
 
 # ---------------------------------------------------------------------------- #
-dt = SX.setup_dataset(Xc, yc)
+ds = SX.setup_dataset(Xc, yc)
+solem = SX._train_test(ds)
+solexplorer(Xc, yc)
 
-dt = SX.setup_dataset(Xr, yr; float_type=Float32)
+ds = SX.setup_dataset(Xr, yr; float_type=Float32)
+solem = SX._train_test(ds)
+solexplorer(Xr, yr; float_type=Float32)
 
-dt = SX.setup_dataset(Xts, yts)
+ds = SX.setup_dataset(Xts, yts)
+solem = SX._train_test(ds)
+solexplorer(Xts, yts)
 
-dt = SX.setup_dataset(
+ds = SX.setup_dataset(
     Xts,
     yts,
     model=ModalDecisionTree(
@@ -84,9 +90,18 @@ dt = SX.setup_dataset(
     ),
     TreatmentGroup(aggrfunc=reducesize(win=(splitwindow(nwindows=3),)),)
 )
+solem = SX._train_test(ds)
+solexplorer(
+    Xts,
+    yts,
+    TreatmentGroup(aggrfunc=reducesize(win=(splitwindow(nwindows=3),)),);
+    model=ModalDecisionTree(
+        features=[mean, maximum]
+    )
+)
 
-dt = SX.setup_dataset(df)
-
+# if dataset has missing, should be imputed first TODO
+@test_throws MethodError SX.setup_dataset(df)
 
 # ---------------------------------------------------------------------------- #
 dt = load_dataset(Xc, yc; float_type=Float32)
@@ -99,10 +114,6 @@ get_multidim(dt)
 
 dt = load_dataset(Xts, yts; float_type=Float32)
 get_tabular(dt)
-get_multidim(dt)
-
-dt = load_dataset(df)
-get_tabular(dt; force_type=true)
 get_multidim(dt)
 
 dt = load_dataset(

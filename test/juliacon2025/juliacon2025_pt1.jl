@@ -138,7 +138,7 @@ Xlight = Xc[:, 3:18]
 # ---------------------------------------------------------------------------- #
 #                                sole xplorer                                  #
 # ---------------------------------------------------------------------------- #
-dtc = symbolic_analysis(
+dtc = solexplorer(
     Xc, yc;
     model=DecisionTreeClassifier(),
     resampling=StratifiedCV(nfolds=20, shuffle=true),
@@ -147,7 +147,7 @@ dtc = symbolic_analysis(
     measures=(accuracy,)      
 )
 
-rfc = symbolic_analysis(
+rfc = solexplorer(
     Xlight, yc;
     model=RandomForestClassifier(n_trees=30),
     resampling=StratifiedCV(nfolds=20, shuffle=true),
@@ -171,7 +171,7 @@ jldsave("lumen_randomforest_juliacon2025.jld2"; lr=rfc)
 data  = JLD2.load("forest_juliacon2025.jld2")
 test_model = data["X"]
 
-xgb = symbolic_analysis(
+xgb = solexplorer(
     Xlight, yc;
     model=XGBoostClassifier(early_stopping_rounds=20),
     resampling=StratifiedCV(nfolds=20, shuffle=true),

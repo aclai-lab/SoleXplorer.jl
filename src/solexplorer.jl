@@ -1,4 +1,4 @@
-# symbolic_analysis.jl — Unified Symbolic Model Analysis Interface
+# solexplorer.jl — Unified Symbolic Model Analysis Interface
 
 # this module provides the main entry point for complete symbolic model analysis workflows:
 
@@ -18,7 +18,7 @@ Abstract type for containers that hold symbolic model analysis results.
 # Concrete Implementations
 - [`ModelSet`](@ref): The primary implementation containing complete analysis results
 
-See also: [`symbolic_analysis`](@ref)
+See also: [`solexplorer`](@ref)
 """
 abstract type AbstractModelSet end
 
@@ -52,7 +52,7 @@ and performance measures.
 - [`rules`](@ref): Extract decision rules
 - [`associations`](@ref): Extract association rules
 
-See also: [`symbolic_analysis`](@ref)
+See also: [`solexplorer`](@ref)
 """
 mutable struct ModelSet{S} <: AbstractModelSet
     ds           :: DataSet
@@ -81,7 +81,7 @@ end
 
 Returns the dataset configuration from a ModelSet.
 
-See also: [`ModelSet`](@ref), [`symbolic_analysis`](@ref)
+See also: [`ModelSet`](@ref), [`solexplorer`](@ref)
 """
 dsetup(m::ModelSet) = m.ds
 
@@ -90,7 +90,7 @@ dsetup(m::ModelSet) = m.ds
 
 Returns the trained sole symbolic models from a ModelSet.
 
-See also: [`ModelSet`](@ref), [`symbolic_analysis`](@ref)
+See also: [`ModelSet`](@ref), [`solexplorer`](@ref)
 """
 solemodels(m::ModelSet) = m.sole
 
@@ -100,7 +100,7 @@ solemodels(m::ModelSet) = m.sole
 Returns the rules extracted from a ModelSet.
 Returns nothing if rule extraction isn't yet performed.
 
-See also: [`ModelSet`](@ref), [`symbolic_analysis`](@ref)
+See also: [`ModelSet`](@ref), [`solexplorer`](@ref)
 """
 rules(m::ModelSet) = m.rules
 
@@ -110,7 +110,7 @@ rules(m::ModelSet) = m.rules
 # Returns the association rules extracted from a ModelSet.
 # Returns nothing if association rules isn't yet performed.
 
-# See also: [`ModelSet`](@ref), [`symbolic_analysis`](@ref)
+# See also: [`ModelSet`](@ref), [`solexplorer`](@ref)
 # """
 # associations(m::ModelSet) = m.associations
 
@@ -119,7 +119,7 @@ rules(m::ModelSet) = m.rules
 
 Extract the performance evaluation measures from a ModelSet.
 
-See also: [`ModelSet`](@ref), [`symbolic_analysis`](@ref)
+See also: [`ModelSet`](@ref), [`solexplorer`](@ref)
 """
 performance(m::ModelSet) = m.measures
 
@@ -286,7 +286,7 @@ function eval_measures(
 end
 
 # ---------------------------------------------------------------------------- #
-#                         internal symbolic_analysis                           #
+#                         internal solexplorer                           #
 # ---------------------------------------------------------------------------- #
 function _symbolic_analysis!(
     modelset    :: AbstractModelSet;
@@ -329,10 +329,10 @@ function _symbolic_analysis(
 end
 
 # ---------------------------------------------------------------------------- #
-#                              symbolic_analysis                               #
+#                              solexplorer                               #
 # ---------------------------------------------------------------------------- #
 """
-    symbolic_analysis!(modelset::ModelSet; kwargs...)
+    solexplorer!(modelset::ModelSet; kwargs...)
 
 Perform additional analysis on an existing ModelSet.
 
@@ -342,21 +342,21 @@ measures) on an existing ModelSet.
 # Examples
 ```julia
 # initial analysis
-modelset = symbolic_analysis(X, y)
+modelset = solexplorer(X, y)
 
 # add rule extraction later
-symbolic_analysis!(modelset; extractor=Lumen())
+solexplorer!(modelset; extractor=Lumen())
 
 # add association mining later
-symbolic_analysis!(modelset; association=Apriori())
+solexplorer!(modelset; association=Apriori())
 ```
 
-See also: [`symbolic_analysis`](@ref), [`ModelSet`](@ref)
+See also: [`solexplorer`](@ref), [`ModelSet`](@ref)
 """
-symbolic_analysis!(modelset::ModelSet; kwargs...)::ModelSet = _symbolic_analysis!(modelset; kwargs...)
+solexplorer!(modelset::ModelSet; kwargs...)::ModelSet = _symbolic_analysis!(modelset; kwargs...)
 
 """
-    symbolic_analysis(
+    solexplorer(
         X::AbstractDataFrame,
         y::AbstractVector,
         w::Union{Nothing,Vector}=nothing;
@@ -397,11 +397,11 @@ It performs the complete workflow:
 # Examples
 ```julia
 # Basic analysis with default settings
-modelset = symbolic_analysis(X, y)
+modelset = solexplorer(X, y)
 
 # Full analysis example
 range = SoleXplorer.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
-modelset = symbolic_analysis(X, y;
+modelset = solexplorer(X, y;
     model=RandomForestClassifier(),
     resampling=CV(nfolds=5, shuffle=true),
     seed=1,
@@ -411,7 +411,7 @@ modelset = symbolic_analysis(X, y;
 )
 
 # Time series analysis example
-modelset = symbolic_analysis(X, y;
+modelset = solexplorer(X, y;
     model=ModalRandomForest(),
     resampling=Holdout(fraction_train=0.7, shuffle=true),
     seed=1,
@@ -429,23 +429,22 @@ performance = performance(modelset)
 
 See also: [`ModelSet`](@ref), [`setup_dataset`](@Ref), [`train_test`](@Ref)
 """
-function symbolic_analysis(
+function solexplorer(
     X::AbstractDataFrame,
     y::AbstractVector{<:Label},
-    w::Union{Nothing,Vector}=nothing;
-    extractor::Nothing,RuleExtractor=nothing,
-    # association::Union{Nothing,AbstractAssociationRuleExtractor}=nothing,
+    args...;
+    # w::Union{Nothing,Vector}=nothing,
+    extractor::Union{Nothing,RuleExtractor}=nothing,
     measures::Tuple{Vararg{FussyMeasure}}=(),
     kwargs...
 )::ModelSet
-    ds = setup_dataset(X, y, w; kwargs...)
+    ds = setup_dataset(X, y, args...; kwargs...)
     solem = _train_test(ds)
-    # _symbolic_analysis(ds, solem; extractor, association, measures)
     _symbolic_analysis(ds, solem; extractor, measures)
 end
 
 """
-    symbolic_analysis(ds::DataSet, solem::SoleModel; kwargs...) -> ModelSet
+    solexplorer(ds::DataSet, solem::SoleModel; kwargs...) -> ModelSet
 
 Perform complete symbolic analysis on pre-trained models.
 
@@ -463,16 +462,16 @@ ds = setup_dataset(
     resampling=CV(nfolds=5, shuffle=true)
 )
 solem = train_test(ds)
-results = symbolic_analysis(
+results = solexplorer(
     ds, solem; 
     extractor=Lumen(),
     measures=(accuracy, kappa)
 )
 ```
 
-See also: [`symbolic_analysis!`](@ref), [`setup_dataset`](@ref), [`train_test`](@ref)
+See also: [`solexplorer!`](@ref), [`setup_dataset`](@ref), [`train_test`](@ref)
 """
-function symbolic_analysis(
+function solexplorer(
     ds::DataSet,
     solem::SoleModel;
     kwargs...
@@ -481,11 +480,11 @@ function symbolic_analysis(
 end
 
 """
-    symbolic_analysis(X::Any, args...; kwargs...) -> ModelSet
+    solexplorer(X::Any, args...; kwargs...) -> ModelSet
 
 Convenience method that converts input data to DataFrame format.
 
-See also: [`symbolic_analysis`](@ref)
+See also: [`solexplorer`](@ref)
 """
-symbolic_analysis(X::Any, args...; kwargs...)::ModelSet = symbolic_analysis(DataFrame(X), args...; kwargs...)
+solexplorer(X::Any, args...; kwargs...)::ModelSet = solexplorer(DataFrame(X), args...; kwargs...)
 
