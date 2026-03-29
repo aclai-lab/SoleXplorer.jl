@@ -60,7 +60,7 @@ solesave(dsc; path, name="test1")
 solemc = train_test(dsc)
 solesave(solemc; path, name="test1.jld2")
 
-modelc = symbolic_analysis(
+modelc = solexplorer(
     dsc, solemc,
     extractor=LumenRuleExtractor(minimization_scheme=:mitespresso),
     measures=(accuracy, log_loss, kappa)

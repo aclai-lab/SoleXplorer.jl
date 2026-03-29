@@ -10,7 +10,7 @@ SoleXplorer uses the following tuning strategies adapted from package [MLJ](http
 strategy_type::Type{<:Any}(;
     range::RangeSpec,
     MLJ.ResamplingStrategy=Holdout(fraction_train=0.7, shuffle=true),
-    measure::MaybeMeasure=nothing,
+    measure::EitherMeasures=nothing,
     repeats::Int64=1,
     strategy_kwargs...
 ) -> Tuning

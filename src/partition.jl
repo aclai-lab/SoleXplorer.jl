@@ -96,14 +96,15 @@ Notes
   to produce validation indices.
 """
 function partition(
-    y           :: AbstractVector{<:Label};
-    resampling  :: MLJ.ResamplingStrategy,
-    valid_ratio :: Real,
-    rng         :: Random.AbstractRNG
-)::Tuple{Vector{PartitionIdxs}, PartitionInfo}
+    rows::Int,
+    y::Union{Nothing,AbstractVector};
+    resampling::MLJ.ResamplingStrategy,
+    valid_ratio::Real,
+    rng::Random.AbstractRNG
+)
     pinfo = PartitionInfo(resampling, valid_ratio, rng)
 
-    ttpairs = MLJBase.train_test_pairs(resampling, 1:length(y), y)
+    ttpairs = MLJBase.train_test_pairs(resampling, 1:rows, y)
 
     if valid_ratio == 0.0
         return ([PartitionIdxs(train, eltype(train)[], test) for (train, test) in ttpairs], pinfo)

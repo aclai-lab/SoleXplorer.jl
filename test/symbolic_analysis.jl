@@ -20,13 +20,13 @@ Xts, yts = SX.load(natopsloader)
 # ---------------------------------------------------------------------------- #
 #                        I'm easy like sunday morning                          #
 # ---------------------------------------------------------------------------- #
-modelc = symbolic_analysis(Xc, yc)
+modelc = solexplorer(Xc, yc)
 @test modelc isa SX.ModelSet
 
-modelr = symbolic_analysis(Xr, yr)
+modelr = solexplorer(Xr, yr)
 @test modelc isa SX.ModelSet
 
-modelts = symbolic_analysis(Xts, yts)
+modelts = solexplorer(Xts, yts)
 @test modelc isa SX.ModelSet
 
 # ---------------------------------------------------------------------------- #
@@ -41,7 +41,7 @@ dsc = setup_dataset(
     tuning=GridTuning(;range, resolution=10, resampling=CV(nfolds=3), measure=SX.accuracy, repeats=2)    
 )
 solemc = train_test(dsc)
-modelc = symbolic_analysis(
+modelc = solexplorer(
     dsc, solemc;
     extractor=SX.InTreesRuleExtractor(),
     measures=(SX.accuracy, log_loss, confusion_matrix, kappa)
@@ -57,7 +57,7 @@ dsr = setup_dataset(
     tuning=GridTuning(resolution=20, resampling=CV(nfolds=3), range=range, repeats=2)    
 )
 solemr = train_test(dsr)
-modelr = symbolic_analysis(
+modelr = solexplorer(
     dsr, solemr;
     measures=(rms, l1, l2, mae, mav)
 )
@@ -67,7 +67,7 @@ modelr = symbolic_analysis(
 #                               usage example #2                               #
 # ---------------------------------------------------------------------------- #
 range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
-modelc = symbolic_analysis(
+modelc = solexplorer(
     Xc, yc;
     model=SX.DecisionTreeClassifier(),
     resampling=CV(nfolds=5, shuffle=true),
@@ -79,7 +79,7 @@ modelc = symbolic_analysis(
 @test modelc isa SX.ModelSet
 
 range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
-modelr = symbolic_analysis(
+modelr = solexplorer(
     Xr, yr;
     model=SX.DecisionTreeRegressor(),
     resampling=CV(nfolds=5, shuffle=true),
@@ -102,7 +102,7 @@ dsts = setup_dataset(
 # ---------------------------------------------------------------------------- #
 #                        resamplings in numeric datasets                       #
 # ---------------------------------------------------------------------------- #
-modelc = symbolic_analysis(
+modelc = solexplorer(
     Xc, yc;
     model=SX.DecisionTreeClassifier(),
     resampling=Holdout(fraction_train=0.75, shuffle=true),
@@ -111,7 +111,7 @@ modelc = symbolic_analysis(
 )
 @test modelc isa SX.ModelSet
 
-modelr = symbolic_analysis(
+modelr = solexplorer(
     Xr, yr;
     model=SX.RandomForestRegressor(),
     resampling=CV(nfolds=5, shuffle=true),
@@ -120,7 +120,7 @@ modelr = symbolic_analysis(
 )
 @test modelr isa SX.ModelSet
 
-modelc = symbolic_analysis(
+modelc = solexplorer(
     Xc, yc;
     model=SX.AdaBoostStumpClassifier(),
     resampling=StratifiedCV(nfolds=5, shuffle=true),
@@ -132,7 +132,7 @@ modelc = symbolic_analysis(
 # ---------------------------------------------------------------------------- #
 #             resamplings in propositional translated time series              #
 # ---------------------------------------------------------------------------- #
-modelts = symbolic_analysis(
+modelts = solexplorer(
     Xts, yts;
     model=SX.DecisionTreeClassifier(),
     resampling=Holdout(fraction_train=0.5, shuffle=true),
@@ -144,7 +144,7 @@ modelts = symbolic_analysis(
 )
 @test modelts isa SX.ModelSet
 
-modelts = symbolic_analysis(
+modelts = solexplorer(
     Xts, yts;
     model=SX.RandomForestClassifier(),
     resampling=CV(nfolds=5, shuffle=true),
@@ -156,7 +156,7 @@ modelts = symbolic_analysis(
 )
 @test modelts isa SX.ModelSet
 
-modelts = symbolic_analysis(
+modelts = solexplorer(
     Xts, yts;
     model=SX.AdaBoostStumpClassifier(),
     resampling=StratifiedCV(nfolds=5, shuffle=true),
@@ -169,7 +169,7 @@ modelts = symbolic_analysis(
 @test modelts isa SX.ModelSet
 
 # TODO known bug, see TODO.md 
-# modelts = symbolic_analysis(
+# modelts = solexplorer(
 #     Xts, yts;
 #     model=SX.XGBoostClassifier(),
 #     resampling=(type=TimeSeriesCV(nfolds=5), seed=1),
@@ -183,7 +183,7 @@ modelts = symbolic_analysis(
 # ---------------------------------------------------------------------------- #
 #                       resampling in modal time series                        #
 # ---------------------------------------------------------------------------- #
-modelts = symbolic_analysis(
+modelts = solexplorer(
     Xts, yts;
     model=SX.ModalDecisionTree(),
     resampling=CV(;nfolds=4),
@@ -192,7 +192,7 @@ modelts = symbolic_analysis(
 )
 @test modelts isa SX.ModelSet
 
-modelts = symbolic_analysis(
+modelts = solexplorer(
     Xts, yts;
     model=SX.ModalRandomForest(),
     resampling=Holdout(fraction_train=0.75, shuffle=true),
@@ -205,7 +205,7 @@ modelts = symbolic_analysis(
 # ---------------------------------------------------------------------------- #
 #             xgboost makewatchlist for early stopping technique               #
 # ---------------------------------------------------------------------------- #
-modelc = symbolic_analysis(
+modelc = solexplorer(
     Xc, yc;
     model=SX.XGBoostClassifier(early_stopping_rounds=20),
     resampling=CV(nfolds=5, shuffle=true),
@@ -216,7 +216,7 @@ modelc = symbolic_analysis(
 @test modelc isa SX.ModelSet
 
 range = SX.range(:num_round; lower=10, unit=10, upper=100)
-modelr = symbolic_analysis(
+modelr = solexplorer(
     Xr, yr;
     model=SX.XGBoostRegressor(early_stopping_rounds=20),
     resampling=CV(nfolds=5, shuffle=true),
@@ -230,7 +230,7 @@ modelr = symbolic_analysis(
 # ---------------------------------------------------------------------------- #
 #                              catch9 and catch22                              #
 # ---------------------------------------------------------------------------- #
-modelts = symbolic_analysis(
+modelts = solexplorer(
     Xts, yts;
     model=SX.DecisionTreeClassifier(),
     seed=1,
@@ -262,7 +262,7 @@ modelts = symbolic_analysis(
 )
 @test modelts isa SX.ModelSet
 
-modelts = symbolic_analysis(
+modelts = solexplorer(
     Xts, yts;
     model=SX.DecisionTreeClassifier(),
     seed=1,
@@ -271,7 +271,7 @@ modelts = symbolic_analysis(
 )
 @test modelts isa SX.ModelSet
 
-modelts = symbolic_analysis(
+modelts = solexplorer(
     Xts, yts;
     model=SX.DecisionTreeClassifier(),
     seed=1,
@@ -280,7 +280,7 @@ modelts = symbolic_analysis(
 )
 @test modelts isa SX.ModelSet
 
-modelts = symbolic_analysis(
+modelts = solexplorer(
     Xts, yts;
     model=SX.DecisionTreeClassifier(),
     seed=1,
@@ -289,7 +289,7 @@ modelts = symbolic_analysis(
 )
 @test modelts isa SX.ModelSet
 
-modelts = symbolic_analysis(
+modelts = solexplorer(
     Xts, yts;
     model=SX.DecisionTreeClassifier(),
     seed=1,
@@ -301,7 +301,7 @@ modelts = symbolic_analysis(
 # ---------------------------------------------------------------------------- #
 #                                  balancing                                   #
 # ---------------------------------------------------------------------------- #
-modelc = symbolic_analysis(
+modelc = solexplorer(
     Xc, yc;
     model=SX.DecisionTreeClassifier(),
     resampling=StratifiedCV(nfolds=5, shuffle=true),
@@ -313,7 +313,7 @@ modelc = symbolic_analysis(
 )
 @test modelc isa SX.ModelSet
 
-modelc = symbolic_analysis(
+modelc = solexplorer(
     Xc, yc;
     model=SX.RandomForestClassifier(),
     resampling=StratifiedCV(nfolds=5, shuffle=true),
@@ -324,7 +324,7 @@ modelc = symbolic_analysis(
 )
 @test modelc isa SX.ModelSet
 
-modelc = symbolic_analysis(
+modelc = solexplorer(
     Xc, yc;
     model=SX.AdaBoostStumpClassifier(),
     resampling=StratifiedCV(nfolds=5, shuffle=true),
@@ -335,7 +335,7 @@ modelc = symbolic_analysis(
 )
 @test modelc isa SX.ModelSet
 
-modelc = symbolic_analysis(
+modelc = solexplorer(
     Xc, yc;
     model=SX.ModalDecisionTree(),
     resampling=StratifiedCV(nfolds=5, shuffle=true),
@@ -346,7 +346,7 @@ modelc = symbolic_analysis(
 )
 @test modelc isa SX.ModelSet
 
-modelc = symbolic_analysis(
+modelc = solexplorer(
     Xc, yc;
     model=SX.ModalRandomForest(),
     resampling=StratifiedCV(nfolds=5, shuffle=true),
@@ -357,7 +357,7 @@ modelc = symbolic_analysis(
 )
 @test modelc isa SX.ModelSet
 
-modelc = symbolic_analysis(
+modelc = solexplorer(
     Xc, yc;
     model=ModalAdaBoost(),
     resampling=StratifiedCV(nfolds=5, shuffle=true),
@@ -368,7 +368,7 @@ modelc = symbolic_analysis(
 )
 @test modelc isa SX.ModelSet
 
-modelc = symbolic_analysis(
+modelc = solexplorer(
     Xc, yc;
     model=SX.XGBoostClassifier(),
     resampling=StratifiedCV(nfolds=5, shuffle=true),
@@ -379,7 +379,7 @@ modelc = symbolic_analysis(
 )
 @test modelc isa SX.ModelSet
 
-@test_throws ArgumentError symbolic_analysis(
+@test_throws ArgumentError solexplorer(
     Xr, yr;
     model=SX.RandomForestRegressor(),
     resampling=StratifiedCV(nfolds=5, shuffle=true),
@@ -395,7 +395,7 @@ modelc = symbolic_analysis(
 r1 = SX.range(:(oversampler.k), lower=3, upper=10)
 r2 = SX.range(:(undersampler.min_ratios), lower=0.1, upper=0.9)
 
-modelc = symbolic_analysis(
+modelc = solexplorer(
     Xc, yc;
     model=SX.DecisionTreeClassifier(),
     resampling=CV(nfolds=5, shuffle=true),
@@ -408,7 +408,7 @@ modelc = symbolic_analysis(
 )
 @test modelc isa SX.ModelSet
 
-modelc = symbolic_analysis(
+modelc = solexplorer(
     Xc, yc;
     model=SX.RandomForestClassifier(),
     resampling=CV(nfolds=5, shuffle=true),
@@ -421,7 +421,7 @@ modelc = symbolic_analysis(
 )
 @test modelc isa SX.ModelSet
 
-modelc = symbolic_analysis(
+modelc = solexplorer(
     Xc, yc;
     model=SX.AdaBoostStumpClassifier(),
     resampling=CV(nfolds=5, shuffle=true),
@@ -434,7 +434,7 @@ modelc = symbolic_analysis(
 )
 @test modelc isa SX.ModelSet
 
-modelc = symbolic_analysis(
+modelc = solexplorer(
     Xc, yc;
     model=SX.ModalDecisionTree(),
     resampling=CV(nfolds=5, shuffle=true),
@@ -447,7 +447,7 @@ modelc = symbolic_analysis(
 )
 @test modelc isa SX.ModelSet
 
-modelc = symbolic_analysis(
+modelc = solexplorer(
     Xc, yc;
     model=SX.ModalRandomForest(),
     resampling=CV(nfolds=5, shuffle=true),
@@ -460,7 +460,7 @@ modelc = symbolic_analysis(
 )
 @test modelc isa SX.ModelSet
 
-modelc = symbolic_analysis(
+modelc = solexplorer(
     Xc, yc;
     model=ModalAdaBoost(),
     resampling=CV(nfolds=5, shuffle=true),
@@ -473,7 +473,7 @@ modelc = symbolic_analysis(
 )
 @test modelc isa SX.ModelSet
 
-modelc = symbolic_analysis(
+modelc = solexplorer(
     Xc, yc;
     model=SX.XGBoostClassifier(),
     resampling=CV(nfolds=5, shuffle=true),
@@ -486,7 +486,7 @@ modelc = symbolic_analysis(
 )
 @test modelc isa SX.ModelSet
 
-@test_throws ArgumentError symbolic_analysis(
+@test_throws ArgumentError solexplorer(
     Xr, yr;
     model=SX.XGBoostRegressor(),
     resampling=CV(nfolds=5, shuffle=true),
@@ -517,7 +517,7 @@ modelc = symbolic_analysis(
 #                                   tuning                                     #
 # ---------------------------------------------------------------------------- #
 range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
-modelc = symbolic_analysis(
+modelc = solexplorer(
     Xc, yc;
     model=SX.DecisionTreeClassifier(),
     resampling=StratifiedCV(nfolds=5, shuffle=true),
@@ -527,7 +527,7 @@ modelc = symbolic_analysis(
 @test modelc isa SX.ModelSet
 
 range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
-modelc = symbolic_analysis(
+modelc = solexplorer(
     Xc, yc;
     model=SX.DecisionTreeClassifier(),
     tuning=RandomTuning(;range, resampling=CV(nfolds=3), measure=SX.accuracy, repeats=2),
@@ -536,7 +536,7 @@ modelc = symbolic_analysis(
 @test modelc isa SX.ModelSet
 
 range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
-modelc = symbolic_analysis(
+modelc = solexplorer(
     Xc, yc;
     model=SX.DecisionTreeClassifier(),
     tuning=RandomTuning(;range, resampling=CV(nfolds=3), measure=SX.accuracy, repeats=2),
@@ -545,7 +545,7 @@ modelc = symbolic_analysis(
 @test modelc isa SX.ModelSet
 
 range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
-modelc = symbolic_analysis(
+modelc = solexplorer(
     Xc, yc;
     model=SX.DecisionTreeClassifier(),
     tuning=ParticleTuning(resampling=CV(nfolds=3), range=range, measure=SX.accuracy, repeats=2),
@@ -554,7 +554,7 @@ modelc = symbolic_analysis(
 @test modelc isa SX.ModelSet
 
 range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
-modelc = symbolic_analysis(
+modelc = solexplorer(
     Xc, yc;
     model=SX.DecisionTreeClassifier(),
     tuning=AdaptiveTuning(resampling=CV(nfolds=3), range=range, measure=SX.accuracy, repeats=2),
@@ -570,7 +570,7 @@ modelc = symbolic_analysis(
 #                              instance weights                                #
 # ---------------------------------------------------------------------------- #
 wc = rand(length(yc))
-modelw = symbolic_analysis(
+modelw = solexplorer(
     Xc, yc, wc;
     model=SX.XGBoostClassifier(),
     seed=1,
@@ -581,7 +581,7 @@ modelw = symbolic_analysis(
 # ---------------------------------------------------------------------------- #
 #                                  windowing                                   #
 # ---------------------------------------------------------------------------- #
-modelts = symbolic_analysis(
+modelts = solexplorer(
     Xts, yts;
     model=SX.DecisionTreeClassifier(),
     seed=1,
@@ -590,7 +590,7 @@ modelts = symbolic_analysis(
 )
 @test modelts isa SX.ModelSet
 
-modelts = symbolic_analysis(
+modelts = solexplorer(
     Xts, yts;
     model=SX.DecisionTreeClassifier(),
     seed=1,
@@ -599,7 +599,7 @@ modelts = symbolic_analysis(
 )
 @test modelts isa SX.ModelSet
 
-modelts = symbolic_analysis(
+modelts = solexplorer(
     Xts, yts;
     model=SX.DecisionTreeClassifier(),
     seed=1,
@@ -608,7 +608,7 @@ modelts = symbolic_analysis(
 )
 @test modelts isa SX.ModelSet
 
-modelts = symbolic_analysis(
+modelts = solexplorer(
     Xts, yts;
     model=SX.DecisionTreeClassifier(),
     seed=1,
@@ -671,7 +671,7 @@ end
 #                                   base.show                                  #
 # ---------------------------------------------------------------------------- #
 @testset "Base.show methods" begin
-    modelc = symbolic_analysis(Xc, yc)
+    modelc = solexplorer(Xc, yc)
     # Test Measures show methods
     @testset "Measures show" begin
 
@@ -706,5 +706,5 @@ end
 #                               X not a dataframe                              #
 # ---------------------------------------------------------------------------- #
 Xc, yc = @load_iris
-modelc = symbolic_analysis(Xc, yc)
+modelc = solexplorer(Xc, yc)
 @test modelc isa SX.ModelSet

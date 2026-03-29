@@ -30,7 +30,7 @@ you can also tune balancing strategy parameters using tuning and ranges, i.e:
 ```
 r1 = SX.range(:(oversampler.k), lower=3, upper=10)
 r2 = SX.range(:(undersampler.min_ratios), lower=0.1, upper=0.9)
-modelc = symbolic_analysis(
+modelc = solexplorer(
     Xc, yc;
     model=RandomForestClassifier(),
     resampling=StratifiedCV(nfolds=5, shuffle=true),

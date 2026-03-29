@@ -17,7 +17,7 @@ makedocs(;
     ),
     pages=[
         "Home"                         => "index.md",
-        "Symbolic Analysis"            => "symbolic_analysis.md",
+        "Symbolic Analysis"            => "solexplorer.md",
         "Setup Dataset"                => "dataset.md",
         "Multi Dimensional Treatement" => "treatement.md",
         "Tuning"                       => "tuning.md",

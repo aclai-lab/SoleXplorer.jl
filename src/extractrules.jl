@@ -24,16 +24,16 @@ to_namedtuple(x) = NamedTuple{fieldnames(typeof(x))}(ntuple(i -> getfield(x, i),
 function extractrules(
     extractor :: InTreesRuleExtractor,
     _         :: NamedTuple,
-    ds        :: AbstractDataSet,
+    ds        :: DataSet,
     solem     :: Vector{AbstractModel}
 )::Vector{DecisionSet}
     map(enumerate(solem)) do (i, model)
         X_test, y_test = get_X(ds, :test)[i], get_y(ds, :test)[i]
-        RuleExtraction.modalextractrules(
+        RuleExtraction.extractrules(
             extractor,
-            model,
             scalarlogiset(X_test; allow_propositional = true),
-            y_test
+            y_test,
+            model
         )
     end
 end
@@ -45,11 +45,11 @@ end
 function extractrules(
     extractor :: LumenRuleExtractor,
     params    :: NamedTuple,
-    _         :: AbstractDataSet,
+    _         :: DataSet,
     solem     :: Vector{AbstractModel}
 )::Vector{LumenResult}
     map(enumerate(solem)) do (_, model)
-        RuleExtraction.modalextractrules(extractor, model; params...)
+        RuleExtraction.extractrules(extractor, model; params...)
     end
 end
 
@@ -59,11 +59,11 @@ end
 function extractrules(
     extractor :: BATreesRuleExtractor,
     params    :: NamedTuple,
-    _         :: AbstractDataSet,
+    _         :: DataSet,
     solem     :: Vector{AbstractModel}
 )::Vector{DecisionSet}
     map(enumerate(solem)) do (_, model)
-        RuleExtraction.modalextractrules(extractor, model; params...)
+        RuleExtraction.extractrules(extractor, model; params...)
     end
 end
 
@@ -73,12 +73,12 @@ end
 # function extractrules(
 #     extractor :: RULECOSIPLUSRuleExtractor,
 #     params    :: NamedTuple,
-#     ds        :: AbstractDataSet,
+#     ds        :: DataSet,
 #     solem     :: Vector{AbstractModel}
 # )::Vector{DecisionSet}
 #     map(enumerate(solem)) do (i, model)
 #         X_test, y_test = get_X(ds, :test)[i], get_y(ds, :test)[i]
-#         RuleExtraction.modalextractrules(extractor, model, X_test, y_test; params...)
+#         RuleExtraction.extractrules(extractor, model, X_test, y_test; params...)
 #     end
 # end
 
@@ -88,14 +88,14 @@ end
 function extractrules(
     extractor :: REFNERuleExtractor,
     params    :: NamedTuple,
-    ds        :: AbstractDataSet,
+    ds        :: DataSet,
     solem     :: Vector{AbstractModel}
 )::Vector{DecisionSet}
     map(enumerate(solem)) do (i, model)
         X_test = get_X(ds, :test)[i]
         Xmin = map(minimum, eachcol(X_test))
         Xmax = map(maximum, eachcol(X_test))
-        RuleExtraction.modalextractrules(extractor, model, Xmin, Xmax; params...)
+        RuleExtraction.extractrules(extractor, model, Xmin, Xmax; params...)
     end
 end
 
@@ -105,12 +105,12 @@ end
 function extractrules(
     extractor :: TREPANRuleExtractor,
     params    :: NamedTuple,
-    ds        :: AbstractDataSet,
+    ds        :: DataSet,
     solem     :: Vector{AbstractModel}
 )::Vector{DecisionSet}
     map(enumerate(solem)) do (i, model)
         X_test = DataFrame(get_X(ds, :test)[i])
-        RuleExtraction.modalextractrules(extractor, model, X_test; params...)
+        RuleExtraction.extractrules(extractor, model, X_test; params...)
     end
 end
 # TODO open a PR to let Trepan accepts AbstractDataFrame

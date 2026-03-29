@@ -9,7 +9,7 @@ data_path = joinpath(@__DIR__, "respiratory_pneumonia.jld2")
 data  = JLD2.load(data_path)
 X, y = data["X"], CategoricalArrays.CategoricalArray{String,1,UInt32}(data["y"])
 
-model = symbolic_analysis(X, y, seed=123);
+model = solexplorer(X, y, seed=123);
 show_measures(model)
 
 # Performance Measures:
@@ -20,10 +20,10 @@ show_measures(model)
 # Usage Example: Silver
 # I would like to test various models, to see which one suites for my experiment...
 
-model = symbolic_analysis(X, y; model=ModalRandomForest(), seed=123);
+model = solexplorer(X, y; model=ModalRandomForest(), seed=123);
 show_measures(model)
 
-model = symbolic_analysis(X, y; model=XGBoostClassifier(), seed=123);
+model = solexplorer(X, y; model=XGBoostClassifier(), seed=123);
 show_measures(model)
 
 # Performance Measures:
@@ -35,7 +35,7 @@ show_measures(model)
 # Now it's time to tweak hyperparameters too find the best setting for the choosen model...
 
 range = SoleXplorer.range(:max_depth; lower=1, upper=10)
-model = symbolic_analysis(
+model = solexplorer(
     X, y;
     model=XGBoostClassifier(),
     seed=123,
@@ -58,7 +58,7 @@ show_measures(model)
 range = (
     SoleXplorer.range(:max_depth; lower=1, upper=3),
     SoleXplorer.range(:num_round; lower=1, upper=10))
-model = symbolic_analysis(
+model = solexplorer(
     X, y;
     model=XGBoostClassifier(),
     seed=123,
@@ -80,7 +80,7 @@ manual_lp = box(IA_L)(manual_p)
 manual_lq = diamond(IA_L)(manual_q)
 manual_lr = box(IA_L)(manual_r)
 
-symbolic_analysis!(
+solexplorer!(
     model,
     association=FPGrowth(
         Vector{Item}([manual_p, manual_q, manual_r]),

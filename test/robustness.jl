@@ -22,7 +22,7 @@ Xts, yts = SX.load(natopsloader)
         for seed in 1:5:40
             for min_purity_increase in 0.0:0.1:0.3
                 for max_depth in 1:10
-                    model = symbolic_analysis(
+                    model = solexplorer(
                         Xc, yc;
                         model=DecisionTreeClassifier(;max_depth, min_purity_increase),
                         resampling=Holdout(; fraction_train, shuffle=true),
@@ -48,7 +48,7 @@ end
         for seed in 1:5:40
             for min_purity_increase in 0.0:0.1:0.3
                 for max_depth in 1:10
-                    model = symbolic_analysis(
+                    model = solexplorer(
                         Xr, yr;
                         model=DecisionTreeRegressor(;max_depth, min_purity_increase),
                         resampling=Holdout(; fraction_train, shuffle=true),
@@ -74,7 +74,7 @@ end
         for seed in 1:5:40
             for sampling_fraction in 0.7:0.1:0.9
                 for n_trees in 10:10:100
-                    model = symbolic_analysis(
+                    model = solexplorer(
                         Xc, yc;
                         model=RandomForestClassifier(;n_trees, sampling_fraction),
                         resampling=Holdout(; fraction_train, shuffle=true),
@@ -100,7 +100,7 @@ end
         for seed in 1:5:40
             for sampling_fraction in 0.7:0.1:0.9
                 for n_trees in 10:10:100
-                    model = symbolic_analysis(
+                    model = solexplorer(
                         Xr, yr;
                         model=RandomForestRegressor(;n_trees, sampling_fraction),
                         resampling=Holdout(; fraction_train, shuffle=true),
@@ -126,7 +126,7 @@ end
         for seed in 1:40
             for feature_importance in [:impurity, :split]
                 for n_iter in 1:5:100
-                    model = symbolic_analysis(
+                    model = solexplorer(
                         Xc, yc;
                         model=AdaBoostStumpClassifier(;n_iter, feature_importance),
                         resampling=Holdout(; fraction_train=0.7, shuffle=true),
@@ -157,7 +157,7 @@ yb = CategoricalArrays.CategoricalArray{String,1,UInt32}(data["y"])
         for seed in 1:5:40
             for num_round in 10:5:50
                 for eta in 0.1:0.1:0.4
-                    model = symbolic_analysis(
+                    model = solexplorer(
                         Xb, yb;
                         model=XGBoostClassifier(;eta, num_round),
                         resampling=Holdout(; fraction_train, shuffle=true),
@@ -183,7 +183,7 @@ end
         for seed in 1:5:40
             for num_round in 10:5:50
                 for eta in 0.1:0.1:0.4
-                    model = symbolic_analysis(
+                    model = solexplorer(
                         Xc, yc;
                         model=XGBoostClassifier(;eta, num_round),
                         resampling=Holdout(; fraction_train, shuffle=true),
@@ -209,7 +209,7 @@ end
         for seed in 1:5:40
             for num_round in 10:5:50
                 for eta in 0.1:0.1:0.4
-                    model = symbolic_analysis(
+                    model = solexplorer(
                         Xr, yr;
                         model=XGBoostRegressor(;eta, num_round),
                         resampling=Holdout(; fraction_train, shuffle=true),

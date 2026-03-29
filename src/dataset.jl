@@ -1,44 +1,8 @@
 # ---------------------------------------------------------------------------- #
-#                               abstract types                                 #
-# ---------------------------------------------------------------------------- #
-abstract type AbstractTreatmentInfo end
-
-"""
-    AbstractDataSet
-
-Abstract supertype for all dataset structures in SoleXplorer.
-
-Concrete subtypes include:
-- [`PropositionalDataSet`](@ref): for standard ML algorithms with aggregated features
-- [`ModalDataSet`](@ref): for modal logic algorithms with temporal structure preservation
-"""
-abstract type AbstractDataSet end
-
-# ---------------------------------------------------------------------------- #
 #                                    types                                     #
 # ---------------------------------------------------------------------------- #
-const Balancing = NamedTuple{(:oversampler, :undersampler), <:Tuple{<:MLJ.Model, <:MLJ.Model}}
-const WinFunc   = Union{Base.Callable, Tuple{Vararg{Base.Callable}}}
-
-# metadata container for dataset preprocessing operations.
-struct ReductionInfo <: AbstractTreatmentInfo
-    features   :: Tuple{Vararg{Base.Callable}}
-    winparams  :: WinFunc
-    reducefunc :: Base.Callable
-end
-
-# simplified metadata for aggregation-only preprocessing.
-struct AggregationInfo <: AbstractTreatmentInfo
-    features   :: Tuple{Vararg{Base.Callable}}
-    winparams  :: WinFunc
-end
-
-const MaybeInt             = Maybe{Int64}
-const MaybeAggregationInfo = Maybe{AggregationInfo}
-const MaybeBalancing       = Maybe{Balancing}
-const MaybeTuning          = Maybe{Tuning}
-const MaybeTreatInfo       = Maybe{AbstractTreatmentInfo}
-const MaybeCallable        = Maybe{Base.Callable}
+const Balancing =
+    NamedTuple{(:oversampler, :undersampler), <:Tuple{<:MLJ.Model, <:MLJ.Model}}
 
 # ---------------------------------------------------------------------------- #
 #                                  defaults                                    #
@@ -46,28 +10,29 @@ const MaybeCallable        = Maybe{Base.Callable}
 # return a default model appropriate for the target variable type
 # this function is used when no explicit model is provided to `setup_dataset`,
 # automatically selecting between classification and regression
-function _DefaultModel(y::AbstractVector)::MLJ.Model
-    return eltype(y) <: RLabel ?
-        DecisionTreeRegressor() :
-        DecisionTreeClassifier()
+# no supervised (y==nothing) is treated as regression as it is.
+function _default_model(y::AbstractVector)
+    return y isa CategoricalArray && !isempty(y) ?
+        DecisionTreeClassifier() :
+        DecisionTreeRegressor()
 end
 
 # ---------------------------------------------------------------------------- #
 #                                   set rng                                    #
 # ---------------------------------------------------------------------------- #
 # Set the random number generator for a model that supports it
-function set_rng!(m::MLJ.Model, rng::Random.AbstractRNG)::MLJ.Model
+function set_rng!(m::MLJ.Model, rng::Random.AbstractRNG)
     m.rng = rng
     return m
 end
 
 # set the random number generator for a resampling strategy
-function set_rng(r::MLJ.ResamplingStrategy, rng::Random.AbstractRNG)::ResamplingStrategy
+function set_rng(r::MLJ.ResamplingStrategy, rng::Random.AbstractRNG)
     typeof(r)(merge(MLJ.params(r), (rng=rng,))...)
 end
 
 # set random number generators for tuning-related components of a model
-function set_tuning_rng!(m::MLJ.Model, rng::Random.AbstractRNG)::MLJ.Model
+function set_tuning_rng!(m::MLJ.Model, rng::Random.AbstractRNG)
     hasproperty(m.tuning, :rng) && (m.tuning.rng = rng)
     hasproperty(m.resampling, :rng) && (m.resampling = set_rng(m.resampling, rng))
     return m
@@ -75,239 +40,44 @@ end
 
 # set the seed for balancing-related components of a model
 # originally broken in case you pass a RNG method (lenth mismatch during MLJ.fit!)
-function set_balancing_seed(m::MLJ.Model, seed::Int64)::MLJ.Model
-    hasproperty(m, :rng) && (m = typeof(m).name.wrapper(merge(MLJ.params(m), (rng=seed,))...))
-    return m
-end
-
-# set logical conditions (features) for modal models
-function set_conditions!(m::MLJ.Model, conditions::Tuple{Vararg{Base.Callable}})::MLJ.Model
-    m.conditions = Function[conditions...]
+function set_balancing_seed(m::MLJ.Model, seed::Int)
+    hasproperty(m, :rng) &&
+        (m = typeof(m).name.wrapper(merge(MLJ.params(m), (rng=seed,))...))
     return m
 end
 
 # ---------------------------------------------------------------------------- #
-#                                    utils                                     #
+#                                DataSet struct                                #
 # ---------------------------------------------------------------------------- #
-# ensures that the target variable `y` is properly formatted for use with MLJ
-# it handles automatic conversion to categorical format when needed for classification tasks
-function check_y(y::AbstractVector, model::MLJ.Model)::AbstractVector
-    return (eltype(y) === Any) || ((eltype(y) <: RLabel) && !(model isa Regression)) ?
-        MLJ.categorical(string.(y)) :
-        y
-end
+struct DataSet{M,T}
+    mach::MLJ.Machine
+    pidxs::Vector{PartitionIdxs{T}}
+    pinfo::PartitionInfo
 
-# convert all numeric columns in a DataFrame to Float64 type
-function to_float_dataset(X::AbstractDataFrame)::AbstractDataFrame
-    for (name, col) in pairs(eachcol(X))
-        if eltype(col) <: Number && eltype(col) != AbstractFloat
-            X[!, name] = Float64.(col)
-        end
-    end
-    
-    return X
-end
-
-# ---------------------------------------------------------------------------- #
-#                                 code dataset                                 #
-# ---------------------------------------------------------------------------- #
-"""
-    code_dataset(X::AbstractDataFrame)
-
-In-place encoding of non-numeric columns in a DataFrame to numeric codes.
-"""
-function code_dataset(X::AbstractDataFrame)
-    for (name, col) in pairs(eachcol(X))
-        if !(eltype(col) <: Number)
-            # handle mixed types by converting to string first
-            eltype(col) == AbstractString || (col = string.(coalesce.(col, "missing")))
-            X[!, name] = MLJ.levelcode.(categorical(col))
-        end
-    end
-    
-    return X
-end
-
-"""
-    code_dataset(y::AbstractVector)
-
-In-place encoding of non-numeric target vector to numeric codes.
-"""
-function code_dataset(y::AbstractVector)
-    if !(eltype(y) <: Number)
-        eltype(y) <: Symbol && (y = string.(y))
-        y = MLJ.levelcode.(categorical(y)) 
-    end
-    
-    return y
-end
-
-"""
-    code_dataset(X::AbstractDataFrame, y::AbstractVector)
-
-Convenience method to encode both features and target simultaneously.
-"""
-code_dataset(X::AbstractDataFrame, y::AbstractVector) = code_dataset(X), code_dataset(y)
-
-# ---------------------------------------------------------------------------- #
-#                          multidimensional dataset                            #
-# ---------------------------------------------------------------------------- #
-"""
-    PropositionalDataSet{M} <: AbstractDataSet
-
-Dataset wrapper for standard machine learning algorithms that work with tabular/propositional data.
-
-This dataset type encapsulates an MLJ machine along with partitioning information and optional
-aggregation metadata. It is used when working with traditional ML models that require flattened
-feature representations, typically created by aggregating multidimensional data.
-
-# Fields
-- `mach::MLJ.Machine`: MLJ machine containing the model, training data, and cache
-- `pidxs::Vector{PartitionIdxs}`: Partition indices for train/test splits across folds
-- `pinfo::PartitionInfo`: Metadata about the partitioning strategy used
-- `ainfo::MaybeAggregationInfo`: Optional aggregation information for multidimensional data
-
-# Type Parameter
-- `M`: The type of the MLJ model contained in the machine
-
-See also: [`ModalDataSet`](@ref), [`setup_dataset`](@ref), [`AbstractDataSet`](@ref)
-"""
-mutable struct PropositionalDataSet{M} <: AbstractDataSet
-    mach  :: MLJ.Machine
-    pidxs :: Vector{PartitionIdxs}
-    pinfo :: PartitionInfo
-    ainfo :: MaybeAggregationInfo
-end
-
-"""
-    ModalDataSet{M} <: AbstractDataSet
-
-Dataset wrapper for modal logic algorithms that preserve temporal/structural relationships.
-
-This dataset type is designed for modal learning algorithms that can work directly with
-multidimensional time series or structured data without requiring feature aggregation.
-It maintains treatment information that describes how the original data structure is preserved.
-
-# Fields
-- `mach::MLJ.Machine`: MLJ machine containing the modal model, training data, and cache
-- `pidxs::Vector{PartitionIdxs}`: Partition indices for train/test splits across folds
-- `pinfo::PartitionInfo`: Metadata about the partitioning strategy used  
-- `tinfo::AbstractTreatmentInfo`: Treatment information describing data structure preservation
-
-# Type Parameter
-- `M`: The type of the modal MLJ model contained in the machine
-
-See also: [`PropositionalDataSet`](@ref), [`setup_dataset`](@ref), [`AbstractDataSet`](@ref)
-"""
-mutable struct ModalDataSet{M} <: AbstractDataSet
-    mach  :: MLJ.Machine
-    pidxs :: Vector{PartitionIdxs}
-    pinfo :: PartitionInfo
-    tinfo :: AbstractTreatmentInfo
-end
-
-"""
-    DataSet(mach, pidxs, pinfo; tinfo=nothing) -> AbstractDataSet
-
-Constructor function that creates the appropriate dataset type based on treatment information.
-
-This function serves as a smart constructor that automatically determines whether to create
-a `PropositionalDataSet` or `ModalDataSet` based on the provided treatment information and
-the type of treatment specified.
-
-# Arguments
-- `mach::MLJ.Machine{M}`: MLJ machine containing model and data
-- `pidxs::Vector{PartitionIdxs}`: Partition indices for cross-validation folds
-- `pinfo::PartitionInfo`: Information about the partitioning strategy
-- `tinfo::MaybeTreatInfo=nothing`: Optional treatment information for multidimensional data
-
-# Returns
-- `PropositionalDataSet{M}`: When `tinfo` is `nothing` or treatment is not `:reducesize`
-- `ModalDataSet{M}`: When `tinfo` specifies `:reducesize` treatment
-
-# Decision Logic
-1. **No treatment info** (`tinfo = nothing`): Creates `PropositionalDataSet` with no aggregation info
-2. **Reduce size treatment** (`get_treatment(tinfo) == :reducesize`): Creates `ModalDataSet` preserving structure
-3. **Other treatments** (e.g., `:aggregate`): Creates `PropositionalDataSet` with aggregation info converted from treatment
-
-# Type Parameter
-- `M <: MLJ.Model`: The type of the model in the MLJ machine
-
-See also: [`PropositionalDataSet`](@ref), [`ModalDataSet`](@ref), [`AbstractDataSet`](@ref)
-"""
-function DataSet(
-    mach  :: MLJ.Machine{M},
-    pidxs :: Vector{PartitionIdxs},
-    pinfo :: PartitionInfo;
-    tinfo :: MaybeTreatInfo=nothing
-) where {M<:MLJ.Model}
-    isnothing(tinfo) ?
-        PropositionalDataSet{M}(mach, pidxs, pinfo, nothing) : begin
-        if tinfo isa ReductionInfo
-            ModalDataSet{M}(mach, pidxs, pinfo, tinfo)
-        else
-            PropositionalDataSet{M}(mach, pidxs, pinfo, tinfo)
-        end
-    end
+    DataSet(
+        mach::MLJ.Machine{M},
+        pidxs::Vector{PartitionIdxs{T}},
+        pinfo::PartitionInfo
+    ) where {M<:MLJ.Model,T} = new{M,T}(mach, pidxs, pinfo)
 end
 
 # ---------------------------------------------------------------------------- #
 #                                    methods                                   #
 # ---------------------------------------------------------------------------- #
-Base.length(ds::AbstractDataSet) = length(ds.pidxs)
+Base.length(ds::DataSet) = length(ds.pidxs)
 
-"""
-    get_X(ds::AbstractDataSet) -> DataFrame
-
-Extract feature DataFrame from dataset's MLJ machine.
-"""
-get_X(ds::AbstractDataSet)::DataFrame = ds.mach.args[1].data
-
-"""
-    get_X(ds::AbstractDataSet, part::Symbol) -> Vector{<:AbstractDataFrame}
-
-Extract feature DataFrames for a specific partition (e.g., :train, :test or :valid) across all folds.
-"""
-get_X(ds::AbstractDataSet, part::Symbol)::Vector{<:AbstractDataFrame} = 
+get_X(ds::DataSet) = ds.mach.args[1].data
+get_X(ds::DataSet, part::Symbol) = 
     [@views get_X(ds)[getproperty(ds.pidxs[i], part), :] for i in 1:length(ds)]
-
-"""
-    get_y(ds::AbstractDataSet) -> Vector
-
-Extract target vector from dataset's MLJ machine.
-"""
-get_y(ds::AbstractDataSet)::AbstractVector = ds.mach.args[2].data
-
-"""
-    get_y(ds::AbstractDataSet, part::Symbol) -> Vector{<:AbstractVector}
-
-Extract target values for a specific partition (e.g., :train, :test or :valid) across all folds.
-"""
-get_y(ds::AbstractDataSet, part::Symbol)::AbstractVector = 
+get_y(ds::DataSet) = ds.mach.args[2].data
+get_y(ds::DataSet, part::Symbol) = 
     [@views get_y(ds)[getproperty(ds.pidxs[i], part)] for i in 1:length(ds)]
 
-"""
-    get_mach(ds::AbstractDataSet)::Machine
+get_mach(ds::DataSet) = ds.mach
+get_mach_model(ds::DataSet) = ds.mach.model
 
-Extract the MLJ machine from the dataset.
-"""
-get_mach(ds::AbstractDataSet)::Machine = ds.mach
-
-"""
-    get_mach_model(ds::AbstractDataSet)::MLJ.Model
-
-Extract the model from the dataset's MLJ machine.
-"""
-get_mach_model(ds::AbstractDataSet)::MLJ.Model = ds.mach.model
-
-"""
-    get_logiset(ds::ModalDataSet)::SupportedLogiset
-
-Extract the logiset (if present) from the dataset's MLJ machine.
-"""
-get_logiset(ds::ModalDataSet)::SupportedLogiset = ds.mach.data[1].modalities[1]
-
-get_rng(ds::AbstractDataSet) = get_rng(ds.pinfo)
+get_logiset(ds::DataSet) = ds.mach.data[1].modalities[1]
+get_rng(ds::DataSet) = get_rng(ds.pinfo)
 
 # ---------------------------------------------------------------------------- #
 #                           MLJ models's extra setup                           #
@@ -315,11 +85,12 @@ get_rng(ds::AbstractDataSet) = get_rng(ds.pinfo)
 function set_balancing(
     model     :: MLJ.Model,
     balancing :: Balancing,
-    seed      :: Int64=17
+    seed      :: Int=17
 )::MLJ.Model
     # regression models don't support balancing
     model isa Regression &&
-        throw(ArgumentError("Balancing is not supported for regression models."))
+        throw(ArgumentError(
+            "Balancing is not supported for regression models."))
 
     # set the model to use the same seed
     balancing = map(b -> set_balancing_seed(b, seed), balancing)
@@ -349,23 +120,42 @@ end
 # ---------------------------------------------------------------------------- #
 #                                setup dataset                                 #
 # ---------------------------------------------------------------------------- #
-function setup_dataset(X::AbstractDataFrame, y::AbstractVector, args...; kwargs...)
-    throw(ArgumentError("Target variable y must have elements of type Label, " * "got eltype: $(eltype(y))"))
+function setup_dataset(
+    X::AbstractDataFrame,
+    y::AbstractVector,
+    args...;
+    kwargs...
+)
+    throw(ArgumentError(
+        "Target variable y must have elements of type Label, " *
+        "got eltype: $(eltype(y))"))
 end
 
 """
     setup_dataset(
-        X, y, w=nothing;
-        model=_DefaultModel(y),
+        dt::DataTreatment;
+        w=nothing,
+        model=_default_model(get_target(dt)),
         resampling=Holdout(fraction_train=0.7, shuffle=true),
         valid_ratio=0.0,
         seed=nothing,
         balancing=nothing,
         tuning=nothing,
-        win=adaptivewindow(nwindows=3, overlap=0.1),
-        features=(maximum, minimum),
-        reducefunc=mean,
-    ) -> AbstractDataSet
+    ) -> DataSet
+
+    setup_dataset(
+        X::Matrix,
+        vnames::Vector{String},
+        y=nothing,
+        treatments...;
+        treatment_ds=true,
+        leftover_ds=true,
+        float_type=Float64,
+        kwargs...
+    ) -> DataSet
+
+    setup_dataset(df::AbstractDataFrame, y=nothing, args...; kwargs...) -> DataSet
+    setup_dataset(df::AbstractDataFrame, y::Symbol, args...; kwargs...) -> DataSet
 
 Creates and configures a dataset structure for machine learning.
 
@@ -374,137 +164,129 @@ including data preprocessing, model configuration, partitioning, hyperparameter 
 and MLJ machine creation.
 
 # Arguments
-- `X::AbstractDataFrame`: Feature matrix/DataFrame
-- `y::AbstractVector`: Target variable vector
-- `w::MaybeVector=nothing`: Optional sample weights
+- `dt::DataTreatment`: A `DataTreatment` object encapsulating features, target, and
+  preprocessing information. Use `DataTreatments.load_dataset` to construct one.
+- `X::Matrix`: Raw feature matrix.
+- `vnames::Vector{String}`: Column names for the feature matrix.
+- `y::Union{Nothing,AbstractVector{<:Label}}=nothing`: Target variable vector.
+  If `nothing`, an unsupervised (or regression-only) setup is assumed.
+- `df::AbstractDataFrame`: Feature DataFrame, optionally containing the target column.
+- `treatments::Vararg{Base.Callable}`: Data treatment functions applied during
+  preprocessing (defaults to `DataTreatments.DefaultTreatmentGroup`).
 
 # Keyword Arguments
 
 ## Model Configuration
-- `model::MLJ.Model=_DefaultModel(y)`: Sole compatible MLJ model to use, 
-   auto-selected based on target type, if no `model` is subbmitted
+- `model::MLJ.Model=_default_model(y)`: Sole-compatible MLJ model to use,
+  auto-selected based on target type if not provided. Classification targets
+  (CategoricalArray) default to `DecisionTreeClassifier`, others to `DecisionTreeRegressor`.
 
-## Data resampling
-- `resampling::ResamplingStrategy=Holdout(shuffle=true)`: Cross-validation strategy
-- `valid_ratio::Real=0.0`: Validation set proportion
-- `rng::Random.AbstractRNG=TaskLocalRNG()`: Random number generator for reproducibility
+## Data Resampling
+- `resampling::ResamplingStrategy=Holdout(fraction_train=0.7, shuffle=true)`:
+  Cross-validation or holdout strategy. Strategies are taken from
+  [MLJ](https://juliaai.github.io/MLJBase.jl/stable/resampling/).
+- `valid_ratio::Real=0.0`: Fraction of training data to reserve as a validation set.
+  Primarily used with XGBoost [early stopping](https://xgboost.readthedocs.io/en/stable/prediction.html).
+- `seed::Union{Nothing,Int}=nothing`: Integer seed for reproducibility. Internally
+  initializes a `Xoshiro` RNG and propagates it to the model, resampling strategy,
+  and tuning components.
 
-Resampling strategies are taken from the package [MLJ](https://juliaai.github.io/MLJ.jl/stable/).
-See official documentation [here](https://juliaai.github.io/MLJBase.jl/stable/resampling/).
+## Class Balancing
+- `balancing::Union{Nothing,Balancing}=nothing`: A `NamedTuple` with fields
+  `oversampler` and `undersampler`, both `MLJ.Model` instances. Not supported for
+  regression models. Strategies are taken from
+  [Imbalance.jl](https://juliaai.github.io/Imbalance.jl/dev/).
 
-`valid_ratio` is used with XGBoost early stop [technique](https://xgboost.readthedocs.io/en/stable/prediction.html).
-`rng` can be setted externally (via seed, using internal Xoshiro algo) for convenience.
+## Hyperparameter Tuning
+- `tuning::Union{Nothing,Tuning}=nothing`: Tuning configuration. Requires a `range`
+  specification, e.g.:
+  ```julia
+  range = SoleXplorer.range(:min_purity_increase; lower=0.1, upper=1.0, scale=:log)
+  ```
+  Tuning strategies are adapted from [MLJ](https://juliaai.github.io/MLJ.jl/stable/)
+  and [MLJParticleSwarmOptimization.jl](https://github.com/JuliaAI/MLJParticleSwarmOptimization.jl).
 
-## Balancing
-Balancing strategies are taken from the package [Imbalance](https://github.com/JuliaAI/Imbalance.jl).
-See official documentation [here](https://juliaai.github.io/Imbalance.jl/dev/).
+## Data Loading (Matrix/DataFrame methods only)
+- `treatment_ds::Bool=true`: Whether to include the treated dataset partition.
+- `leftover_ds::Bool=true`: Whether to include the leftover (untreated) partition.
+- `float_type::Type=Float64`: Numeric type used for feature conversion.
 
-## Tuning
-`tuning::MaybeTuning=nothing`: Hyperparameter tuning configuration,
-requires `range` vectors, i.e:
-```
-range = SoleXplorer.range(:min_purity_increase; lower=0.1, upper=1.0, scale=:log)
-```
-
-Tuning strategies are adapted from the package [MLJ](https://juliaai.github.io/MLJ.jl/stable/)
-and package [MLJParticleSwarmOptimization](https://github.com/JuliaAI/MLJParticleSwarmOptimization.jl).
-
-
-## Multidimensional Data Processing
-These parameters are needed only if a time series dataset is used.
-With these parameters we can tweak size reduction, in case of **modal** analysis
-or aggregation strategy, in case of further **propositional** analysis.
-Parameters are the same, SoleXplorer will take care of automatically set the case,
-depending on the model choose.
-
-- `win::WinFunc=adaptivewindow(nwindows=3, overlap=0.1)`: Windowing function
-Available windows strategies: [MovingWindow](@ref), [WholeWindow](@ref), [SplitWindow](@ref), [adaptivewindow](@ref).
-
-- `features::Tuple{Vararg{Base.Callable}}=(maximum, minimum)`: Feature extraction functions
-Note that beyond standard reduction functions (e.g., maximum, minimum, mean, mode), [Catch22](https://time-series-features.gitbook.io/catch22) time-series features are also available.
-- `reducefunc::Base.Callable=mean`: Reduction function for modal algorithms
+## Weights
+- `w::Union{Nothing,Vector}=nothing`: Optional per-sample weights vector.
 
 # Returns
-- `PropositionalDataSet{M}`: For standard ML algorithms with tabular data
-- `ModalDataSet{M}`: For modal logic algorithms with structured data
+- `DataSet{M,T}`: A configured dataset struct wrapping an MLJ machine, partition
+  indices, and partition metadata.
 
-# Examples:
+# Notes
+- When calling `setup_dataset(df, y::Symbol, ...)`, the target column `y` is
+  automatically removed from the feature set.
+- Modal models require a `DataTreatment` built from multidimensional (time-series)
+  data; non-modal models require tabular data. Mixing types raises an error.
+- For Modal models with tuning, if no `measure` is provided, `LogLoss()` is used
+  as a default.
+
+# Examples
 ```julia
-using SoleXplorer
-using MLJ
-using DataFrames, Random
+using SoleXplorer, MLJ, DataFrames
 const SX = SoleXplorer
 
 Xc, yc = @load_iris
 Xc = DataFrame(Xc)
 
-Xr, yr = @load_boston
-Xr = DataFrame(Xr)
+# basic classification setup
+ds = setup_dataset(Xc, yc)
 
-natopsloader = SX.NatopsLoader()
-Xts, yts = SX.load(natopsloader)
+# specify model
+ds = setup_dataset(Xc, yc; model=AdaBoostStumpClassifier())
 
-# basic setup
-dsc = setup_dataset(Xc, yc)
+# cross-validation with seed
+ds = setup_dataset(Xc, yc; resampling=CV(nfolds=10, shuffle=true), seed=1)
 
-# model type specification
-dsc = setup_dataset(
-    Xc, yc;
-    model=AdaBoostStumpClassifier()
-)
-
-# resampling
-dsc = setup_dataset(
-    Xc, yc;
-    resampling=CV(nfolds=10),
-)
-
-dsc = setup_dataset(
-    Xc, yc;
-    resampling=CV(nfolds=10, shuffle=true),
-    seed=1
-)
-
-# tuning
+# hyperparameter tuning
 range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
-dsc = setup_dataset(
+ds = setup_dataset(
     Xc, yc;
     model=ModalDecisionTree(),
     resampling=CV(nfolds=5, shuffle=true),
     seed=1,
-    tuning=GridTuning(resolution=10, resampling=CV(nfolds=3), range=range, measure=accuracy, repeats=2)
+    tuning=GridTuning(
+        resolution=10,
+        resampling=CV(nfolds=3),
+        range=range,
+        measure=accuracy,
+        repeats=2
+    )
 )
 
-# time-series
-dts = setup_dataset(
-    Xts, yts;
-    model=ModalRandomForest(),
-    resampling=Holdout(fraction_train=0.7, shuffle=true),
-    seed=1,
-    win=adaptivewindow(nwindows=3, overlap=0.3),
-    features=(minimum, maximum),
-    reducefunc=mode
-)
+# target as column symbol
+ds = setup_dataset(Xc, :target)
 ```
 
-# See also: [`DataSet`](@ref), [`PropositionalDataSet`](@ref), [`ModalDataSet`](@ref), [`symbolic_analysis`](@ref)
+# See also: [`DataSet`](@ref), [`solexplorer`](@ref)
 """
 function setup_dataset(
-    X           :: AbstractDataFrame,
-    y           :: AbstractVector{<:Label},
-    w           :: MaybeVector                  = nothing;
-    model       :: MLJ.Model                    = _DefaultModel(y),
-    resampling  :: ResamplingStrategy           = Holdout(fraction_train=0.7, shuffle=true),
-    valid_ratio :: Real                         = 0.0,
-    seed        :: MaybeInt                     = nothing,
-    balancing   :: MaybeBalancing               = nothing,
-    tuning      :: MaybeTuning                  = nothing,
-    win         :: WinFunc                      = adaptivewindow(nwindows=3, overlap=0.1),
-    features    :: Tuple{Vararg{Base.Callable}} = (maximum, minimum),
-    norm        :: MaybeCallable                = nothing,
-    reducefunc  :: Base.Callable                = mean
-)::AbstractDataSet
-    y = check_y(y, model)
+    dt::DT.DataTreatment;
+    w::Union{Nothing,Vector}=nothing,
+    model::MLJ.Model=_default_model(DT.get_target(dt)),
+    resampling::ResamplingStrategy=Holdout(fraction_train=0.7, shuffle=true),
+    valid_ratio::Real=0.0,
+    seed::Union{Nothing,Int}=nothing,
+    balancing::Union{Nothing,Balancing}=nothing,
+    tuning::Union{Nothing,Tuning}=nothing
+)
+    # get the dataset if type is appropriate for the chosen model
+    X, vnames = if is_tabular(dt) && !(model isa Modal)
+        DT.get_tabular(dt; force_type=true)
+    elseif is_multidim(dt) && (model isa Modal)
+        DT.get_multidim(dt; force_type=true)
+    else
+        error("Incompatible dataset and model types: " *
+        "use a modal model for multidimensional data, " *
+        "and a non-modal model for tabular data.")
+    end
+
+    y = DT.get_target(dt)
 
     # setup rng
     if !isnothing(seed)
@@ -516,54 +298,66 @@ function setup_dataset(
         rng = TaskLocalRNG()
     end
 
-    # Modal models need features to be passed in model params
-    hasproperty(model, :features) && set_conditions!(model, features)
     # MLJ.TunedModels can't automatically assigns measure to Modal models
     if model isa Modal && !isnothing(tuning)
         isnothing(get_measure(tuning)) && (tuning.measure = LogLoss())
     end
 
-    # handle multidimensional datasets:
-    # propositional models requiring feature aggregation
-    # modal models requiring reducing data size
-    if DataTreatments.is_multidim_dataset(X)
-        if model isa Modal
-            t = DataTreatment(X, :reducesize; win, features, reducefunc, norm)
-            X = DataFrame(get_dataset(t), Symbol.(get_featureid(t)))
-            tinfo = ReductionInfo(features, win, reducefunc)
-        else
-            t = DataTreatment(X, :aggregate; win, features, norm)
-            X = DataFrame(get_dataset(t), Symbol.(get_featureid(t)))
-            tinfo = AggregationInfo(features, win)
-        end
-    else
-        X = code_dataset(X)
-        # some algos, like xgboost, doesnt accept dataset with numeric values, only float
-        X = to_float_dataset(X)
-        tinfo = nothing
-    end
-
-    ttpairs, pinfo = partition(y; resampling, valid_ratio, rng)
+    ttpairs, pinfo = partition(DT.nrows(dt), y; resampling, valid_ratio, rng)
 
     isnothing(seed)      && (seed = 1)
     isnothing(balancing) || (model = set_balancing(model, balancing, seed))
     isnothing(tuning)    || (model = set_tuning(model, tuning, rng))
 
-    mach = isnothing(w) ? MLJ.machine(model, X, y) : MLJ.machine(model, X, y, w)
-    
-    DataSet(mach, ttpairs, pinfo; tinfo)
+    Xdf = DataFrame(X, vnames)
+    to_mach = isempty(y) ? (Xdf) : (Xdf, y)
+
+    mach = isnothing(w) ? MLJ.machine(model, to_mach...) : MLJ.machine(model, to_mach..., w)
+
+    DataSet(mach, ttpairs, pinfo)
 end
+
+function setup_dataset(
+    X::Matrix,
+    vnames::Vector{String}=["V$i" for i in 1:size(data, 2)],
+    y::Union{Nothing,AbstractVector{<:Label}}=nothing,
+    treatments::Vararg{Base.Callable}=DT.DefaultTreatmentGroup;
+    treatment_ds::Bool=true,
+    leftover_ds::Bool=true,
+    float_type::Type=Float64,
+    kwargs...
+)
+    dt = DT.load_dataset(
+        X,
+        vnames,
+        y,
+        treatments...;
+        treatment_ds,
+        leftover_ds,
+        float_type
+    )
+
+    setup_dataset(dt; kwargs...)
+end
+
+setup_dataset(
+    df::AbstractDataFrame,
+    y::Union{Nothing,AbstractVector{<:Label}}=nothing,
+    args...;
+    kwargs...
+) = setup_dataset(Matrix(df), names(df), y, args...; kwargs...)
+
+setup_dataset(df::AbstractDataFrame, args...; kwargs...) =
+    setup_dataset(Matrix(df), names(df), nothing, args...; kwargs...)
 
 """
     setup_dataset(X::AbstractDataFrame, y::Symbol; kwargs...)::AbstractDataSet
 
 Convenience method when target variable is a column in the feature DataFrame.
 """
-function setup_dataset(
+setup_dataset(
     X::AbstractDataFrame,
     y::Symbol,
     args...;
     kwargs...
-)::AbstractDataSet
-    setup_dataset(X[!, Not(y)], X[!, y], args...; kwargs...)
-end
+) = setup_dataset(X[!, Not(y)], X[!, y], args...; kwargs...)

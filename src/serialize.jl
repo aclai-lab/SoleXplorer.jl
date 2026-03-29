@@ -3,7 +3,7 @@
 # naming conventions and path management.
 
 # All serialization functions work with types that implement the `Saveable` union:
-# - AbstractDataSet: Dataset configurations and ML pipelines
+# - DataSet: Dataset configurations and ML pipelines
 # - AbstractSoleModel: Trained symbolic models  
 # - AbstractModelSet: Complete analysis results with multiple models
 
@@ -12,7 +12,7 @@
 # ---------------------------------------------------------------------------- #
 # union type defining all objects that can be serialized by SoleXplorer
 const Saveable = Union{
-    AbstractDataSet,
+    DataSet,
     AbstractSoleModel,
     AbstractModelSet
 }
@@ -55,7 +55,7 @@ existence checking, and JLD2 serialization.
 
 See also: [`soleload`](@ref)
 """
-solesave(ds::AbstractDataSet; kwargs...)   = _save(ds, "soleds"; kwargs...)
+solesave(ds::DataSet; kwargs...)   = _save(ds, "soleds"; kwargs...)
 solesave(ds::AbstractSoleModel; kwargs...) = _save(ds, "solemodel"; kwargs...)
 solesave(ds::AbstractModelSet; kwargs...)  = _save(ds, "soleanalysis"; kwargs...)
 

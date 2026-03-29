@@ -38,7 +38,7 @@ using SoleXplorer, MLJ
 Xc, yc = @load_iris
 
 # Train a decision tree
-modelc = symbolic_analysis(Xc, yc)
+modelc = solexplorer(Xc, yc)
 ```
 
 Of course, customizations are possible:
@@ -47,7 +47,7 @@ Of course, customizations are possible:
 using Random
 
 range = SoleXplorer.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
-modelc = symbolic_analysis(
+modelc = solexplorer(
     Xc, yc;
     model=DecisionTreeClassifier(),
     resampling=CV(nfolds=5, shuffle=true),
@@ -66,7 +66,7 @@ natopsloader = SoleXplorer.NatopsLoader()
 Xts, yts = SoleXplorer.load(natopsloader)
 
 # Train a modal decision tree
-modelts = symbolic_analysis(
+modelts = solexplorer(
     Xts, yts;
     model=ModalDecisionTree(),
     resampling=Holdout(fraction_train=0.8, shuffle=true),

@@ -13,8 +13,7 @@ abstract type AbstractTuning end
 # ---------------------------------------------------------------------------- #
 #                                   types                                      #
 # ---------------------------------------------------------------------------- #
-const EitherMeasures = Union{RobustMeasure, FussyMeasure}
-const MaybeMeasure   = Maybe{EitherMeasures}
+const EitherMeasures = Union{Nothing,RobustMeasure,FussyMeasure}
 
 const RangeSpec = Union{
     Tuple,
@@ -31,7 +30,7 @@ mutable struct Tuning{T} <: AbstractTuning
     strategy   :: T
     range      :: RangeSpec
     resampling :: MLJ.ResamplingStrategy
-    measure    :: MaybeMeasure
+    measure    :: EitherMeasures
     repeats    :: Int64
     
     function Tuning{T}(strategy::T, range::RangeSpec, resampling, measure, repeats) where T
@@ -72,7 +71,7 @@ Extract the resampling strategy from a tuning configuration.
 get_resampling(t::Tuning) = t.resampling
 
 """
-    get_measure(t::Tuning) -> MaybeMeasure
+    get_measure(t::Tuning) -> EitherMeasures
 
 Extract the reference performance measure from a tuning configuration.
 """
@@ -122,7 +121,7 @@ Base.range(field::Union{Symbol,Expr}; kwargs...) = field, kwargs...
     strategy_type :: Type{<:Any};
     range         :: RangeSpec,
     resampling    :: MLJ.ResamplingStrategy=Holdout(fraction_train=0.7, shuffle=true),
-    measure       :: MaybeMeasure=nothing,
+    measure       :: EitherMeasures=nothing,
     repeats       :: Int64=1,
     kwargs...
 )::Tuning

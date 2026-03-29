@@ -19,9 +19,9 @@ catch
     SX.load(natopsloader)
 end
 
-model = symbolic_analysis(Xts, yts, seed=11)
+model = solexplorer(Xts, yts, seed=11)
 
-@btime symbolic_analysis(Xts, yts, seed=11)
+@btime solexplorer(Xts, yts, seed=11)
 # 11.728 ms (20570 allocations: 2.09 MiB)
 
 # ---------------------------------------------------------------------------- #
