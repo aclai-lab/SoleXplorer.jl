@@ -1,6 +1,7 @@
 # solexplorer.jl — Unified Symbolic Model Analysis Interface
 
-# this module provides the main entry point for complete symbolic model analysis workflows:
+# this module provides the main entry point for complete 
+# symbolic model analysis workflows:
 
 # 1. Dataset setup and cross-validation training (via train_test.jl)
 # 2. Training and testing models (via train_test.jl)
@@ -16,7 +17,8 @@
 Abstract type for containers that hold symbolic model analysis results.
 
 # Concrete Implementations
-- [`ModelSet`](@ref): The primary implementation containing complete analysis results
+- [`ModelSet`](@ref): The primary implementation containing complete analysis 
+  results
 
 See also: [`solexplorer`](@ref)
 """
@@ -31,7 +33,7 @@ abstract type AbstractModelSet end
 Wrapper for complete symbolic model analysis results.
 
 This structure holds all components of a symbolic analysis workflow including
-the dataset configuration, sole trained models, extracted rules, association rules,
+the dataset configuration, sole trained models, extracted rules,
 and performance measures.
 
 # Type Parameters
@@ -40,35 +42,32 @@ and performance measures.
 # Fields
 - `ds::DataSet`: Dataset configuration with cross-validation setup,
    plus all settings needed by modal analysis.
-- `sole::Vector{AbstractModel}`: Vector of trained symbolic models (one per CV fold)
+- `sole::Vector{AbstractModel}`: Vector of trained symbolic models
+  (one per CV fold)
 ### Optional
-- `rules::Union{Nothing,Vector{DecisionSet},Vector{LumenResult}}`: Extracted rules
-- `associations::MaybeAssociations`: Association rules between features
+- `rules::Union{Nothing,Vector{DecisionSet},Vector{LumenResult}}`:
+  Extracted rules
 - `measures::Union{Nothing,Measures}`: Performance evaluation measures
 
 # Accessing Components
 - [`dsetup`](@ref): Extract dataset configuration
 - [`solemodels`](@ref): Extract trained models
 - [`rules`](@ref): Extract decision rules
-- [`associations`](@ref): Extract association rules
 
 See also: [`solexplorer`](@ref)
 """
 mutable struct ModelSet{S} <: AbstractModelSet
-    ds           :: DataSet
-    sole         :: Vector{AbstractModel}
-    rules        :: Union{Nothing,Vector{DecisionSet},Vector{LumenResult}}
-    # associations :: MaybeAssociaRules
-    measures     :: Union{Nothing,Measures}
+    ds::DataSet
+    sole::Vector{AbstractModel}
+    rules::Union{Nothing,Vector{DecisionSet}}
+    measures::Union{Nothing,Measures}
 
     function ModelSet(
-        ds       :: DataSet,
-        sole     :: SoleModel{S};
-        rules    :: Union{Nothing,Vector{DecisionSet},Vector{LumenResult}}=nothing,
-        # miner    :: MaybeAssociaRules=nothing,
-        measures :: Union{Nothing,Measures}=nothing
+        ds::DataSet,
+        sole::SoleModel{S};
+        rules::Union{Nothing,Vector{DecisionSet}}=nothing,
+        measures::Union{Nothing,Measures}=nothing
     ) where S
-        # new{S}(ds, solemodels(sole), rules, miner, measures)
         new{S}(ds, solemodels(sole), rules, measures)
     end
 end
@@ -149,7 +148,6 @@ function Base.show(io::IO, m::ModelSet{S}) where S
     print(io, "models=$(length(solemodels(m)))")
 
     isnothing(rules(m))        || print(io, ", rules=$(length(rules(m)))")
-    # isnothing(associations(m)) || print(io, ", associations=$(length(associations(m)))")
     isnothing(measures(m))     || print(io, ", measures=$(length(measures(m)))")
 
     print(io, ")")
@@ -162,11 +160,8 @@ function Base.show(io::IO, ::MIME"text/plain", m::ModelSet{S}) where S
     
     isnothing(rules(m)) ?
         println(io, "  Rules: none") :
-        println(io, "  Rules: $(length(first(rules(m)))) extracted rules per model")
-
-    # isnothing(associations(m)) ?
-    #     println(io, "  Associations: none") :
-    #     println(io, "  Associations: $(length(associations(m))) associated rules per model")
+        println(io, "  Rules: $(length(first(rules(m)))) " *
+            "extracted rules per model")
     
     isnothing(performance(m)) ?
         println(io, "  Measures: none") : begin
@@ -180,7 +175,9 @@ end
 function show_measures(m::ModelSet)
     println("Performance Measures:")
     for (m, v) in zip(measures(m), values(m))
-        v isa Real ? println("  $(m) = $(round(v, digits=2))") : println("  $(m) = $(v)")
+        v isa Real ?
+            println("  $(m) = $(round(v, digits=2))") :
+            println("  $(m) = $(v)")
     end
 end
 
@@ -193,7 +190,8 @@ function supporting_predictions(solem::AbstractModel)
         solem.info.supporting_predictions
 end
 
-sole_predict_mode(solem::AbstractModel, y_test::AbstractVector{<:Label}) = supporting_predictions(solem)
+sole_predict_mode(solem::AbstractModel, y_test::AbstractVector{<:Label}) =
+    supporting_predictions(solem)
 
 # if it's a classification task, convert, if needed,
 # predictions in categorical values.
@@ -231,22 +229,24 @@ function eval_measures(
     solem::Vector{AbstractModel},
     measures::Tuple{Vararg{FussyMeasure}},
     y_test::Vector{<:AbstractVector{<:Label}}
-)::Measures
-    mach_model      = get_mach_model(ds)
-    measures        = MLJBase._actual_measures([measures...], mach_model)
-    operations      = get_operations(measures, MLJBase.prediction_type(mach_model))
+)
+    mach_model = get_mach_model(ds)
+    measures = MLJBase._actual_measures([measures...], mach_model)
+    operations = get_operations(measures, MLJBase.prediction_type(mach_model))
 
-    nfolds          = length(ds)
+    nfolds = length(ds)
     test_fold_sizes = [length(y_test[k]) for k in 1:nfolds]
-    nmeasures       = length(measures)
+    nmeasures = length(measures)
 
-    # weights used to aggregate per-fold measurements, which depends on a measures
+    # weights used to aggregate per-fold measurements,
+    # which depends on a measures
     # external mode of aggregation:
     fold_weights(mode) = nfolds .* test_fold_sizes ./ sum(test_fold_sizes)
     fold_weights(::MLJBase.StatisticalMeasuresBase.Sum) = nothing
     
     measurements_vector = mapreduce(vcat, 1:nfolds) do k
-        yhat_given_operation = Dict(op=>op(solem[k], y_test[k]) for op in unique(operations))
+        yhat_given_operation =
+            Dict(op=>op(solem[k], y_test[k]) for op in unique(operations))
 
         # Forced to convert to string as some statistical measures don't accept
         # categorical arrays, like confusion matrix and kappa
@@ -289,11 +289,12 @@ end
 #                         internal solexplorer                           #
 # ---------------------------------------------------------------------------- #
 function _solexplorer!(
-    modelset    :: AbstractModelSet;
-    extractor   :: Union{Nothing,RuleExtractor,Tuple{RuleExtractor,NamedTuple}}=nothing,
-    measures    :: Tuple{Vararg{FussyMeasure}}=()
+    modelset::AbstractModelSet;
+    extractor::Union{Nothing,RuleExtractor,Tuple{RuleExtractor,NamedTuple}}=
+        nothing,
+    measures::Tuple{Vararg{FussyMeasure}}=()
 )
-    ds    = dsetup(modelset)
+    ds = dsetup(modelset)
     solem = solemodels(modelset)
 
     !isnothing(extractor) && (modelset.rules = begin
@@ -304,11 +305,10 @@ function _solexplorer!(
             params = NamedTuple(;)
         end
 
-        :rng ∈ fieldnames(typeof(extractor)) && (extractor = set_rng(extractor, get_rng(ds)))
+        :rng ∈ fieldnames(typeof(extractor)) && (extractor =
+            set_rng(extractor, get_rng(ds)))
         extractrules(extractor, params, ds, solem)
     end)
-
-    # !isnothing(association) && (modelset.associations = mas_caller(ds, association))
 
     y_test = get_y(ds, :test)
     isempty(measures) && (measures = _DefaultMeasures(first(y_test)))
@@ -329,7 +329,7 @@ function _solexplorer(
 end
 
 # ---------------------------------------------------------------------------- #
-#                              solexplorer                               #
+#                                 solexplorer                                  #
 # ---------------------------------------------------------------------------- #
 """
     solexplorer!(modelset::ModelSet; kwargs...)
@@ -374,7 +374,6 @@ It performs the complete workflow:
 2. **Model Configuration**: Sets up the MLJ machine.
 3. **Model Training**: Trains symbolic models on each CV fold.
 4. **Rule Extraction**: Extracts interpretable rules from trained models.
-5. **Association Mining**: Discovers feature relationships and patterns.
 6. **Evaluation**: Computes comprehensive performance metrics.
 
 # Arguments
@@ -385,8 +384,6 @@ It performs the complete workflow:
 ## Analysis Options
 - `extractor`: Rule extraction method:
   See [SolePostHoc](https://github.com/aclai-lab/SolePostHoc.jl)
-- `association`: Association rule mining:
-  See [ModalAssociationRules](https://github.com/aclai-lab/ModalAssociationRules.jl)
 - `measures`: Performance measures tuple:
   - `(accuracy, auc, f1_score)`: Custom measures
   - `()`: Use default measures for task type
@@ -400,12 +397,19 @@ It performs the complete workflow:
 modelset = solexplorer(X, y)
 
 # Full analysis example
-range = SoleXplorer.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
+range = SoleXplorer.range(
+    :min_purity_increase; lower=0.001, upper=1.0, scale=:log)
 modelset = solexplorer(X, y;
     model=RandomForestClassifier(),
     resampling=CV(nfolds=5, shuffle=true),
     seed=1,
-    tuning=GridTuning(resolution=10, resampling=CV(nfolds=3), range=range, measure=accuracy, repeats=2),
+    tuning=GridTuning(
+        resolution=10,
+        resampling=CV(nfolds=3),
+        range=range,
+        measure=accuracy,
+        repeats=2
+    ),
     extractor=InTreesRuleExtractor(),
     measures=(accuracy, log_loss, confusion_matrix, kappa)   
 )
@@ -498,5 +502,6 @@ Convenience method that converts input data to DataFrame format.
 
 See also: [`solexplorer`](@ref)
 """
-solexplorer(X::Any, args...; kwargs...) = solexplorer(DataFrame(X), args...; kwargs...)
+solexplorer(X::Any, args...; kwargs...) =
+    solexplorer(DataFrame(X), args...; kwargs...)
 
