@@ -27,7 +27,7 @@ function extractrules(
     ds        :: DataSet,
     solem     :: Vector{AbstractModel}
 )::Vector{DecisionSet}
-    map(enumerate(solem)) do (i, model)
+    map(solem) do model
         X_test, y_test = get_X(ds, :test)[i], get_y(ds, :test)[i]
         RuleExtraction.extractrules(
             extractor,
@@ -43,12 +43,12 @@ end
 #                              LumenRuleExtractor                              #
 # ---------------------------------------------------------------------------- #
 function extractrules(
-    extractor :: LumenRuleExtractor,
-    params    :: NamedTuple,
-    _         :: DataSet,
-    solem     :: Vector{AbstractModel}
-)::Vector{LumenResult}
-    map(enumerate(solem)) do (_, model)
+    extractor::LumenRuleExtractor,
+    params::NamedTuple,
+    _::DataSet,
+    solem::Vector{AbstractModel}
+)
+    map(solem) do model
         RuleExtraction.extractrules(extractor, model; params...)
     end
 end
@@ -62,7 +62,7 @@ function extractrules(
     _         :: DataSet,
     solem     :: Vector{AbstractModel}
 )::Vector{DecisionSet}
-    map(enumerate(solem)) do (_, model)
+    map(solem) do model
         RuleExtraction.extractrules(extractor, model; params...)
     end
 end
@@ -76,7 +76,7 @@ end
 #     ds        :: DataSet,
 #     solem     :: Vector{AbstractModel}
 # )::Vector{DecisionSet}
-#     map(enumerate(solem)) do (i, model)
+#     map(solem) do model
 #         X_test, y_test = get_X(ds, :test)[i], get_y(ds, :test)[i]
 #         RuleExtraction.extractrules(extractor, model, X_test, y_test; params...)
 #     end
@@ -91,7 +91,7 @@ function extractrules(
     ds        :: DataSet,
     solem     :: Vector{AbstractModel}
 )::Vector{DecisionSet}
-    map(enumerate(solem)) do (i, model)
+    map(solem) do model
         X_test = get_X(ds, :test)[i]
         Xmin = map(minimum, eachcol(X_test))
         Xmax = map(maximum, eachcol(X_test))
@@ -108,7 +108,7 @@ function extractrules(
     ds        :: DataSet,
     solem     :: Vector{AbstractModel}
 )::Vector{DecisionSet}
-    map(enumerate(solem)) do (i, model)
+    map(solem) do model
         X_test = DataFrame(get_X(ds, :test)[i])
         RuleExtraction.extractrules(extractor, model, X_test; params...)
     end

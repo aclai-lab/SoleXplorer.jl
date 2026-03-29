@@ -288,7 +288,7 @@ end
 # ---------------------------------------------------------------------------- #
 #                         internal solexplorer                           #
 # ---------------------------------------------------------------------------- #
-function _symbolic_analysis!(
+function _solexplorer!(
     modelset    :: AbstractModelSet;
     extractor   :: Union{Nothing,RuleExtractor,Tuple{RuleExtractor,NamedTuple}}=nothing,
     measures    :: Tuple{Vararg{FussyMeasure}}=()
@@ -324,7 +324,7 @@ function _solexplorer(
     kwargs...
 )
     modelset = ModelSet(ds, solem)
-    _symbolic_analysis!(modelset; kwargs...)
+    _solexplorer!(modelset; kwargs...)
     return modelset
 end
 
@@ -353,7 +353,7 @@ solexplorer!(modelset; association=Apriori())
 
 See also: [`solexplorer`](@ref), [`ModelSet`](@ref)
 """
-solexplorer!(modelset::ModelSet; kwargs...) = _symbolic_analysis!(modelset; kwargs...)
+solexplorer!(modelset::ModelSet; kwargs...) = _solexplorer!(modelset; kwargs...)
 
 """
     solexplorer(
