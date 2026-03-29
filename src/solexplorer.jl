@@ -292,7 +292,7 @@ function _symbolic_analysis!(
     modelset    :: AbstractModelSet;
     extractor   :: Union{Nothing,RuleExtractor,Tuple{RuleExtractor,NamedTuple}}=nothing,
     measures    :: Tuple{Vararg{FussyMeasure}}=()
-)::ModelSet
+)
     ds    = dsetup(modelset)
     solem = solemodels(modelset)
 
@@ -318,11 +318,11 @@ function _symbolic_analysis!(
     return modelset
 end
 
-function _symbolic_analysis(
+function _solexplorer(
     ds::DataSet,
     solem::SoleModel;
     kwargs...
-)::ModelSet
+)
     modelset = ModelSet(ds, solem)
     _symbolic_analysis!(modelset; kwargs...)
     return modelset
@@ -353,7 +353,7 @@ solexplorer!(modelset; association=Apriori())
 
 See also: [`solexplorer`](@ref), [`ModelSet`](@ref)
 """
-solexplorer!(modelset::ModelSet; kwargs...)::ModelSet = _symbolic_analysis!(modelset; kwargs...)
+solexplorer!(modelset::ModelSet; kwargs...) = _symbolic_analysis!(modelset; kwargs...)
 
 """
     solexplorer(
@@ -437,10 +437,22 @@ function solexplorer(
     extractor::Union{Nothing,RuleExtractor}=nothing,
     measures::Tuple{Vararg{FussyMeasure}}=(),
     kwargs...
-)::ModelSet
+)
     ds = setup_dataset(X, y, args...; kwargs...)
     solem = _train_test(ds)
-    _symbolic_analysis(ds, solem; extractor, measures)
+    _solexplorer(ds, solem; extractor, measures)
+end
+
+function solexplorer(
+    dt::DT.DataTreatment,
+    args...;
+    extractor::Union{Nothing,RuleExtractor}=nothing,
+    measures::Tuple{Vararg{FussyMeasure}}=(),
+    kwargs...
+)
+    ds = setup_dataset(dt, args...; kwargs...)
+    solem = _train_test(ds)
+    _solexplorer(ds, solem; extractor, measures)
 end
 
 """
@@ -475,8 +487,8 @@ function solexplorer(
     ds::DataSet,
     solem::SoleModel;
     kwargs...
-)::ModelSet
-    _symbolic_analysis(ds, solem; kwargs...)
+)
+    _solexplorer(ds, solem; kwargs...)
 end
 
 """
@@ -486,5 +498,5 @@ Convenience method that converts input data to DataFrame format.
 
 See also: [`solexplorer`](@ref)
 """
-solexplorer(X::Any, args...; kwargs...)::ModelSet = solexplorer(DataFrame(X), args...; kwargs...)
+solexplorer(X::Any, args...; kwargs...) = solexplorer(DataFrame(X), args...; kwargs...)
 
