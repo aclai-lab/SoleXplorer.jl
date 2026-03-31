@@ -276,10 +276,10 @@ function setup_dataset(
     tuning::Union{Nothing,Tuning}=nothing
 )
     # get the dataset if type is appropriate for the chosen model
-    X, vnames = if is_tabular(dt) && !(model isa Modal)
-        DT.get_tabular(dt; force_type=true)
-    elseif is_multidim(dt) && (model isa Modal)
-        DT.get_multidim(dt; force_type=true)
+    X, vnames = if has_tabular(dt) && !(model isa Modal)
+        DT.get_tabular(dt)
+    elseif has_multidim(dt) && (model isa Modal)
+        DT.get_multidim(dt)
     else
         error("Incompatible dataset and model types: " *
         "use a modal model for multidimensional data, " *
@@ -323,7 +323,7 @@ function setup_dataset(
     y::Union{Nothing,AbstractVector{<:Label}}=nothing,
     treatments::Vararg{Base.Callable}=DT.DefaultTreatmentGroup;
     treatment_ds::Bool=true,
-    leftover_ds::Bool=true,
+    leftover_ds::Bool=false,
     float_type::Type=Float64,
     kwargs...
 )

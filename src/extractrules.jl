@@ -11,22 +11,25 @@
 # ---------------------------------------------------------------------------- #
 #                                 utilities                                    #
 # ---------------------------------------------------------------------------- #
-# callable constructor for RuleExtractor types that creates an extractor-parameters tuple.
+# callable constructor for RuleExtractor types
+# that creates an extractor-parameters tuple.
 function (RE::Type{<:RuleExtractor})(;kwargs...)
     return (RE(), (;kwargs...))
 end
 
-to_namedtuple(x) = NamedTuple{fieldnames(typeof(x))}(ntuple(i -> getfield(x, i), fieldcount(typeof(x))))
+to_namedtuple(x) = NamedTuple{fieldnames(typeof(x))}(
+        ntuple(i -> getfield(x, i), fieldcount(typeof(x)))
+    )
 
 # ---------------------------------------------------------------------------- #
 #                             InTreesRuleExtractor                             #
 # ---------------------------------------------------------------------------- #
 function extractrules(
-    extractor :: InTreesRuleExtractor,
-    _         :: NamedTuple,
-    ds        :: DataSet,
-    solem     :: Vector{AbstractModel}
-)::Vector{DecisionSet}
+    extractor::InTreesRuleExtractor,
+    _::NamedTuple,
+    ds::DataSet,
+    solem::Vector{AbstractModel}
+)
     map(solem) do model
         X_test, y_test = get_X(ds, :test)[i], get_y(ds, :test)[i]
         RuleExtraction.extractrules(
@@ -57,11 +60,11 @@ end
 #                             BATreesRuleExtractor                             #
 # ---------------------------------------------------------------------------- #
 function extractrules(
-    extractor :: BATreesRuleExtractor,
-    params    :: NamedTuple,
-    _         :: DataSet,
-    solem     :: Vector{AbstractModel}
-)::Vector{DecisionSet}
+    extractor::BATreesRuleExtractor,
+    params::NamedTuple,
+    _::DataSet,
+    solem::Vector{AbstractModel}
+)
     map(solem) do model
         RuleExtraction.extractrules(extractor, model; params...)
     end
@@ -70,27 +73,27 @@ end
 # ---------------------------------------------------------------------------- #
 #                          RULECOSIPLUSRuleExtractor                           #
 # ---------------------------------------------------------------------------- #
-# function extractrules(
-#     extractor :: RULECOSIPLUSRuleExtractor,
-#     params    :: NamedTuple,
-#     ds        :: DataSet,
-#     solem     :: Vector{AbstractModel}
-# )::Vector{DecisionSet}
-#     map(solem) do model
-#         X_test, y_test = get_X(ds, :test)[i], get_y(ds, :test)[i]
-#         RuleExtraction.extractrules(extractor, model, X_test, y_test; params...)
-#     end
-# end
+function extractrules(
+    extractor::RULECOSIPLUSRuleExtractor,
+    params::NamedTuple,
+    ds::DataSet,
+    solem::Vector{AbstractModel}
+)
+    map(solem) do model
+        X_test, y_test = get_X(ds, :test)[i], get_y(ds, :test)[i]
+        RuleExtraction.extractrules(extractor, model, X_test, y_test; params...)
+    end
+end
 
 # ---------------------------------------------------------------------------- #
 #                              REFNERuleExtractor                              #
 # ---------------------------------------------------------------------------- #
 function extractrules(
-    extractor :: REFNERuleExtractor,
-    params    :: NamedTuple,
-    ds        :: DataSet,
-    solem     :: Vector{AbstractModel}
-)::Vector{DecisionSet}
+    extractor::REFNERuleExtractor,
+    params::NamedTuple,
+    ds::DataSet,
+    solem::Vector{AbstractModel}
+)
     map(solem) do model
         X_test = get_X(ds, :test)[i]
         Xmin = map(minimum, eachcol(X_test))
@@ -103,11 +106,11 @@ end
 #                              TREPANRuleExtractor                              #
 # ---------------------------------------------------------------------------- #
 function extractrules(
-    extractor :: TREPANRuleExtractor,
-    params    :: NamedTuple,
-    ds        :: DataSet,
-    solem     :: Vector{AbstractModel}
-)::Vector{DecisionSet}
+    extractor::TREPANRuleExtractor,
+    params::NamedTuple,
+    ds::DataSet,
+    solem::Vector{AbstractModel}
+)
     map(solem) do model
         X_test = DataFrame(get_X(ds, :test)[i])
         RuleExtraction.extractrules(extractor, model, X_test; params...)
