@@ -123,9 +123,7 @@ include("train_test.jl")
 include("extractrules.jl")
 
 export AbstractModelSet, ModelSet
-export dsetup, solemodels, rules, associations
-export performance, measures, values
-export show_measures
+export get_ds, get_sole, get_rules, get_measures, get_values
 export solexplorer, solexplorer!
 include("solexplorer.jl")
 

@@ -1,13 +1,3 @@
-# solexplorer.jl — Unified Symbolic Model Analysis Interface
-
-# this module provides the main entry point for complete 
-# symbolic model analysis workflows:
-
-# 1. Dataset setup and cross-validation training (via train_test.jl)
-# 2. Training and testing models (via train_test.jl)
-# 3. Rule extraction from symbolic models (via extractrules.jl) 
-# 4. Performance evaluation using MLJ measures
-
 # ---------------------------------------------------------------------------- #
 #                               abstract types                                 #
 # ---------------------------------------------------------------------------- #
@@ -37,22 +27,26 @@ the dataset configuration, sole trained models, extracted rules,
 and performance measures.
 
 # Type Parameters
-- `S`: The sole model type (e.g., DecisionTreeClassifier)
+- `S`: The sole model type (e.g., `DecisionTreeClassifier`)
 
 # Fields
 - `ds::DataSet`: Dataset configuration with cross-validation setup,
-   plus all settings needed by modal analysis.
+  plus all settings needed by modal analysis.
 - `sole::Vector{AbstractModel}`: Vector of trained symbolic models
-  (one per CV fold)
+  (one per CV fold).
+
 ### Optional
-- `rules::Union{Nothing,Vector{DecisionSet},Vector{LumenResult}}`:
-  Extracted rules
-- `measures::Union{Nothing,Measures}`: Performance evaluation measures
+- `rules::Union{Nothing,Vector{DecisionSet}}`: Extracted rules, or `nothing`
+  if rule extraction has not been performed.
+- `measures::Union{Nothing,Measures}`: Performance evaluation measures,
+  or `nothing` if evaluation has not been performed.
 
 # Accessing Components
-- [`dsetup`](@ref): Extract dataset configuration
-- [`solemodels`](@ref): Extract trained models
-- [`rules`](@ref): Extract decision rules
+- [`get_ds`](@ref): Extract dataset configuration
+- [`get_sole`](@ref): Extract trained models
+- [`get_rules`](@ref): Extract decision rules
+- [`get_measures`](@ref): Extract performance measures
+- [`get_values`](@ref): Extract computed measure values
 
 See also: [`solexplorer`](@ref)
 """
@@ -76,69 +70,40 @@ end
 #                                 constructors                                 #
 # ---------------------------------------------------------------------------- #
 """
-    dsetup(m::ModelSet) -> DataSet
+    get_ds(m::ModelSet) -> DataSet
 
-Returns the dataset configuration from a ModelSet.
-
-See also: [`ModelSet`](@ref), [`solexplorer`](@ref)
+Returns the dataset configuration from a `ModelSet`.
 """
-dsetup(m::ModelSet) = m.ds
+get_ds(m::ModelSet) = m.ds
 
 """
-    solemodels(m::ModelSet) -> Vector{AbstractModel}
+    get_sole(m::ModelSet) -> Vector{AbstractModel}
 
-Returns the trained sole symbolic models from a ModelSet.
-
-See also: [`ModelSet`](@ref), [`solexplorer`](@ref)
+Returns the vector of trained sole symbolic models from a `ModelSet`.
 """
-solemodels(m::ModelSet) = m.sole
+get_sole(m::ModelSet) = m.sole
 
 """
-    rules(m::ModelSet) -> Union{Nothing,Vector{DecisionSet},Vector{LumenResult}}
+    get_rules(m::ModelSet) -> Union{Nothing,Vector{DecisionSet}}
 
-Returns the rules extracted from a ModelSet.
-Returns nothing if rule extraction isn't yet performed.
-
-See also: [`ModelSet`](@ref), [`solexplorer`](@ref)
+Returns the rules extracted from a `ModelSet`.
+Returns `nothing` if rule extraction has not yet been performed.
 """
-rules(m::ModelSet) = m.rules
-
-# """
-#     associations(m::ModelSet) -> MaybeAssociaRules
-
-# Returns the association rules extracted from a ModelSet.
-# Returns nothing if association rules isn't yet performed.
-
-# See also: [`ModelSet`](@ref), [`solexplorer`](@ref)
-# """
-# associations(m::ModelSet) = m.associations
+get_rules(m::ModelSet) = m.rules
 
 """
-    performance(m::ModelSet) -> Union{Nothing,Measures}
+    get_measures(m::ModelSet) -> Union{Nothing,Measures}
 
-Extract the performance evaluation measures from a ModelSet.
-
-See also: [`ModelSet`](@ref), [`solexplorer`](@ref)
+Returns the performance evaluation measures from a `ModelSet`.
 """
-performance(m::ModelSet) = m.measures
+get_measures(m::ModelSet) = m.measures
 
 """
-    measures(m::ModelSet) -> Vector
+    get_values(m::ModelSet) -> Vector
 
-Extract the performance measure objects from a ModelSet.
-
-# See also: [`performance`](@ref), [`ModelSet`](@ref)
+Returns the computed performance measure values from a `ModelSet`.
 """
-measures(m::ModelSet) = performance(m).measures
-
-"""
-    values(m::ModelSet) -> Vector
-
-Extract the computed performance measure values from a ModelSet.
-
-# See also: [`performance`](@ref), [`ModelSet`](@ref)
-"""
-values(m::ModelSet) = performance(m).measures_values
+get_values(m::ModelSet) = get_measures(m).measures_values
 
 # ---------------------------------------------------------------------------- #
 #                                  base show                                   #
@@ -155,18 +120,18 @@ end
 
 function Base.show(io::IO, ::MIME"text/plain", m::ModelSet{S}) where S
     println(io, "ModelSet{$S}:")
-    println(io, "  Dataset: $(typeof(dsetup(m)))")
-    println(io, "  Models:  $(length(solemodels(m))) symbolic models")
-    
-    isnothing(rules(m)) ?
+    println(io, "  Dataset: $(typeof(get_ds(m)))")
+    println(io, "  Models:  $(length(get_sole(m))) symbolic models")
+
+    isnothing(get_rules(m)) ?
         println(io, "  Rules: none") :
-        println(io, "  Rules: $(length(first(rules(m)))) " *
+        println(io, "  Rules: $(length(first(get_rules(m)))) " *
             "extracted rules per model")
-    
-    isnothing(performance(m)) ?
+
+    isnothing(get_measures(m)) ?
         println(io, "  Measures: none") : begin
             println(io, "  Measures:")
-            for (measure, value) in zip(measures(m), values(m))
+            for (measure, value) in zip(get_measures(m), get_values(m))
                 println(io, "    $(measure) = $(value)")
             end
         end
@@ -174,10 +139,10 @@ end
 
 function show_measures(m::ModelSet)
     println("Performance Measures:")
-    for (m, v) in zip(measures(m), values(m))
+    for (ms, v) in zip(get_measures(m), get_values(m))
         v isa Real ?
-            println("  $(m) = $(round(v, digits=2))") :
-            println("  $(m) = $(v)")
+            println("  $(ms) = $(round(v, digits=2))") :
+            println("  $(ms) = $(v)")
     end
 end
 
@@ -294,8 +259,8 @@ function _solexplorer!(
         nothing,
     measures::Tuple{Vararg{FussyMeasure}}=()
 )
-    ds = dsetup(modelset)
-    solem = solemodels(modelset)
+    ds = get_ds(modelset)
+    solem = get_sole(modelset)
 
     !isnothing(extractor) && (modelset.rules = begin
         if extractor isa Tuple
@@ -334,22 +299,15 @@ end
 """
     solexplorer!(modelset::ModelSet; kwargs...)
 
-Perform additional analysis on an existing ModelSet.
+Perform additional analysis on an existing `ModelSet` in-place.
 
-In-place version that adds or updates analysis components (rules, associations,
-measures) on an existing ModelSet.
+Adds or updates analysis components (rules, measures) on an existing `ModelSet`.
 
-# Examples
-```julia
-# initial analysis
-modelset = solexplorer(X, y)
-
-# add rule extraction later
-solexplorer!(modelset; extractor=Lumen())
-
-# add association mining later
-solexplorer!(modelset; association=Apriori())
-```
+# Keyword Arguments
+- `extractor::Union{Nothing,RuleExtractor}=nothing`: Rule extraction strategy.
+  See [SolePostHoc](https://github.com/aclai-lab/SolePostHoc.jl).
+- `measures::Tuple{Vararg{FussyMeasure}}=()`: Performance measures to compute.
+  If empty, default measures for the task type are used.
 
 See also: [`solexplorer`](@ref), [`ModelSet`](@ref)
 """
@@ -358,10 +316,9 @@ solexplorer!(modelset::ModelSet; kwargs...) = _solexplorer!(modelset; kwargs...)
 """
     solexplorer(
         X::AbstractDataFrame,
-        y::AbstractVector,
-        w::Union{Nothing,Vector}=nothing;
-        extractor::Nothing,RuleExtractor=nothing,
-        association::Union{Nothing,AbstractAssociationRuleExtractor}=nothing,
+        y::AbstractVector{<:Label},
+        args...;
+        extractor::Union{Nothing,RuleExtractor}=nothing,
         measures::Tuple{Vararg{FussyMeasure}}=(),
         kwargs...
     ) -> ModelSet
@@ -373,34 +330,33 @@ It performs the complete workflow:
 1. **Dataset Setup**: Configures cross-validation and time series preprocessing.
 2. **Model Configuration**: Sets up the MLJ machine.
 3. **Model Training**: Trains symbolic models on each CV fold.
-4. **Rule Extraction**: Extracts interpretable rules from trained models.
-6. **Evaluation**: Computes comprehensive performance metrics.
+4. **Rule Extraction**: Extracts interpretable rules from trained models (optional).
+5. **Evaluation**: Computes comprehensive performance metrics.
 
 # Arguments
-- `X::AbstractDataFrame`: Feature matrix with observations as rows
-- `y::AbstractVector`: Target variable (labels for classification)
-- `w::Union{Nothing,Vector}`: Sample weights (optional)
+- `X::AbstractDataFrame`: Feature matrix with observations as rows.
+- `y::AbstractVector{<:Label}`: Target variable (class labels or continuous values).
+- `args...`: Optional positional arguments forwarded to [`setup_dataset`](@ref)
+  (e.g., a `TreatmentGroup` for data preprocessing).
 
-## Analysis Options
-- `extractor`: Rule extraction method:
-  See [SolePostHoc](https://github.com/aclai-lab/SolePostHoc.jl)
-- `measures`: Performance measures tuple:
-  - `(accuracy, auc, f1_score)`: Custom measures
-  - `()`: Use default measures for task type
-
-## Dataset & Training Options (kwargs)
-  See [`setup_dataset`](@Ref)
+# Keyword Arguments
+- `extractor::Union{Nothing,RuleExtractor}=nothing`: Rule extraction strategy.
+  See [SolePostHoc](https://github.com/aclai-lab/SolePostHoc.jl).
+- `measures::Tuple{Vararg{FussyMeasure}}=()`: Performance measures tuple.
+  If empty, default measures for the task type are used.
+- `kwargs...`: Additional options forwarded to [`setup_dataset`](@ref)
+  (e.g., `model`, `resampling`, `seed`, `tuning`, `win`, `features`).
 
 # Examples
 ```julia
-# Basic analysis with default settings
+# Basic usage with default settings
 modelset = solexplorer(X, y)
 
-# Full analysis example
-range = SoleXplorer.range(
-    :min_purity_increase; lower=0.001, upper=1.0, scale=:log)
-modelset = solexplorer(X, y;
-    model=RandomForestClassifier(),
+# Classification with tuning and rule extraction
+range = SoleXplorer.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
+modelset = solexplorer(
+    X, y;
+    model=DecisionTreeClassifier(),
     resampling=CV(nfolds=5, shuffle=true),
     seed=1,
     tuning=GridTuning(
@@ -411,11 +367,12 @@ modelset = solexplorer(X, y;
         repeats=2
     ),
     extractor=InTreesRuleExtractor(),
-    measures=(accuracy, log_loss, confusion_matrix, kappa)   
+    measures=(accuracy, log_loss, confusion_matrix, kappa)
 )
 
-# Time series analysis example
-modelset = solexplorer(X, y;
+# Time series classification with modal decision tree
+modelset = solexplorer(
+    X, y;
     model=ModalRandomForest(),
     resampling=Holdout(fraction_train=0.7, shuffle=true),
     seed=1,
@@ -423,15 +380,15 @@ modelset = solexplorer(X, y;
     measures=(log_loss, accuracy, confusion_matrix, kappa)
 )
 
-# Access modelset
-setup = dsetup(modelset)
-models = solemodels(modelset)
-rules = rules(modelset)  
-associations = associations(modelset)
-performance = performance(modelset)
+# Accessing results
+ds      = get_ds(modelset)
+models  = get_sole(modelset)
+rules   = get_rules(modelset)
+perf    = get_measures(modelset)
+vals    = get_values(modelset)
 ```
 
-See also: [`ModelSet`](@ref), [`setup_dataset`](@Ref), [`train_test`](@Ref)
+See also: [`ModelSet`](@ref), [`setup_dataset`](@ref), [`solexplorer!`](@ref)
 """
 function solexplorer(
     X::AbstractDataFrame,
@@ -459,34 +416,6 @@ function solexplorer(
     _solexplorer(ds, solem; extractor, measures)
 end
 
-"""
-    solexplorer(ds::DataSet, solem::SoleModel; kwargs...) -> ModelSet
-
-Perform complete symbolic analysis on pre-trained models.
-
-# Arguments  
-- `ds::DataSet`: Dataset used for training the models.
-- `solem::SoleModel`: Trained sole symbolic models.
-- `kwargs...`: Analysis options (extractor, association, measures).
-
-# Examples
-```julia
-# analyze pre-trained models
-ds = setup_dataset(
-    X, y;
-    model=DecisionTreeClassifier(),
-    resampling=CV(nfolds=5, shuffle=true)
-)
-solem = train_test(ds)
-results = solexplorer(
-    ds, solem; 
-    extractor=Lumen(),
-    measures=(accuracy, kappa)
-)
-```
-
-See also: [`solexplorer!`](@ref), [`setup_dataset`](@ref), [`train_test`](@ref)
-"""
 function solexplorer(
     ds::DataSet,
     solem::SoleModel;
@@ -495,13 +424,6 @@ function solexplorer(
     _solexplorer(ds, solem; kwargs...)
 end
 
-"""
-    solexplorer(X::Any, args...; kwargs...) -> ModelSet
-
-Convenience method that converts input data to DataFrame format.
-
-See also: [`solexplorer`](@ref)
-"""
 solexplorer(X::Any, args...; kwargs...) =
     solexplorer(DataFrame(X), args...; kwargs...)
 
