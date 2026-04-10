@@ -70,6 +70,7 @@ using JLD2
     stretch_decreasing, stretch_high, entropy_pairs, rs_range, dfa,
     low_freq_power, centroid_freq, transition_variance, periodicity, base_set
 @reexport using DataTreatments: catch9, catch22_set, complete_set
+@reexport using DataTreatments: Interpolate, LOCF, NOCB, Substitute, SVD
 
 # ---------------------------------------------------------------------------- #
 #                                 interfaces                                   #
