@@ -30,17 +30,16 @@ function extractrules(
     ds::DataSet,
     solem::Vector{AbstractModel}
 )
-    map(solem) do model
+    map(enumerate(solem)) do (i, model)
         X_test, y_test = get_X(ds, :test)[i], get_y(ds, :test)[i]
         RuleExtraction.extractrules(
             extractor,
+            model,
             scalarlogiset(X_test; allow_propositional = true),
-            y_test,
-            model
+            y_test
         )
     end
 end
-# TODO swap model and y_test as soon as we introduce new algo in PostHoc
 
 # ---------------------------------------------------------------------------- #
 #                              LumenRuleExtractor                              #
@@ -79,7 +78,7 @@ function extractrules(
     ds::DataSet,
     solem::Vector{AbstractModel}
 )
-    map(solem) do model
+    map(enumerate(solem)) do (i, model)
         X_test, y_test = get_X(ds, :test)[i], get_y(ds, :test)[i]
         RuleExtraction.extractrules(extractor, model, X_test, y_test; params...)
     end
@@ -94,7 +93,7 @@ function extractrules(
     ds::DataSet,
     solem::Vector{AbstractModel}
 )
-    map(solem) do model
+    map(enumerate(solem)) do (i, model)
         X_test = get_X(ds, :test)[i]
         Xmin = map(minimum, eachcol(X_test))
         Xmax = map(maximum, eachcol(X_test))
@@ -111,7 +110,7 @@ function extractrules(
     ds::DataSet,
     solem::Vector{AbstractModel}
 )
-    map(solem) do model
+    map(enumerate(solem)) do (i, model)
         X_test = DataFrame(get_X(ds, :test)[i])
         RuleExtraction.extractrules(extractor, model, X_test; params...)
     end

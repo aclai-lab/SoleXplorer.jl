@@ -72,7 +72,7 @@ t_regress = [1.2, 3.4, 2.2, 4.8, 0.9]
 # ---------------------------------------------------------------------------- #
 ds = SX.setup_dataset(Xc, yc)
 solem = SX._train_test(ds)
-solexplorer(Xc, yc)
+z=solexplorer(Xc, yc, model=RandomForestClassifier(;n_trees=2))
 
 ds = SX.setup_dataset(Xr, yr; float_type=Float32)
 solem = SX._train_test(ds)
