@@ -107,7 +107,7 @@ const Modal =
 include("measures.jl")
 export range
 export get_range, get_strategy, get_resampling, get_measure, get_repeats
-export GridTuning, RandomTuning, CubeTuning, ParticleTuning, AdaptiveTuning
+export GridTuning, RandomTuning, ParticleTuning, AdaptiveTuning
 include("tuning.jl")
 
 export AbstractDataSet

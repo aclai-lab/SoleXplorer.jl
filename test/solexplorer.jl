@@ -2,16 +2,12 @@ using Test
 using SoleXplorer
 const SX = SoleXplorer
 
-# using DataTreatments
-# const DT = DataTreatments
-
 using MLJ
 using DataFrames, Random
 
 # ---------------------------------------------------------------------------- #
 #                                load dataset                                  #
 # ---------------------------------------------------------------------------- #
-
 Xc, yc = @load_iris
 Xc = DataFrame(Xc)
 
@@ -149,15 +145,24 @@ modeldb = solexplorer(df, t_regress,
     # with tuning
     range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
     for tuning in [
-        GridTuning(resolution=5,  resampling=CV(nfolds=3), range=range, measure=SX.accuracy),
-        RandomTuning(n=5,         resampling=CV(nfolds=3), range=range, measure=SX.accuracy),
+        GridTuning(;
+            resolution=5,
+            resampling=CV(nfolds=3),
+            range,
+            measure=SX.accuracy),
+        RandomTuning(;
+            n=5,
+            resampling=CV(nfolds=3),
+            range,
+            measure=SX.accuracy
+        ),
     ]
         m = solexplorer(
             Xc, yc;
             model=SX.DecisionTreeClassifier(),
             resampling=CV(nfolds=3, shuffle=true),
             seed=1,
-            tuning=tuning,
+            tuning,
             measures=(SX.accuracy, kappa)
         )
         @test m isa SX.ModelSet
