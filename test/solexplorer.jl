@@ -131,16 +131,16 @@ modeldb = solexplorer(df, t_regress,
 # --- Classification models ---
 @testset "DecisionTreeClassifier parametrizations" begin
     for (resampling, seed) in [
-        (CV(nfolds=3, shuffle=true),              1),
-        (CV(nfolds=5, shuffle=true),              42),
+        (CV(nfolds=3, shuffle=true), 1),
+        (CV(nfolds=5, shuffle=true), 42),
         (Holdout(fraction_train=0.7, shuffle=true), 7),
-        (StratifiedCV(nfolds=4, shuffle=true),    99),
+        (StratifiedCV(nfolds=4, shuffle=true), 99),
     ]
         m = solexplorer(
             Xc, yc;
             model=SX.DecisionTreeClassifier(),
-            resampling=resampling,
-            seed=seed,
+            resampling,
+            seed,
             measures=(SX.accuracy, log_loss, confusion_matrix, kappa)
         )
         @test m isa SX.ModelSet

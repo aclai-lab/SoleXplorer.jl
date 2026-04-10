@@ -131,7 +131,9 @@ function Base.show(io::IO, ::MIME"text/plain", m::ModelSet{S}) where S
     isnothing(get_measures(m)) ?
         println(io, "  Measures: none") : begin
             println(io, "  Measures:")
-            for (measure, value) in zip(get_measures(m), get_values(m))
+            measures = get_measures(m)
+            for (measure, value) in
+                zip(measures.measures, measures.measures_values)
                 println(io, "    $(measure) = $(value)")
             end
         end
