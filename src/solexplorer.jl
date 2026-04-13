@@ -266,7 +266,7 @@ function _solexplorer!(
 
     !isnothing(extractor) && (modelset.rules = begin
         if extractor isa Tuple
-            params    = last(extractor)
+            params = last(extractor)
             extractor = first(extractor)
         else
             params = NamedTuple(;)
@@ -397,7 +397,11 @@ function solexplorer(
     y::AbstractVector{<:Label},
     args...;
     # w::Union{Nothing,Vector}=nothing,
-    extractor::Union{Nothing,RuleExtractor}=nothing,
+    extractor::Union{
+        Nothing,
+        RuleExtractor,
+        Tuple{RuleExtractor,NamedTuple}
+    }=nothing,
     measures::Tuple{Vararg{FussyMeasure}}=(),
     kwargs...
 )
@@ -409,7 +413,11 @@ end
 function solexplorer(
     dt::DT.DataTreatment,
     args...;
-    extractor::Union{Nothing,RuleExtractor}=nothing,
+    extractor::Union{
+        Nothing,
+        RuleExtractor,
+        Tuple{RuleExtractor,NamedTuple}
+    }=nothing,
     measures::Tuple{Vararg{FussyMeasure}}=(),
     kwargs...
 )

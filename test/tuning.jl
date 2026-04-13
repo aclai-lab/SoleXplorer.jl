@@ -24,7 +24,7 @@ Xts, yts = SX.load(natopsloader)
 # ---------------------------------------------------------------------------- #
 seed = 42
 model = SX.DecisionTreeClassifier()
-measures=(SX.accuracy, kappa)
+measures=(SX.accuracy, SX.kappa)
 resampling = SX.CV(nfolds=10, shuffle=true)
 range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
 
@@ -116,7 +116,7 @@ m = solexplorer(
 
 seed = 42
 model = SX.DecisionTreeClassifier()
-measures=(SX.accuracy, kappa)
+measures=(SX.accuracy, SX.kappa)
 range1 = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
 tuning = GridTuning(;
     goal=30,
@@ -140,7 +140,7 @@ m = solexplorer(
 seed = 42
 model = SX.XGBoostClassifier()
 resampling = SX.CV(nfolds=3, shuffle=true)
-measures = (SX.accuracy, kappa)
+measures = (SX.accuracy, SX.kappa)
 range1 = SX.range(:num_round; lower=20, upper=100, unit=20)
 range2 = SX.range(:eta; lower=0.2, upper=0.6, unit=0.1)
 range3 = SX.range(:max_depth; lower=4, upper=6)
@@ -189,7 +189,7 @@ m = solexplorer(
 # ---------------------------------------------------------------------------- #
 seed = 42
 model = SX.DecisionTreeClassifier()
-measures=(SX.accuracy, kappa)
+measures=(SX.accuracy, SX.kappa)
 resampling = SX.CV(nfolds=10, shuffle=true)
 range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
 
@@ -317,7 +317,7 @@ m = solexplorer(
 # ---------------------------------------------------------------------------- #
 seed = 42
 model = SX.DecisionTreeClassifier()
-measures=(SX.accuracy, kappa)
+measures=(SX.accuracy, SX.kappa)
 resampling = SX.CV(nfolds=10, shuffle=true)
 range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
 
@@ -348,7 +348,7 @@ m = solexplorer(
 seed = 42
 model = SX.XGBoostClassifier()
 resampling = SX.CV(nfolds=3, shuffle=true)
-measures = (SX.accuracy, kappa)
+measures = (SX.accuracy, SX.kappa)
 range1 = SX.range(:num_round; lower=20, upper=100, unit=20)
 range2 = SX.range(:eta; lower=0.2, upper=0.6, unit=0.1)
 range3 = SX.range(:max_depth; lower=4, upper=6)

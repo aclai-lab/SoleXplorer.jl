@@ -18,8 +18,8 @@ function (RE::Type{<:RuleExtractor})(;kwargs...)
 end
 
 to_namedtuple(x) = NamedTuple{fieldnames(typeof(x))}(
-        ntuple(i -> getfield(x, i), fieldcount(typeof(x)))
-    )
+    ntuple(i -> getfield(x, i), fieldcount(typeof(x)))
+)
 
 # ---------------------------------------------------------------------------- #
 #                             InTreesRuleExtractor                             #
