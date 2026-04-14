@@ -319,7 +319,7 @@ end
 
 function setup_dataset(
     X::Matrix,
-    vnames::Vector{String}=["V$i" for i in 1:size(data, 2)],
+    vnames::Vector{String}=["V$i" for i in 1:size(X, 2)],
     y::Union{Nothing,AbstractVector{<:Label}}=nothing,
     treatments::Vararg{Base.Callable}=DT.DefaultTreatmentGroup;
     treatment_ds::Bool=true,
