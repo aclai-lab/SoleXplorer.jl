@@ -5,30 +5,34 @@ using SoleData: scalarlogiset
 using SoleData.Artifacts
 
 @reexport using SoleModels: Label, CLabel, RLabel, XGLabel
-using SoleModels: Branch, ConstantModel
-using SoleModels: DecisionEnsemble, DecisionTree, DecisionXGBoost
-using SoleModels: AbstractModel, solemodel, weighted_aggregation, apply!
-using SoleModels: RuleExtractor, DecisionSet
+using SoleModels:
+    Branch, ConstantModel,
+    DecisionEnsemble, DecisionTree, DecisionXGBoost,
+    AbstractModel, solemodel, weighted_aggregation, apply!,
+    RuleExtractor, DecisionSet,
+    readmetrics
 
 @reexport using SoleData.Artifacts: NatopsLoader, load
-@reexport using SoleModels: readmetrics
 
 @reexport using SolePostHoc.RuleExtraction:
-    InTreesRuleExtractor, LumenRuleExtractor, BATreesRuleExtractor
+    InTreesRuleExtractor, LumenRuleExtractor, BATreesRuleExtractor,
 # @reexport using SolePostHoc.RuleExtraction: RULECOSIPLUSRuleExtractor
-@reexport using SolePostHoc.RuleExtraction:
     REFNERuleExtractor, TREPANRuleExtractor
 using SolePostHoc.RuleExtraction
 
 # ---------------------------------------------------------------------------- #
 #                                     MLJ                                      #
 # ---------------------------------------------------------------------------- #
+@reexport using MLJ:
 # performance measures for classification
-@reexport using MLJ: accuracy, confusion_matrix, kappa, log_loss
+    Accuracy, Kappa, LogLoss, FScore,
+    FalseNegativeRate, FalsePositiveRate, TrueNegativeRate, TruePositiveRate,
+    ConfusionMatrix,
 # performance measures for regression 
-@reexport using MLJ: rms, l1, l2, mae, mav
+    RootMeanSquaredError, LPLoss,
 # cross-validation
-@reexport using MLJ: Holdout, CV, StratifiedCV, TimeSeriesCV
+    Holdout, CV, StratifiedCV, TimeSeriesCV
+
 # tuning
 using MLJParticleSwarmOptimization
 const PSO = MLJParticleSwarmOptimization
@@ -37,12 +41,6 @@ using MLJ
 using MLJ: MLJBase, MLJTuning
 # custom resampling strategy
 import MLJ.MLJBase: train_test_pairs
-# balancing
-using Imbalance
-@reexport using Imbalance.MLJ:
-    BorderlineSMOTE1, ClusterUndersampler, ENNUndersampler, ROSE,
-    RandomOversampler, RandomUndersampler, RandomWalkOversampler,
-    SMOTE, SMOTEN, SMOTENC, TomekUndersampler
 
 # ---------------------------------------------------------------------------- #
 #                              external packages                               #
@@ -64,13 +62,27 @@ using JLD2
 # feature extraction via Catch22
 # export user friendly Catch22 nicknames
 @reexport using DataTreatments:
+    TreatmentGroup,
+# export user friendly Catch22 nicknames
     mode_5, mode_10, embedding_dist, acf_timescale,
     acf_first_min, ami2, trev, outlier_timing_pos, outlier_timing_neg,
     whiten_timescale, forecast_error, ami_timescale, high_fluctuation,
     stretch_decreasing, stretch_high, entropy_pairs, rs_range, dfa,
-    low_freq_power, centroid_freq, transition_variance, periodicity, base_set
-@reexport using DataTreatments: catch9, catch22_set, complete_set
-@reexport using DataTreatments: Interpolate, LOCF, NOCB, Substitute, SVD
+    low_freq_power, centroid_freq, transition_variance, periodicity, base_set,
+# feature sets
+    catch9, catch22_set, complete_set,
+# windowing
+    movingwindow, wholewindow, splitwindow, adaptivewindow,
+# imputation
+    Interpolate, LOCF, NOCB, Substitute, SVD,
+# balancing
+    RandomOversampler, RandomWalkOversampler, ROSE, SMOTE,
+    BorderlineSMOTE1, SMOTEN, SMOTENC, RandomUndersampler,
+    ClusterUndersampler, ENNUndersampler, TomekUndersampler,
+# normalization
+    ZScore, MinMax, Center, Sigmoid, UnitEnergy, UnitPower,
+    Scale, ScaleMad, ScaleFirst, PNorm1, PNorm, PNormInf,
+    MissingSafe, Robust
 
 # ---------------------------------------------------------------------------- #
 #                                 interfaces                                   #
@@ -105,6 +117,7 @@ const Modal =
 #                                   modules                                    #
 # ---------------------------------------------------------------------------- #
 include("measures.jl")
+
 export range
 export get_range, get_strategy, get_resampling, get_measure, get_repeats
 export GridTuning, RandomTuning, ParticleTuning, AdaptiveTuning
