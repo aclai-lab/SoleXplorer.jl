@@ -220,6 +220,7 @@ function eval_measures(
         test = eltype(y_test[k]) <: CLabel ? String.(y_test[k]) : y_test[k]
 
         [map(measures, operations) do m, op
+        # @show yhat_given_operation[op]
             m(
                 yhat_given_operation[op],
                 test,

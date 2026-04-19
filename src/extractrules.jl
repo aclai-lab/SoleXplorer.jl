@@ -72,17 +72,17 @@ end
 # ---------------------------------------------------------------------------- #
 #                          RULECOSIPLUSRuleExtractor                           #
 # ---------------------------------------------------------------------------- #
-function extractrules(
-    extractor::RULECOSIPLUSRuleExtractor,
-    params::NamedTuple,
-    ds::DataSet,
-    solem::Vector{AbstractModel}
-)
-    map(enumerate(solem)) do (i, model)
-        X_test, y_test = get_X(ds, :test)[i], get_y(ds, :test)[i]
-        RuleExtraction.extractrules(extractor, model, X_test, y_test; params...)
-    end
-end
+# function extractrules(
+#     extractor::RULECOSIPLUSRuleExtractor,
+#     params::NamedTuple,
+#     ds::DataSet,
+#     solem::Vector{AbstractModel}
+# )
+#     map(enumerate(solem)) do (i, model)
+#         X_test, y_test = get_X(ds, :test)[i], get_y(ds, :test)[i]
+#         RuleExtraction.extractrules(extractor, model, X_test, y_test; params...)
+#     end
+# end
 
 # ---------------------------------------------------------------------------- #
 #                              REFNERuleExtractor                              #

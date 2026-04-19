@@ -263,3 +263,17 @@ function apply(
     apply!(solem, logiset, y; base_score)
     return solem
 end
+
+# ---------------------------------------------------------------------------- #
+#                         ModalDecisionList package                            #
+# ---------------------------------------------------------------------------- #
+function apply(
+    m :: Machine{RandomDecisionListClassifier},
+    X :: AbstractDataFrame,
+    y :: AbstractVector
+)::DecisionEnsemble
+    solem = fitted_params(m).fitresult.model
+    logiset = PropositionalLogiset(X)
+    apply!(solem, logiset, y)
+    return solem
+end

@@ -236,7 +236,7 @@ function setup_dataset(
     model::MLJ.Model=_default_model(DT.get_target(dt)),
     resampling::ResamplingStrategy=Holdout(fraction_train=0.7, shuffle=true),
     valid_ratio::Real=0.0,
-    seed::Union{Nothing,Int}=nothing,
+    rng::AbstractRNG=Xoshiro(42),
     tuning::Union{Nothing,Tuning}=nothing
 )
     # get the dataset if type is appropriate for the chosen model
@@ -253,14 +253,8 @@ function setup_dataset(
     y = DT.get_target(dt)
 
     # setup rng
-    if !isnothing(seed)
-        rng = Xoshiro(seed)
-        # propagate user rng to every field that needs it
-        hasproperty(model, :rng) && set_rng!(model, rng)
-        hasproperty(resampling, :rng) && (resampling = set_rng(resampling, rng))
-    else
-        rng = TaskLocalRNG()
-    end
+    hasproperty(model, :rng) && set_rng!(model, rng)
+    hasproperty(resampling, :rng) && (resampling = set_rng(resampling, rng))
 
     # MLJ.TunedModels can't automatically assigns measure to Modal models
     if model isa Modal && !isnothing(tuning)
@@ -269,7 +263,6 @@ function setup_dataset(
 
     ttpairs, pinfo = partition(DT.nrows(dt), y; resampling, valid_ratio, rng)
 
-    isnothing(seed) && (seed = 42)
     isnothing(tuning) || (model = set_tuning(model, tuning, rng))
 
     Xdf = DataFrame(X, vnames)

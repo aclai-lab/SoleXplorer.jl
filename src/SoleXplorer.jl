@@ -81,8 +81,7 @@ using JLD2
     ClusterUndersampler, ENNUndersampler, TomekUndersampler,
 # normalization
     ZScore, MinMax, Center, Sigmoid, UnitEnergy, UnitPower,
-    Scale, ScaleMad, ScaleFirst, PNorm1, PNorm, PNormInf,
-    MissingSafe, Robust
+    Scale, ScaleMad, ScaleFirst, PNorm1, PNorm, PNormInf, Robust
 
 # ---------------------------------------------------------------------------- #
 #                                 interfaces                                   #
@@ -107,6 +106,10 @@ using ModalDecisionTrees
 @reexport using MLJXGBoostInterface:
     XGBoostClassifier, XGBoostRegressor
 using XGBoost, MLJXGBoostInterface
+
+@reexport using ModalDecisionLists:
+    DecisionListClassifier, RandomDecisionListClassifier
+using ModalDecisionLists
 
 const Regression =
     Union{DecisionTreeRegressor,RandomForestRegressor,XGBoostRegressor}
