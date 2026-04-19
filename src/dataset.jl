@@ -236,9 +236,10 @@ function setup_dataset(
     model::MLJ.Model=_default_model(DT.get_target(dt)),
     resampling::ResamplingStrategy=Holdout(fraction_train=0.7, shuffle=true),
     valid_ratio::Real=0.0,
-    rng::AbstractRNG=Xoshiro(42),
+    rng::Union{AbstractRNG,Int}=Xoshiro(42),
     tuning::Union{Nothing,Tuning}=nothing
 )
+    rng isa Int && (rng = Xoshiro(rng))
     # get the dataset if type is appropriate for the chosen model
     X, vnames = if has_tabular(dt) && !(model isa Modal)
         DT.get_tabular(dt)
