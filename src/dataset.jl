@@ -1,10 +1,4 @@
 # ---------------------------------------------------------------------------- #
-#                                    types                                     #
-# ---------------------------------------------------------------------------- #
-const Balancing =
-    NamedTuple{(:oversampler, :undersampler), <:Tuple{<:MLJ.Model, <:MLJ.Model}}
-
-# ---------------------------------------------------------------------------- #
 #                                  defaults                                    #
 # ---------------------------------------------------------------------------- #
 # return a default model appropriate for the target variable type
@@ -35,14 +29,6 @@ end
 function set_tuning_rng!(m::MLJ.Model, rng::Random.AbstractRNG)
     hasproperty(m.tuning, :rng) && (m.tuning.rng = rng)
     hasproperty(m.resampling, :rng) && (m.resampling = set_rng(m.resampling, rng))
-    return m
-end
-
-# set the seed for balancing-related components of a model
-# originally broken in case you pass a RNG method (lenth mismatch during MLJ.fit!)
-function set_balancing_seed(m::MLJ.Model, seed::Int)
-    hasproperty(m, :rng) &&
-        (m = typeof(m).name.wrapper(merge(MLJ.params(m), (rng=seed,))...))
     return m
 end
 
@@ -80,30 +66,15 @@ get_logiset(ds::DataSet) = ds.mach.data[1].modalities[1]
 get_rng(ds::DataSet) = get_rng(ds.pinfo)
 
 # ---------------------------------------------------------------------------- #
-#                           MLJ models's extra setup                           #
+#                             MLJ models's tuning                              #
 # ---------------------------------------------------------------------------- #
-function set_balancing(
-    model     :: MLJ.Model,
-    balancing :: Balancing,
-    seed      :: Int=17
-)::MLJ.Model
-    # regression models don't support balancing
-    model isa Regression &&
-        throw(ArgumentError(
-            "Balancing is not supported for regression models."))
-
-    # set the model to use the same seed
-    balancing = map(b -> set_balancing_seed(b, seed), balancing)
-
-    model = MLJ.BalancedModel(model; balancing...)
-end
-
 function set_tuning(
-    model  :: MLJ.Model,
-    tuning :: Tuning,
-    rng    :: Random.AbstractRNG
+    model::MLJ.Model,
+    tuning::Tuning,
+    rng::Random.AbstractRNG
 )::MLJ.Model
     t_range = get_range(tuning)
+    
     if !(t_range isa MLJ.NominalRange)
         # convert SX.range to MLJ.range now that model is available
         range = t_range isa Tuple{Vararg{Tuple}} ? t_range : (t_range,)
@@ -139,7 +110,6 @@ end
         resampling=Holdout(fraction_train=0.7, shuffle=true),
         valid_ratio=0.0,
         seed=nothing,
-        balancing=nothing,
         tuning=nothing,
     ) -> DataSet
 
@@ -191,11 +161,6 @@ and MLJ machine creation.
   initializes a `Xoshiro` RNG and propagates it to the model, resampling strategy,
   and tuning components.
 
-## Class Balancing
-- `balancing::Union{Nothing,Balancing}=nothing`: A `NamedTuple` with fields
-  `oversampler` and `undersampler`, both `MLJ.Model` instances. Not supported for
-  regression models. Strategies are taken from
-  [Imbalance.jl](https://juliaai.github.io/Imbalance.jl/dev/).
 
 ## Hyperparameter Tuning
 - `tuning::Union{Nothing,Tuning}=nothing`: Tuning configuration. Requires a `range`
@@ -271,15 +236,14 @@ function setup_dataset(
     model::MLJ.Model=_default_model(DT.get_target(dt)),
     resampling::ResamplingStrategy=Holdout(fraction_train=0.7, shuffle=true),
     valid_ratio::Real=0.0,
-    seed::Union{Nothing,Int}=nothing,
-    balancing::Union{Nothing,Balancing}=nothing,
+    rng::AbstractRNG=Xoshiro(42),
     tuning::Union{Nothing,Tuning}=nothing
 )
     # get the dataset if type is appropriate for the chosen model
-    X, vnames = if is_tabular(dt) && !(model isa Modal)
-        DT.get_tabular(dt; force_type=true)
-    elseif is_multidim(dt) && (model isa Modal)
-        DT.get_multidim(dt; force_type=true)
+    X, vnames = if has_tabular(dt) && !(model isa Modal)
+        DT.get_tabular(dt)
+    elseif has_multidim(dt) && (model isa Modal)
+        DT.get_multidim(dt)
     else
         error("Incompatible dataset and model types: " *
         "use a modal model for multidimensional data, " *
@@ -289,14 +253,8 @@ function setup_dataset(
     y = DT.get_target(dt)
 
     # setup rng
-    if !isnothing(seed)
-        rng = Xoshiro(seed)
-        # propagate user rng to every field that needs it
-        hasproperty(model, :rng)      && set_rng!(model, rng)
-        hasproperty(resampling, :rng) && (resampling = set_rng(resampling, rng))
-    else
-        rng = TaskLocalRNG()
-    end
+    hasproperty(model, :rng) && set_rng!(model, rng)
+    hasproperty(resampling, :rng) && (resampling = set_rng(resampling, rng))
 
     # MLJ.TunedModels can't automatically assigns measure to Modal models
     if model isa Modal && !isnothing(tuning)
@@ -305,25 +263,24 @@ function setup_dataset(
 
     ttpairs, pinfo = partition(DT.nrows(dt), y; resampling, valid_ratio, rng)
 
-    isnothing(seed)      && (seed = 1)
-    isnothing(balancing) || (model = set_balancing(model, balancing, seed))
-    isnothing(tuning)    || (model = set_tuning(model, tuning, rng))
+    isnothing(tuning) || (model = set_tuning(model, tuning, rng))
 
     Xdf = DataFrame(X, vnames)
     to_mach = isempty(y) ? (Xdf) : (Xdf, y)
 
-    mach = isnothing(w) ? MLJ.machine(model, to_mach...) : MLJ.machine(model, to_mach..., w)
+    mach = isnothing(w) ?
+        MLJ.machine(model, to_mach...) : MLJ.machine(model, to_mach..., w)
 
     DataSet(mach, ttpairs, pinfo)
 end
 
 function setup_dataset(
     X::Matrix,
-    vnames::Vector{String}=["V$i" for i in 1:size(data, 2)],
+    vnames::Vector{String}=["V$i" for i in 1:size(X, 2)],
     y::Union{Nothing,AbstractVector{<:Label}}=nothing,
     treatments::Vararg{Base.Callable}=DT.DefaultTreatmentGroup;
     treatment_ds::Bool=true,
-    leftover_ds::Bool=true,
+    leftover_ds::Bool=false,
     float_type::Type=Float64,
     kwargs...
 )

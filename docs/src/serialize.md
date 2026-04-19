@@ -50,9 +50,6 @@ dsc = setup_dataset(
     model=DecisionTreeClassifier(max_depth=3),
     resampling=StratifiedCV(nfolds=5, shuffle=true),
     seed=11,
-    balancing=(
-        oversampler=SMOTENC(k=5, ratios=1.0),
-        undersampler=TomekUndersampler(min_ratios=0.5)),
     tuning=GridTuning(goal=4, range=(r1,r2))
 )
 solesave(dsc; path, name="test1")

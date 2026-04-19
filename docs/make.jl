@@ -21,7 +21,6 @@ makedocs(;
         "Setup Dataset"                => "dataset.md",
         "Multi Dimensional Treatement" => "treatement.md",
         "Tuning"                       => "tuning.md",
-        "Balancing"                    => "balancing.md",
         "Serialization"                => "serialize.md",
     ],
     warnonly=:true,
