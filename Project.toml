@@ -22,8 +22,9 @@ SoleModels = "4249d9c7-3290-4ddd-961c-e1d3ec2467f8"
 SolePostHoc = "cf1aa0c3-12c9-4ebe-9bdc-bd6c2ca79b72"
 XGBoost = "009559a3-9522-5dbb-924b-0b6ed2b22bb9"
 
-[sources]
-ModalDecisionLists = {rev = "devPaso", url = "https://github.com/aclai-lab/ModalDecisionLists.jl"}
+[sources.ModalDecisionLists]
+rev = "devPaso"
+url = "https://github.com/aclai-lab/ModalDecisionLists.jl"
 
 [compat]
 CategoricalArrays = "0.10, 1"
@@ -35,7 +36,7 @@ MLJ = "0.21, 0.22, 0.23"
 MLJDecisionTreeInterface = "0.4"
 MLJParticleSwarmOptimization = "0.1"
 MLJXGBoostInterface = "0.3"
-ModalDecisionLists = "0.1.1"
+ModalDecisionLists = "0.1.1, 0.1"
 ModalDecisionTrees = "0.5"
 Random = "1"
 Reexport = "1"
