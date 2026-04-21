@@ -4,10 +4,5 @@ docs/site/
 /Manifest.toml
 abc.history
 forest.txt
-/*.jld2
-src/*.jld2
-test/soleanalysis_test1.jld2
-test/soleds_test1.jld2
-test/solemodel_test1.jld2
 datasets/
 test/datasets/
