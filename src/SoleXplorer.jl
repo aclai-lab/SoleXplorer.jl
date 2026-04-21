@@ -145,10 +145,4 @@ export get_ds, get_sole, get_rules, get_measures, get_values
 export solexplorer, solexplorer!
 include("solexplorer.jl")
 
-# ---------------------------------------------------------------------------- #
-#                                  load save                                   #
-# ---------------------------------------------------------------------------- #
-export soleload, solesave
-include("serialize.jl")
-
 end
