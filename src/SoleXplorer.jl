@@ -46,7 +46,7 @@ import MLJ.MLJBase: train_test_pairs
 #                              external packages                               #
 # ---------------------------------------------------------------------------- #
 @reexport using DataTreatments:
-    load_dataset,
+    load_dataset, get_tabular
     movingwindow, wholewindow, splitwindow, adaptivewindow,
     TreatmentGroup, aggregate, reducesize
 using DataTreatments
