@@ -26,7 +26,9 @@ using SolePostHoc.RuleExtraction
 @reexport using MLJ:
 # performance measures for classification
     Accuracy, Kappa, LogLoss, FScore,
-    FalseNegativeRate, FalsePositiveRate, TrueNegativeRate, TruePositiveRate,
+    TruePositiveRate, # sensitivity, binary
+    TrueNegativeRate, # specificity, binary
+    FalseNegativeRate, FalsePositiveRate,
     ConfusionMatrix,
 # performance measures for regression 
     RootMeanSquaredError, LPLoss,
