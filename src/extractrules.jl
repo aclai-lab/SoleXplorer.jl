@@ -51,7 +51,9 @@ function extractrules(
     solem::Vector{AbstractModel}
 )
     map(solem) do model
-        RuleExtraction.extractrules(extractor, model; params...)
+        result = RuleExtraction.extractrules(extractor, model; params...)
+        GC.gc()
+        result
     end
 end
 
