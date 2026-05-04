@@ -223,7 +223,7 @@ function apply(
 )::DecisionXGBoost
     trees        = XGBoost.trees(m.fitresult.fitresult[1])
     featurenames = m.fitresult.report.vals[1].features
-    classlabels  = MLJ.classes(m.fitresult[2])
+    classlabels  = MLJ.classes(m.fitresult.fitresult[2])
     solem        = solemodel(trees, Matrix(X), y; featurenames, classlabels)
     logiset      = scalarlogiset(mapcols(col -> Float32.(col), X), allow_propositional=true)
     apply!(solem, logiset, y)

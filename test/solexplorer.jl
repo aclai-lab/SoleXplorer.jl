@@ -17,6 +17,43 @@ Xr = DataFrame(Xr)
 natopsloader = SX.NatopsLoader()
 Xts, yts = SX.load(natopsloader)
 
+dt = SX.load_dataset(Xts, yts)
+tabular = get_tabular(dt)
+@test tabular[1] isa Matrix{Float64}
+@test tabular[2] isa Vector
+@test SX.is_tabular(dt) == true
+@test SX.is_multidim(dt) == false
+
+dt = SX.load_dataset(
+    Xts, yts,
+    TreatmentGroup(
+        # dims=1,
+        aggrfunc=SX.aggregate(
+            win=(SX.splitwindow(nwindows=5),)
+        )
+    );
+)
+tabular = get_tabular(dt)
+@test tabular[1] isa Matrix{Float64}
+@test tabular[2] isa Vector
+@test SX.is_tabular(dt) == true
+@test SX.is_multidim(dt) == false
+
+dt = SX.load_dataset(
+    Xts, yts,
+    TreatmentGroup(
+        aggrfunc=SX.reducesize(
+            reducefunc=mean,
+            win=(SX.splitwindow(nwindows=5),)
+        )
+    );
+)
+multidim = SX.get_multidim(dt)
+@test multidim[1] isa Matrix{Array{Float64}}
+@test multidim[2] isa Vector
+@test SX.is_tabular(dt) == false
+@test SX.is_multidim(dt) == true
+
 function create_image(seed::Int; n=6)
     Random.seed!(seed)
     rand(Float64, n, n)
@@ -136,8 +173,8 @@ modeldb = solexplorer(df, t_regress,
             Xc, yc;
             model=SX.DecisionTreeClassifier(),
             resampling,
-            seed,
-            measures=(SX.accuracy, log_loss, confusion_matrix, kappa)
+            rng=seed,
+            measures=(SX.Accuracy(), SX.LogLoss(), SX.ConfusionMatrix(), SX.Kappa())
         )
         @test m isa SX.ModelSet
     end
@@ -149,21 +186,20 @@ modeldb = solexplorer(df, t_regress,
             resolution=5,
             resampling=CV(nfolds=3),
             range,
-            measure=SX.accuracy),
+            measure=SX.Accuracy()),
         RandomTuning(;
-            n=5,
             resampling=CV(nfolds=3),
             range,
-            measure=SX.accuracy
+            measure=SX.Accuracy()
         ),
     ]
         m = solexplorer(
             Xc, yc;
             model=SX.DecisionTreeClassifier(),
             resampling=CV(nfolds=3, shuffle=true),
-            seed=1,
+            rng=42,
             tuning,
-            measures=(SX.accuracy, kappa)
+            measures=(SX.Accuracy(), SX.Kappa())
         )
         @test m isa SX.ModelSet
     end
@@ -173,26 +209,26 @@ modeldb = solexplorer(df, t_regress,
         Xc, yc;
         model=SX.DecisionTreeClassifier(),
         resampling=CV(nfolds=3, shuffle=true),
-        seed=1,
+        rng=42,
         extractor=SX.InTreesRuleExtractor(),
-        measures=(SX.accuracy, log_loss, confusion_matrix, kappa)
+        measures=(SX.Accuracy(), SX.LogLoss(), SX.ConfusionMatrix(), SX.Kappa())
     )
     @test m isa SX.ModelSet
 end
 
 @testset "RandomForestClassifier parametrizations" begin
     for (resampling, seed) in [
-        (CV(nfolds=3, shuffle=true),               1),
-        (CV(nfolds=5, shuffle=true),               42),
+        (CV(nfolds=3, shuffle=true), 1),
+        (CV(nfolds=5, shuffle=true), 42),
         (Holdout(fraction_train=0.75, shuffle=true), 7),
-        (StratifiedCV(nfolds=4, shuffle=true),     99),
+        (StratifiedCV(nfolds=4, shuffle=true), 99),
     ]
         m = solexplorer(
             Xc, yc;
             model=SX.RandomForestClassifier(),
             resampling=resampling,
-            seed=seed,
-            measures=(SX.accuracy, log_loss, confusion_matrix, kappa)
+            rng=seed,
+            measures=(SX.Accuracy(), SX.LogLoss(), SX.ConfusionMatrix(), SX.Kappa())
         )
         @test m isa SX.ModelSet
     end
@@ -203,25 +239,25 @@ end
         Xc, yc;
         model=SX.RandomForestClassifier(),
         resampling=CV(nfolds=3, shuffle=true),
-        seed=1,
-        tuning=GridTuning(resolution=3, resampling=CV(nfolds=3), range=range, measure=SX.accuracy),
-        measures=(SX.accuracy, kappa)
+        rng=42,
+        tuning=GridTuning(resolution=3, resampling=CV(nfolds=3), range=range, measure=SX.Accuracy()),
+        measures=(SX.Accuracy(), SX.Kappa())
     )
     @test m isa SX.ModelSet
 end
 
 @testset "AdaBoostStumpClassifier parametrizations" begin
     for (resampling, seed) in [
-        (CV(nfolds=3, shuffle=true),               1),
-        (Holdout(fraction_train=0.7, shuffle=true),  7),
-        (StratifiedCV(nfolds=4, shuffle=true),     99),
+        (CV(nfolds=3, shuffle=true), 1),
+        (Holdout(fraction_train=0.7, shuffle=true), 7),
+        (StratifiedCV(nfolds=4, shuffle=true), 99),
     ]
         m = solexplorer(
             Xc, yc;
             model=SX.AdaBoostStumpClassifier(),
             resampling=resampling,
-            seed=seed,
-            measures=(SX.accuracy, log_loss, confusion_matrix, kappa)
+            rng=seed,
+            measures=(SX.Accuracy(), SX.LogLoss(), SX.ConfusionMatrix(), SX.Kappa())
         )
         @test m isa SX.ModelSet
     end
@@ -229,33 +265,50 @@ end
 
 @testset "ModalDecisionTree classification parametrizations" begin
     for (resampling, seed) in [
-        (CV(nfolds=3, shuffle=true),               1),
-        (Holdout(fraction_train=0.7, shuffle=true),  7),
-        (StratifiedCV(nfolds=4, shuffle=true),     99),
+        (CV(nfolds=3, shuffle=true), 1),
+        (Holdout(fraction_train=0.7, shuffle=true), 7),
+        (StratifiedCV(nfolds=4, shuffle=true), 99),
     ]
         m = solexplorer(
-            Xc, yc;
+            Xts, yts,
+            TreatmentGroup(
+                aggrfunc=reducesize(
+                    reducefunc=mean,
+                    win=(splitwindow(nwindows=5),)
+                )
+            );
             model=SX.ModalDecisionTree(),
             resampling=resampling,
-            seed=seed,
-            measures=(SX.accuracy,)
+            rng=seed,
+            measures=(SX.Accuracy(),)
         )
         @test m isa SX.ModelSet
     end
+
+    @test_throws ErrorException solexplorer(
+        Xts, yts;
+        model=SX.ModalDecisionTree()
+    )
 end
 
 @testset "ModalRandomForest classification parametrizations" begin
     for (resampling, seed) in [
-        (CV(nfolds=3, shuffle=true),               1),
+        (CV(nfolds=3, shuffle=true), 1),
         (Holdout(fraction_train=0.75, shuffle=true), 7),
-        (StratifiedCV(nfolds=4, shuffle=true),     99),
+        (StratifiedCV(nfolds=4, shuffle=true), 99),
     ]
         m = solexplorer(
-            Xc, yc;
+            Xts, yts,
+            TreatmentGroup(
+                aggrfunc=reducesize(
+                    reducefunc=mean,
+                    win=(splitwindow(nwindows=3),)
+                )
+            );
             model=SX.ModalRandomForest(),
             resampling=resampling,
-            seed=seed,
-            measures=(SX.accuracy,)
+            rng=seed,
+            measures=(SX.Accuracy(),)
         )
         @test m isa SX.ModelSet
     end
@@ -263,16 +316,22 @@ end
 
 @testset "ModalAdaBoost classification parametrizations" begin
     for (resampling, seed) in [
-        (CV(nfolds=3, shuffle=true),               1),
-        (Holdout(fraction_train=0.7, shuffle=true),  7),
-        (StratifiedCV(nfolds=4, shuffle=true),     99),
+        (CV(nfolds=3, shuffle=true), 1),
+        (Holdout(fraction_train=0.7, shuffle=true), 7),
+        (StratifiedCV(nfolds=4, shuffle=true), 99),
     ]
         m = solexplorer(
-            Xc, yc;
+            Xts, yts,
+            TreatmentGroup(
+                aggrfunc=reducesize(
+                    reducefunc=mean,
+                    win=(splitwindow(nwindows=5),)
+                )
+            );
             model=ModalAdaBoost(),
             resampling=resampling,
-            seed=seed,
-            measures=(SX.accuracy,)
+            rng=seed,
+            measures=(SX.Accuracy(),)
         )
         @test m isa SX.ModelSet
     end
@@ -280,16 +339,16 @@ end
 
 @testset "XGBoostClassifier parametrizations" begin
     for (resampling, seed) in [
-        (CV(nfolds=3, shuffle=true),               1),
-        (Holdout(fraction_train=0.7, shuffle=true),  7),
-        (StratifiedCV(nfolds=4, shuffle=true),     99),
+        (CV(nfolds=3, shuffle=true), 1),
+        (Holdout(fraction_train=0.7, shuffle=true), 7),
+        (StratifiedCV(nfolds=4, shuffle=true), 99),
     ]
         m = solexplorer(
             Xc, yc;
             model=SX.XGBoostClassifier(),
             resampling=resampling,
-            seed=seed,
-            measures=(SX.accuracy, confusion_matrix, kappa)
+            rng=seed,
+            measures=(SX.Accuracy(), SX.ConfusionMatrix(), SX.Kappa())
         )
         @test m isa SX.ModelSet
     end
@@ -300,8 +359,8 @@ end
         model=SX.XGBoostClassifier(early_stopping_rounds=10),
         resampling=CV(nfolds=3, shuffle=true),
         valid_ratio=0.2,
-        seed=1,
-        measures=(SX.accuracy, confusion_matrix)
+        rng=42,
+        measures=(SX.Accuracy(), SX.ConfusionMatrix())
     )
     @test m isa SX.ModelSet
 
@@ -311,9 +370,9 @@ end
         Xc, yc;
         model=SX.XGBoostClassifier(),
         resampling=CV(nfolds=3, shuffle=true),
-        seed=1,
-        tuning=GridTuning(resolution=3, resampling=CV(nfolds=3), range=range, measure=SX.accuracy),
-        measures=(SX.accuracy, kappa)
+        rng=42,
+        tuning=GridTuning(resolution=3, resampling=CV(nfolds=3), range=range, measure=SX.Accuracy()),
+        measures=(SX.Accuracy(), SX.Kappa())
     )
     @test m isa SX.ModelSet
 end
@@ -321,16 +380,16 @@ end
 # --- Regression models ---
 @testset "DecisionTreeRegressor parametrizations" begin
     for (resampling, seed) in [
-        (CV(nfolds=3, shuffle=true),               1),
-        (CV(nfolds=5, shuffle=true),               42),
-        (Holdout(fraction_train=0.7, shuffle=true),  7),
+        (CV(nfolds=3, shuffle=true), 1),
+        (CV(nfolds=5, shuffle=true), 42),
+        (Holdout(fraction_train=0.7, shuffle=true), 7),
     ]
         m = solexplorer(
             Xr, yr;
             model=SX.DecisionTreeRegressor(),
             resampling=resampling,
-            seed=seed,
-            measures=(rms, l1, l2, mae, mav)
+            rng=seed,
+            measures=(SX.RootMeanSquaredError(), SX.LPLoss())
         )
         @test m isa SX.ModelSet
     end
@@ -339,15 +398,15 @@ end
     range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
     for tuning in [
         GridTuning(resolution=5, resampling=CV(nfolds=3), range=range, measure=rms),
-        RandomTuning(n=5,        resampling=CV(nfolds=3), range=range, measure=rms),
+        RandomTuning(resampling=CV(nfolds=3), range=range, measure=rms),
     ]
         m = solexplorer(
             Xr, yr;
             model=SX.DecisionTreeRegressor(),
             resampling=CV(nfolds=3, shuffle=true),
-            seed=1,
+            rng=42,
             tuning=tuning,
-            measures=(rms, mae)
+            measures=(SX.RootMeanSquaredError(), SX.LPLoss())
         )
         @test m isa SX.ModelSet
     end
@@ -355,16 +414,16 @@ end
 
 @testset "RandomForestRegressor parametrizations" begin
     for (resampling, seed) in [
-        (CV(nfolds=3, shuffle=true),               1),
-        (CV(nfolds=5, shuffle=true),               42),
+        (CV(nfolds=3, shuffle=true), 1),
+        (CV(nfolds=5, shuffle=true), 42),
         (Holdout(fraction_train=0.75, shuffle=true), 7),
     ]
         m = solexplorer(
             Xr, yr;
             model=SX.RandomForestRegressor(),
             resampling=resampling,
-            seed=seed,
-            measures=(rms, l1, l2, mae, mav)
+            rng=seed,
+            measures=(SX.RootMeanSquaredError(), SX.LPLoss())
         )
         @test m isa SX.ModelSet
     end
@@ -375,24 +434,29 @@ end
         Xr, yr;
         model=SX.RandomForestRegressor(),
         resampling=CV(nfolds=3, shuffle=true),
-        seed=1,
-        tuning=GridTuning(resolution=3, resampling=CV(nfolds=3), range=range, measure=rms),
-        measures=(rms, mae)
+        rng=42,
+        tuning=GridTuning(;
+            resolution=3,
+            resampling=CV(nfolds=3),
+            range,
+            measure=SX.RootMeanSquaredError()
+        ),
+        measures=(SX.RootMeanSquaredError(), SX.LPLoss())
     )
     @test m isa SX.ModelSet
 end
 
 @testset "XGBoostRegressor parametrizations" begin
     for (resampling, seed) in [
-        (CV(nfolds=3, shuffle=true),               1),
-        (Holdout(fraction_train=0.7, shuffle=true),  7),
+        (CV(nfolds=3, shuffle=true), 1),
+        (Holdout(fraction_train=0.7, shuffle=true), 7),
     ]
         m = solexplorer(
             Xr, yr;
             model=SX.XGBoostRegressor(),
             resampling=resampling,
-            seed=seed,
-            measures=(rms, l1, l2, mae, mav)
+            rng=seed,
+            measures=(SX.RootMeanSquaredError(), SX.LPLoss())
         )
         @test m isa SX.ModelSet
     end
@@ -403,8 +467,8 @@ end
         model=SX.XGBoostRegressor(early_stopping_rounds=10),
         resampling=CV(nfolds=3, shuffle=true),
         valid_ratio=0.2,
-        seed=1,
-        measures=(rms, mae)
+        rng=42,
+        measures=(SX.RootMeanSquaredError(), SX.LPLoss())
     )
     @test m isa SX.ModelSet
 
@@ -414,9 +478,14 @@ end
         Xr, yr;
         model=SX.XGBoostRegressor(),
         resampling=CV(nfolds=3, shuffle=true),
-        seed=1,
-        tuning=GridTuning(resolution=3, resampling=CV(nfolds=3), range=range, measure=rms),
-        measures=(rms, mae)
+        rng=42,
+        tuning=GridTuning(;
+            resolution=3,
+            resampling=CV(nfolds=3),
+            range,
+            measure=SX.RootMeanSquaredError()
+        ),
+        measures=(SX.RootMeanSquaredError(), SX.LPLoss())
     )
     @test m isa SX.ModelSet
 end
