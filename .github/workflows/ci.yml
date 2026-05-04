@@ -2,7 +2,7 @@ name: CI
 on:
   push:
     branches:
-      - main
+      - devUpgrade
     tags: ['*']
   pull_request:
   workflow_dispatch:
