@@ -7,9 +7,9 @@ using DataFrames, Random
 
 using Distributions
 
-# ---------------------------------------------------------------------------- #
-#                                load dataset                                  #
-# ---------------------------------------------------------------------------- #
+# ---------------------------------------------------------------------------------------- #
+#                                      load dataset                                        #
+# ---------------------------------------------------------------------------------------- #
 Xc, yc = @load_iris
 Xc = DataFrame(Xc)
 
@@ -19,9 +19,9 @@ Xr = DataFrame(Xr)
 natopsloader = SX.NatopsLoader()
 Xts, yts = SX.load(natopsloader)
 
-# ---------------------------------------------------------------------------- #
-#                                 grid tuning                                  #
-# ---------------------------------------------------------------------------- #
+# ---------------------------------------------------------------------------------------- #
+#                                       grid tuning                                        #
+# ---------------------------------------------------------------------------------------- #
 seed = 42
 model = SX.DecisionTreeClassifier()
 measures=(SX.accuracy, SX.kappa)
@@ -49,7 +49,7 @@ m = solexplorer(
 @test m.ds.mach.model.tuning.goal === nothing
 @test m.ds.mach.model.tuning.resolution == 7
 
-# ---------------------------------------------------------------------------- #
+# ---------------------------------------------------------------------------------------- #
 seed = 42
 model = SX.RandomForestRegressor()
 measures=(SX.rms,)
@@ -78,7 +78,7 @@ m = solexplorer(
 @test m.ds.mach.model.tuning isa MLJ.Grid
 @test m.ds.mach.model.tuning.goal == 30
 
-# ---------------------------------------------------------------------------- #
+# ---------------------------------------------------------------------------------------- #
 tuning = GridTuning(;
     goal=2,
     resampling,
@@ -184,9 +184,9 @@ m = solexplorer(
 @test m.ds.mach.model.tuning isa MLJ.Grid
 @test m.ds.mach.model.tuning.goal == 10
 
-# ---------------------------------------------------------------------------- #
-#                            random search tuning                              #
-# ---------------------------------------------------------------------------- #
+# ---------------------------------------------------------------------------------------- #
+#                                  random search tuning                                    #
+# ---------------------------------------------------------------------------------------- #
 seed = 42
 model = SX.DecisionTreeClassifier()
 measures=(SX.accuracy, SX.kappa)
@@ -214,7 +214,7 @@ m = solexplorer(
 @test m.ds.mach.model.tuning.other == Distributions.Normal
 @test m.ds.mach.model.tuning.positive_unbounded == Distributions.Gamma
 
-# ---------------------------------------------------------------------------- #
+# ---------------------------------------------------------------------------------------- #
 seed = 42
 model = SX.RandomForestRegressor()
 measures=(SX.rms,)
@@ -247,9 +247,9 @@ m = solexplorer(
 @test m.ds.mach.model.tuning.other == Distributions.Gamma
 @test m.ds.mach.model.tuning.positive_unbounded == Distributions.Uniform
 
-# ---------------------------------------------------------------------------- #
-#                            particle swarm tuning                             #
-# ---------------------------------------------------------------------------- #
+# ---------------------------------------------------------------------------------------- #
+#                                  particle swarm tuning                                   #
+# ---------------------------------------------------------------------------------------- #
 seed = 42
 model = SX.DecisionTreeRegressor()
 measures=(SX.rms,)
@@ -312,9 +312,9 @@ m = solexplorer(
 @test m.ds.mach.model.tuning.prob_shift == 0.35
 @test m.ds.mach.model.tuning.w == 1.2
 
-# ---------------------------------------------------------------------------- #
-#                      adaptive particle swarm tuning                          #
-# ---------------------------------------------------------------------------- #
+# ---------------------------------------------------------------------------------------- #
+#                            adaptive particle swarm tuning                                #
+# ---------------------------------------------------------------------------------------- #
 seed = 42
 model = SX.DecisionTreeClassifier()
 measures=(SX.accuracy, SX.kappa)
