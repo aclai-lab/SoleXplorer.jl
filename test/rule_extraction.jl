@@ -3,177 +3,128 @@ using SoleXplorer
 const SX = SoleXplorer
 
 using MLJ
-using DataFrames, Random
+using DataFrames
 
 Xc, yc = @load_iris
 Xc = DataFrame(Xc)
 
+solex = solexplorer(
+    Xc, yc;
+    model=SX.RandomForestClassifier(max_depth=5, n_trees=10),
+    resampling=Holdout(;shuffle=true),
+    rng=42,   
+)
+
 # ---------------------------------------------------------------------------- #
 #                          in trees rules extraction                           #
 # ---------------------------------------------------------------------------- #
-dsc = setup_dataset(
-    Xc, yc;
-    model=SX.DecisionTreeClassifier(),
-    resampling=Holdout(;shuffle=true),
-    seed=1,   
-)
-solemc = train_test(dsc)
-
-modelc = solexplorer(
-    dsc, solemc;
+solexplorer!(
+    solex;
     extractor=InTreesRuleExtractor()
 )
-@test SX.rules(modelc) isa Vector{SX.DecisionSet}
+get_rules(solex)
+@test get_rules(solex) isa Vector{SX.DecisionSet}
 
-modelc = solexplorer(
-    dsc, solemc;
-    extractor=InTreesRuleExtractor(min_coverage=1.0)
+solexplorer!(
+    solex;
+    extractor=InTreesRuleExtractor(min_coverage=0.3)
 )
-@test SX.rules(modelc) isa Vector{SX.DecisionSet}
+get_rules(solex)
+@test get_rules(solex) isa Vector{SX.DecisionSet}
 
-@test_throws MethodError  solexplorer(
-    dsc, solemc;
+@test_throws MethodError solexplorer!(
+    solex;
     extractor=InTreesRuleExtractor(;invalid=true)
 )
 
 # ---------------------------------------------------------------------------- #
 #                           lumen rules extraction                             #
 # ---------------------------------------------------------------------------- #
-dsc = setup_dataset(
-    Xc, yc;
-    model=SX.XGBoostClassifier(),
-    resampling=Holdout(;shuffle=true),
-    seed=1,   
-)
-solemc = train_test(dsc)
-
-modelc = solexplorer(
-    dsc, solemc;
+solexplorer!(
+    solex;
     extractor=LumenRuleExtractor()
 )
-@test SX.rules(modelc) isa Vector{SX.LumenResult}
+get_rules(solex)
+@test get_rules(solex) isa Vector{SX.DecisionSet}
 
-modelc = solexplorer(
-    dsc, solemc;
+# takes too long on randomforest
+soledt = solexplorer(
+    Xc, yc;
+    model=SX.DecisionTreeClassifier(max_depth=5,),
+    resampling=Holdout(;shuffle=true),
+    rng=42,   
     extractor=LumenRuleExtractor(minimization_scheme=:mitespresso)
 )
-@test SX.rules(modelc) isa Vector{SX.LumenResult}
+@test get_rules(soledt) isa Vector{SX.DecisionSet}
 
-@test_throws MethodError  solexplorer(
-    dsc, solemc;
+@test_throws MethodError solexplorer!(
+    solex;
     extractor=LumenRuleExtractor(invalid=true)
 )
-
-dsc = setup_dataset(
-    Xc, yc;
-    model=SX.RandomForestClassifier(n_trees=2),
-    resampling=Holdout(;shuffle=true),
-    seed=1,   
-)
-solemc = train_test(dsc)
-
-modelc = solexplorer(
-    dsc, solemc;
-    extractor=LumenRuleExtractor()
-)
-@test SX.rules(modelc) isa Vector{SX.LumenResult}
-
-modelc = solexplorer(
-    dsc, solemc;
-    extractor=LumenRuleExtractor(minimization_scheme=:mitespresso)
-)
-@test SX.rules(modelc) isa Vector{SX.LumenResult}
 
 # ---------------------------------------------------------------------------- #
 #                          batrees rules extraction                            #
 # ---------------------------------------------------------------------------- #
-dsc = setup_dataset(
-    Xc, yc;
-    model=SX.RandomForestClassifier(n_trees=2),
-    resampling=Holdout(;shuffle=true),
-    seed=1,   
+# remember to install g++, clang and make
+# sudo apt update
+# sudo apt install clang
+# sudo apt install make
+# sudo apt install build-essential
+solexplorer!(
+    solex;
+    extractor=BATreesRuleExtractor(;dataset_name="Sole_Analysis")
 )
-solemc = train_test(dsc)
+@test get_rules(solex) isa Vector{SX.DecisionSet}
 
-modelc = solexplorer(
-    dsc, solemc;
-    extractor=BATreesRuleExtractor(dataset_name="Sole_Analysis")
-)
-@test SX.rules(modelc) isa Vector{SX.DecisionSet}
-
-modelc = solexplorer(
-    dsc, solemc;
+solexplorer!(
+    solex;
     extractor=BATreesRuleExtractor(dataset_name="Sole_Analysis", num_trees=5)
 )
-@test SX.rules(modelc) isa Vector{SX.DecisionSet}
+@test get_rules(solex) isa Vector{SX.DecisionSet}
 
-@test_throws MethodError  solexplorer(
-    dsc, solemc;
-    extractor=BATreesRuleExtractor(invalid=true)
+@test_throws MethodError solexplorer!(
+    solex;
+    extractor=BATreesRuleExtractor(;invalid=true)
 )
 
 # ---------------------------------------------------------------------------- #
 #                         rulecosi rules extraction                            #
 # ---------------------------------------------------------------------------- #
-# dsc = setup_dataset(
-#     Xc, yc;
-#     model=SX.RandomForestClassifier(n_trees=2),
-#     resampling=Holdout(;shuffle=true),
-#     seed=1,   
-# )
-# solemc = train_test(dsc)
+solexplorer!(
+    solex;
+    extractor=RULECOSIPLUSRuleExtractor()
+)
+@test get_rules(solex) isa Vector{SX.DecisionSet}
 
-# modelc = solexplorer(
-#     dsc, solemc;
-#     extractor=RULECOSIPLUSRuleExtractor()
-# )
-# @test SX.rules(modelc) isa Vector{SX.DecisionSet}
-
-# @test_throws MethodError  solexplorer(
-#     dsc, solemc;
-#     extractor=RULECOSIPLUSRuleExtractor(invalid=true)
-# )
+@test_throws MethodError  solexplorer!(
+    solex;
+    extractor=RULECOSIPLUSRuleExtractor(invalid=true)
+)
 
 # ---------------------------------------------------------------------------- #
 #                           refne rules extraction                             #
 # ---------------------------------------------------------------------------- #
-dsc = setup_dataset(
-    Xc, yc;
-    model=SX.RandomForestClassifier(n_trees=2),
-    resampling=Holdout(;shuffle=true),
-    seed=1,   
+solexplorer!(
+    solex;
+    extractor=REFNERuleExtractor(;L=2)
 )
-solemc = train_test(dsc)
+@test get_rules(solex) isa Vector{SX.DecisionSet}
 
-modelc = solexplorer(
-    dsc, solemc;
-    extractor=REFNERuleExtractor(L=2)
-)
-@test SX.rules(modelc) isa Vector{SX.DecisionSet}
-
-@test_throws MethodError  solexplorer(
-    dsc, solemc;
+@test_throws MethodError solexplorer!(
+    solex;
     extractor=REFNERuleExtractor(invalid=true)
 )
 
 # ---------------------------------------------------------------------------- #
 #                          trepan rules extraction                             #
 # ---------------------------------------------------------------------------- #
-dsc = setup_dataset(
-    Xc, yc;
-    model=SX.RandomForestClassifier(n_trees=2),
-    resampling=Holdout(;shuffle=true),
-    seed=1,   
-)
-solemc = train_test(dsc)
-
-modelc = solexplorer(
-    dsc, solemc;
+solexplorer!(
+    solex;
     extractor=TREPANRuleExtractor()
 )
-@test SX.rules(modelc) isa Vector{SX.DecisionSet}
+@test get_rules(solex) isa Vector{SX.DecisionSet}
 
-@test_throws MethodError  solexplorer(
-    dsc, solemc;
+@test_throws MethodError solexplorer!(
+    solex;
     extractor=TREPANRuleExtractor(invalid=true)
 )

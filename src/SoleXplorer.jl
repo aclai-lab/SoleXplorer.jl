@@ -16,8 +16,7 @@ using SoleModels:
 
 @reexport using SolePostHoc.RuleExtraction:
     InTreesRuleExtractor, LumenRuleExtractor, BATreesRuleExtractor,
-# @reexport using SolePostHoc.RuleExtraction: RULECOSIPLUSRuleExtractor
-    REFNERuleExtractor, TREPANRuleExtractor
+    RULECOSIPLUSRuleExtractor, REFNERuleExtractor, TREPANRuleExtractor
 using SolePostHoc.RuleExtraction
 
 # ---------------------------------------------------------------------------- #
