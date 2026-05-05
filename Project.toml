@@ -21,14 +21,20 @@ SoleModels = "4249d9c7-3290-4ddd-961c-e1d3ec2467f8"
 SolePostHoc = "cf1aa0c3-12c9-4ebe-9bdc-bd6c2ca79b72"
 XGBoost = "009559a3-9522-5dbb-924b-0b6ed2b22bb9"
 
+[sources.SoleData]
+rev = "main"
+url = "https://github.com/aclai-lab/SoleData.jl"
+[sources.SoleModels]
+rev = "main"
+url = "https://github.com/aclai-lab/SoleModels.jl"
 [sources.ModalDecisionLists]
-rev = "devPaso"
+rev = "rdl_tests"
 url = "https://github.com/aclai-lab/ModalDecisionLists.jl"
 [sources.ModalDecisionTrees]
 rev = "main"
 url = "https://github.com/aclai-lab/ModalDecisionTrees.jl"
 [sources.SolePostHoc]
-rev = "devPaso"
+rev = "main"
 url = "https://github.com/aclai-lab/SolePostHoc.jl"
 
 [compat]
@@ -51,8 +57,9 @@ XGBoost = "2.5"
 julia = "1"
 
 [extras]
+Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["JLD2", "Test"]
+test = ["Distributions", "JLD2", "Test"]
