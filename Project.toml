@@ -22,10 +22,10 @@ SolePostHoc = "cf1aa0c3-12c9-4ebe-9bdc-bd6c2ca79b72"
 XGBoost = "009559a3-9522-5dbb-924b-0b6ed2b22bb9"
 
 [sources.SoleData]
-rev = "devPaso"
+rev = "main"
 url = "https://github.com/aclai-lab/SoleData.jl"
 [sources.SoleModels]
-rev = "devXGBoost"
+rev = "main"
 url = "https://github.com/aclai-lab/SoleModels.jl"
 [sources.ModalDecisionLists]
 rev = "rdl_tests"
@@ -34,7 +34,7 @@ url = "https://github.com/aclai-lab/ModalDecisionLists.jl"
 rev = "main"
 url = "https://github.com/aclai-lab/ModalDecisionTrees.jl"
 [sources.SolePostHoc]
-rev = "devLazy"
+rev = "main"
 url = "https://github.com/aclai-lab/SolePostHoc.jl"
 
 [compat]
