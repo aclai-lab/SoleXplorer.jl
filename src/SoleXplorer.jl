@@ -100,7 +100,7 @@ using ModalDecisionTrees
 using XGBoost, MLJXGBoostInterface
 
 @reexport using ModalDecisionLists:
-    RandomDecisionListClassifier
+    DecisionListClassifier, RandomDecisionListClassifier
 using ModalDecisionLists
 
 const Regression =
@@ -130,6 +130,6 @@ include("extractrules.jl")
 
 export AbstractModelSet, ModelSet, solexplorer, solexplorer!,
     get_ds, get_sole, get_rules, get_measures, get_values
-include("main.jl")
+include("solexplorer.jl")
 
 end

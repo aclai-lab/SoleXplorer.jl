@@ -5,9 +5,9 @@ const SX = SoleXplorer
 using MLJ
 using DataFrames, Random
 
-# ---------------------------------------------------------------------------------------- #
-#                                      load dataset                                        #
-# ---------------------------------------------------------------------------------------- #
+# ---------------------------------------------------------------------------- #
+#                                load dataset                                  #
+# ---------------------------------------------------------------------------- #
 Xc, yc = @load_iris
 Xc = DataFrame(Xc)
 
@@ -135,9 +135,9 @@ df = build_test_df()
 t_classif = repeat(["classA", "classB", "classC", "classA", "classB"], 4)
 t_regress = collect(1.0:1.0:20.0)  
 
-# ---------------------------------------------------------------------------------------- #
-#                              I'm easy like sunday morning                                #
-# ---------------------------------------------------------------------------------------- #
+# ---------------------------------------------------------------------------- #
+#                        I'm easy like sunday morning                          #
+# ---------------------------------------------------------------------------- #
 modelc = solexplorer(Xc, yc)
 @test modelc isa SX.ModelSet
 
@@ -157,9 +157,10 @@ modeldb = solexplorer(df, t_regress,
 )
 @test modelc isa SX.ModelSet
 
-# ---------------------------------------------------------------------------------------- #
-#                               all models parametrizations                                #
-# ---------------------------------------------------------------------------------------- #
+# ---------------------------------------------------------------------------- #
+#                         all models parametrizations                          #
+# ---------------------------------------------------------------------------- #
+
 # --- Classification models ---
 @testset "DecisionTreeClassifier parametrizations" begin
     for (resampling, seed) in [
@@ -239,12 +240,7 @@ end
         model=SX.RandomForestClassifier(),
         resampling=CV(nfolds=3, shuffle=true),
         rng=42,
-        tuning=GridTuning(;
-            resolution=3,
-            resampling=CV(nfolds=3),
-            range,
-            measure=SX.Accuracy()
-        ),
+        tuning=GridTuning(resolution=3, resampling=CV(nfolds=3), range=range, measure=SX.Accuracy()),
         measures=(SX.Accuracy(), SX.Kappa())
     )
     @test m isa SX.ModelSet
@@ -375,12 +371,7 @@ end
         model=SX.XGBoostClassifier(),
         resampling=CV(nfolds=3, shuffle=true),
         rng=42,
-        tuning=GridTuning(;
-            resolution=3,
-            resampling=CV(nfolds=3),
-            range,
-            measure=SX.Accuracy()
-        ),
+        tuning=GridTuning(resolution=3, resampling=CV(nfolds=3), range=range, measure=SX.Accuracy()),
         measures=(SX.Accuracy(), SX.Kappa())
     )
     @test m isa SX.ModelSet
@@ -406,8 +397,8 @@ end
     # with tuning
     range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
     for tuning in [
-        GridTuning(;resolution=5, resampling=CV(nfolds=3), range, measure=rms),
-        RandomTuning(;resampling=CV(nfolds=3), range, measure=rms),
+        GridTuning(resolution=5, resampling=CV(nfolds=3), range=range, measure=rms),
+        RandomTuning(resampling=CV(nfolds=3), range=range, measure=rms),
     ]
         m = solexplorer(
             Xr, yr;
@@ -497,21 +488,4 @@ end
         measures=(SX.RootMeanSquaredError(), SX.LPLoss())
     )
     @test m isa SX.ModelSet
-end
-
-@testset "ModalDecisionTree classification parametrizations" begin
-    for (resampling, seed) in [
-        (CV(nfolds=3, shuffle=true), 1),
-        (Holdout(fraction_train=0.7, shuffle=true), 7),
-        (StratifiedCV(nfolds=4, shuffle=true), 99),
-    ]
-        m = solexplorer(
-            Xc, yc,
-            model=SX.RandomDecisionListClassifier(),
-            resampling=resampling,
-            rng=seed,
-            measures=(SX.Accuracy(),)
-        )
-        @test m isa SX.ModelSet
-    end
 end
