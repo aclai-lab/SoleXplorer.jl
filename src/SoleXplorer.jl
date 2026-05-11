@@ -100,7 +100,7 @@ using ModalDecisionTrees
 using XGBoost, MLJXGBoostInterface
 
 @reexport using ModalDecisionLists:
-    DecisionListClassifier, RandomDecisionListClassifier
+    RandomDecisionListClassifier, SequentialCoveringForest
 using ModalDecisionLists
 
 const Regression =

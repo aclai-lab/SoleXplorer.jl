@@ -277,3 +277,14 @@ function apply(
     apply!(solem, logiset, y)
     return solem
 end
+
+function apply(
+    m :: Machine{SequentialCoveringForest},
+    X :: AbstractDataFrame,
+    y :: AbstractVector
+)::DecisionEnsemble
+    solem = fitted_params(m).fitresult.model
+    logiset = PropositionalLogiset(X)
+    apply!(solem, logiset, y)
+    return solem
+end
