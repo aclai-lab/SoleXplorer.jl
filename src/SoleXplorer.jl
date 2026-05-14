@@ -19,9 +19,9 @@ using SoleModels:
     RULECOSIPLUSRuleExtractor, REFNERuleExtractor, TREPANRuleExtractor
 using SolePostHoc.RuleExtraction
 
-# ---------------------------------------------------------------------------- #
-#                                     MLJ                                      #
-# ---------------------------------------------------------------------------- #
+# ---------------------------------------------------------------------------------------- #
+#                                           MLJ                                            #
+# ---------------------------------------------------------------------------------------- #
 @reexport using MLJ:
 # performance measures for classification
     Accuracy, Kappa, LogLoss, FScore,
@@ -43,9 +43,9 @@ using MLJ: MLJBase, MLJTuning
 # custom resampling strategy
 import MLJ.MLJBase: train_test_pairs
 
-# ---------------------------------------------------------------------------- #
-#                              external packages                               #
-# ---------------------------------------------------------------------------- #
+# ---------------------------------------------------------------------------------------- #
+#                                    external packages                                     #
+# ---------------------------------------------------------------------------------------- #
 @reexport using DataTreatments:
     load_dataset, get_tabular, get_target,
     TreatmentGroup, aggregate, reducesize,
@@ -75,16 +75,16 @@ using CategoricalArrays
 using DataFrames
 using Random
 
-# ---------------------------------------------------------------------------- #
-#                                 interfaces                                   #
-# ---------------------------------------------------------------------------- #
+# ---------------------------------------------------------------------------------------- #
+#                                       interfaces                                         #
+# ---------------------------------------------------------------------------------------- #
 export partition, pCV
 export get_X, get_y, get_train, get_test
 include("partition.jl")
 
-# ---------------------------------------------------------------------------- #
-#                                   models                                     #
-# ---------------------------------------------------------------------------- #
+# ---------------------------------------------------------------------------------------- #
+#                                         models                                           #
+# ---------------------------------------------------------------------------------------- #
 @reexport using MLJDecisionTreeInterface:
     DecisionTreeClassifier, DecisionTreeRegressor,
     RandomForestClassifier, RandomForestRegressor,
@@ -99,18 +99,18 @@ using ModalDecisionTrees
     XGBoostClassifier, XGBoostRegressor
 using XGBoost, MLJXGBoostInterface
 
-@reexport using ModalDecisionLists:
-    RandomDecisionListClassifier, SequentialCoveringForest
-using ModalDecisionLists
+# @reexport using ModalDecisionLists:
+#     RandomDecisionListClassifier, SequentialCoveringForest
+# using ModalDecisionLists
 
 const Regression =
     Union{DecisionTreeRegressor,RandomForestRegressor,XGBoostRegressor}
 const Modal =
     Union{ModalDecisionTree,ModalRandomForest,ModalAdaBoost}
 
-# ---------------------------------------------------------------------------- #
-#                                   modules                                    #
-# ---------------------------------------------------------------------------- #
+# ---------------------------------------------------------------------------------------- #
+#                                        sections                                          #
+# ---------------------------------------------------------------------------------------- #
 include("measures.jl")
 
 export range,
