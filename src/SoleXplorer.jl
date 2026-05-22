@@ -71,6 +71,12 @@ import MLJ.MLJBase: train_test_pairs
 using DataTreatments
 const DT = DataTreatments
 
+using RuleExtractions
+const RE = RuleExtractions
+
+struct TripleP <: RuleExtractor end
+export TripleP
+
 using CategoricalArrays
 using DataFrames
 using Random

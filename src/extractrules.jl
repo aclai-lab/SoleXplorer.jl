@@ -58,6 +58,20 @@ function extractrules(
 end
 
 # ---------------------------------------------------------------------------- #
+#                                   Pasini                                     #
+# ---------------------------------------------------------------------------- #
+function extractrules(
+    extractor::TripleP,
+    params::NamedTuple,
+    _::DataSet,
+    solem::Vector{AbstractModel}
+)
+    map(solem) do model
+        Base.invokelatest(RuleExtractions.extractrules, model)
+    end
+end
+
+# ---------------------------------------------------------------------------- #
 #                             BATreesRuleExtractor                             #
 # ---------------------------------------------------------------------------- #
 function extractrules(
