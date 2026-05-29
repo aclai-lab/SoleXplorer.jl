@@ -46,28 +46,11 @@ end
 # ---------------------------------------------------------------------------- #
 function extractrules(
     extractor::LumenRuleExtractor,
-    params::NamedTuple,
     _::DataSet,
     solem::Vector{AbstractModel}
 )
     map(solem) do model
-        result = RuleExtraction.extractrules(extractor, model; params...)
-        GC.gc()
-        result
-    end
-end
-
-# ---------------------------------------------------------------------------- #
-#                                   Pasini                                     #
-# ---------------------------------------------------------------------------- #
-function extractrules(
-    extractor::TripleP,
-    params::NamedTuple,
-    _::DataSet,
-    solem::Vector{AbstractModel}
-)
-    map(solem) do model
-        Base.invokelatest(RuleExtractions.extractrules, model)
+        RuleExtraction.extractrules(extractor, model)
     end
 end
 
