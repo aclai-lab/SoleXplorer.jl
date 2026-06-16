@@ -13,22 +13,24 @@ const RangeSpec = Union{
     MLJ.MLJBase.ParamRange
 }
 
+const Wrapper = StatisticalMeasures.StatisticalMeasuresBase.Wrapper
+
 # ---------------------------------------------------------------------------- #
 #                                Tuning struct                                 #
 # ---------------------------------------------------------------------------- #
 mutable struct Tuning{T} <: AbstractTuning
     strategy::T
     range::RangeSpec
-    resampling::MLJ.ResamplingStrategy
-    measure::StatisticalMeasures.StatisticalMeasuresBase.Wrapper
+    resampling::Union{Nothing,MLJ.ResamplingStrategy}
+    measure::Union{Nothing,Wrapper}
     repeats::Int
 
     function Tuning(
         strategy::T,
         range::RangeSpec,
-        resampling::MLJ.ResamplingStrategy,
-        measure::StatisticalMeasures.StatisticalMeasuresBase.Wrapper,
-        repeats::Int
+        resampling::Union{Nothing,MLJ.ResamplingStrategy}=nothing,
+        measure::Union{Nothing,Wrapper}=nothing,
+        repeats::Int=1
     ) where T
         repeats > 0 ||
             throw(ArgumentError("repeats must be positive, got $repeats"))
@@ -71,7 +73,7 @@ get_resampling(t::Tuning) = t.resampling
 
 """
     get_measure(t::Tuning) 
-        -> StatisticalMeasures.StatisticalMeasuresBase.Wrapper
+        -> Wrapper
 
 Extract the reference performance measure from a tuning configuration.
 """
@@ -124,7 +126,7 @@ Base.range(field::Union{Symbol,Expr}; kwargs...) = field, kwargs...
     range::RangeSpec,
     resampling::MLJ.ResamplingStrategy=
         Holdout(fraction_train=0.7, shuffle=true),
-    measure::Union{Nothing,StatisticalMeasures.StatisticalMeasuresBase.Wrapper}=
+    measure::Union{Nothing,Wrapper}=
         nothing,
     repeats::Int=1,
     kwargs...

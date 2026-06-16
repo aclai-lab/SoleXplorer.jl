@@ -106,8 +106,8 @@ export range,
     GridTuning, RandomTuning, ParticleTuning, AdaptiveTuning
 include("tuning.jl")
 
-export AbstractDataSet, PropositionalDataSet, ModalDataSet, DataSet,
-    code_dataset, get_mach, get_mach_model, get_logiset, setup_dataset
+export AbstractDataSet, DataSet, setup_dataset,
+    get_X, get_y, get_mach, get_mach_model, get_logiset, get_rng
 include("dataset.jl")
 
 include("apply.jl")

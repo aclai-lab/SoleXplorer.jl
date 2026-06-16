@@ -27,14 +27,36 @@ end
 
 # set random number generators for tuning-related components of a model
 function set_tuning_rng!(m::MLJ.Model, rng::Random.AbstractRNG)
-    hasproperty(m.tuning, :rng) && (m.tuning.rng = rng)
-    hasproperty(m.resampling, :rng) && (m.resampling = set_rng(m.resampling, rng))
+    hasproperty(m.tuning, :rng) &&
+        (m.tuning.rng = rng)
+    hasproperty(m.resampling, :rng) &&
+        (m.resampling = set_rng(m.resampling, rng))
     return m
 end
 
 # ---------------------------------------------------------------------------- #
 #                                DataSet struct                                #
 # ---------------------------------------------------------------------------- #
+"""
+    DataSet{M<:MLJ.Model,T} <: Any
+
+A configured dataset structure wrapping an MLJ machine, partition indices,
+and partition metadata.
+
+# Type Parameters
+- `M<:MLJ.Model`: The MLJ model type (e.g. `DecisionTreeClassifier`).
+- `T`: The element type of the partition index vectors.
+
+# Fields
+- `mach::MLJ.Machine`: The MLJ machine holding the model, features `X`,
+  and target `y`.
+- `pidxs::Vector{PartitionIdxs{T}}`: Per-fold partition index sets,
+  each containing train/test (and optionally validation) indices.
+- `pinfo::PartitionInfo`: Metadata about the partitioning strategy,
+  including the resampling type and rng used.
+
+# See also: [`setup_dataset`](@ref), [`solexplorer`](@ref)
+"""
 struct DataSet{M,T}
     mach::MLJ.Machine
     pidxs::Vector{PartitionIdxs{T}}
@@ -50,19 +72,68 @@ end
 # ---------------------------------------------------------------------------- #
 #                                    methods                                   #
 # ---------------------------------------------------------------------------- #
+"""
+    Base.length(ds::DataSet) -> Int
+
+Return the number of folds (partitions) in the dataset.
+"""
 Base.length(ds::DataSet) = length(ds.pidxs)
 
+"""
+    get_X(ds::DataSet) -> AbstractMatrix
+    get_X(ds::DataSet, part::Symbol) -> Vector{AbstractMatrix}
+
+Return the feature matrix stored in the MLJ machine.
+
+The two-argument form returns a vector of views, one per fold, sliced
+according to the partition indices named `part` (e.g. `:train`, `:test`,
+`:val`).
+"""
 get_X(ds::DataSet) = ds.mach.args[1].data
-get_X(ds::DataSet, part::Symbol) = 
+get_X(ds::DataSet, part::Symbol) =
     [@views get_X(ds)[getproperty(ds.pidxs[i], part), :] for i in 1:length(ds)]
+
+"""
+    get_y(ds::DataSet) -> AbstractVector
+    get_y(ds::DataSet, part::Symbol) -> Vector{AbstractVector}
+
+Return the target vector stored in the MLJ machine.
+
+The two-argument form returns a vector of views, one per fold, sliced
+according to the partition indices named `part` (e.g. `:train`, `:test`,
+`:val`).
+"""
 get_y(ds::DataSet) = ds.mach.args[2].data
-get_y(ds::DataSet, part::Symbol) = 
+get_y(ds::DataSet, part::Symbol) =
     [@views get_y(ds)[getproperty(ds.pidxs[i], part)] for i in 1:length(ds)]
 
+"""
+    get_mach(ds::DataSet) -> MLJ.Machine
+
+Return the MLJ machine wrapped by the dataset.
+"""
 get_mach(ds::DataSet) = ds.mach
+
+"""
+    get_mach_model(ds::DataSet) -> MLJ.Model
+
+Return the model stored inside the MLJ machine.
+"""
 get_mach_model(ds::DataSet) = ds.mach.model
 
+"""
+    get_logiset(ds::DataSet) -> AbstractLogiset
+
+Return the first modality of the logiset produced after fitting the
+machine. Only valid for modal datasets.
+"""
 get_logiset(ds::DataSet) = ds.mach.data[1].modalities[1]
+
+"""
+    get_rng(ds::DataSet) -> AbstractRNG
+
+Return the random number generator used when partitioning the dataset.
+"""
 get_rng(ds::DataSet) = get_rng(ds.pinfo)
 
 # ---------------------------------------------------------------------------- #
@@ -91,17 +162,6 @@ end
 # ---------------------------------------------------------------------------- #
 #                                setup dataset                                 #
 # ---------------------------------------------------------------------------- #
-function setup_dataset(
-    X::AbstractDataFrame,
-    y::AbstractVector,
-    args...;
-    kwargs...
-)
-    throw(ArgumentError(
-        "Target variable y must have elements of type Label, " *
-        "got eltype: $(eltype(y))"))
-end
-
 """
     setup_dataset(
         dt::DataTreatment;
@@ -109,7 +169,7 @@ end
         model=_default_model(get_target(dt)),
         resampling=Holdout(fraction_train=0.7, shuffle=true),
         valid_ratio=0.0,
-        seed=nothing,
+        rng=Xoshiro(42),
         tuning=nothing,
     ) -> DataSet
 
@@ -119,77 +179,91 @@ end
         y=nothing,
         treatments...;
         treatment_ds=true,
-        leftover_ds=true,
+        leftover_ds=false,
         float_type=Float64,
         kwargs...
     ) -> DataSet
 
-    setup_dataset(df::AbstractDataFrame, y=nothing, args...; kwargs...) -> DataSet
-    setup_dataset(df::AbstractDataFrame, y::Symbol, args...; kwargs...) -> DataSet
+    setup_dataset(
+        df::AbstractDataFrame, y=nothing, args...; kwargs...) -> DataSet
+    setup_dataset(
+        df::AbstractDataFrame, y::Symbol, args...; kwargs...) -> DataSet
 
 Creates and configures a dataset structure for machine learning.
 
-This is the core implementation function that handles the complete dataset setup pipeline,
-including data preprocessing, model configuration, partitioning, hyperparameter tuning,
-and MLJ machine creation.
+This is the core implementation function that handles the complete dataset
+setup pipeline, including data preprocessing, model configuration,
+partitioning, hyperparameter tuning, and MLJ machine creation.
 
 # Arguments
-- `dt::DataTreatment`: A `DataTreatment` object encapsulating features, target, and
-  preprocessing information. Use `DataTreatments.load_dataset` to construct one.
+- `dt::DataTreatment`: A `DataTreatment` object encapsulating features,
+  target, and preprocessing information. Use `DataTreatments.load_dataset`
+  to construct one.
 - `X::Matrix`: Raw feature matrix.
 - `vnames::Vector{String}`: Column names for the feature matrix.
+  Defaults to `["V1", "V2", ...]`.
 - `y::Union{Nothing,AbstractVector{<:Label}}=nothing`: Target variable vector.
   If `nothing`, an unsupervised (or regression-only) setup is assumed.
-- `df::AbstractDataFrame`: Feature DataFrame, optionally containing the target column.
-- `treatments::Vararg{Base.Callable}`: Data treatment functions applied during
-  preprocessing (defaults to `DataTreatments.DefaultTreatmentGroup`).
+- `df::AbstractDataFrame`: Feature DataFrame, optionally containing the
+  target column.
+- `treatments::Vararg{Base.Callable}`: Data treatment functions applied
+  during preprocessing (defaults to `DataTreatments.DefaultTreatmentGroup`).
 
 # Keyword Arguments
 
 ## Model Configuration
 - `model::MLJ.Model=_default_model(y)`: Sole-compatible MLJ model to use,
   auto-selected based on target type if not provided. Classification targets
-  (CategoricalArray) default to `DecisionTreeClassifier`, others to `DecisionTreeRegressor`.
+  (CategoricalArray) default to `DecisionTreeClassifier`, others to
+  `DecisionTreeRegressor`.
 
 ## Data Resampling
 - `resampling::ResamplingStrategy=Holdout(fraction_train=0.7, shuffle=true)`:
   Cross-validation or holdout strategy. Strategies are taken from
   [MLJ](https://juliaai.github.io/MLJBase.jl/stable/resampling/).
-- `valid_ratio::Real=0.0`: Fraction of training data to reserve as a validation set.
-  Primarily used with XGBoost [early stopping](https://xgboost.readthedocs.io/en/stable/prediction.html).
-- `seed::Union{Nothing,Int}=nothing`: Integer seed for reproducibility. Internally
-  initializes a `Xoshiro` RNG and propagates it to the model, resampling strategy,
-  and tuning components.
-
+- `valid_ratio::Real=0.0`: Fraction of training data to reserve as a
+  validation set. Primarily used with XGBoost
+  [early stopping](https://xgboost.readthedocs.io/en/stable/prediction.html).
+- `rng::Union{AbstractRNG,Int}=Xoshiro(42)`: Random number generator or
+  integer seed for reproducibility. If an `Int` is provided, it is
+  automatically wrapped in a `Xoshiro` RNG and propagated to the model,
+  resampling strategy, and tuning components.
 
 ## Hyperparameter Tuning
-- `tuning::Union{Nothing,Tuning}=nothing`: Tuning configuration. Requires a `range`
-  specification, e.g.:
+- `tuning::Union{Nothing,Tuning}=nothing`: Tuning configuration. Requires
+  a `range` specification, e.g.:
   ```julia
-  range = SoleXplorer.range(:min_purity_increase; lower=0.1, upper=1.0, scale=:log)
+  range = SoleXplorer.range(
+      :min_purity_increase; lower=0.1, upper=1.0, scale=:log
+  )
   ```
-  Tuning strategies are adapted from [MLJ](https://juliaai.github.io/MLJ.jl/stable/)
-  and [MLJParticleSwarmOptimization.jl](https://github.com/JuliaAI/MLJParticleSwarmOptimization.jl).
+  Tuning strategies are adapted from
+  [MLJ](https://juliaai.github.io/MLJ.jl/stable/) and
+  [MLJParticleSwarmOptimization.jl]
+  (https://github.com/JuliaAI/MLJParticleSwarmOptimization.jl).
 
 ## Data Loading (Matrix/DataFrame methods only)
-- `treatment_ds::Bool=true`: Whether to include the treated dataset partition.
-- `leftover_ds::Bool=true`: Whether to include the leftover (untreated) partition.
+- `treatment_ds::Bool=true`: Whether to include the treated dataset
+  partition.
+- `leftover_ds::Bool=false`: Whether to include the leftover (untreated)
+  partition.
 - `float_type::Type=Float64`: Numeric type used for feature conversion.
 
 ## Weights
 - `w::Union{Nothing,Vector}=nothing`: Optional per-sample weights vector.
 
 # Returns
-- `DataSet{M,T}`: A configured dataset struct wrapping an MLJ machine, partition
-  indices, and partition metadata.
+- `DataSet{M,T}`: A configured dataset struct wrapping an MLJ machine,
+  partition indices, and partition metadata.
 
 # Notes
-- When calling `setup_dataset(df, y::Symbol, ...)`, the target column `y` is
-  automatically removed from the feature set.
-- Modal models require a `DataTreatment` built from multidimensional (time-series)
-  data; non-modal models require tabular data. Mixing types raises an error.
-- For Modal models with tuning, if no `measure` is provided, `LogLoss()` is used
-  as a default.
+- When calling `setup_dataset(df, y::Symbol, ...)`, the target column `y`
+  is automatically removed from the feature set.
+- Modal models require a `DataTreatment` built from multidimensional
+  (time-series) data; non-modal models require tabular data. Mixing types
+  raises an error.
+- For Modal models with tuning, if no `measure` is provided, `LogLoss()`
+  is used as a default.
 
 # Examples
 ```julia
@@ -205,16 +279,16 @@ ds = setup_dataset(Xc, yc)
 # specify model
 ds = setup_dataset(Xc, yc; model=AdaBoostStumpClassifier())
 
-# cross-validation with seed
-ds = setup_dataset(Xc, yc; resampling=CV(nfolds=10, shuffle=true), seed=1)
+# cross-validation with rng seed
+ds = setup_dataset(Xc, yc; resampling=CV(nfolds=10, shuffle=true), rng=1)
 
 # hyperparameter tuning
-range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
+range = SX.range(:gamma; lower=0.001, upper=1.0, scale=:log)
 ds = setup_dataset(
     Xc, yc;
-    model=ModalDecisionTree(),
+    model=XGBoostClassifier(),
     resampling=CV(nfolds=5, shuffle=true),
-    seed=1,
+    rng=1,
     tuning=GridTuning(
         resolution=10,
         resampling=CV(nfolds=3),
@@ -225,11 +299,16 @@ ds = setup_dataset(
 )
 
 # target as column symbol
-ds = setup_dataset(Xc, :target)
+ds = setup_dataset(Xc, :petal_width)
 ```
 
 # See also: [`DataSet`](@ref), [`solexplorer`](@ref)
 """
+setup_dataset(X::AbstractDataFrame, y::AbstractVector, args...; kwargs...) =
+    throw(ArgumentError(
+        "Target variable y must have elements of type Label, " *
+        "got eltype: $(eltype(y))"))
+
 function setup_dataset(
     dt::DT.DataTreatment;
     w::Union{Nothing,Vector}=nothing,
@@ -298,12 +377,14 @@ function setup_dataset(
     setup_dataset(dt; kwargs...)
 end
 
-setup_dataset(
+function setup_dataset(
     df::AbstractDataFrame,
     y::Union{Nothing,AbstractVector{<:Label}}=nothing,
     args...;
     kwargs...
-) = setup_dataset(Matrix(df), names(df), y, args...; kwargs...)
+) 
+setup_dataset(Matrix(df), names(df), y, args...; kwargs...)
+end
 
 setup_dataset(df::AbstractDataFrame, args...; kwargs...) =
     setup_dataset(Matrix(df), names(df), nothing, args...; kwargs...)

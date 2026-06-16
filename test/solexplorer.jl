@@ -29,7 +29,6 @@ tabular = get_tabular(dt)
 dt = SX.load_dataset(
     Xts, yts,
     TreatmentGroup(
-        # dims=1,
         aggrfunc=SX.aggregate(
             win=(SX.splitwindow(nwindows=5),)
         )
