@@ -14,18 +14,20 @@ abstract type AbstractPartitionIdxs end
 
 # fields
 # - type::T: MLJ resampling strategy (e.g., CV, Holdout, StratifiedCV)
-# - valid_ratio::Real: Proportion of data for validation (0.0-1.0), optinal for XGBoost
+# - valid_ratio::Real:
+# Proportion of data for validation (0.0-1.0), optinal for XGBoost
 struct PartitionInfo{T} <: AbstractPartitionInfo
-    type        :: T
-    valid_ratio :: Real
-    rng         :: Random.AbstractRNG
+    type::T
+    valid_ratio::Real
+    rng::Random.AbstractRNG
 
     function PartitionInfo(
-        type        :: T,
-        valid_ratio :: Real,
-        rng         :: Random.AbstractRNG,
+        type::T,
+        valid_ratio::Real,
+        rng::Random.AbstractRNG,
     )::PartitionInfo where {T<:MLJ.ResamplingStrategy}
-        0 ≤ valid_ratio ≤ 1 || throw(ArgumentError("valid_ratio must be between 0 and 1"))
+        0 ≤ valid_ratio ≤ 1 ||
+            throw(ArgumentError("valid_ratio must be between 0 and 1"))
 
         new{T}(type, valid_ratio, rng)
     end
@@ -53,19 +55,19 @@ end
 # ---------------------------------------------------------------------------- #
 # container for train/validation/test index vectors
 struct PartitionIdxs{T<:Int} <: AbstractPartitionIdxs
-    train :: Vector{T}
-    valid :: Vector{T}
-    test  :: Vector{T}
+    train::Vector{T}
+    valid::Vector{T}
+    test::Vector{T}
 
     function PartitionIdxs(
-        train :: Union{Vector{T}, UnitRange{T}},
-        valid :: Union{Vector{T}, UnitRange{T}},
-        test  :: Union{Vector{T}, UnitRange{T}},
+        train::Union{Vector{T},UnitRange{T}},
+        valid::Union{Vector{T},UnitRange{T}},
+        test::Union{Vector{T},UnitRange{T}},
     ) where T<:Int
     new{T}(
-        train isa UnitRange ? collect(train) : train, 
-        valid isa UnitRange ? collect(valid) : valid, 
-        test  isa UnitRange ? collect(test)  : test
+        train isa UnitRange ? collect(train) : train,
+        valid isa UnitRange ? collect(valid) : valid,
+        test isa UnitRange ? collect(test) : test
     )
     end
 end
@@ -107,10 +109,13 @@ function partition(
     ttpairs = MLJBase.train_test_pairs(resampling, 1:rows, y)
 
     if valid_ratio == 0.0
-        return ([PartitionIdxs(train, eltype(train)[], test) for (train, test) in ttpairs], pinfo)
+        return ([PartitionIdxs(train, eltype(train)[], test)
+            for (train, test) in ttpairs], pinfo)
     else
-        tvalid = collect((MLJ.partition(t[1], 1-valid_ratio)..., t[2]) for t in ttpairs)
-        return ([PartitionIdxs(train, valid, test) for (train, valid, test) in tvalid], pinfo)
+        tvalid = collect((MLJ.partition(t[1], 1-valid_ratio)..., t[2])
+            for t in ttpairs)
+        return ([PartitionIdxs(train, valid, test)
+            for (train, valid, test) in tvalid], pinfo)
     end
 end
 
@@ -119,7 +124,8 @@ partition(y::AbstractVector; kwargs...) = partition(length(y), y; kwargs...)
 # ---------------------------------------------------------------------------- #
 #                                   methods                                    #
 # ---------------------------------------------------------------------------- #
-Base.length(t::PartitionIdxs) = length(t.train) + length(t.valid) + length(t.test)
+Base.length(t::PartitionIdxs) =
+    length(t.train) + length(t.valid) + length(t.test)
 
 """
     get_train(t::PartitionIdxs) -> Vector{Int}
@@ -148,11 +154,12 @@ get_test(t::PartitionIdxs)  = t.test
 function Base.show(io::IO, pidx::PartitionIdxs{T}) where T
     n_train = length(pidx.train)
     n_valid = length(pidx.valid)
-    n_test  = length(pidx.test)
-    total   = n_train + n_valid + n_test
+    n_test = length(pidx.test)
+    total = n_train + n_valid + n_test
     
     print(io, "PartitionIdxs{$T}")
-    print(io, "\n  Total samples: $total, Train: $n_train, Valid: $n_valid, Test: $n_test.")
+    print(io, "\n  Total samples: $total, " *
+        "Train: $n_train, Valid: $n_valid, Test: $n_test.")
 end
 
 function Base.show(io::IO, ::MIME"text/plain", pidx::PartitionIdxs{T}) where T
@@ -208,11 +215,21 @@ struct pCV <: ResamplingStrategy
 end
 
 # Constructor with keywords
-pCV(; nfolds::Int=6, fraction_train::Float64=0.7, shuffle=nothing, rng=nothing) =
+pCV(;
+    nfolds::Int=6,
+    fraction_train::Float64=0.7,
+    shuffle=nothing,
+    rng=nothing
+) =
     pCV(nfolds, fraction_train, MLJBase.shuffle_and_rng(shuffle, rng)...)
 
 function MLJBase.train_test_pairs(pcv::pCV, rows)
     return map(1:pcv.nfolds) do _
-        MLJBase.partition(rows, pcv.fraction_train, shuffle=pcv.shuffle, rng=pcv.rng)
+        MLJBase.partition(
+            rows,
+            pcv.fraction_train,
+            shuffle=pcv.shuffle,
+            rng=pcv.rng
+        )
     end
 end

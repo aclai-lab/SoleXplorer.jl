@@ -2,6 +2,8 @@ using Test
 using SoleXplorer
 const SX = SoleXplorer
 
+using SoleData
+
 using MLJ
 using DataFrames, Random
 
@@ -11,24 +13,24 @@ Xc = DataFrame(Xc)
 Xr, yr = @load_boston
 Xr = DataFrame(Xr)
 
-natopsloader = SX.NatopsLoader()
-Xts, yts = SX.load(natopsloader)
+natopsloader = SoleData.Artifacts.NatopsLoader()
+Xts, yts = SoleData.Artifacts.load(natopsloader)
 
 # ---------------------------------------------------------------------------- #
 #                        train and test usage examples                         #
 # ---------------------------------------------------------------------------- #
 # basic setup
 solemc = train_test(Xc, yc)
-@test solemc isa SX.SoleModel{SX.PropositionalDataSet{SX.DecisionTreeClassifier}}
+@test solemc isa SX.SoleModel{SX.DataSet{SX.DecisionTreeClassifier, Int}}
 solemr = train_test(Xr, yr)
-@test solemr isa SX.SoleModel{SX.PropositionalDataSet{SX.DecisionTreeRegressor}}
+@test solemr isa SX.SoleModel{SX.DataSet{SX.DecisionTreeRegressor, Int}}
 
 datac  = setup_dataset(Xc, yc)
 solemc = train_test(datac)
-@test solemc isa SX.SoleModel{SX.PropositionalDataSet{SX.DecisionTreeClassifier}}
+@test solemc isa SX.SoleModel{SX.DataSet{SX.DecisionTreeClassifier, Int}}
 datar  = setup_dataset(Xr, yr)
 solemr = train_test(datar)
-@test solemr isa SX.SoleModel{SX.PropositionalDataSet{SX.DecisionTreeRegressor}}
+@test solemr isa SX.SoleModel{SX.DataSet{SX.DecisionTreeRegressor, Int}}
 
 # ---------------------------------------------------------------------------- #
 #                                     models                                   #
@@ -37,61 +39,79 @@ solemc = train_test(
     Xc, yc;
     model=SX.DecisionTreeClassifier()
 )
-@test solemc isa SX.SoleModel{SX.PropositionalDataSet{SX.DecisionTreeClassifier}}
+@test solemc isa SX.SoleModel{SX.DataSet{SX.DecisionTreeClassifier, Int}}
 
 solemc = train_test(
     Xc, yc;
     model=SX.RandomForestClassifier()
 )
-@test solemc isa SX.SoleModel{SX.PropositionalDataSet{SX.RandomForestClassifier}}
+@test solemc isa SX.SoleModel{SX.DataSet{SX.RandomForestClassifier, Int}}
 
 solemc = train_test(
     Xc, yc;
     model=SX.AdaBoostStumpClassifier()
 )
-@test solemc isa SX.SoleModel{SX.PropositionalDataSet{SX.AdaBoostStumpClassifier}}
+@test solemc isa SX.SoleModel{SX.DataSet{SX.AdaBoostStumpClassifier, Int}}
 
 solemr = train_test(
     Xr, yr;
     model=SX.DecisionTreeRegressor()
 )
-@test solemr isa SX.SoleModel{SX.PropositionalDataSet{SX.DecisionTreeRegressor}}
+@test solemr isa SX.SoleModel{SX.DataSet{SX.DecisionTreeRegressor, Int}}
 
 solemr = train_test(
     Xr, yr;
     model=SX.RandomForestRegressor()
 )
-@test solemr isa SX.SoleModel{SX.PropositionalDataSet{SX.RandomForestRegressor}}
+@test solemr isa SX.SoleModel{SX.DataSet{SX.RandomForestRegressor, Int}}
 
 solemts = train_test(
-    Xts, yts;
+    Xts, yts,
+    TreatmentGroup(
+        aggrfunc=reducesize(
+            reducefunc=mean,
+            win=(splitwindow(nwindows=5),)
+        )
+    );
     model=SX.ModalDecisionTree()
 )
-@test solemts isa SX.SoleModel{SX.ModalDataSet{SX.ModalDecisionTree}}
+@test solemts isa SX.SoleModel{SX.DataSet{SX.ModalDecisionTree, Int}}
 
 solemts = train_test(
-    Xts, yts;
+    Xts, yts,
+    TreatmentGroup(
+        aggrfunc=reducesize(
+            reducefunc=mean,
+            win=(splitwindow(nwindows=5),)
+        )
+    );
     model=SX.ModalRandomForest()
 )
-@test solemts isa SX.SoleModel{SX.ModalDataSet{SX.ModalRandomForest}}
+@test solemts isa SX.SoleModel{SX.DataSet{SX.ModalRandomForest, Int}}
 
 solemts = train_test(
-    Xts, yts;
+    Xts, yts,
+    TreatmentGroup(
+        aggrfunc=reducesize(
+            reducefunc=mean,
+            win=(splitwindow(nwindows=5),)
+        )
+    );
     model=SX.ModalAdaBoost()
 )
-@test solemts isa SX.SoleModel{SX.ModalDataSet{SX.ModalAdaBoost}}
+@test solemts isa SX.SoleModel{SX.DataSet{SX.ModalAdaBoost, Int}}
 
 solemc = train_test(
     Xc, yc;
     model=SX.XGBoostClassifier()
 )
-@test solemc isa SX.SoleModel{SX.PropositionalDataSet{SX.XGBoostClassifier}}
+@test solemc isa SX.SoleModel{SX.DataSet{SX.XGBoostClassifier, Int}}
 
 solemr = train_test(
     Xr, yr;
     model=SX.XGBoostRegressor()
 )
-@test solemr isa SX.SoleModel{SX.PropositionalDataSet{SX.XGBoostRegressor}}
+@test solemr isa SX.SoleModel{SX.DataSet{SX.XGBoostRegressor, Int}}
 
 # ---------------------------------------------------------------------------- #
 #                                     tuning                                   #
@@ -101,10 +121,18 @@ solemc = train_test(
     Xc, yc;
     model=SX.DecisionTreeClassifier(),
     resampling=CV(nfolds=5, shuffle=true),
-    seed=1,
-    tuning=GridTuning(resolution=10, resampling=CV(nfolds=3), range=range, measure=SX.accuracy, repeats=2)
+    rng=1,
+    tuning=GridTuning(;
+        resolution=10,
+        resampling=CV(nfolds=3),
+        range,
+        measure=SX.accuracy,
+        repeats=2
+    )
 )
-@test solemc isa SX.SoleModel{<:SX.PropositionalDataSet{<:MLJ.MLJTuning.ProbabilisticTunedModel{<:Any, <:SX.DecisionTreeClassifier}}}
+@test solemc isa SX.SoleModel{<:SX.DataSet{
+    <:MLJ.MLJTuning.ProbabilisticTunedModel{
+        <:Any, <:SX.DecisionTreeClassifier}, Int}}
 
 range = (
     SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log),
@@ -114,30 +142,54 @@ solemc = train_test(
     Xc, yc;
     model=SX.RandomForestClassifier(),
     resampling=CV(nfolds=5, shuffle=true),
-    seed=1,
-    tuning=GridTuning(resolution=10, resampling=CV(nfolds=3), range=range, measure=SX.accuracy, repeats=2)
+    rng=1,
+    tuning=GridTuning(;
+        resolution=10,
+        resampling=CV(nfolds=3),
+        range,
+        measure=SX.accuracy,
+        repeats=2
+    )
 )
-@test solemc isa SX.SoleModel{<:SX.PropositionalDataSet{<:MLJ.MLJTuning.ProbabilisticTunedModel{<:Any, <:SX.RandomForestClassifier}}}
+@test solemc isa SX.SoleModel{
+    <:SX.DataSet{<:MLJ.MLJTuning.ProbabilisticTunedModel{
+        <:Any, <:SX.RandomForestClassifier}, Int}}
 
 range = SX.range(:n_iter; lower=10, unit=10, upper=100)
 solemc = train_test(
     Xc, yc;
     model=SX.AdaBoostStumpClassifier(),
     resampling=CV(nfolds=5, shuffle=true),
-    seed=1,
-    tuning=GridTuning(resolution=10, resampling=CV(nfolds=3), range=range, measure=SX.accuracy, repeats=2)
+    rng=1,
+    tuning=GridTuning(;
+        resolution=10,
+        resampling=CV(nfolds=3),
+        range,
+        measure=SX.accuracy,
+        repeats=2
+    )
 )
-@test solemc isa SX.SoleModel{<:SX.PropositionalDataSet{<:MLJ.MLJTuning.ProbabilisticTunedModel{<:Any, <:SX.AdaBoostStumpClassifier}}}
+@test solemc isa SX.SoleModel{
+    <:SX.DataSet{<:MLJ.MLJTuning.ProbabilisticTunedModel{
+        <:Any, <:SX.AdaBoostStumpClassifier}, Int}}
 
 range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
 solemr = train_test(
     Xr, yr;
     model=SX.DecisionTreeRegressor(),
     resampling=CV(nfolds=5, shuffle=true),
-    seed=1,
-    tuning=GridTuning(resolution=10, resampling=CV(nfolds=3), range=range, measure=rms, repeats=2)
+    rng=1,
+    tuning=GridTuning(;
+        resolution=10,
+        resampling=CV(nfolds=3),
+        range,
+        measure=rms,
+        repeats=2
+    )
 )
-@test solemr isa SX.SoleModel{<:SX.PropositionalDataSet{<:MLJ.MLJTuning.DeterministicTunedModel{<:Any, <:SX.DecisionTreeRegressor}}}
+@test solemr isa SX.SoleModel{
+    <:SX.DataSet{<:MLJ.MLJTuning.DeterministicTunedModel{
+        <:Any, <:SX.DecisionTreeRegressor}, Int}}
 
 range = (
     SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log),
@@ -147,40 +199,90 @@ solemr = train_test(
     Xr, yr;
     model=SX.RandomForestRegressor(),
     resampling=CV(nfolds=5, shuffle=true),
-    seed=1,
-    tuning=GridTuning(resolution=10, resampling=CV(nfolds=3), range=range, measure=rms, repeats=2)
+    rng=1,
+    tuning=GridTuning(;
+        resolution=10,
+        resampling=CV(nfolds=3),
+        range,
+        measure=rms,
+        repeats=2
+    )
 )
-@test solemr isa SX.SoleModel{<:SX.PropositionalDataSet{<:MLJ.MLJTuning.DeterministicTunedModel{<:Any, <:SX.RandomForestRegressor}}}
+@test solemr isa SX.SoleModel{
+    <:SX.DataSet{<:MLJ.MLJTuning.DeterministicTunedModel{
+        <:Any, <:SX.RandomForestRegressor}, Int}}
 
 range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
 solemts = train_test(
-    Xts, yts;
+    Xts, yts,
+    TreatmentGroup(
+        aggrfunc=reducesize(
+            reducefunc=mean,
+            win=(splitwindow(nwindows=5),)
+        )
+    );
     model=SX.ModalDecisionTree(),
     resampling=CV(nfolds=5, shuffle=true),
-    seed=1,
-    tuning=GridTuning(resolution=10, resampling=CV(nfolds=3), range=range, measure=SX.accuracy, repeats=2)
+    rng=1,
+    tuning=GridTuning(;
+        resolution=10,
+        resampling=CV(nfolds=3),
+        range,
+        measure=SX.accuracy,
+        repeats=2
+    )
 )
-@test solemts isa SX.SoleModel{<:SX.ModalDataSet{<:MLJ.MLJTuning.ProbabilisticTunedModel{<:Any, <:SX.ModalDecisionTree}}}
+@test solemts isa SX.SoleModel{
+    <:SX.DataSet{<:MLJ.MLJTuning.ProbabilisticTunedModel{
+        <:Any, <:SX.ModalDecisionTree}, Int}}
 
 range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
 solemts = train_test(
-    Xts, yts;
+    Xts, yts,
+    TreatmentGroup(
+        aggrfunc=reducesize(
+            reducefunc=mean,
+            win=(splitwindow(nwindows=5),)
+        )
+    );
     model=SX.ModalRandomForest(),
     resampling=CV(nfolds=5, shuffle=true),
-    seed=1,
-    tuning=GridTuning(resolution=10, resampling=CV(nfolds=3), range=range, measure=SX.accuracy, repeats=2)
+    rng=1,
+    tuning=GridTuning(;
+        resolution=10,
+        resampling=CV(nfolds=3),
+        range,
+        measure=SX.accuracy,
+        repeats=2
+    )
 )
-@test solemts isa SX.SoleModel{<:SX.ModalDataSet{<:MLJ.MLJTuning.ProbabilisticTunedModel{<:Any, <:SX.ModalRandomForest}}}
+@test solemts isa SX.SoleModel{
+    <:SX.DataSet{<:MLJ.MLJTuning.ProbabilisticTunedModel{
+        <:Any, <:SX.ModalRandomForest}, Int}}
 
 range = SX.range(:n_iter; lower=2, unit=10, upper=10)
 solemts = train_test(
-    Xts, yts;
+    Xts, yts,
+    TreatmentGroup(
+        aggrfunc=reducesize(
+            reducefunc=mean,
+            win=(splitwindow(nwindows=5),)
+        )
+    );
     model=SX.ModalAdaBoost(),
     resampling=CV(nfolds=5, shuffle=true),
-    seed=1,
-    tuning=GridTuning(resolution=10, resampling=CV(nfolds=3), range=range, measure=SX.accuracy, repeats=2)
+    rng=1,
+    tuning=GridTuning(;
+        resolution=10,
+        resampling=CV(nfolds=3),
+        range,
+        measure=SX.accuracy,
+        repeats=2
+    )
 )
-@test solemts isa SX.SoleModel{<:SX.ModalDataSet{<:MLJ.MLJTuning.ProbabilisticTunedModel{<:Any, <:SX.ModalAdaBoost}}}
+@test solemts isa SX.SoleModel{
+    <:SX.DataSet{<:MLJ.MLJTuning.ProbabilisticTunedModel{
+        <:Any, <:SX.ModalAdaBoost}, Int}}
 
 range = SX.range(:num_round; lower=10, unit=10, upper=100)
 solemc = train_test(
@@ -190,10 +292,18 @@ solemc = train_test(
     ),
     resampling=CV(nfolds=5, shuffle=true),
     valid_ratio=0.2,
-    seed=1,
-    tuning=GridTuning(resolution=10, resampling=CV(nfolds=3), range=range, measure=SX.accuracy, repeats=2)
+    rng=1,
+    tuning=GridTuning(;
+        resolution=10,
+        resampling=CV(nfolds=3),
+        range,
+        measure=SX.accuracy,
+        repeats=2
+    )
 )
-@test solemc isa SX.SoleModel{<:SX.PropositionalDataSet{<:MLJ.MLJTuning.ProbabilisticTunedModel{<:Any, <:SX.XGBoostClassifier}}}
+@test solemc isa SX.SoleModel{
+    <:SX.DataSet{<:MLJ.MLJTuning.ProbabilisticTunedModel{
+        <:Any, <:SX.XGBoostClassifier}, Int}}
 
 range = SX.range(:num_round; lower=10, unit=10, upper=100)
 solemr = train_test(
@@ -203,10 +313,18 @@ solemr = train_test(
     ),
     resampling=CV(nfolds=5, shuffle=true),
     valid_ratio=0.2,
-    seed=1,
-    tuning=GridTuning(resolution=10, resampling=CV(nfolds=3), range=range, measure=rms, repeats=2)
+    rng=1,
+    tuning=GridTuning(;
+        resolution=10,
+        resampling=CV(nfolds=3),
+        range,
+        measure=rms,
+        repeats=2
+    )
 )
-@test solemr isa SX.SoleModel{<:SX.PropositionalDataSet{<:MLJ.MLJTuning.DeterministicTunedModel{<:Any, <:SX.XGBoostRegressor}}}
+@test solemr isa SX.SoleModel{
+    <:SX.DataSet{<:MLJ.MLJTuning.DeterministicTunedModel{
+        <:Any, <:SX.XGBoostRegressor}, Int}}
 
 # ---------------------------------------------------------------------------- #
 #                                    various                                   #
@@ -217,7 +335,7 @@ solemr = train_test(
         Xc, yc,
         model=SX.DecisionTreeClassifier(),
         resampling=CV(nfolds=3, shuffle=true),
-        seed=42
+        rng=42
     )
     
     # Create SoleModel with trained models
@@ -244,7 +362,7 @@ solemr = train_test(
         Xc, yc,
         model = SX.DecisionTreeClassifier(),
         resampling = CV(nfolds=5),
-        seed=42
+        rng=42
     )
     
     solem_5fold = train_test(ds_5fold)

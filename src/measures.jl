@@ -11,9 +11,9 @@ const RobustMeasure = StatisticalMeasures.StatisticalMeasuresBase.RobustMeasure
 const FussyMeasure  = StatisticalMeasures.StatisticalMeasuresBase.FussyMeasure
 
 const ValidMeasures = Union{
-        Float64, 
-        StatisticalMeasures.ConfusionMatrices.ConfusionMatrix
-    }
+    Float64, 
+    StatisticalMeasures.ConfusionMatrices.ConfusionMatrix
+}
 
 # ---------------------------------------------------------------------------- #
 #                                  measures                                    #
@@ -26,10 +26,10 @@ const ValidMeasures = Union{
 # - measures_values: the measure values
 # - operations: prediction operations used (predict, predict_mode, etc.)
 struct Measures <: AbstractMeasures
-    per_fold        :: Vector{Vector{ValidMeasures}}
-    measures        :: Vector{RobustMeasure}
-    measures_values :: Vector{ValidMeasures}
-    operations      :: AbstractVector
+    per_fold::Vector{Vector{ValidMeasures}}
+    measures::Vector{RobustMeasure}
+    measures_values::Vector{ValidMeasures}
+    operations::AbstractVector
 end
 
 # ---------------------------------------------------------------------------- #
@@ -67,12 +67,14 @@ end
 # adapted from MLJ's evaluate
 # determine appropriate prediction operations for each measure
 function get_operations(
-    measures   :: Vector,
-    prediction :: Symbol,
+    measures::Vector,
+    prediction::Symbol,
 )
     map(measures) do m
-        kind_of_proxy = MLJBase.StatisticalMeasuresBase.kind_of_proxy(m)
-        observation_scitype = MLJBase.StatisticalMeasuresBase.observation_scitype(m)
+        kind_of_proxy =
+            MLJBase.StatisticalMeasuresBase.kind_of_proxy(m)
+        observation_scitype =
+            MLJBase.StatisticalMeasuresBase.observation_scitype(m)
         isnothing(kind_of_proxy) && (return sole_predict)
 
         if prediction === :probabilistic
