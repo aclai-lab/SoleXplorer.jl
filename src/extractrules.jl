@@ -44,18 +44,27 @@ end
 # ---------------------------------------------------------------------------- #
 #                              LumenRuleExtractor                              #
 # ---------------------------------------------------------------------------- #
+# experimental Paso
 function extractrules(
     extractor::LumenRuleExtractor,
-    params::NamedTuple,
-    _::DataSet,
+    ds::DataSet,
     solem::Vector{AbstractModel}
 )
-    map(solem) do model
-        result = RuleExtraction.extractrules(extractor, model; params...)
-        GC.gc()
-        result
+    map(enumerate(solem)) do (i, model)
+        X_train, y_train = get_X(ds, :train)[i], get_y(ds, :train)[i]
+        RuleExtraction.extractrules(extractor, model, X_train, y_train)
     end
 end
+
+# main original
+# function extractrules(
+#     extractor::LumenRuleExtractor,
+#     _::DataSet,
+#     solem::Vector{AbstractModel}
+# )
+#     map(solem) do model
+#         RuleExtraction.extractrules(extractor, model)
+# end
 
 # ---------------------------------------------------------------------------- #
 #                             BATreesRuleExtractor                             #

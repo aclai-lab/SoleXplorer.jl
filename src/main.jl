@@ -220,7 +220,6 @@ function eval_measures(
         test = eltype(y_test[k]) <: CLabel ? String.(y_test[k]) : y_test[k]
 
         [map(measures, operations) do m, op
-        # @show yhat_given_operation[op]
             m(
                 yhat_given_operation[op],
                 test,
@@ -254,28 +253,21 @@ function eval_measures(
 end
 
 # ---------------------------------------------------------------------------- #
-#                         internal solexplorer                           #
+#                            internal solexplorer                              #
 # ---------------------------------------------------------------------------- #
 function _solexplorer!(
     modelset::AbstractModelSet;
-    extractor::Union{Nothing,RuleExtractor,Tuple{RuleExtractor,NamedTuple}}=
-        nothing,
+    extractor::Union{Nothing,RuleExtractor}=nothing,
     measures::Tuple{Vararg{FussyMeasure}}=()
 )
     ds = get_ds(modelset)
     solem = get_sole(modelset)
 
     !isnothing(extractor) && (modelset.rules = begin
-        if extractor isa Tuple
-            params = last(extractor)
-            extractor = first(extractor)
-        else
-            params = NamedTuple(;)
-        end
-
-        :rng ∈ fieldnames(typeof(extractor)) && (extractor =
-            set_rng(extractor, get_rng(ds)))
-        extractrules(extractor, params, ds, solem)
+        :rng ∈ fieldnames(typeof(extractor)) && 
+            getfield(extractor, :rng) isa Random.TaskLocalRNG &&
+            (extractor = set_rng(extractor, get_rng(ds)))
+        extractrules(extractor, ds, solem)
     end)
 
     y_test = get_y(ds, :test)
@@ -398,11 +390,7 @@ function solexplorer(
     y::AbstractVector{<:Label},
     args...;
     # w::Union{Nothing,Vector}=nothing,
-    extractor::Union{
-        Nothing,
-        RuleExtractor,
-        Tuple{RuleExtractor,NamedTuple}
-    }=nothing,
+    extractor::Union{Nothing,RuleExtractor}=nothing,
     measures::Tuple{Vararg{FussyMeasure}}=(),
     kwargs...
 )
@@ -414,11 +402,7 @@ end
 function solexplorer(
     dt::DT.DataTreatment,
     args...;
-    extractor::Union{
-        Nothing,
-        RuleExtractor,
-        Tuple{RuleExtractor,NamedTuple}
-    }=nothing,
+    extractor::Union{Nothing,RuleExtractor}=nothing,
     measures::Tuple{Vararg{FussyMeasure}}=(),
     kwargs...
 )

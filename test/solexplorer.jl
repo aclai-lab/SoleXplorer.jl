@@ -160,6 +160,7 @@ modeldb = solexplorer(df, t_regress,
 # ---------------------------------------------------------------------------------------- #
 #                               all models parametrizations                                #
 # ---------------------------------------------------------------------------------------- #
+
 # --- Classification models ---
 @testset "DecisionTreeClassifier parametrizations" begin
     for (resampling, seed) in [
@@ -378,8 +379,7 @@ end
         tuning=GridTuning(;
             resolution=3,
             resampling=CV(nfolds=3),
-            range,
-            measure=SX.Accuracy()
+            range,measure=SX.Accuracy()
         ),
         measures=(SX.Accuracy(), SX.Kappa())
     )
@@ -406,8 +406,8 @@ end
     # with tuning
     range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
     for tuning in [
-        GridTuning(;resolution=5, resampling=CV(nfolds=3), range, measure=rms),
-        RandomTuning(;resampling=CV(nfolds=3), range, measure=rms),
+        GridTuning(; resolution=5, resampling=CV(nfolds=3), range, measure=rms),
+        RandomTuning(; resampling=CV(nfolds=3), range, measure=rms),
     ]
         m = solexplorer(
             Xr, yr;
@@ -499,19 +499,56 @@ end
     @test m isa SX.ModelSet
 end
 
-@testset "ModalDecisionTree classification parametrizations" begin
+@testset "ModalDecisionList parametrizations" begin
     for (resampling, seed) in [
         (CV(nfolds=3, shuffle=true), 1),
+        (CV(nfolds=5, shuffle=true), 42),
         (Holdout(fraction_train=0.7, shuffle=true), 7),
         (StratifiedCV(nfolds=4, shuffle=true), 99),
     ]
         m = solexplorer(
-            Xc, yc,
+            Xc, yc;
             model=SX.RandomDecisionListClassifier(),
-            resampling=resampling,
+            resampling,
             rng=seed,
-            measures=(SX.Accuracy(),)
+            measures=(SX.Accuracy(), SX.LogLoss(), SX.ConfusionMatrix(), SX.Kappa())
         )
         @test m isa SX.ModelSet
     end
+
+    # with tuning
+    range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
+    for tuning in [
+        GridTuning(;
+            resolution=5,
+            resampling=CV(nfolds=3),
+            range,
+            measure=SX.Accuracy()),
+        RandomTuning(;
+            resampling=CV(nfolds=3),
+            range,
+            measure=SX.Accuracy()
+        ),
+    ]
+        m = solexplorer(
+            Xc, yc;
+            model=SX.RandomDecisionListClassifier(),
+            resampling=CV(nfolds=3, shuffle=true),
+            rng=42,
+            tuning,
+            measures=(SX.Accuracy(), SX.Kappa())
+        )
+        @test m isa SX.ModelSet
+    end
+
+    # with rule extraction
+    m = solexplorer(
+        Xc, yc;
+        model=SX.RandomDecisionListClassifier(),
+        resampling=CV(nfolds=3, shuffle=true),
+        rng=42,
+        extractor=SX.LumenRuleExtractor(),
+        measures=(SX.Accuracy(), SX.LogLoss(), SX.ConfusionMatrix(), SX.Kappa())
+    )
+    @test m isa SX.ModelSet
 end
