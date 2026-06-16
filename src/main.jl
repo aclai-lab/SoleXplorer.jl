@@ -53,16 +53,14 @@ See also: [`solexplorer`](@ref)
 mutable struct ModelSet{S} <: AbstractModelSet
     ds::DataSet
     sole::Vector{AbstractModel}
-    rules::Union{Nothing,Vector{DecisionSet}}
     measures::Union{Nothing,Measures}
 
     function ModelSet(
         ds::DataSet,
         sole::SoleModel{S};
-        rules::Union{Nothing,Vector{DecisionSet}}=nothing,
         measures::Union{Nothing,Measures}=nothing
     ) where S
-        new{S}(ds, solemodels(sole), rules, measures)
+        new{S}(ds, solemodels(sole), measures)
     end
 end
 
@@ -82,14 +80,6 @@ get_ds(m::ModelSet) = m.ds
 Returns the vector of trained sole symbolic models from a `ModelSet`.
 """
 get_sole(m::ModelSet) = m.sole
-
-"""
-    get_rules(m::ModelSet) -> Union{Nothing,Vector{DecisionSet}}
-
-Returns the rules extracted from a `ModelSet`.
-Returns `nothing` if rule extraction has not yet been performed.
-"""
-get_rules(m::ModelSet) = m.rules
 
 """
     get_measures(m::ModelSet) -> Union{Nothing,Measures}
@@ -112,7 +102,6 @@ function Base.show(io::IO, m::ModelSet{S}) where S
     print(io, "ModelSet{$S}(")
     print(io, "models=$(length(solemodels(m)))")
 
-    isnothing(rules(m))        || print(io, ", rules=$(length(rules(m)))")
     isnothing(measures(m))     || print(io, ", measures=$(length(measures(m)))")
 
     print(io, ")")
@@ -122,11 +111,6 @@ function Base.show(io::IO, ::MIME"text/plain", m::ModelSet{S}) where S
     println(io, "ModelSet{$S}:")
     println(io, "  Dataset: $(typeof(get_ds(m)))")
     println(io, "  Models:  $(length(get_sole(m))) symbolic models")
-
-    isnothing(get_rules(m)) ?
-        println(io, "  Rules: none") :
-        println(io, "  Rules: $(length(first(get_rules(m)))) " *
-            "extracted rules per model")
 
     isnothing(get_measures(m)) ?
         println(io, "  Measures: none") : begin
@@ -257,18 +241,10 @@ end
 # ---------------------------------------------------------------------------- #
 function _solexplorer!(
     modelset::AbstractModelSet;
-    extractor::Union{Nothing,RuleExtractor}=nothing,
     measures::Tuple{Vararg{FussyMeasure}}=()
 )
     ds = get_ds(modelset)
     solem = get_sole(modelset)
-
-    !isnothing(extractor) && (modelset.rules = begin
-        :rng ∈ fieldnames(typeof(extractor)) && 
-            getfield(extractor, :rng) isa Random.TaskLocalRNG &&
-            (extractor = set_rng(extractor, get_rng(ds)))
-        extractrules(extractor, ds, solem)
-    end)
 
     y_test = get_y(ds, :test)
     isempty(measures) && (measures = _DefaultMeasures(first(y_test)))
@@ -390,25 +366,23 @@ function solexplorer(
     y::AbstractVector{<:Label},
     args...;
     # w::Union{Nothing,Vector}=nothing,
-    extractor::Union{Nothing,RuleExtractor}=nothing,
     measures::Tuple{Vararg{FussyMeasure}}=(),
     kwargs...
 )
     ds = setup_dataset(X, y, args...; kwargs...)
     solem = _train_test(ds)
-    _solexplorer(ds, solem; extractor, measures)
+    _solexplorer(ds, solem; measures)
 end
 
 function solexplorer(
     dt::DT.DataTreatment,
     args...;
-    extractor::Union{Nothing,RuleExtractor}=nothing,
     measures::Tuple{Vararg{FussyMeasure}}=(),
     kwargs...
 )
     ds = setup_dataset(dt, args...; kwargs...)
     solem = _train_test(ds)
-    _solexplorer(ds, solem; extractor, measures)
+    _solexplorer(ds, solem; measures)
 end
 
 function solexplorer(

@@ -2,20 +2,22 @@ using Test
 using SoleXplorer
 const SX = SoleXplorer
 
+using SoleData
+
 using MLJ
 using DataFrames, Random
 
-# ---------------------------------------------------------------------------------------- #
-#                                      load dataset                                        #
-# ---------------------------------------------------------------------------------------- #
+# ---------------------------------------------------------------------------- #
+#                                load dataset                                  #
+# ---------------------------------------------------------------------------- #
 Xc, yc = @load_iris
 Xc = DataFrame(Xc)
 
 Xr, yr = @load_boston
 Xr = DataFrame(Xr)
 
-natopsloader = SX.NatopsLoader()
-Xts, yts = SX.load(natopsloader)
+natopsloader = SoleData.Artifacts.NatopsLoader()
+Xts, yts = SoleData.Artifacts.load(natopsloader)
 
 dt = SX.load_dataset(Xts, yts)
 tabular = get_tabular(dt)
@@ -135,9 +137,9 @@ df = build_test_df()
 t_classif = repeat(["classA", "classB", "classC", "classA", "classB"], 4)
 t_regress = collect(1.0:1.0:20.0)  
 
-# ---------------------------------------------------------------------------------------- #
-#                              I'm easy like sunday morning                                #
-# ---------------------------------------------------------------------------------------- #
+# ---------------------------------------------------------------------------- #
+#                        I'm easy like sunday morning                          #
+# ---------------------------------------------------------------------------- #
 modelc = solexplorer(Xc, yc)
 @test modelc isa SX.ModelSet
 
@@ -157,9 +159,9 @@ modeldb = solexplorer(df, t_regress,
 )
 @test modelc isa SX.ModelSet
 
-# ---------------------------------------------------------------------------------------- #
-#                               all models parametrizations                                #
-# ---------------------------------------------------------------------------------------- #
+# ---------------------------------------------------------------------------- #
+#                         all models parametrizations                          #
+# ---------------------------------------------------------------------------- #
 
 # --- Classification models ---
 @testset "DecisionTreeClassifier parametrizations" begin
@@ -174,7 +176,12 @@ modeldb = solexplorer(df, t_regress,
             model=SX.DecisionTreeClassifier(),
             resampling,
             rng=seed,
-            measures=(SX.Accuracy(), SX.LogLoss(), SX.ConfusionMatrix(), SX.Kappa())
+            measures=(
+                SX.Accuracy(),
+                SX.LogLoss(),
+                SX.ConfusionMatrix(),
+                SX.Kappa()
+            )
         )
         @test m isa SX.ModelSet
     end
@@ -210,7 +217,6 @@ modeldb = solexplorer(df, t_regress,
         model=SX.DecisionTreeClassifier(),
         resampling=CV(nfolds=3, shuffle=true),
         rng=42,
-        extractor=SX.InTreesRuleExtractor(),
         measures=(SX.Accuracy(), SX.LogLoss(), SX.ConfusionMatrix(), SX.Kappa())
     )
     @test m isa SX.ModelSet
@@ -228,7 +234,12 @@ end
             model=SX.RandomForestClassifier(),
             resampling=resampling,
             rng=seed,
-            measures=(SX.Accuracy(), SX.LogLoss(), SX.ConfusionMatrix(), SX.Kappa())
+            measures=(
+                SX.Accuracy(),
+                SX.LogLoss(),
+                SX.ConfusionMatrix(),
+                SX.Kappa()
+            )
         )
         @test m isa SX.ModelSet
     end
@@ -262,7 +273,12 @@ end
             model=SX.AdaBoostStumpClassifier(),
             resampling=resampling,
             rng=seed,
-            measures=(SX.Accuracy(), SX.LogLoss(), SX.ConfusionMatrix(), SX.Kappa())
+            measures=(
+                SX.Accuracy(),
+                SX.LogLoss(),
+                SX.ConfusionMatrix(),
+                SX.Kappa()
+            )
         )
         @test m isa SX.ModelSet
     end
@@ -495,60 +511,6 @@ end
             measure=SX.RootMeanSquaredError()
         ),
         measures=(SX.RootMeanSquaredError(), SX.LPLoss())
-    )
-    @test m isa SX.ModelSet
-end
-
-@testset "ModalDecisionList parametrizations" begin
-    for (resampling, seed) in [
-        (CV(nfolds=3, shuffle=true), 1),
-        (CV(nfolds=5, shuffle=true), 42),
-        (Holdout(fraction_train=0.7, shuffle=true), 7),
-        (StratifiedCV(nfolds=4, shuffle=true), 99),
-    ]
-        m = solexplorer(
-            Xc, yc;
-            model=SX.RandomDecisionListClassifier(),
-            resampling,
-            rng=seed,
-            measures=(SX.Accuracy(), SX.LogLoss(), SX.ConfusionMatrix(), SX.Kappa())
-        )
-        @test m isa SX.ModelSet
-    end
-
-    # with tuning
-    range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
-    for tuning in [
-        GridTuning(;
-            resolution=5,
-            resampling=CV(nfolds=3),
-            range,
-            measure=SX.Accuracy()),
-        RandomTuning(;
-            resampling=CV(nfolds=3),
-            range,
-            measure=SX.Accuracy()
-        ),
-    ]
-        m = solexplorer(
-            Xc, yc;
-            model=SX.RandomDecisionListClassifier(),
-            resampling=CV(nfolds=3, shuffle=true),
-            rng=42,
-            tuning,
-            measures=(SX.Accuracy(), SX.Kappa())
-        )
-        @test m isa SX.ModelSet
-    end
-
-    # with rule extraction
-    m = solexplorer(
-        Xc, yc;
-        model=SX.RandomDecisionListClassifier(),
-        resampling=CV(nfolds=3, shuffle=true),
-        rng=42,
-        extractor=SX.LumenRuleExtractor(),
-        measures=(SX.Accuracy(), SX.LogLoss(), SX.ConfusionMatrix(), SX.Kappa())
     )
     @test m isa SX.ModelSet
 end
