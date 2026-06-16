@@ -2,6 +2,9 @@ using Test
 using SoleXplorer
 const SX = SoleXplorer
 
+
+using SoleData
+
 using MLJ, DataFrames, Random
 using CategoricalArrays, JLD2
 
@@ -11,8 +14,8 @@ Xc = DataFrame(Xc)
 Xr, yr = @load_boston
 Xr = DataFrame(Xr)
 
-natopsloader = SX.NatopsLoader()
-Xts, yts = SX.load(natopsloader)
+natopsloader = SoleData.Artifacts.NatopsLoader()
+Xts, yts = SoleData.Artifacts.load(natopsloader)
 
 # ---------------------------------------------------------------------------------------- #
 #                          decisiontree classification robustness                          #
