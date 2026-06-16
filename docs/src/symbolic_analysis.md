@@ -2,26 +2,66 @@
 CurrentModule = SoleXplorer
 ```
 
-# [Symbolic analysis](@id symbolic-analysis)
+# Symbolic Analysis
 
-This is the entry point of SoleXplorer: this function can be used standalone, for finalize an already trained model, or to update already analyzed results.
+This page documents the symbolic model training, rule extraction, and
+evaluation API.
 
-```@docs
-solexplorer(X::AbstractDataFrame, y::AbstractVector, w::Union{Nothing,Vector})
-solexplorer(ds::AbstractDataSet, solem::SoleModel)
-solexplorer!(modelset::ModelSet)
+## Overview
+
+After dataset setup, SoleXplorer trains an MLJ model on each CV fold,
+converts it to a Sole symbolic model, and evaluates it using the
+specified measures.
+
+The full pipeline is:
+
+```
+DataSet  →  train/test  →  SoleModel  →  rule extraction  →  Measures
 ```
 
-# [ModelSet](@id ModelSet)
+## Examples
 
-```@docs
-AbstractModelSet
-ModelSet
-dsetup(m::ModelSet)
-solemodels(m::ModelSet)
-rules(m::ModelSet)
-<!-- associations(m::ModelSet) -->
-performance(m::ModelSet)
+### Basic Classification
+
+```julia
+using SoleXplorer, MLJ, DataFrames
+
+X, y = @load_iris
+X = DataFrame(X)
+
+modelset = solexplorer(X, y)
+
+# inspect the first fold's symbolic model
+m = get_sole(modelset)[1]
+printmodel(m)
 ```
 
+### Custom Measures
 
+```julia
+modelset = solexplorer(
+    X, y;
+    measures=(accuracy, log_loss, confusion_matrix, kappa)
+)
+vals = get_values(modelset)
+```
+
+### Modal Time-Series
+
+```julia
+# dt is a DataTreatment built from multivariate time-series
+modelset = solexplorer(
+    dt;
+    model=ModalDecisionTree(),
+    resampling=Holdout(fraction_train=0.7, shuffle=true),
+    rng=1,
+    measures=(accuracy, log_loss)
+)
+```
+
+### Re-evaluating an Existing ModelSet
+
+```julia
+# add or update measures without retraining
+solexplorer!(modelset; measures=(accuracy, kappa))
+```

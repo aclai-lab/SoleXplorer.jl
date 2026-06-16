@@ -2,90 +2,64 @@
 CurrentModule = SoleXplorer
 ```
 
-# [Treatement](@id treatement)
-With multidimensional datasets there are two possible types of work:
+# Data Treatment
 
-1. Use of Propositional algorithms (DecisionTree, XGBoost):
-   - Applies windowing to divide time series into segments
-   - Extracts scalar features (max, min, mean, etc.) from each window
-   - Returns a standard tabular DataFrame
+This page documents the data treatment and preprocessing API, which
+handles loading, transforming, and preparing raw data for symbolic
+analysis.
 
-2. Use of Modal algorithms (ModalDecisionTree):
-   - Creates windowed time series preserving temporal structure
-   - Applies reduction functions to manage dimensionality
+## Overview
 
-```@docs
-treatment(X::AbstractDataFrame, treat::Symbol)
+A `DataTreatment` encapsulates the feature matrix, target vector, and
+all preprocessing steps applied before training. It is the recommended
+entry point for modal (time-series) workflows.
+
+## Examples
+
+### Tabular Data
+
+For standard tabular data, `setup_dataset` and `solexplorer` accept a
+`DataFrame` directly without needing an explicit `DataTreatment`:
+
+```julia
+using SoleXplorer, MLJ, DataFrames
+
+X, y = @load_iris
+X = DataFrame(X)
+
+modelset = solexplorer(X, y)
 ```
 
-<!-- Windowing strategies availables for reduce/aggregation time-series datasets.
+### Time-Series (Modal) Data
 
-```@docs
-MovingWindow
-WholeWindow
-SplitWindow
-adaptivewindow
-AbstractWinFunction
-WinFunction
-``` -->
+For multivariate time-series, build a `DataTreatment` first:
 
-# [Featuresets](@id featuresets)
+```julia
+using SoleXplorer, DataTreatments
 
-### Basic Statistics
-Standard statistical measures: `maximum`, `minimum`, `mean`, `median`, `std`, `cov`
+dt = DataTreatments.load_dataset(
+    X_timeseries,
+    y;
+    treatments=DataTreatments.DefaultTreatmentGroup
+)
 
-<!-- ### Catch22 Features
-Canonical time-series characteristics covering:
-- Distribution properties and extreme events
-- Linear and nonlinear autocorrelation structures  
-- Forecasting performance and scaling properties
-- Symbolic dynamics and transition patterns -->
+modelset = solexplorer(
+    dt;
+    model=ModalDecisionTree(),
+    resampling=Holdout(fraction_train=0.7, shuffle=true),
+    rng=1
+)
+```
 
-<!-- ### Predefined Feature Sets
+### From a Raw Matrix
 
-- [`base_set`](@ref): Minimal statistical features (4 features)
-- [`catch9`](@ref): Curated subset combining statistics + key Catch22 (9 features)  
-- [`catch22_set`](@ref): Complete Catch22 suite (22 features)
-- [`complete_set`](@ref): All features combined (28 features)
-
-### References
-
-The Catch22 features are based on the Canonical Time-series Characteristics:
-- **Repository**: https://github.com/DynamicsAndNeuralSystems/catch22
-- **Paper**: Lubba, C.H., Sethi, S.S., Knaute, P. et al. "catch22: CAnonical Time-series CHaracteristics." *Data Min Knowl Disc* 33, 1821–1852 (2019). https://doi.org/10.1007/s10618-019-00647-x -->
-
-<!-- ```@docs
-base_set
-catch9
-catch22_set
-complete_set
-``` -->
-
-See also: [`treatment`](@ref), [`setup_dataset`](@ref)
-
-## All Catch22 Features
-
-<!-- ```@docs
-mode_5
-mode_10  
-embedding_dist
-acf_timescale
-acf_first_min
-ami2
-trev
-outlier_timing_pos
-outlier_timing_neg
-whiten_timescale
-forecast_error
-ami_timescale
-high_fluctuation
-stretch_decreasing
-stretch_high
-entropy_pairs
-rs_range
-dfa
-low_freq_power
-centroid_freq
-transition_variance
-periodicity
-``` -->
+```julia
+modelset = solexplorer(
+    X_matrix,
+    variable_names,
+    y;
+    treatment_ds=true,
+    leftover_ds=false,
+    float_type=Float64
+)
+```

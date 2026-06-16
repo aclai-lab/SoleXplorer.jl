@@ -1,26 +1,30 @@
 using Documenter
 using SoleXplorer
 
-DocMeta.setdocmeta!(SoleXplorer, :DocTestSetup, :(using SoleXplorer); recursive = true)
+DocMeta.setdocmeta!(
+    SoleXplorer,
+    :DocTestSetup,
+    :(using SoleXplorer);
+    recursive = true
+)
 
 makedocs(;
     modules=[SoleXplorer],
-    authors="Lorenzo Balboni, Mauro Milella, Giovanni Pagliarini, Alberto Paparella, Riccardo Pasini, Marco Perrotta",
+    authors="Giovanni Pagliarini, Riccardo Pasini",
     repo=Documenter.Remotes.GitHub("aclai-lab", "SoleXplorer.jl"),
     sitename="SoleXplorer.jl",
     format=Documenter.HTML(;
         size_threshold=4000000,
         prettyurls=get(ENV, "CI", "false") == "true",
         canonical="https://aclai-lab.github.io/SoleXplorer.jl",
-        edit_link="main", # possibly this line is dangerous after publishing
         assets=String[],
     ),
     pages=[
-        "Home"                         => "index.md",
-        "Symbolic Analysis"            => "solexplorer.md",
-        "Setup Dataset"                => "dataset.md",
+        "Home" => "index.md",
+        "Symbolic Analysis" => "symbolic_analysis.md",
+        "Setup Dataset" => "dataset.md",
         "Multi Dimensional Treatement" => "treatement.md",
-        "Tuning"                       => "tuning.md",
+        "Tuning" => "tuning.md",
     ],
     warnonly=:true,
 )

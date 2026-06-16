@@ -2,23 +2,32 @@
     <img src="banner.png" alt="SoleXplorer" width="900">
 </div>
 
-# SoleXplorer
 ## A symbolic journey through your datasets
 
-[![dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://aclai-lab.github.io/SoleXplorer.jl/)
+[![main](https://img.shields.io/badge/docs-main-blue.svg)](https://aclai-lab.github.io/SoleXplorer.jl/)
 [![CI](https://github.com/aclai-lab/SoleXplorer.jl/actions/workflows/ci.yml/badge.svg)](https://github.com/aclai-lab/SoleXplorer.jl/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/aclai-lab/SoleXplorer.jl/graph/badge.svg?token=EJQ1MJOTDO)](https://codecov.io/gh/aclai-lab/SoleXplorer.jl)
 
-**SoleXplorer.jl** is an interactive interface for exploring symbolic machine learning models, built on top of the [Sole.jl](https://github.com/aclai-lab/Sole.jl) ecosystem. It provides tools for visualizing, inspecting, and interacting with models derived from (logic-based) symbolic learning algorithms.
+**SoleXplorer.jl** is a Julia package for end-to-end symbolic machine
+learning analysis. It wraps [MLJ.jl](https://juliaai.github.io/MLJ.jl/)
+and [Sole.jl](https://github.com/aclai-lab/Sole.jl) to provide a unified
+interface for training, evaluating, and extracting interpretable rules
+from symbolic models — including modal decision trees and random forests
+for time-series data.
 
-Key features:
-* Can handle both classification and regression tasks.
-* Inspect metrics.
-* Works also on time-series based datasets using modal logic.
-* View rules and their metrics.
-* Inspect logical formulas and their evaluation.
-* View modal rule associations.
-* Integrated GUI.
+## Features
+
+- **Unified workflow**: dataset setup, training, evaluation, and rule
+  extraction in a single call.
+- **Cross-validation**: full support for MLJ resampling strategies
+  (`Holdout`, `CV`, `StratifiedCV`, `pCV`).
+- **Hyperparameter tuning**: grid search, random search, and particle
+  swarm optimization via MLJ tuning.
+- **Modal models**: native support for
+  [ModalDecisionTree](https://github.com/aclai-lab/ModalDecisionTrees.jl)
+  and `ModalRandomForest` on multivariate time-series.
+- **Interpretability**: automatic rule extraction from trained symbolic
+  models.
 
 ## Installation
 
@@ -27,65 +36,70 @@ using Pkg
 Pkg.add("SoleXplorer")
 ```
 
+Or from the REPL:
+
+```
+] add SoleXplorer
+```
+
 ## Quick Start
 
-### Decision tree
-
-Every parameter is defaulted: start analysis simply passing your raw dataset:
-
 ```julia
-using SoleXplorer, MLJ
+using SoleXplorer, MLJ, DataFrames
 
-# Load example dataset
-Xc, yc = @load_iris
+# load a dataset
+X, y = @load_iris
+X = DataFrame(X)
 
-# Train a decision tree
-modelc = solexplorer(Xc, yc)
+# run the full workflow with default settings
+modelset = solexplorer(X, y)
+
+# access results
+ds      = get_ds(modelset)        # DataSet configuration
+models  = get_sole(modelset)      # trained symbolic models (one per fold)
+perf    = get_measures(modelset)  # performance evaluation
+vals    = get_values(modelset)    # raw measure values
 ```
 
-Of course, customizations are possible:
+## Cross-Validation
 
 ```julia
-using Random
+modelset = solexplorer(
+    X, y;
+    resampling=CV(nfolds=5, shuffle=true),
+    rng=1,
+    measures=(accuracy, log_loss, confusion_matrix)
+)
+```
 
-range = SoleXplorer.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
-modelc = solexplorer(
-    Xc, yc;
+## Hyperparameter Tuning
+
+```julia
+r = SoleXplorer.range(
+    :min_purity_increase; lower=0.001, upper=1.0, scale=:log
+)
+modelset = solexplorer(
+    X, y;
     model=DecisionTreeClassifier(),
     resampling=CV(nfolds=5, shuffle=true),
-    seed=1,
-    tuning=(tuning=Grid(resolution=10), resampling=CV(nfolds=3), range, measure=accuracy, repeats=2),
-    extractor=InTreesRuleExtractor(),
-    measures=(accuracy, log_loss, confusion_matrix, kappa)      
+    rng=1,
+    tuning=GridTuning(
+        resolution=10,
+        resampling=CV(nfolds=3),
+        range=r,
+        measure=accuracy
+    )
 )
 ```
 
-### Temporal association rules
+## Contents
 
-```julia
-# Load a temporal dataset
-natopsloader = SoleXplorer.NatopsLoader()
-Xts, yts = SoleXplorer.load(natopsloader)
-
-# Train a modal decision tree
-modelts = solexplorer(
-    Xts, yts;
-    model=ModalDecisionTree(),
-    resampling=Holdout(fraction_train=0.8, shuffle=true),
-    seed=1,
-    features=(minimum, maximum),
-    measures=(log_loss, accuracy, confusion_matrix, kappa)
-)
+```@contents
+Pages = ["index.md", "dataset.md", "tuning.md",
+    "symbolic_analysis.md", "treatement.md"]
+Depth = 2
 ```
-
-## Related packages
-SoleXplorer extensively uses the following packages:
-* [`SoleLogics`](https://github.com/aclai-lab/SoleLogics.jl): modal and temporal logic systems.
-* [`MLJ`](https://github.com/JuliaAI/MLJ.jl): provides all machine learning frameworks.
-* [`SolePostHoc`](https://github.com/aclai-lab/SolePostHoc.jl): for rule extraction.
-* [`ModalAssociationRules`](https://github.com/aclai-lab/ModalAssociationRules.jl): for mining association rules.
 
 ## About
-
-The package is developed by the [ACLAI Lab](https://aclai.unife.it/en/) @ University of Ferrara.
-
+The package is developed by the
+[ACLAI Lab](https://aclai.unife.it/en/) @ University of Ferrara.

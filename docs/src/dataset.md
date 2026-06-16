@@ -2,37 +2,59 @@
 CurrentModule = SoleXplorer
 ```
 
-# [Setup dataset](@id setup-dataset)
+# Dataset
+
+This page documents the dataset setup and configuration API.
+
+## Overview
+
+The dataset layer wraps an MLJ machine together with partition indices
+and metadata. It is the central data structure passed through the entire
+SoleXplorer workflow.
+
+## Entry Point
 
 ```@docs
-setup_dataset()
-setup_dataset(X::AbstractDataFrame, y::Symbol)
+setup_dataset
 ```
 
-# [Dataset](@id dataset)
+## DataSet
+
 ```@docs
-AbstractDataSet
-AbstractSoleModel
-PropositionalDataSet
-ModalDataSet
 DataSet
-get_X(ds::AbstractDataSet)
-get_X(ds::AbstractDataSet, part::Symbol)
-get_y(ds::AbstractDataSet)
-get_y(ds::AbstractDataSet, part::Symbol)
-get_mach(ds::AbstractDataSet)
-get_mach_model(ds::AbstractDataSet)
-get_logiset(ds::ModalDataSet)
 ```
 
-# [Utilities](@id utilities)
+### Accessors
+
 ```@docs
-code_dataset(X::AbstractDataFrame)
-code_dataset(y::AbstractVector)
-code_dataset(X::AbstractDataFrame, y::AbstractVector)
+get_X
+get_y
+get_mach
+get_mach_model
+get_logiset
 ```
 
-# [Train and Test Dataset](@id train-test)
+## Partitioning
+
+Partitioning splits data into train/validation/test sets according to
+an MLJ resampling strategy.
+
 ```@docs
-train_test(ds::AbstractDataSet)
+partition
+get_train
+get_valid
+get_test
+```
+
+### Parametrized Cross-Validation
+
+```@docs
+pCV
+```
+
+## ModelSet
+
+```@docs
+AbstractModelSet
+ModelSet
 ```

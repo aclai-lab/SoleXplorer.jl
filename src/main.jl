@@ -7,8 +7,8 @@
 Abstract type for containers that hold symbolic model analysis results.
 
 # Concrete Implementations
-- [`ModelSet`](@ref): The primary implementation containing complete analysis 
-  results
+- [`ModelSet`](@ref): The primary implementation containing complete
+  analysis results
 
 See also: [`solexplorer`](@ref)
 """
@@ -22,9 +22,9 @@ abstract type AbstractModelSet end
 
 Wrapper for complete symbolic model analysis results.
 
-This structure holds all components of a symbolic analysis workflow including
-the dataset configuration, sole trained models, extracted rules,
-and performance measures.
+This structure holds all components of a symbolic analysis workflow
+including the dataset configuration, sole trained models, extracted
+rules, and performance measures.
 
 # Type Parameters
 - `S`: The sole model type (e.g., `DecisionTreeClassifier`)
@@ -34,21 +34,16 @@ and performance measures.
   plus all settings needed by modal analysis.
 - `sole::Vector{AbstractModel}`: Vector of trained symbolic models
   (one per CV fold).
-
-### Optional
-- `rules::Union{Nothing,Vector{DecisionSet}}`: Extracted rules, or `nothing`
-  if rule extraction has not been performed.
 - `measures::Union{Nothing,Measures}`: Performance evaluation measures,
   or `nothing` if evaluation has not been performed.
 
 # Accessing Components
 - [`get_ds`](@ref): Extract dataset configuration
 - [`get_sole`](@ref): Extract trained models
-- [`get_rules`](@ref): Extract decision rules
 - [`get_measures`](@ref): Extract performance measures
 - [`get_values`](@ref): Extract computed measure values
 
-See also: [`solexplorer`](@ref)
+# See also: [`solexplorer`](@ref)
 """
 mutable struct ModelSet{S} <: AbstractModelSet
     ds::DataSet
@@ -268,19 +263,17 @@ end
 #                                 solexplorer                                  #
 # ---------------------------------------------------------------------------- #
 """
-    solexplorer!(modelset::ModelSet; kwargs...)
+    solexplorer!(modelset::ModelSet; kwargs...) -> ModelSet
 
 Perform additional analysis on an existing `ModelSet` in-place.
 
-Adds or updates analysis components (rules, measures) on an existing `ModelSet`.
+Adds or updates performance measures on an existing `ModelSet`.
 
 # Keyword Arguments
-- `extractor::Union{Nothing,RuleExtractor}=nothing`: Rule extraction strategy.
-  See [SolePostHoc](https://github.com/aclai-lab/SolePostHoc.jl).
-- `measures::Tuple{Vararg{FussyMeasure}}=()`: Performance measures to compute.
-  If empty, default measures for the task type are used.
+- `measures::Tuple{Vararg{FussyMeasure}}=()`: Performance measures to
+  compute. If empty, default measures for the task type are used.
 
-See also: [`solexplorer`](@ref), [`ModelSet`](@ref)
+# See also: [`solexplorer`](@ref), [`ModelSet`](@ref)
 """
 solexplorer!(modelset::ModelSet; kwargs...) = _solexplorer!(modelset; kwargs...)
 
@@ -289,47 +282,60 @@ solexplorer!(modelset::ModelSet; kwargs...) = _solexplorer!(modelset; kwargs...)
         X::AbstractDataFrame,
         y::AbstractVector{<:Label},
         args...;
-        extractor::Union{Nothing,RuleExtractor}=nothing,
         measures::Tuple{Vararg{FussyMeasure}}=(),
         kwargs...
     ) -> ModelSet
 
+    solexplorer(
+        dt::DT.DataTreatment,
+        args...;
+        measures::Tuple{Vararg{FussyMeasure}}=(),
+        kwargs...
+    ) -> ModelSet
+
+    solexplorer(ds::DataSet, solem::SoleModel; kwargs...) -> ModelSet
+
 Complete end-to-end symbolic model analysis workflow.
 
-This is the main entry point for symbolic analysis.
-It performs the complete workflow:
-1. **Dataset Setup**: Configures cross-validation and time series preprocessing.
+This is the main entry point for symbolic analysis. It performs the
+complete workflow:
+1. **Dataset Setup**: Configures cross-validation and preprocessing.
 2. **Model Configuration**: Sets up the MLJ machine.
 3. **Model Training**: Trains symbolic models on each CV fold.
-4. **Rule Extraction**: Extracts interpretable rules from trained models (optional).
-5. **Evaluation**: Computes comprehensive performance metrics.
+4. **Evaluation**: Computes comprehensive performance metrics.
 
 # Arguments
 - `X::AbstractDataFrame`: Feature matrix with observations as rows.
-- `y::AbstractVector{<:Label}`: Target variable (class labels or continuous values).
-- `args...`: Optional positional arguments forwarded to [`setup_dataset`](@ref)
-  (e.g., a `TreatmentGroup` for data preprocessing).
+- `y::AbstractVector{<:Label}`: Target variable (class labels or
+  continuous values).
+- `dt::DT.DataTreatment`: Pre-built data treatment object, e.g. from
+  `DataTreatments.load_dataset`. Use this for modal (time-series) data.
+- `ds::DataSet`: A pre-configured dataset. Combined with `solem` to
+  skip training and go straight to evaluation.
+- `solem::SoleModel`: A pre-trained sole model paired with `ds`.
+- `args...`: Optional positional arguments forwarded to
+  [`setup_dataset`](@ref) (e.g., a `TreatmentGroup`).
 
 # Keyword Arguments
-- `extractor::Union{Nothing,RuleExtractor}=nothing`: Rule extraction strategy.
-  See [SolePostHoc](https://github.com/aclai-lab/SolePostHoc.jl).
 - `measures::Tuple{Vararg{FussyMeasure}}=()`: Performance measures tuple.
   If empty, default measures for the task type are used.
 - `kwargs...`: Additional options forwarded to [`setup_dataset`](@ref)
-  (e.g., `model`, `resampling`, `seed`, `tuning`, `win`, `features`).
+  (e.g., `model`, `resampling`, `rng`, `tuning`).
 
 # Examples
 ```julia
 # Basic usage with default settings
 modelset = solexplorer(X, y)
 
-# Classification with tuning and rule extraction
-range = SoleXplorer.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
+# Classification with cross-validation and tuning
+range = SoleXplorer.range(
+    :min_purity_increase; lower=0.001, upper=1.0, scale=:log
+)
 modelset = solexplorer(
     X, y;
     model=DecisionTreeClassifier(),
     resampling=CV(nfolds=5, shuffle=true),
-    seed=1,
+    rng=1,
     tuning=GridTuning(
         resolution=10,
         resampling=CV(nfolds=3),
@@ -337,7 +343,6 @@ modelset = solexplorer(
         measure=accuracy,
         repeats=2
     ),
-    extractor=InTreesRuleExtractor(),
     measures=(accuracy, log_loss, confusion_matrix, kappa)
 )
 
@@ -346,20 +351,21 @@ modelset = solexplorer(
     X, y;
     model=ModalRandomForest(),
     resampling=Holdout(fraction_train=0.7, shuffle=true),
-    seed=1,
-    features=(minimum, maximum),
+    rng=1,
     measures=(log_loss, accuracy, confusion_matrix, kappa)
 )
 
+# From a pre-built DataTreatment
+modelset = solexplorer(dt; model=ModalDecisionTree(), rng=1)
+
 # Accessing results
-ds      = get_ds(modelset)
-models  = get_sole(modelset)
-rules   = get_rules(modelset)
-perf    = get_measures(modelset)
-vals    = get_values(modelset)
+ds     = get_ds(modelset)
+models = get_sole(modelset)
+perf   = get_measures(modelset)
+vals   = get_values(modelset)
 ```
 
-See also: [`ModelSet`](@ref), [`setup_dataset`](@ref), [`solexplorer!`](@ref)
+# See also: [`ModelSet`](@ref), [`setup_dataset`](@ref), [`solexplorer!`](@ref)
 """
 function solexplorer(
     X::AbstractDataFrame,

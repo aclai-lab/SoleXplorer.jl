@@ -2,6 +2,8 @@ using Test
 using SoleXplorer
 const SX = SoleXplorer
 
+using SoleData
+
 using MLJ
 using DataFrames, Random
 
@@ -16,13 +18,13 @@ Xc = DataFrame(Xc)
 Xr, yr = @load_boston
 Xr = DataFrame(Xr)
 
-natopsloader = SX.NatopsLoader()
-Xts, yts = SX.load(natopsloader)
+natopsloader = SoleData.Artifacts.NatopsLoader()
+Xts, yts = SoleData.Artifacts.load(natopsloader)
 
 # ---------------------------------------------------------------------------- #
 #                                 grid tuning                                  #
 # ---------------------------------------------------------------------------- #
-seed = 42
+rng = 42
 model = SX.DecisionTreeClassifier()
 measures=(SX.accuracy, SX.kappa)
 resampling = SX.CV(nfolds=10, shuffle=true)
@@ -38,7 +40,7 @@ m = solexplorer(
     Xc, yc;
     model,
     resampling,
-    seed,
+    rng,
     tuning,
     measures
 )
@@ -50,7 +52,7 @@ m = solexplorer(
 @test m.ds.mach.model.tuning.resolution == 7
 
 # ---------------------------------------------------------------------------- #
-seed = 42
+rng = 42
 model = SX.RandomForestRegressor()
 measures=(SX.rms,)
 resampling = SX.CV(nfolds=6, shuffle=true)
@@ -68,7 +70,7 @@ m = solexplorer(
     Xr, yr;
     model,
     resampling,
-    seed,
+    rng,
     tuning,
     measures
 )
@@ -89,12 +91,12 @@ tuning = GridTuning(;
     Xr, yr;
     model,
     resampling,
-    seed,
+    rng,
     tuning,
     measures
 )
 
-seed = 42
+rng = 42
 tuning = GridTuning(;
     goal=2,
     resampling,
@@ -105,7 +107,7 @@ m = solexplorer(
     Xr, yr;
     model,
     resampling,
-    seed,
+    rng,
     tuning,
     measures
 )
@@ -114,7 +116,7 @@ m = solexplorer(
 @test m.ds.mach.model.tuning isa MLJ.Grid
 @test m.ds.mach.model.tuning.goal == 2
 
-seed = 42
+rng = 42
 model = SX.DecisionTreeClassifier()
 measures=(SX.accuracy, SX.kappa)
 range1 = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
@@ -128,7 +130,7 @@ m = solexplorer(
     Xc, yc;
     model,
     resampling,
-    seed,
+    rng,
     tuning,
     measures
 )
@@ -137,7 +139,7 @@ m = solexplorer(
 @test m.ds.mach.model.tuning isa MLJ.Grid
 @test m.ds.mach.model.tuning.goal == 30
 
-seed = 42
+rng = 42
 model = SX.XGBoostClassifier()
 resampling = SX.CV(nfolds=3, shuffle=true)
 measures = (SX.accuracy, SX.kappa)
@@ -155,7 +157,7 @@ m = solexplorer(
     Xc, yc;
     model,
     resampling,
-    seed,
+    rng,
     tuning,
     measures
 )
@@ -175,7 +177,7 @@ m = solexplorer(
     Xc, yc;
     model,
     resampling,
-    seed,
+    rng,
     tuning,
     measures
 )
@@ -187,7 +189,7 @@ m = solexplorer(
 # ---------------------------------------------------------------------------- #
 #                            random search tuning                              #
 # ---------------------------------------------------------------------------- #
-seed = 42
+rng = 42
 model = SX.DecisionTreeClassifier()
 measures=(SX.accuracy, SX.kappa)
 resampling = SX.CV(nfolds=10, shuffle=true)
@@ -196,13 +198,13 @@ range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
 tuning = RandomTuning(;
     range,
     measure=SX.accuracy,
-    rng=Random.Xoshiro(seed)
+    rng=Random.Xoshiro(rng)
 )
 m = solexplorer(
     Xc, yc;
     model,
     resampling,
-    seed,
+    rng,
     tuning,
     measures
 )
@@ -215,7 +217,7 @@ m = solexplorer(
 @test m.ds.mach.model.tuning.positive_unbounded == Distributions.Gamma
 
 # ---------------------------------------------------------------------------- #
-seed = 42
+rng = 42
 model = SX.RandomForestRegressor()
 measures=(SX.rms,)
 resampling = SX.CV(nfolds=6, shuffle=true)
@@ -228,14 +230,14 @@ tuning = RandomTuning(;
     bounded=Distributions.Normal,
     other=Distributions.Gamma,
     positive_unbounded=Distributions.Uniform,
-    rng=Random.Xoshiro(seed),
+    rng=Random.Xoshiro(rng),
     measure=SX.rms
 )
 m = solexplorer(
     Xr, yr;
     model,
     resampling,
-    seed,
+    rng,
     tuning,
     measures
 )
@@ -250,7 +252,7 @@ m = solexplorer(
 # ---------------------------------------------------------------------------- #
 #                            particle swarm tuning                             #
 # ---------------------------------------------------------------------------- #
-seed = 42
+rng = 42
 model = SX.DecisionTreeRegressor()
 measures=(SX.rms,)
 resampling = SX.CV(nfolds=6, shuffle=true)
@@ -268,7 +270,7 @@ m = solexplorer(
     Xr, yr;
     model,
     resampling,
-    seed,
+    rng,
     tuning,
     measures
 )
@@ -288,7 +290,7 @@ tuning = ParticleTuning(;
     n_particles=4,
     prob_shift=0.35,
     w=1.2,
-    rng=Random.Xoshiro(seed),
+    rng=Random.Xoshiro(rng),
     repeats=2,
     resampling,
     range=(range1, range2, range3),
@@ -298,7 +300,7 @@ m = solexplorer(
     Xr, yr;
     model,
     resampling,
-    seed,
+    rng,
     tuning,
     measures
 )
@@ -315,7 +317,7 @@ m = solexplorer(
 # ---------------------------------------------------------------------------- #
 #                      adaptive particle swarm tuning                          #
 # ---------------------------------------------------------------------------- #
-seed = 42
+rng = 42
 model = SX.DecisionTreeClassifier()
 measures=(SX.accuracy, SX.kappa)
 resampling = SX.CV(nfolds=10, shuffle=true)
@@ -331,7 +333,7 @@ m = solexplorer(
     Xc, yc;
     model,
     resampling,
-    seed,
+    rng,
     tuning,
     measures
 )
@@ -345,7 +347,7 @@ m = solexplorer(
 @test m.ds.mach.model.tuning.n_particles == 3
 @test m.ds.mach.model.tuning.prob_shift == 0.25
 
-seed = 42
+rng = 42
 model = SX.XGBoostClassifier()
 resampling = SX.CV(nfolds=3, shuffle=true)
 measures = (SX.accuracy, SX.kappa)
@@ -358,7 +360,7 @@ tuning = AdaptiveTuning(;
     c2=1.8,
     n_particles=4,
     prob_shift=0.35,
-    rng=Random.Xoshiro(seed),
+    rng=Random.Xoshiro(rng),
     repeats=2,
     resampling,
     range=(range1, range2, range3),
@@ -368,7 +370,7 @@ m = solexplorer(
     Xc, yc;
     model,
     resampling,
-    seed,
+    rng,
     tuning,
     measures
 )

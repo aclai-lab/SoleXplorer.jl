@@ -2,39 +2,109 @@
 CurrentModule = SoleXplorer
 ```
 
-# [Tuning](@id tuning)
+# Hyperparameter Tuning
 
-SoleXplorer uses the following tuning strategies adapted from package [MLJ](https://juliaai.github.io/MLJ.jl/stable/): `GridTuning`, `RandomTuning`, `CubeTuning`, `ParticleTuning` and `AdaptiveTuning`.
+SoleXplorer integrates with MLJ's tuning infrastructure, providing a
+simplified interface for common tuning strategies.
 
+## Overview
+
+Tuning is configured via a `Tuning` object passed to `setup_dataset` or
+`solexplorer`. The range of hyperparameters to explore is specified
+with `SoleXplorer.range`.
+
+## Defining a Range
+
+```@docs
+SoleXplorer.range
 ```
-strategy_type::Type{<:Any}(;
-    range::RangeSpec,
-    MLJ.ResamplingStrategy=Holdout(fraction_train=0.7, shuffle=true),
-    measure::EitherMeasures=nothing,
-    repeats::Int64=1,
-    strategy_kwargs...
-) -> Tuning
-```
 
-# Arguments
-- `strategy_type`: Type of optimization strategy to instantiate
-- `range`: Parameter ranges to explore
-- `resampling`: Cross-validation for hyperparameter evaluation
-- `measure`: Performance metric for optimization  
-- `repeats`: Number of optimization runs
-- `kwargs...`: Strategy-specific parameters
+## Tuning Strategies
 
-# [Tuning Strategies](@id tuning-strategies)
 ```@docs
 GridTuning
 RandomTuning
-CubeTuning
-ParticleTuning
-AdaptiveTuning
 ```
 
-# [Tuning Range](@id range)
+## Examples
 
-```@docs
-range
+### Grid Search
+
+```julia
+r = SoleXplorer.range(
+    :min_purity_increase; lower=0.001, upper=1.0, scale=:log
+)
+modelset = solexplorer(
+    X, y;
+    model=DecisionTreeClassifier(),
+    resampling=CV(nfolds=5, shuffle=true),
+    rng=1,
+    tuning=GridTuning(
+        resolution=10,
+        resampling=CV(nfolds=3),
+        range=r,
+        measure=accuracy,
+        repeats=2
+    )
+)
+```
+
+### Random Search
+
+```julia
+r = SoleXplorer.range(
+    :min_purity_increase; lower=0.001, upper=1.0, scale=:log
+)
+modelset = solexplorer(
+    X, y;
+    model=DecisionTreeClassifier(),
+    rng=1,
+    tuning=RandomTuning(
+        n=50,
+        resampling=CV(nfolds=3),
+        range=r,
+        measure=accuracy
+    )
+)
+```
+
+### Particle Swarm Optimization
+
+```julia
+r = SoleXplorer.range(
+    :min_purity_increase; lower=0.001, upper=1.0, scale=:log
+)
+modelset = solexplorer(
+    X, y;
+    model=DecisionTreeClassifier(),
+    rng=1,
+    tuning=PSOTuning(
+        n=30,
+        resampling=CV(nfolds=3),
+        range=r,
+        measure=accuracy
+    )
+)
+```
+
+### Multiple Ranges
+
+```julia
+r1 = SoleXplorer.range(
+    :min_purity_increase; lower=0.001, upper=1.0, scale=:log
+)
+r2 = SoleXplorer.range(
+    :max_depth; lower=2, upper=10
+)
+modelset = solexplorer(
+    X, y;
+    model=DecisionTreeClassifier(),
+    rng=1,
+    tuning=GridTuning(
+        resolution=5,
+        resampling=CV(nfolds=3),
+        range=(r1, r2),
+        measure=accuracy
+    )
+)
 ```
