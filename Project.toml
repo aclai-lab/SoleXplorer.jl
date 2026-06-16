@@ -12,7 +12,6 @@ MLJ = "add582a8-e3ab-11e8-2d5e-e98b27df1bc7"
 MLJDecisionTreeInterface = "c6f25543-311c-4c74-83dc-3ea6d1015661"
 MLJParticleSwarmOptimization = "17a086e9-ed03-4f30-ab88-8b63f0f6126c"
 MLJXGBoostInterface = "54119dfa-1dab-4055-a167-80440f4f7a91"
-ModalDecisionLists = "dbece2fb-9d58-4710-9902-4ec759308ae8"
 ModalDecisionTrees = "e54bda2e-c571-11ec-9d64-0242ac120002"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
@@ -44,13 +43,12 @@ url = "https://github.com/aclai-lab/SolePostHoc.jl"
 [compat]
 CategoricalArrays = "0.10, 1"
 DataFrames = "1"
-DataTreatments = "0.4, 0.5"
+DataTreatments = "0.5"
 DimensionalData = "0.29, 0.30"
 MLJ = "0.23"
 MLJDecisionTreeInterface = "0.4"
 MLJParticleSwarmOptimization = "0.1"
 MLJXGBoostInterface = "0.3"
-ModalDecisionLists = "0.1"
 ModalDecisionTrees = "0.5"
 Random = "1"
 Reexport = "1"
@@ -61,9 +59,8 @@ XGBoost = "2.5"
 julia = "1"
 
 [extras]
-Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Distributions", "JLD2", "Test"]
+test = ["JLD2", "Test"]

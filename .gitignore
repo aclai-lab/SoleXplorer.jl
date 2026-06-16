@@ -6,3 +6,5 @@ abc.history
 forest.txt
 datasets/
 test/datasets/
+.CondaPkg
+CondaPkg.toml
