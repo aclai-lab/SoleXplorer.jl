@@ -399,6 +399,6 @@ function solexplorer(
     _solexplorer(ds, solem; kwargs...)
 end
 
-solexplorer(X::Any, args...; kwargs...) =
-    solexplorer(DataFrame(X), args...; kwargs...)
+solexplorer(X::AbstractArray, vnames::AbstractVector, args...; kwargs...) =
+    solexplorer(DataFrame(X, vnames), args...; kwargs...)
 

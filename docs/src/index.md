@@ -51,10 +51,10 @@ X = DataFrame(X)
 modelset = solexplorer(X, y)
 
 # access results
-ds      = get_ds(modelset)        # DataSet configuration
-models  = get_sole(modelset)      # trained symbolic models (one per fold)
-perf    = get_measures(modelset)  # performance evaluation
-vals    = get_values(modelset)    # raw measure values
+ds = get_ds(modelset)         # DataSet configuration
+models = get_sole(modelset)   # trained symbolic models (one per fold)
+perf = get_measures(modelset) # performance evaluation
+vals = get_values(modelset)   # raw measure values
 ```
 
 ## Cross-Validation

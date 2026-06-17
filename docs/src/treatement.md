@@ -22,10 +22,10 @@ For standard tabular data, `setup_dataset` and `solexplorer` accept a
 `DataFrame` directly without needing an explicit `DataTreatment`:
 
 ```julia
-using SoleXplorer, MLJ, DataFrames
+using SoleXplorer, SoleData, MLJ, DataFrames
 
-X, y = @load_iris
-X = DataFrame(X)
+natopsloader = SoleData.Artifacts.NatopsLoader()
+X, y = SoleData.Artifacts.load(natopsloader)
 
 modelset = solexplorer(X, y)
 ```
@@ -35,12 +35,15 @@ modelset = solexplorer(X, y)
 For multivariate time-series, build a `DataTreatment` first:
 
 ```julia
-using SoleXplorer, DataTreatments
-
-dt = DataTreatments.load_dataset(
-    X_timeseries,
-    y;
-    treatments=DataTreatments.DefaultTreatmentGroup
+dt = SoleXplorer.load_dataset(
+    X,
+    y,
+    TreatmentGroup(
+        aggrfunc=SoleXplorer.reducesize(
+            reducefunc=mean,
+            win=(SoleXplorer.splitwindow(nwindows=5),)
+        )
+    );
 )
 
 modelset = solexplorer(
@@ -54,12 +57,13 @@ modelset = solexplorer(
 ### From a Raw Matrix
 
 ```julia
+X_matrix = Matrix(X)
+variable_names = names(X)
+
 modelset = solexplorer(
     X_matrix,
     variable_names,
     y;
-    treatment_ds=true,
-    leftover_ds=false,
     float_type=Float64
 )
 ```
