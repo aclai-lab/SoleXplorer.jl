@@ -57,7 +57,7 @@ and partition metadata.
 
 # See also: [`setup_dataset`](@ref), [`solexplorer`](@ref)
 """
-struct DataSet{M,T}
+mutable struct DataSet{M,T}
     mach::MLJ.Machine
     pidxs::Vector{PartitionIdxs{T}}
     pinfo::PartitionInfo

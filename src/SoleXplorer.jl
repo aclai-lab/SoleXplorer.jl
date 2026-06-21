@@ -116,7 +116,8 @@ export train_test
 include("train_test.jl")
 
 export AbstractModelSet, ModelSet, solexplorer, solexplorer!,
-    get_ds, get_sole, get_rules, get_measures, get_values, get_dataset
+    get_ds, get_sole, get_rules, get_measures, get_values,
+    get_dataset, get_targets
 include("main.jl")
 
 end

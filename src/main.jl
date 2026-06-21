@@ -97,6 +97,13 @@ Returns the raw dataset from the MLJ machine stored in the `ModelSet`.
 """
 get_dataset(m::ModelSet) = m.ds.mach.args[1].data
 
+"""
+    get_targets(m::ModelSet) -> AbstractVector
+
+Returns the target vector from the MLJ machine stored in the `ModelSet`.
+"""
+get_targets(m::ModelSet) = m.ds.mach.args[2].data
+
 # ---------------------------------------------------------------------------- #
 #                                  base show                                   #
 # ---------------------------------------------------------------------------- #
