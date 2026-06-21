@@ -90,6 +90,13 @@ Returns the computed performance measure values from a `ModelSet`.
 """
 get_values(m::ModelSet) = get_measures(m).measures_values
 
+"""
+    get_dataset(m::ModelSet) -> DataFrame
+
+Returns the raw dataset from the MLJ machine stored in the `ModelSet`.
+"""
+get_dataset(m::ModelSet) = m.ds.mach.args[1].data
+
 # ---------------------------------------------------------------------------- #
 #                                  base show                                   #
 # ---------------------------------------------------------------------------- #
