@@ -58,7 +58,9 @@ end
 # ---------------------------------------------------------------------------- #
 # return default measures appropriate for the target variable type
 function _DefaultMeasures(y::AbstractVector)::Tuple{Vararg{FussyMeasure}}
-    return eltype(y) <: CLabel ? (accuracy, kappa) : (rms, l1, l2)
+    return eltype(y) <: CLabel ?
+        (Accuracy(), FScore(), TruePositiveRate(), TrueNegativeRate()) :
+        (RootMeanSquaredError(), LPLoss())
 end
 
 # ---------------------------------------------------------------------------- #
