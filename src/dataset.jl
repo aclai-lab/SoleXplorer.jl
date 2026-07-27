@@ -1,11 +1,13 @@
 # ---------------------------------------------------------------------------- #
 #                                  defaults                                    #
 # ---------------------------------------------------------------------------- #
-# return a default model appropriate for the target variable type
+# return a default model appropriate for the target variable type and data
+# dimensionality.
 # this function is used when no explicit model is provided to `setup_dataset`,
-# automatically selecting between classification and regression
-# no supervised (y==nothing) is treated as regression as it is.
-function _default_model(y::AbstractVector, multidim::Bool)
+# automatically selecting between classification and regression, and between
+# modal and non-modal models based on the dataset dimensionality.
+# unsupervised (y == nothing) is treated as regression.
+function default_model(y::AbstractVector, multidim::Bool)
     return if y isa CategoricalArray && !isempty(y)
         multidim ?
             ModalDecisionTree() :
@@ -172,7 +174,7 @@ end
     setup_dataset(
         dt::DataTreatment;
         w=nothing,
-        model=_default_model(get_target(dt)),
+        model=default_model(get_target(dt)),
         resampling=Holdout(fraction_train=0.7, shuffle=true),
         valid_ratio=0.0,
         rng=Xoshiro(42),
@@ -218,7 +220,7 @@ partitioning, hyperparameter tuning, and MLJ machine creation.
 # Keyword Arguments
 
 ## Model Configuration
-- `model::MLJ.Model=_default_model(y)`: Sole-compatible MLJ model to use,
+- `model::MLJ.Model=default_model(y)`: Sole-compatible MLJ model to use,
   auto-selected based on target type if not provided. Classification targets
   (CategoricalArray) default to `DecisionTreeClassifier`, others to
   `DecisionTreeRegressor`.
@@ -318,7 +320,7 @@ setup_dataset(X::AbstractDataFrame, y::AbstractVector, args...; kwargs...) =
 function setup_dataset(
     dt::DT.DataTreatment;
     w::Union{Nothing,Vector}=nothing,
-    model::MLJ.Model=_default_model(DT.get_target(dt), has_multidim(dt)),
+    model::MLJ.Model=default_model(DT.get_target(dt), has_multidim(dt)),
     resampling::ResamplingStrategy=Holdout(fraction_train=0.7, shuffle=true),
     valid_ratio::Real=0.0,
     rng::Union{AbstractRNG,Int}=Xoshiro(42),
