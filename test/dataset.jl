@@ -90,6 +90,7 @@ dsts = setup_dataset(
     )
 )
 @test dsts isa SX.DataSet{SX.ModalDecisionTree}
+@test dsts.mach.args[1].data[1,1] isa Vector
 
 dsts = setup_dataset(
     Xts, yts,
@@ -101,6 +102,7 @@ dsts = setup_dataset(
     )
 )
 @test dsts isa SX.DataSet{SX.DecisionTreeClassifier}
+@test dsts.mach.args[1].data[1,1] isa Float32
 
 dsimg = setup_dataset(
     Ximg, yimg,
@@ -113,6 +115,7 @@ dsimg = setup_dataset(
     )
 )
 @test dsimg isa SX.DataSet{SX.ModalDecisionTree}
+@test dsimg.mach.args[1].data[1,1] isa Array{Float32,2}
 
 dsimg = setup_dataset(
     Ximg, yimg,
@@ -124,6 +127,7 @@ dsimg = setup_dataset(
     )
 )
 @test dsimg isa SX.DataSet{SX.DecisionTreeClassifier}
+@test dsimg.mach.args[1].data[1,1] isa Float32
 
 # ---------------------------------------------------------------------------- #
 #                covering various examples to complete codecov                 #
@@ -495,59 +499,3 @@ end
     
     @test pairs1 == pairs2
 end
-
-a= setup_dataset(
-    Xts, yts,
-    TreatmentGroup(
-    
-        aggrfunc=SX.aggregate(
-            features=(maximum,),
-            win=(splitwindow(nwindows=4),),
-        ),
-        norm=MinMax
-    );
-    model=SX.ModalDecisionTree()
-)
-
-s = setup_dataset(
-    Xts, yts,
-    TreatmentGroup(
-        aggrfunc=SX.aggregate(
-            features=(maximum,),
-            win=(splitwindow(nwindows=4),),
-        ),
-        norm=MinMax
-    );
-    model=SX.ModalDecisionTree()
-)
-
-using DataTreatments
-dt = load_dataset(
-Xts,
-    yts,
-    TreatmentGroup(
-        aggrfunc=SX.aggregate(
-            features=(maximum,),
-            win=(splitwindow(nwindows=4),),
-        ),
-        norm=MinMax
-    );
-    treatment_ds=true,
-    leftover_ds=false,
-    float_type=Float32,
-)
-
-da = load_dataset(
-Xts,
-    yts,
-    TreatmentGroup(
-        aggrfunc=SX.aggregate(
-            features=(maximum,),
-            win=(splitwindow(nwindows=4),),
-        ),
-        norm=MinMax
-    );
-    treatment_ds=true,
-    leftover_ds=false,
-    float_type=Float32,
-)
