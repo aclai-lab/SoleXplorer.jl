@@ -5,10 +5,16 @@
 # this function is used when no explicit model is provided to `setup_dataset`,
 # automatically selecting between classification and regression
 # no supervised (y==nothing) is treated as regression as it is.
-function _default_model(y::AbstractVector)
-    return y isa CategoricalArray && !isempty(y) ?
-        DecisionTreeClassifier() :
-        DecisionTreeRegressor()
+function _default_model(y::AbstractVector, multidim::Bool)
+    return if y isa CategoricalArray && !isempty(y)
+        multidim ?
+            ModalDecisionTree() :
+            DecisionTreeClassifier()
+    else
+        multidim ?
+            ModalDecisionTree() :
+            DecisionTreeRegressor()
+    end
 end
 
 # ---------------------------------------------------------------------------- #
@@ -312,7 +318,7 @@ setup_dataset(X::AbstractDataFrame, y::AbstractVector, args...; kwargs...) =
 function setup_dataset(
     dt::DT.DataTreatment;
     w::Union{Nothing,Vector}=nothing,
-    model::MLJ.Model=_default_model(DT.get_target(dt)),
+    model::MLJ.Model=_default_model(DT.get_target(dt), has_multidim(dt)),
     resampling::ResamplingStrategy=Holdout(fraction_train=0.7, shuffle=true),
     valid_ratio::Real=0.0,
     rng::Union{AbstractRNG,Int}=Xoshiro(42),

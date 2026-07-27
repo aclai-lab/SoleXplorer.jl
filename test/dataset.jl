@@ -19,7 +19,10 @@ Xts, yts = SoleData.Artifacts.load(natopsloader)
 Xts, yts = SoleData.Artifacts.load(SoleData.Artifacts.LibrasLoader())
 
 rng = Xoshiro(42)
-Ximg = [round.(rand(rng, Float32, 15, 15); digits = 2) for _ in 1:20, _ in 1:12]
+Ximg = DataFrame(
+    [round.(rand(rng, Float32, 15, 15); digits = 2) for _ in 1:20, _ in 1:12],
+    :auto
+)
 yimg = rand(rng, 1:3, 20)
 
 # ---------------------------------------------------------------------------- #
@@ -62,47 +65,6 @@ dsr = setup_dataset(
 )
 @test dsr isa SX.DataSet{SX.RandomForestRegressor}
 
-# ---------------------------------------------------------------------------- #
-# treatments groups: aggregate or reducesize for multidim datasets
-dsts = setup_dataset(
-    Xts, yts,
-    TreatmentGroup(
-        aggrfunc=reducesize(
-            reducefunc=mean,
-            win=(splitwindow(nwindows=4),),
-        ),
-        norm=MinMax
-    );
-    model=SX.ModalDecisionTree()
-)
-@test dsts isa SX.DataSet{SX.ModalDecisionTree}
-
-dsts = setup_dataset(
-    Xts, yts,
-    TreatmentGroup(
-        aggrfunc=reducesize(
-            reducefunc=mean,
-            win=(splitwindow(nwindows=4),),
-        ),
-        norm=MinMax
-    ),
-    model=SX.ModalRandomForest()
-)
-@test dsts isa SX.DataSet{SX.ModalRandomForest}
-
-dsts = setup_dataset(
-    Xts, yts,
-    TreatmentGroup(
-        aggrfunc=reducesize(
-            reducefunc=mean,
-            win=(splitwindow(nwindows=4),),
-        ),
-        norm=MinMax
-    ),
-    model=SX.ModalAdaBoost()
-)
-@test dsts isa SX.DataSet{SX.ModalAdaBoost}
-
 dsc = setup_dataset(
     Xc, yc;
     model=SX.XGBoostClassifier()
@@ -114,6 +76,54 @@ dsr = setup_dataset(
     model=SX.XGBoostRegressor()
 )
 @test dsr isa SX.DataSet{SX.XGBoostRegressor}
+
+# ---------------------------------------------------------------------------- #
+# treatments groups: aggregate or reducesize for multidim datasets
+dsts = setup_dataset(
+    Xts, yts,
+    TreatmentGroup(
+        aggrfunc=reducesize(
+            reducefunc=mean,
+            win=(splitwindow(nwindows=4),),
+        ),
+        norm=MinMax
+    )
+)
+@test dsts isa SX.DataSet{SX.ModalDecisionTree}
+
+dsts = setup_dataset(
+    Xts, yts,
+    TreatmentGroup(
+        aggrfunc=SX.aggregate(
+            features=(maximum,),
+            win=(splitwindow(nwindows=4),),
+        ),
+    )
+)
+@test dsts isa SX.DataSet{SX.DecisionTreeClassifier}
+
+dsimg = setup_dataset(
+    Ximg, yimg,
+    TreatmentGroup(
+        aggrfunc=reducesize(
+            reducefunc=mean,
+            win=(splitwindow(nwindows=4),),
+        ),
+        norm=MinMax
+    )
+)
+@test dsimg isa SX.DataSet{SX.ModalDecisionTree}
+
+dsimg = setup_dataset(
+    Ximg, yimg,
+    TreatmentGroup(
+        aggrfunc=SX.aggregate(
+            features=(maximum,),
+            win=(splitwindow(nwindows=4),),
+        ),
+    )
+)
+@test dsimg isa SX.DataSet{SX.DecisionTreeClassifier}
 
 # ---------------------------------------------------------------------------- #
 #                covering various examples to complete codecov                 #
