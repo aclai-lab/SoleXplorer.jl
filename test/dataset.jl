@@ -16,6 +16,12 @@ Xr = DataFrame(Xr)
 natopsloader = SoleData.Artifacts.NatopsLoader()
 Xts, yts = SoleData.Artifacts.load(natopsloader)
 
+Xts, yts = SoleData.Artifacts.load(SoleData.Artifacts.LibrasLoader())
+
+rng = Xoshiro(42)
+Ximg = [round.(rand(rng, Float32, 15, 15); digits = 2) for _ in 1:20, _ in 1:12]
+yimg = rand(rng, 1:3, 20)
+
 # ---------------------------------------------------------------------------- #
 #                        prepare dataset usage examples                        #
 # ---------------------------------------------------------------------------- #
@@ -56,10 +62,11 @@ dsr = setup_dataset(
 )
 @test dsr isa SX.DataSet{SX.RandomForestRegressor}
 
+# ---------------------------------------------------------------------------- #
+# treatments groups: aggregate or reducesize for multidim datasets
 dsts = setup_dataset(
     Xts, yts,
     TreatmentGroup(
-    
         aggrfunc=reducesize(
             reducefunc=mean,
             win=(splitwindow(nwindows=4),),
