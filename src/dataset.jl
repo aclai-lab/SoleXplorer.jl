@@ -8,15 +8,9 @@
 # modal and non-modal models based on the dataset dimensionality.
 # unsupervised (y == nothing) is treated as regression.
 function default_model(y::AbstractVector, multidim::Bool)
-    return if y isa CategoricalArray && !isempty(y)
-        multidim ?
-            ModalDecisionTree() :
-            DecisionTreeClassifier()
-    else
-        multidim ?
-            ModalDecisionTree() :
-            DecisionTreeRegressor()
-    end
+    multidim && return ModalDecisionTree()
+    return y isa CategoricalArray && !isempty(y) ?
+        DecisionTreeClassifier() : DecisionTreeRegressor()
 end
 
 # ---------------------------------------------------------------------------- #
