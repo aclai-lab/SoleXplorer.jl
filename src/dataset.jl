@@ -319,6 +319,7 @@ function setup_dataset(
     tuning::Union{Nothing,Tuning}=nothing
 )
     rng isa Int && (rng = Xoshiro(rng))
+
     # get the dataset if type is appropriate for the chosen model
     X, vnames = if has_tabular(dt) && !(model isa Modal)
         DT.get_tabular(dt)
@@ -355,15 +356,15 @@ function setup_dataset(
 end
 
 function setup_dataset(
-    X::Matrix,
+    X::Matrix{T},
     vnames::Vector{String}=["V$i" for i in 1:size(X, 2)],
     y::Union{Nothing,AbstractVector{<:Label}}=nothing,
     treatments::Vararg{Base.Callable}=DT.DefaultTreatmentGroup;
     treatment_ds::Bool=true,
     leftover_ds::Bool=false,
-    float_type::Type=Float64,
+    float_type::Type=Float32,
     kwargs...
-)
+) where T
     dt = DT.load_dataset(
         X,
         vnames,
@@ -389,14 +390,3 @@ end
 setup_dataset(df::AbstractDataFrame, args...; kwargs...) =
     setup_dataset(Matrix(df), names(df), nothing, args...; kwargs...)
 
-"""
-    setup_dataset(X::AbstractDataFrame, y::Symbol; kwargs...)::AbstractDataSet
-
-Convenience method when target variable is a column in the feature DataFrame.
-"""
-setup_dataset(
-    X::AbstractDataFrame,
-    y::Symbol,
-    args...;
-    kwargs...
-) = setup_dataset(X[!, Not(y)], X[!, y], args...; kwargs...)

@@ -59,7 +59,7 @@ dsr = setup_dataset(
 dsts = setup_dataset(
     Xts, yts,
     TreatmentGroup(
-        dims=1,
+    
         aggrfunc=reducesize(
             reducefunc=mean,
             win=(splitwindow(nwindows=4),),
@@ -73,7 +73,6 @@ dsts = setup_dataset(
 dsts = setup_dataset(
     Xts, yts,
     TreatmentGroup(
-        dims=1,
         aggrfunc=reducesize(
             reducefunc=mean,
             win=(splitwindow(nwindows=4),),
@@ -87,7 +86,6 @@ dsts = setup_dataset(
 dsts = setup_dataset(
     Xts, yts,
     TreatmentGroup(
-        dims=1,
         aggrfunc=reducesize(
             reducefunc=mean,
             win=(splitwindow(nwindows=4),),
@@ -113,14 +111,9 @@ dsr = setup_dataset(
 # ---------------------------------------------------------------------------- #
 #                covering various examples to complete codecov                 #
 # ---------------------------------------------------------------------------- #
-y_symbol = :petal_width
-dsc = setup_dataset(Xc, y_symbol)
-@test dsc isa SX.DataSet{SX.DecisionTreeRegressor}
-
 dsc = setup_dataset(
     Xts, yts,
     TreatmentGroup(
-        dims=1,
         aggrfunc=SX.aggregate(
             features=(maximum,),
             win=(splitwindow(nwindows=4),),
@@ -485,3 +478,59 @@ end
     
     @test pairs1 == pairs2
 end
+
+a= setup_dataset(
+    Xts, yts,
+    TreatmentGroup(
+    
+        aggrfunc=SX.aggregate(
+            features=(maximum,),
+            win=(splitwindow(nwindows=4),),
+        ),
+        norm=MinMax
+    );
+    model=SX.ModalDecisionTree()
+)
+
+s = setup_dataset(
+    Xts, yts,
+    TreatmentGroup(
+        aggrfunc=SX.aggregate(
+            features=(maximum,),
+            win=(splitwindow(nwindows=4),),
+        ),
+        norm=MinMax
+    );
+    model=SX.ModalDecisionTree()
+)
+
+using DataTreatments
+dt = load_dataset(
+Xts,
+    yts,
+    TreatmentGroup(
+        aggrfunc=SX.aggregate(
+            features=(maximum,),
+            win=(splitwindow(nwindows=4),),
+        ),
+        norm=MinMax
+    );
+    treatment_ds=true,
+    leftover_ds=false,
+    float_type=Float32,
+)
+
+da = load_dataset(
+Xts,
+    yts,
+    TreatmentGroup(
+        aggrfunc=SX.aggregate(
+            features=(maximum,),
+            win=(splitwindow(nwindows=4),),
+        ),
+        norm=MinMax
+    );
+    treatment_ds=true,
+    leftover_ds=false,
+    float_type=Float32,
+)
