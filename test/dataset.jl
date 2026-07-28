@@ -34,6 +34,7 @@ dsc = setup_dataset(Xc, yc)
 dsr = setup_dataset(Xr, yr)
 @test dsr isa SX.DataSet{SX.DecisionTreeRegressor}
 
+# ---------------------------------------------------------------------------- #
 # model type specification
 dsc = setup_dataset(
     Xc, yc;
@@ -77,7 +78,60 @@ dsr = setup_dataset(
 )
 @test dsr isa SX.DataSet{SX.XGBoostRegressor}
 
+dsts = setup_dataset(
+    Xts, yts;
+    model=SX.ModalDecisionTree(),
+)
+@test dsts isa SX.DataSet{SX.ModalDecisionTree}
+@test dsts.mach.args[1].data[1,1] isa Vector
+
+dsts = setup_dataset(
+    Xts, yts;
+    model=SX.ModalRandomForest(),
+)
+@test dsts isa SX.DataSet{SX.ModalRandomForest}
+@test dsts.mach.args[1].data[1,1] isa Vector
+
+dsts = setup_dataset(
+    Xts, yts;
+    model=SX.ModalAdaBoost(),
+)
+@test dsts isa SX.DataSet{SX.ModalAdaBoost}
+@test dsts.mach.args[1].data[1,1] isa Vector
+
+dsimg = setup_dataset(
+    Ximg, yimg;
+    model=SX.ModalDecisionTree(),
+)
+@test dsimg isa SX.DataSet{SX.ModalDecisionTree}
+@test dsimg.mach.args[1].data[1,1] isa Matrix
+
+dsimg = setup_dataset(
+    Ximg, yimg;
+    model=SX.ModalRandomForest(),
+)
+@test dsimg isa SX.DataSet{SX.ModalRandomForest}
+@test dsimg.mach.args[1].data[1,1] isa Matrix
+
+dsimg = setup_dataset(
+    Ximg, yimg;
+    model=SX.ModalAdaBoost(),
+)
+@test dsimg isa SX.DataSet{SX.ModalAdaBoost}
+@test dsimg.mach.args[1].data[1,1] isa Matrix
+
 # ---------------------------------------------------------------------------- #
+# aggrfunc parameter usage
+dsts = setup_dataset(
+    Xts, yts;
+    model=SX.ModalDecisionTree(),
+    aggrfunc=reducesize(
+        reducefunc=mean,
+        win=(splitwindow(nwindows=4),),
+    ),
+    norm=MinMax
+)
+
 # treatments groups: aggregate or reducesize for multidim datasets
 dsts = setup_dataset(
     Xts, yts,

@@ -1,6 +1,8 @@
 # ---------------------------------------------------------------------------- #
 #                                  defaults                                    #
 # ---------------------------------------------------------------------------- #
+is_multidim(X::Matrix{T}) where T = T isa AbstractVector ? true : false
+
 # return a default model appropriate for the target variable type and data
 # dimensionality.
 # this function is used when no explicit model is provided to `setup_dataset`,
@@ -11,6 +13,15 @@ function default_model(y::AbstractVector, multidim::Bool)
     multidim && return ModalDecisionTree()
     return y isa CategoricalArray && !isempty(y) ?
         DecisionTreeClassifier() : DecisionTreeRegressor()
+end
+
+# if no data treatment is specified, check the model being used and,
+# if it is modal, do not aggregate; instead, reduce the dimensionality of the
+# multidimensional data.
+function default_treatment(model::MLJ.Model)
+    return model isa Modal ?
+        TreatmentGroup(aggrfunc=reducesize(win=(splitwindow(nwindows=3)))) :
+        DT.DefaultTreatmentGroup
 end
 
 # ---------------------------------------------------------------------------- #
@@ -306,19 +317,14 @@ ds = setup_dataset(Xc, :petal_width)
 
 # See also: [`DataSet`](@ref), [`solexplorer`](@ref)
 """
-setup_dataset(X::AbstractDataFrame, y::AbstractVector, args...; kwargs...) =
-    throw(ArgumentError(
-        "Target variable y must have elements of type Label, " *
-        "got eltype: $(eltype(y))"))
-
 function setup_dataset(
     dt::DT.DataTreatment;
     w::Union{Nothing,Vector}=nothing,
     model::MLJ.Model=default_model(DT.get_target(dt), has_multidim(dt)),
     resampling::ResamplingStrategy=Holdout(fraction_train=0.7, shuffle=true),
     valid_ratio::Real=0.0,
-    rng::Union{AbstractRNG,Int}=Xoshiro(42),
-    tuning::Union{Nothing,Tuning}=nothing
+    tuning::Union{Nothing,Tuning}=nothing,
+    rng::Union{AbstractRNG,Int}=Xoshiro(42)
 )
     rng isa Int && (rng = Xoshiro(rng))
 
@@ -359,36 +365,47 @@ end
 
 function setup_dataset(
     X::Matrix{T},
+    y::Union{Nothing,AbstractVector{<:Label}}=nothing;
     vnames::Vector{String}=["V$i" for i in 1:size(X, 2)],
-    y::Union{Nothing,AbstractVector{<:Label}}=nothing,
-    treatments::Vararg{Base.Callable}=DT.DefaultTreatmentGroup;
-    treatment_ds::Bool=true,
-    leftover_ds::Bool=false,
+    w::Union{Nothing,Vector}=nothing,
+    model::MLJ.Model=default_model(y, is_multidim(X)),
+    resampling::ResamplingStrategy=Holdout(fraction_train=0.7, shuffle=true),
+    valid_ratio::Real=0.0,
+    tuning::Union{Nothing,Tuning}=nothing,
     float_type::Type=Float32,
+    rng::Union{AbstractRNG,Int}=Xoshiro(42),
     kwargs...
 ) where T
+    treatments = isempty(kwargs) ?
+        default_treatment(model) :
+        TreatmentGroup(; kwargs...)
+
     dt = DT.load_dataset(
         X,
         vnames,
         y,
-        treatments...;
-        treatment_ds,
-        leftover_ds,
+        treatments;
         float_type
     )
 
-    setup_dataset(dt; kwargs...)
+    setup_dataset(
+        dt;
+        w,
+        model,
+        resampling,
+        valid_ratio,
+        tuning,
+        rng,
+    )
 end
 
 function setup_dataset(
     df::AbstractDataFrame,
-    y::Union{Nothing,AbstractVector{<:Label}}=nothing,
-    args...;
+    y::Union{Nothing,AbstractVector{<:Label}}=nothing;
     kwargs...
 ) 
-setup_dataset(Matrix(df), names(df), y, args...; kwargs...)
+setup_dataset(Matrix(df), y; vnames=names(df), kwargs...)
 end
 
 setup_dataset(df::AbstractDataFrame, args...; kwargs...) =
-    setup_dataset(Matrix(df), names(df), nothing, args...; kwargs...)
-
+    setup_dataset(Matrix(df); vnames=names(df), kwargs...)
