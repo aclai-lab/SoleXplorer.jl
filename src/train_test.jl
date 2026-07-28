@@ -19,22 +19,10 @@ const XGBoostModel = Union{XGBoostClassifier, XGBoostRegressor}
 # check if dataset or model uses XGBoost
 # used to determine if XGBoost-specific setup (watchlist) is needed
 has_xgboost_model(ds::DataSet) = has_xgboost_model(ds.mach.model)
-has_xgboost_model(model::MLJTuning.EitherTunedModel) =
-    has_xgboost_model(model.model)
 has_xgboost_model(::XGBoostModel) = true
 has_xgboost_model(::Any) = false
 
-# Check if dataset uses hyperparameter tuning
-is_tuned_model(ds::DataSet) = is_tuned_model(ds.mach.model)
-is_tuned_model(::MLJTuning.EitherTunedModel) = true
-is_tuned_model(::Any) = false
-
-function get_early_stopping_rounds(ds::DataSet)
-    return is_tuned_model(ds) ?
-        ds.mach.model.model.early_stopping_rounds :
-        ds.mach.model.early_stopping_rounds
-
-end
+get_early_stopping_rounds(ds::DataSet) = ds.mach.model.early_stopping_rounds
 
 # create XGBoost watchlist for early stopping validation
 # throws `ArgumentError` if validation set is empty
@@ -57,11 +45,7 @@ function makewatchlist!(ds::DataSet, train::Vector{Int}, valid::Vector{Int})
 
     watchlist = XGBoost.OrderedDict(["train" => dtrain, "eval" => dvalid])
 
-    if is_tuned_model(ds)
-        ds.mach.model.model.watchlist = watchlist
-    else
-        ds.mach.model.watchlist = watchlist
-    end
+    return ds.mach.model.watchlist = watchlist
 end
 
 # configure XGBoost watchlist for fold `i` if early stopping is enabled

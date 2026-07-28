@@ -334,31 +334,12 @@ complete workflow:
 - `measures::Tuple{Vararg{FussyMeasure}}=()`: Performance measures tuple.
   If empty, default measures for the task type are used.
 - `kwargs...`: Additional options forwarded to [`setup_dataset`](@ref)
-  (e.g., `model`, `resampling`, `rng`, `tuning`).
+  (e.g., `model`, `resampling`, `rng`).
 
 # Examples
 ```julia
 # Basic usage with default settings
 modelset = solexplorer(X, y)
-
-# Classification with cross-validation and tuning
-range = SoleXplorer.range(
-    :min_purity_increase; lower=0.001, upper=1.0, scale=:log
-)
-modelset = solexplorer(
-    X, y;
-    model=DecisionTreeClassifier(),
-    resampling=CV(nfolds=5, shuffle=true),
-    rng=1,
-    tuning=GridTuning(
-        resolution=10,
-        resampling=CV(nfolds=3),
-        range=range,
-        measure=accuracy,
-        repeats=2
-    ),
-    measures=(accuracy, log_loss, confusion_matrix, kappa)
-)
 
 # Time series classification with modal decision tree
 modelset = solexplorer(

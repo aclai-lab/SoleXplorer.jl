@@ -18,7 +18,7 @@ Xts, yts = SoleData.Artifacts.load(natopsloader)
 
 Xts, yts = SoleData.Artifacts.load(SoleData.Artifacts.LibrasLoader())
 
-rng = Xoshiro(42)
+rng = Random.Xoshiro(42)
 Ximg = DataFrame(
     [round.(rand(rng, Float32, 15, 15); digits = 2) for _ in 1:20, _ in 1:12],
     :auto
@@ -26,20 +26,8 @@ Ximg = DataFrame(
 yimg = rand(rng, 1:3, 20)
 
 # ---------------------------------------------------------------------------- #
-#                        prepare dataset usage examples                        #
+#                           model type specification                           #
 # ---------------------------------------------------------------------------- #
-# basic setup
-dsc = setup_dataset(Xc, yc)
-@test dsc isa SX.DataSet{SX.DecisionTreeClassifier}
-dsr = setup_dataset(Xr, yr)
-@test dsr isa SX.DataSet{SX.DecisionTreeRegressor}
-dsts = setup_dataset(Xts, yts)
-@test dsts isa SX.DataSet{SX.ModalDecisionTree}
-dsimg = setup_dataset(Ximg, yimg)
-@test dsimg isa SX.DataSet{SX.ModalDecisionTree}
-
-# ---------------------------------------------------------------------------- #
-# model type specification
 dsc = setup_dataset(
     Xc, yc;
     model=SX.DecisionTreeClassifier()
@@ -125,160 +113,225 @@ dsimg = setup_dataset(
 @test dsimg.mach.args[1].data[1,1] isa Matrix
 
 # ---------------------------------------------------------------------------- #
-# aggrfunc parameter usage
+#                     aggrfunc=reducesized parameter usage                     #
+# ---------------------------------------------------------------------------- #
+# windowing functions
 dsts = setup_dataset(
-    Xts, yts; aggrfunc=reducesize(win=(movingwindow(winsize=4, winstep=1)))
+    Xts, yts; model=SX.ModalDecisionTree(),
+    aggrfunc=reducesize(win=(wholewindow()))
 )
 @test dsts isa SX.DataSet{SX.ModalDecisionTree}
 @test dsts.mach.args[1].data[1,1] isa Vector
 
 dsts = setup_dataset(
-    Xts, yts,
-    TreatmentGroup(
-        aggrfunc=reducesize(
-            reducefunc=mean,
-            win=(splitwindow(nwindows=4),),
-        ),
-        norm=MinMax
-    )
+    Xts, yts; model=SX.ModalDecisionTree(),
+    aggrfunc=reducesize(win=(splitwindow(nwindows=3)))
 )
 @test dsts isa SX.DataSet{SX.ModalDecisionTree}
 @test dsts.mach.args[1].data[1,1] isa Vector
 
 dsts = setup_dataset(
-    Xts, yts,
-    TreatmentGroup(
-        aggrfunc=reducesize(
-            reducefunc=mean,
-            win=(splitwindow(nwindows=4),),
-        ),
-        norm=MinMax
-    )
+    Xts, yts; model=SX.ModalDecisionTree(),
+    aggrfunc=reducesize(win=(adaptivewindow(nwindows=3, overlap=0.2)))
 )
 @test dsts isa SX.DataSet{SX.ModalDecisionTree}
 @test dsts.mach.args[1].data[1,1] isa Vector
 
-dsts = setup_dataset(
-    Xts, yts,
-    TreatmentGroup(
-        aggrfunc=reducesize(
-            reducefunc=mean,
-            win=(splitwindow(nwindows=4),),
-        ),
-        norm=MinMax
-    )
-)
-@test dsts isa SX.DataSet{SX.ModalDecisionTree}
-@test dsts.mach.args[1].data[1,1] isa Vector
-
-
-
-dsts = setup_dataset(
-    Xts, yts;
-    model=SX.ModalDecisionTree(),
-    aggrfunc=reducesize(
-        reducefunc=mean,
-        win=(splitwindow(nwindows=4),),
-    ),
-    norm=MinMax
-)
-
-
-
-dsts = setup_dataset(
-    Xts, yts,
-    TreatmentGroup(
-        aggrfunc=SX.aggregate(
-            features=(maximum,),
-            win=(splitwindow(nwindows=4),),
-        ),
-    )
-)
-@test dsts isa SX.DataSet{SX.DecisionTreeClassifier}
-@test dsts.mach.args[1].data[1,1] isa Float32
-
+# ---------------------------------------------------------------------------- #
 dsimg = setup_dataset(
-    Ximg, yimg,
-    TreatmentGroup(
-        aggrfunc=reducesize(
-            reducefunc=mean,
-            win=(splitwindow(nwindows=4),),
-        ),
-        norm=MinMax
-    )
+    Ximg, yimg; model=SX.ModalDecisionTree(),
+    aggrfunc=reducesize(win=(wholewindow()))
 )
 @test dsimg isa SX.DataSet{SX.ModalDecisionTree}
-@test dsimg.mach.args[1].data[1,1] isa Array{Float32,2}
+@test dsimg.mach.args[1].data[1,1] isa Matrix
 
 dsimg = setup_dataset(
-    Ximg, yimg,
-    TreatmentGroup(
-        aggrfunc=SX.aggregate(
-            features=(maximum,),
-            win=(splitwindow(nwindows=4),),
-        ),
-    )
+    Ximg, yimg; model=SX.ModalDecisionTree(),
+    aggrfunc=reducesize(win=(splitwindow(nwindows=3)))
+)
+@test dsimg isa SX.DataSet{SX.ModalDecisionTree}
+@test dsimg.mach.args[1].data[1,1] isa Matrix
+
+dsimg = setup_dataset(
+    Ximg, yimg; model=SX.ModalDecisionTree(),
+    aggrfunc=reducesize(win=(adaptivewindow(nwindows=3, overlap=0.2)))
+)
+@test dsimg isa SX.DataSet{SX.ModalDecisionTree}
+@test dsimg.mach.args[1].data[1,1] isa Matrix
+
+# ---------------------------------------------------------------------------- #
+# reducefunc
+dsts = setup_dataset(
+    Xts, yts; model=SX.ModalDecisionTree(),
+    aggrfunc=reducesize(reducefunc=mean)
+)
+@test dsts isa SX.DataSet{SX.ModalDecisionTree}
+@test dsts.mach.args[1].data[1,1] isa Vector
+
+dsts = setup_dataset(
+    Xts, yts; model=SX.ModalDecisionTree(),
+    aggrfunc=reducesize(reducefunc=minimum)
+)
+@test dsts isa SX.DataSet{SX.ModalDecisionTree}
+@test dsts.mach.args[1].data[1,1] isa Vector
+
+dsts = setup_dataset(
+    Xts, yts; model=SX.ModalDecisionTree(),
+    aggrfunc=reducesize(reducefunc=maximum)
+)
+@test dsts isa SX.DataSet{SX.ModalDecisionTree}
+@test dsts.mach.args[1].data[1,1] isa Vector
+
+# ---------------------------------------------------------------------------- #
+dsimg = setup_dataset(
+    Ximg, yimg; model=SX.ModalDecisionTree(),
+    aggrfunc=reducesize(reducefunc=mean)
+)
+@test dsimg isa SX.DataSet{SX.ModalDecisionTree}
+@test dsimg.mach.args[1].data[1,1] isa Matrix
+
+dsimg = setup_dataset(
+    Ximg, yimg; model=SX.ModalDecisionTree(),
+    aggrfunc=reducesize(reducefunc=minimum)
+)
+@test dsimg isa SX.DataSet{SX.ModalDecisionTree}
+@test dsimg.mach.args[1].data[1,1] isa Matrix
+
+dsimg = setup_dataset(
+    Ximg, yimg; model=SX.ModalDecisionTree(),
+    aggrfunc=reducesize(reducefunc=maximum)
+)
+@test dsimg isa SX.DataSet{SX.ModalDecisionTree}
+@test dsimg.mach.args[1].data[1,1] isa Matrix
+
+# ---------------------------------------------------------------------------- #
+#                      aggrfunc=aggregate parameter usage                      #
+# ---------------------------------------------------------------------------- #
+# windowing functions
+dsts = setup_dataset(
+    Xts, yts; model=SX.DecisionTreeClassifier(),
+    aggrfunc=SX.aggregate(win=(wholewindow()))
+)
+@test dsts isa SX.DataSet{SX.DecisionTreeClassifier}
+@test dsts.mach.args[1].data[1,1] isa Real
+
+dsts = setup_dataset(
+    Xts, yts; model=SX.DecisionTreeClassifier(),
+    aggrfunc=SX.aggregate(win=(splitwindow(nwindows=3)))
+)
+@test dsts isa SX.DataSet{SX.DecisionTreeClassifier}
+@test dsts.mach.args[1].data[1,1] isa Real
+
+dsts = setup_dataset(
+    Xts, yts; model=SX.DecisionTreeClassifier(),
+    aggrfunc=SX.aggregate(win=(adaptivewindow(nwindows=3, overlap=0.2)))
+)
+@test dsts isa SX.DataSet{SX.DecisionTreeClassifier}
+@test dsts.mach.args[1].data[1,1] isa Real
+
+# ---------------------------------------------------------------------------- #
+dsimg = setup_dataset(
+    Ximg, yimg; model=SX.DecisionTreeClassifier(),
+    aggrfunc=SX.aggregate(win=(wholewindow()))
 )
 @test dsimg isa SX.DataSet{SX.DecisionTreeClassifier}
-@test dsimg.mach.args[1].data[1,1] isa Float32
+@test dsimg.mach.args[1].data[1,1] isa Real
 
-# ---------------------------------------------------------------------------- #
-#                covering various examples to complete codecov                 #
-# ---------------------------------------------------------------------------- #
-dsc = setup_dataset(
-    Xts, yts,
-    TreatmentGroup(
-        aggrfunc=SX.aggregate(
-            features=(maximum,),
-            win=(splitwindow(nwindows=4),),
-        ),
-    );
-    resampling=Holdout(fraction_train=0.5, shuffle=true),
+dsimg = setup_dataset(
+    Ximg, yimg; model=SX.DecisionTreeClassifier(),
+    aggrfunc=SX.aggregate(win=(splitwindow(nwindows=3)))
 )
-@test dsc isa SX.DataSet{SX.DecisionTreeClassifier}
+@test dsimg isa SX.DataSet{SX.DecisionTreeClassifier}
+@test dsimg.mach.args[1].data[1,1] isa Real
+
+dsimg = setup_dataset(
+    Ximg, yimg; model=SX.DecisionTreeClassifier(),
+    aggrfunc=SX.aggregate(win=(adaptivewindow(nwindows=3, overlap=0.2)))
+)
+@test dsimg isa SX.DataSet{SX.DecisionTreeClassifier}
+@test dsimg.mach.args[1].data[1,1] isa Real
 
 # ---------------------------------------------------------------------------- #
-#                                 resamplig                                    #
+# featuresets
+dsts = setup_dataset(
+    Xts, yts; model=SX.DecisionTreeClassifier(),
+    aggrfunc=SX.aggregate(features=mean)
+)
+@test dsts isa SX.DataSet{SX.DecisionTreeClassifier}
+@test dsts.mach.args[1].data[1,1] isa Real
+
+dsts = setup_dataset(
+    Xts, yts; model=SX.DecisionTreeClassifier(),
+    aggrfunc=SX.aggregate(features=(maximum, minimum, mean))
+)
+@test dsts isa SX.DataSet{SX.DecisionTreeClassifier}
+@test dsts.mach.args[1].data[1,1] isa Real
+
+dsts = setup_dataset(
+    Xts, yts; model=SX.DecisionTreeClassifier(),
+    aggrfunc=SX.aggregate(features=catch22_set)
+)
+@test dsts isa SX.DataSet{SX.DecisionTreeClassifier}
+@test dsts.mach.args[1].data[1,1] isa Real
+
+# ---------------------------------------------------------------------------- #
+dsimg = setup_dataset(
+    Ximg, yimg; model=SX.DecisionTreeClassifier(),
+    aggrfunc=SX.aggregate(features=mean)
+)
+@test dsimg isa SX.DataSet{SX.DecisionTreeClassifier}
+@test dsimg.mach.args[1].data[1,1] isa Real
+
+dsimg = setup_dataset(
+    Ximg, yimg; model=SX.DecisionTreeClassifier(),
+    aggrfunc=SX.aggregate(features=(maximum, minimum, mean))
+)
+@test dsimg isa SX.DataSet{SX.DecisionTreeClassifier}
+@test dsimg.mach.args[1].data[1,1] isa Real
+
+dsimg = setup_dataset(
+    Ximg, yimg; model=SX.DecisionTreeClassifier(),
+    aggrfunc=SX.aggregate(features=catch22_set)
+)
+@test dsimg isa SX.DataSet{SX.DecisionTreeClassifier}
+@test dsimg.mach.args[1].data[1,1] isa Real
+
+# ---------------------------------------------------------------------------- #
+#                           resamplig strategies                               #
 # ---------------------------------------------------------------------------- #
 dsc = setup_dataset(
-    Xc, yc;
-    resampling=CV(),
+    Xc, yc; model=SX.DecisionTreeClassifier(),
+    resampling=CV(nfolds=3, shuffle=true),
 )
 @test dsc isa SX.DataSet{SX.DecisionTreeClassifier}
 @test dsc.pinfo.type isa MLJ.CV
 
 dsc = setup_dataset(
-    Xc, yc;
-    resampling=Holdout(),
+    Xc, yc; model=SX.DecisionTreeClassifier(),
+    resampling=Holdout(fraction_train=0.7, shuffle=true),
 )
 @test dsc isa SX.DataSet{SX.DecisionTreeClassifier}
 @test dsc.pinfo.type isa MLJ.Holdout
 
 dsc = setup_dataset(
-    Xc, yc;
-    resampling=StratifiedCV(),
+    Xc, yc; model=SX.DecisionTreeClassifier(),
+    resampling=StratifiedCV(nfolds=4, shuffle=true),
 )
 @test dsc isa SX.DataSet{SX.DecisionTreeClassifier}
 @test dsc.pinfo.type isa MLJ.StratifiedCV
 
 dsc = setup_dataset(
-    Xc, yc;
-    resampling=TimeSeriesCV(),
+    Xc, yc; model=SX.DecisionTreeClassifier(),
+    resampling=TimeSeriesCV(nfolds=4),
 )
 @test dsc isa SX.DataSet{SX.DecisionTreeClassifier}
 @test dsc.pinfo.type isa MLJ.TimeSeriesCV
-
-dsc = setup_dataset(
-    Xc, yc;
-    resampling=CV(nfolds=10, shuffle=true),
-)
-@test dsc isa SX.DataSet{SX.DecisionTreeClassifier}
 
 # ---------------------------------------------------------------------------- #
 #                              rng propagation                                #
 # ---------------------------------------------------------------------------- #
 dsc = setup_dataset(
-    Xc, yc;
+    Xc, yc; model=SX.DecisionTreeClassifier(),
     resampling=CV(nfolds=10, shuffle=true),
     rng=1
 )
@@ -286,44 +339,17 @@ dsc = setup_dataset(
 @test dsc.mach.model.rng isa Xoshiro
 @test dsc.pinfo.rng isa Xoshiro
 
-range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
-
-dsc = setup_dataset(
-    Xts, yts,
-    TreatmentGroup(
-        aggrfunc=SX.reducesize(
-            reducefunc=mean,
-            win=(SX.splitwindow(nwindows=5),)
-        )
-    ),
-    model=SX.ModalDecisionTree(),
-    resampling=CV(nfolds=5, shuffle=true),
-    rng=1,
-    tuning=GridTuning(;
-        resolution=10,
-        resampling=CV(nfolds=3),
-        range,
-        measure=SX.accuracy,
-        repeats=2
-    )
-)
-@test dsc.mach.model.model.rng isa Xoshiro
-@test dsc.mach.model.tuning.rng isa Xoshiro
-@test dsc.mach.model.resampling.rng isa Xoshiro
-
 # ---------------------------------------------------------------------------- #
 #                            validate modelsetup                               #
 # ---------------------------------------------------------------------------- #
 dsc = setup_dataset(
-    Xc, yc;
-    model=SX.DecisionTreeClassifier(;max_depth=5)
+    Xc, yc; model=SX.DecisionTreeClassifier(;max_depth=5)
 )
 @test dsc isa SX.DataSet{SX.DecisionTreeClassifier}
 @test dsc.mach.model.max_depth == 5
 
 @test_throws UndefVarError setup_dataset(
-    Xc, yc;
-    model=Invalid(;max_depth=5)
+    Xc, yc; model=Invalid(;max_depth=5)
 )
 
 @test_throws MethodError setup_dataset(
@@ -332,98 +358,10 @@ dsc = setup_dataset(
 )
 
 @test_throws MethodError setup_dataset(
-    Xc, yc;
+    Xc, yc; model=SX.DecisionTreeClassifier(),
     resampling=Holdout(fraction_train=0.5, shuffle=true),
     invalid=maximum
 )
-
-# ---------------------------------------------------------------------------- #
-#                                    tuning                                    #
-# ---------------------------------------------------------------------------- #
-range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
-dsr = setup_dataset(
-    Xr, yr;
-    model=SX.DecisionTreeRegressor(),
-    rng=1234,
-    tuning=GridTuning(;
-        resolution=10,
-        resampling=CV(nfolds=3),
-        range,
-        measure=rms
-    )
-)
-@test dsr isa SX.DataSet{<:MLJ.MLJTuning.DeterministicTunedModel}
-model = dsr.mach.model
-@test model isa MLJ.MLJTuning.DeterministicTunedModel
-@test model.tuning isa MLJ.MLJTuning.Grid
-
-range = (SX.range(:min_purity_increase, lower=0.001, upper=1.0, scale=:log),
-     SX.range(:max_depth, lower=1, upper=10))
-dsc = setup_dataset(
-    Xc, yc;
-    model=SX.DecisionTreeClassifier(),
-    rng=1234,
-    tuning=RandomTuning(; range)
-)
-@test dsc isa SX.DataSet{<:MLJ.MLJTuning.ProbabilisticTunedModel}
-model = dsc.mach.model
-@test model isa MLJ.MLJTuning.ProbabilisticTunedModel
-@test model.tuning isa MLJ.MLJTuning.RandomSearch
-
-range = SX.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
-dsr = setup_dataset(
-    Xr, yr;
-    model=SX.DecisionTreeRegressor(),
-    rng=1234,
-    tuning=ParticleTuning(;
-        n_particles=3,
-        resampling=CV(nfolds=3),
-        range,
-        measure=rms
-    )
-)
-@test dsr isa SX.DataSet{<:MLJ.MLJTuning.DeterministicTunedModel}
-model = dsr.mach.model
-@test model isa MLJ.MLJTuning.DeterministicTunedModel
-@test model.tuning isa SX.MLJParticleSwarmOptimization.ParticleSwarm
-
-range = (SX.range(:min_purity_increase, lower=0.001, upper=1.0, scale=:log),
-     SX.range(:max_depth, lower=1, upper=10))
-dsc = setup_dataset(
-    Xc, yc;
-    model=SX.DecisionTreeClassifier(),
-    rng=1234,
-    tuning=AdaptiveTuning(; range)
-)
-@test dsc isa SX.DataSet{<:MLJ.MLJTuning.ProbabilisticTunedModel}
-model = dsc.mach.model
-@test model isa MLJ.MLJTuning.ProbabilisticTunedModel
-@test model.tuning isa SX.MLJParticleSwarmOptimization.AdaptiveParticleSwarm
-
-tuning=GridTuning(; resolution=10, range)
-@test propertynames(tuning) == (
-    :strategy, :range, :resampling, :measure, :repeats)
-@test SX.getproperty(tuning, :resampling) isa Holdout
-@test get_strategy(tuning) isa MLJ.Grid
-
-# ---------------------------------------------------------------------------- #
-#                               various cases                                  #
-# ---------------------------------------------------------------------------- #
-y_invalid = fill(nothing, length(yc)) 
-@test_throws ArgumentError setup_dataset(Xc, y_invalid)
-
-dsc = setup_dataset(Xc, yc)
-@test length(dsc) == length(dsc.pidxs)
-
-@test SX.get_X(dsc, :train) isa Vector{<:AbstractDataFrame}
-@test SX.get_y(dsc, :test) isa Vector{<:AbstractVector{<:SX.CLabel}}
-@test SX.get_mach_model(dsc) isa SX.DecisionTreeClassifier
-
-@test_nowarn dsc.pinfo
-@test_nowarn dsc.pidxs
-@test_nowarn length(dsc.pidxs)
-
-@test length(dsc.pidxs) == length(dsc)
 
 # ---------------------------------------------------------------------------- #
 #                                  Base.show                                   #
@@ -514,39 +452,6 @@ dsc = setup_dataset(Xc, yc)
         @test occursin("Valid:", pidx_output)
         @test occursin("Test:", pidx_output)
     end
-end
-
-@testset "Tuning show methods" begin
-    # Create a test tuning configuration
-    tuning = GridTuning(
-        range=(:max_depth, 1:10),
-        measure=SX.accuracy,
-        repeats=2
-    )
-    
-    # Test text/plain show method
-    io = IOBuffer()
-    show(io, MIME"text/plain"(), tuning)
-    output = String(take!(io))
-    
-    @test contains(output, "Tuning{")
-    @test contains(output, "strategy:")
-    @test contains(output, "range:")
-    @test contains(output, "resampling:")
-    @test contains(output, "measure:")
-    @test contains(output, "repeats:")
-    
-    # Test compact show method
-    io = IOBuffer()
-    show(io, tuning)
-    compact_output = String(take!(io))
-    
-    @test contains(compact_output, "Tuning{")
-    @test contains(compact_output, "repeats=2")
-    
-    # Test that it doesn't error when printed
-    @test_nowarn println(tuning)
-    @test_nowarn display(tuning)
 end
 
 @testset "pCV Tests" begin

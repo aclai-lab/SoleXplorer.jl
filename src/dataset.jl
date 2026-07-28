@@ -3,18 +3,6 @@
 # ---------------------------------------------------------------------------- #
 is_multidim(::Matrix{T}) where T = T <: AbstractArray
 
-# return a default model appropriate for the target variable type and data
-# dimensionality.
-# this function is used when no explicit model is provided to `setup_dataset`,
-# automatically selecting between classification and regression, and between
-# modal and non-modal models based on the dataset dimensionality.
-# unsupervised (y == nothing) is treated as regression.
-function default_model(X::Matrix{T}, y::AbstractVector) where T
-    is_multidim(X) && return ModalDecisionTree()
-    return y isa CategoricalArray && !isempty(y) ?
-        DecisionTreeClassifier() : DecisionTreeRegressor()
-end
-
 # if no data treatment is specified, check the model being used and,
 # if it is modal, do not aggregate; instead, reduce the dimensionality of the
 # multidimensional data.
@@ -36,15 +24,6 @@ end
 # set the random number generator for a resampling strategy
 function set_rng(r::MLJ.ResamplingStrategy, rng::Random.AbstractRNG)
     typeof(r)(merge(MLJ.params(r), (rng=rng,))...)
-end
-
-# set random number generators for tuning-related components of a model
-function set_tuning_rng!(m::MLJ.Model, rng::Random.AbstractRNG)
-    hasproperty(m.tuning, :rng) &&
-        (m.tuning.rng = rng)
-    hasproperty(m.resampling, :rng) &&
-        (m.resampling = set_rng(m.resampling, rng))
-    return m
 end
 
 # ---------------------------------------------------------------------------- #
@@ -148,29 +127,6 @@ Return the random number generator used when partitioning the dataset.
 get_rng(ds::DataSet) = get_rng(ds.pinfo)
 
 # ---------------------------------------------------------------------------- #
-#                             MLJ models's tuning                              #
-# ---------------------------------------------------------------------------- #
-function set_tuning(
-    model::MLJ.Model,
-    tuning::Tuning,
-    rng::Random.AbstractRNG
-)::MLJ.Model
-    t_range = get_range(tuning)
-    
-    if !(t_range isa MLJ.NominalRange)
-        # convert SX.range to MLJ.range now that model is available
-        range = t_range isa Tuple{Vararg{Tuple}} ? t_range : (t_range,)
-        range = collect(MLJ.range(model, r[1]; r[2:end]...) for r in range)
-        tuning.range = range
-    end
-
-    model = MLJ.TunedModel(model; tuning_params(tuning)...)
-
-    # set the model to use the same rng as the dataset
-    set_tuning_rng!(model, rng)
-end
-
-# ---------------------------------------------------------------------------- #
 #                                setup dataset                                 #
 # ---------------------------------------------------------------------------- #
 """
@@ -179,10 +135,9 @@ end
         y=nothing;
         vnames=["V1", "V2", ...],
         w=nothing,
-        model=default_model(y, is_multidim(X)),
+        model::MLJ.Model;
         resampling=Holdout(fraction_train=0.7, shuffle=true),
         valid_ratio=0.0,
-        tuning=nothing,
         float_type=Float32,
         rng=Xoshiro(42),
         kwargs...
@@ -226,13 +181,7 @@ and builds an MLJ machine.
 - `valid_ratio::Real=0.0`: Fraction of each training partition reserved for
   validation.
 - `rng::Union{AbstractRNG,Int}=Xoshiro(42)`: Random-number generator, or an
-  integer seed. The generator is propagated to the model, resampling strategy,
-  and tuning components when supported.
-
-## Hyperparameter tuning
-- `tuning::Union{Nothing,Tuning}=nothing`: Optional tuning configuration. Its
-  range is converted to an MLJ range after the model has been selected. For
-  modal models, `LogLoss()` is used when no tuning measure is specified.
+  integer seed. The generator is propagated to the model, resampling strategy.
 
 # Returns
 A `DataSet` containing the MLJ machine, partition indices, and partition
@@ -260,32 +209,17 @@ ds = setup_dataset(
     rng=1,
 )
 
-# Explicit model and tuning:
-range = SoleXplorer.range(:gamma; lower=0.001, upper=1.0, scale=:log)
-ds = setup_dataset(
-    df,
-    y;
-    model=XGBoostClassifier(),
-    tuning=GridTuning(
-        resolution=10,
-        resampling=CV(nfolds=3),
-        range=range,
-        measure=accuracy,
-        repeats=2,
-    ),
-)
 ```
 
 # See also
 [`DataSet`](@ref), [`solexplorer`](@ref)
 """
-function setup_dataset(
+function _setup_dataset(
     dt::DT.DataTreatment;
+    model::MLJ.Model,
     w::Union{Nothing,Vector}=nothing,
-    model::MLJ.Model=default_model(DT.get_target(dt), has_multidim(dt)),
     resampling::ResamplingStrategy=Holdout(fraction_train=0.7, shuffle=true),
     valid_ratio::Real=0.0,
-    tuning::Union{Nothing,Tuning}=nothing,
     rng::Union{AbstractRNG,Int}=Xoshiro(42)
 )
     rng isa Int && (rng = Xoshiro(rng))
@@ -307,14 +241,7 @@ function setup_dataset(
     hasproperty(model, :rng) && set_rng!(model, rng)
     hasproperty(resampling, :rng) && (resampling = set_rng(resampling, rng))
 
-    # MLJ.TunedModels can't automatically assigns measure to Modal models
-    if model isa Modal && !isnothing(tuning)
-        isnothing(get_measure(tuning)) && (tuning.measure = LogLoss())
-    end
-
     ttpairs, pinfo = partition(DT.nrows(dt), y; resampling, valid_ratio, rng)
-
-    isnothing(tuning) || (model = set_tuning(model, tuning, rng))
 
     Xdf = DataFrame(X, vnames)
     to_mach = isempty(y) ? (Xdf) : (Xdf, y)
@@ -328,46 +255,30 @@ end
 function setup_dataset(
     X::Matrix{T},
     y::Union{Nothing,AbstractVector{<:Label}}=nothing;
+    model::MLJ.Model,
     vnames::Vector{String}=["V$i" for i in 1:size(X, 2)],
     w::Union{Nothing,Vector}=nothing,
-    model::MLJ.Model=default_model(X, y),
     resampling::ResamplingStrategy=Holdout(fraction_train=0.7, shuffle=true),
     valid_ratio::Real=0.0,
-    tuning::Union{Nothing,Tuning}=nothing,
     float_type::Type=Float32,
     rng::Union{AbstractRNG,Int}=Xoshiro(42),
     kwargs...
 ) where T
-    treatments = isempty(kwargs) ?
+    treatment = isempty(kwargs) ?
         default_treatment(model) :
         TreatmentGroup(; kwargs...)
 
-    dt = DT.load_dataset(
-        X,
-        vnames,
-        y,
-        treatments;
-        float_type
-    )
-
-    setup_dataset(
-        dt;
-        w,
-        model,
-        resampling,
-        valid_ratio,
-        tuning,
-        rng,
-    )
+    dt = DT.load_dataset(X, vnames, y, treatment; float_type)
+    _setup_dataset(dt; model, w, resampling, valid_ratio, rng)
 end
 
-function setup_dataset(
+setup_dataset(
     df::AbstractDataFrame,
-    y::Union{Nothing,AbstractVector{<:Label}}=nothing;
+    y::AbstractVector{<:Label},
+    args...;
     kwargs...
-) 
-setup_dataset(Matrix(df), y; vnames=names(df), kwargs...)
-end
+) = setup_dataset(Matrix(df), y; vnames=names(df), kwargs...)
+
 
 setup_dataset(df::AbstractDataFrame, args...; kwargs...) =
-    setup_dataset(Matrix(df); vnames=names(df), kwargs...)
+    setup_dataset(Matrix(df), nothing; vnames=names(df), kwargs...)

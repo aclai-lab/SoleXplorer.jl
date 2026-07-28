@@ -26,12 +26,8 @@ using SoleModels:
 # cross-validation
     Holdout, CV, StratifiedCV, TimeSeriesCV
 
-# tuning
-using MLJParticleSwarmOptimization
-const PSO = MLJParticleSwarmOptimization
-
 using MLJ
-using MLJ: MLJBase, MLJTuning
+using MLJ: MLJBase
 # custom resampling strategy
 import MLJ.MLJBase: train_test_pairs
 
@@ -50,15 +46,14 @@ import MLJ.MLJBase: train_test_pairs
     # features sets
     base_set, catch9, catch22_set, complete_set,
     # windowing
-    movingwindow, wholewindow, splitwindow, adaptivewindow,
+    wholewindow, splitwindow, adaptivewindow,
     # balancing
     RandomOversampler, RandomWalkOversampler, ROSE, SMOTE,
     BorderlineSMOTE1, SMOTEN, SMOTENC, RandomUndersampler,
     ClusterUndersampler, ENNUndersampler, TomekUndersampler,
     # normalization
     ZScore, MinMax, Center, Sigmoid, UnitEnergy, UnitPower,
-    Scale, ScaleMad, ScaleFirst, PNorm1, PNorm, PNormInf,
-    MissingSafe, Robust
+    Scale, ScaleMad, ScaleFirst, PNorm1, PNorm, PNormInf, Robust
     
 using DataTreatments
 const DT = DataTreatments
@@ -100,11 +95,6 @@ const Modal =
 #                                  sections                                    #
 # ---------------------------------------------------------------------------- #
 include("measures.jl")
-
-export range,
-    get_range, get_strategy, get_resampling, get_measure, get_repeats,
-    GridTuning, RandomTuning, ParticleTuning, AdaptiveTuning
-include("tuning.jl")
 
 export AbstractDataSet, DataSet, setup_dataset,
     get_X, get_y, get_mach, get_mach_model, get_logiset, get_rng
