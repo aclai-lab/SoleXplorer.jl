@@ -1,7 +1,7 @@
 # ---------------------------------------------------------------------------- #
 #                                  defaults                                    #
 # ---------------------------------------------------------------------------- #
-is_multidim(X::Matrix{T}) where T = T isa AbstractVector ? true : false
+is_multidim(::Matrix{T}) where T = T <: AbstractArray
 
 # return a default model appropriate for the target variable type and data
 # dimensionality.
@@ -9,8 +9,8 @@ is_multidim(X::Matrix{T}) where T = T isa AbstractVector ? true : false
 # automatically selecting between classification and regression, and between
 # modal and non-modal models based on the dataset dimensionality.
 # unsupervised (y == nothing) is treated as regression.
-function default_model(y::AbstractVector, multidim::Bool)
-    multidim && return ModalDecisionTree()
+function default_model(X::Matrix{T}, y::AbstractVector) where T
+    is_multidim(X) && return ModalDecisionTree()
     return y isa CategoricalArray && !isempty(y) ?
         DecisionTreeClassifier() : DecisionTreeRegressor()
 end
@@ -82,8 +82,6 @@ mutable struct DataSet{M,T}
     ) where {M<:MLJ.Model,T} = new{M,T}(mach, pidxs, pinfo)
 end
 
-# ---------------------------------------------------------------------------- #
-#                                    methods                                   #
 # ---------------------------------------------------------------------------- #
 """
     Base.length(ds::DataSet) -> Int
@@ -177,145 +175,109 @@ end
 # ---------------------------------------------------------------------------- #
 """
     setup_dataset(
-        dt::DataTreatment;
+        X::Matrix,
+        y=nothing;
+        vnames=["V1", "V2", ...],
         w=nothing,
-        model=default_model(get_target(dt)),
+        model=default_model(y, is_multidim(X)),
         resampling=Holdout(fraction_train=0.7, shuffle=true),
         valid_ratio=0.0,
-        rng=Xoshiro(42),
         tuning=nothing,
-    ) -> DataSet
-
-    setup_dataset(
-        X::Matrix,
-        vnames::Vector{String},
-        y=nothing,
-        treatments...;
-        treatment_ds=true,
-        leftover_ds=false,
-        float_type=Float64,
+        float_type=Float32,
+        rng=Xoshiro(42),
         kwargs...
     ) -> DataSet
 
     setup_dataset(
-        df::AbstractDataFrame, y=nothing, args...; kwargs...) -> DataSet
-    setup_dataset(
-        df::AbstractDataFrame, y::Symbol, args...; kwargs...) -> DataSet
+        df::AbstractDataFrame,
+        y=nothing;
+        kwargs...
+    ) -> DataSet
 
-Creates and configures a dataset structure for machine learning.
-
-This is the core implementation function that handles the complete dataset
-setup pipeline, including data preprocessing, model configuration,
-partitioning, hyperparameter tuning, and MLJ machine creation.
+Create and configure a `DataSet` for machine learning. The function loads or
+uses the supplied data treatment, selects the data representation compatible
+with the model, creates train/test (and optionally validation) partitions,
+and builds an MLJ machine.
 
 # Arguments
-- `dt::DataTreatment`: A `DataTreatment` object encapsulating features,
-  target, and preprocessing information. Use `DataTreatments.load_dataset`
-  to construct one.
-- `X::Matrix`: Raw feature matrix.
-- `vnames::Vector{String}`: Column names for the feature matrix.
-  Defaults to `["V1", "V2", ...]`.
-- `y::Union{Nothing,AbstractVector{<:Label}}=nothing`: Target variable vector.
-  If `nothing`, an unsupervised (or regression-only) setup is assumed.
-- `df::AbstractDataFrame`: Feature DataFrame, optionally containing the
-  target column.
-- `treatments::Vararg{Base.Callable}`: Data treatment functions applied
-  during preprocessing (defaults to `DataTreatments.DefaultTreatmentGroup`).
+- `X::Matrix`: Raw feature matrix. Multidimensional samples are represented
+  by matrix elements that are themselves vectors.
+- `df::AbstractDataFrame`: Tabular feature data. It is converted to a matrix
+  before loading.
+- `y::Union{Nothing,AbstractVector{<:Label}}=nothing`: Target values. When
+  omitted, the MLJ machine is created without a target.
+- `vnames::Vector{String}`: Feature names for `X`. By default, names are
+  generated as `"V1"`, `"V2"`, and so on.
+- `w::Union{Nothing,Vector}=nothing`: Optional per-observation weights.
 
 # Keyword Arguments
 
-## Model Configuration
-- `model::MLJ.Model=default_model(y)`: Sole-compatible MLJ model to use,
-  auto-selected based on target type if not provided. Classification targets
-  (CategoricalArray) default to `DecisionTreeClassifier`, others to
-  `DecisionTreeRegressor`.
+## Model and preprocessing
+- `model::MLJ.Model`: Model used to build the MLJ machine. If omitted, a
+  `ModalDecisionTree` is selected for multidimensional data; otherwise,
+  categorical targets select a `DecisionTreeClassifier` and other targets
+  select a `DecisionTreeRegressor`.
+- `float_type::Type=Float32`: Numeric type used while loading matrix or
+  DataFrame data.
 
-## Data Resampling
+## Resampling
 - `resampling::ResamplingStrategy=Holdout(fraction_train=0.7, shuffle=true)`:
-  Cross-validation or holdout strategy. Strategies are taken from
-  [MLJ](https://juliaai.github.io/MLJBase.jl/stable/resampling/).
-- `valid_ratio::Real=0.0`: Fraction of training data to reserve as a
-  validation set. Primarily used with XGBoost
-  [early stopping](https://xgboost.readthedocs.io/en/stable/prediction.html).
-- `rng::Union{AbstractRNG,Int}=Xoshiro(42)`: Random number generator or
-  integer seed for reproducibility. If an `Int` is provided, it is
-  automatically wrapped in a `Xoshiro` RNG and propagated to the model,
-  resampling strategy, and tuning components.
+  MLJ holdout or cross-validation strategy used to partition observations.
+- `valid_ratio::Real=0.0`: Fraction of each training partition reserved for
+  validation.
+- `rng::Union{AbstractRNG,Int}=Xoshiro(42)`: Random-number generator, or an
+  integer seed. The generator is propagated to the model, resampling strategy,
+  and tuning components when supported.
 
-## Hyperparameter Tuning
-- `tuning::Union{Nothing,Tuning}=nothing`: Tuning configuration. Requires
-  a `range` specification, e.g.:
-  ```julia
-  range = SoleXplorer.range(
-      :min_purity_increase; lower=0.1, upper=1.0, scale=:log
-  )
-  ```
-  Tuning strategies are adapted from
-  [MLJ](https://juliaai.github.io/MLJ.jl/stable/) and
-  [MLJParticleSwarmOptimization.jl]
-  (https://github.com/JuliaAI/MLJParticleSwarmOptimization.jl).
-
-## Data Loading (Matrix/DataFrame methods only)
-- `treatment_ds::Bool=true`: Whether to include the treated dataset
-  partition.
-- `leftover_ds::Bool=false`: Whether to include the leftover (untreated)
-  partition.
-- `float_type::Type=Float64`: Numeric type used for feature conversion.
-
-## Weights
-- `w::Union{Nothing,Vector}=nothing`: Optional per-sample weights vector.
+## Hyperparameter tuning
+- `tuning::Union{Nothing,Tuning}=nothing`: Optional tuning configuration. Its
+  range is converted to an MLJ range after the model has been selected. For
+  modal models, `LogLoss()` is used when no tuning measure is specified.
 
 # Returns
-- `DataSet{M,T}`: A configured dataset struct wrapping an MLJ machine,
-  partition indices, and partition metadata.
+A `DataSet` containing the MLJ machine, partition indices, and partition
+metadata.
 
-# Notes
-- When calling `setup_dataset(df, y::Symbol, ...)`, the target column `y`
-  is automatically removed from the feature set.
-- Modal models require a `DataTreatment` built from multidimensional
-  (time-series) data; non-modal models require tabular data. Mixing types
-  raises an error.
-- For Modal models with tuning, if no `measure` is provided, `LogLoss()`
-  is used as a default.
+# Errors
+Throws an error when a modal model is used with tabular data, or when a
+non-modal model is used with multidimensional data.
 
 # Examples
 ```julia
 using SoleXplorer, MLJ, DataFrames
-const SX = SoleXplorer
 
-Xc, yc = @load_iris
-Xc = DataFrame(Xc)
+X, y = @load_iris
+df = DataFrame(X)
 
-# basic classification setup
-ds = setup_dataset(Xc, yc)
+# Classification with default model and preprocessing:
+ds = setup_dataset(df, y)
 
-# specify model
-ds = setup_dataset(Xc, yc; model=AdaBoostStumpClassifier())
-
-# cross-validation with rng seed
-ds = setup_dataset(Xc, yc; resampling=CV(nfolds=10, shuffle=true), rng=1)
-
-# hyperparameter tuning
-range = SX.range(:gamma; lower=0.001, upper=1.0, scale=:log)
+# Cross-validation with a reproducible seed:
 ds = setup_dataset(
-    Xc, yc;
-    model=XGBoostClassifier(),
-    resampling=CV(nfolds=5, shuffle=true),
+    df,
+    y;
+    resampling=CV(nfolds=10, shuffle=true),
     rng=1,
+)
+
+# Explicit model and tuning:
+range = SoleXplorer.range(:gamma; lower=0.001, upper=1.0, scale=:log)
+ds = setup_dataset(
+    df,
+    y;
+    model=XGBoostClassifier(),
     tuning=GridTuning(
         resolution=10,
         resampling=CV(nfolds=3),
         range=range,
         measure=accuracy,
-        repeats=2
-    )
+        repeats=2,
+    ),
 )
-
-# target as column symbol
-ds = setup_dataset(Xc, :petal_width)
 ```
 
-# See also: [`DataSet`](@ref), [`solexplorer`](@ref)
+# See also
+[`DataSet`](@ref), [`solexplorer`](@ref)
 """
 function setup_dataset(
     dt::DT.DataTreatment;
@@ -368,7 +330,7 @@ function setup_dataset(
     y::Union{Nothing,AbstractVector{<:Label}}=nothing;
     vnames::Vector{String}=["V$i" for i in 1:size(X, 2)],
     w::Union{Nothing,Vector}=nothing,
-    model::MLJ.Model=default_model(y, is_multidim(X)),
+    model::MLJ.Model=default_model(X, y),
     resampling::ResamplingStrategy=Holdout(fraction_train=0.7, shuffle=true),
     valid_ratio::Real=0.0,
     tuning::Union{Nothing,Tuning}=nothing,

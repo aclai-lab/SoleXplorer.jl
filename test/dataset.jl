@@ -33,6 +33,10 @@ dsc = setup_dataset(Xc, yc)
 @test dsc isa SX.DataSet{SX.DecisionTreeClassifier}
 dsr = setup_dataset(Xr, yr)
 @test dsr isa SX.DataSet{SX.DecisionTreeRegressor}
+dsts = setup_dataset(Xts, yts)
+@test dsts isa SX.DataSet{SX.ModalDecisionTree}
+dsimg = setup_dataset(Ximg, yimg)
+@test dsimg isa SX.DataSet{SX.ModalDecisionTree}
 
 # ---------------------------------------------------------------------------- #
 # model type specification
@@ -123,16 +127,11 @@ dsimg = setup_dataset(
 # ---------------------------------------------------------------------------- #
 # aggrfunc parameter usage
 dsts = setup_dataset(
-    Xts, yts;
-    model=SX.ModalDecisionTree(),
-    aggrfunc=reducesize(
-        reducefunc=mean,
-        win=(splitwindow(nwindows=4),),
-    ),
-    norm=MinMax
+    Xts, yts; aggrfunc=reducesize(win=(movingwindow(winsize=4, winstep=1)))
 )
+@test dsts isa SX.DataSet{SX.ModalDecisionTree}
+@test dsts.mach.args[1].data[1,1] isa Vector
 
-# treatments groups: aggregate or reducesize for multidim datasets
 dsts = setup_dataset(
     Xts, yts,
     TreatmentGroup(
@@ -145,6 +144,46 @@ dsts = setup_dataset(
 )
 @test dsts isa SX.DataSet{SX.ModalDecisionTree}
 @test dsts.mach.args[1].data[1,1] isa Vector
+
+dsts = setup_dataset(
+    Xts, yts,
+    TreatmentGroup(
+        aggrfunc=reducesize(
+            reducefunc=mean,
+            win=(splitwindow(nwindows=4),),
+        ),
+        norm=MinMax
+    )
+)
+@test dsts isa SX.DataSet{SX.ModalDecisionTree}
+@test dsts.mach.args[1].data[1,1] isa Vector
+
+dsts = setup_dataset(
+    Xts, yts,
+    TreatmentGroup(
+        aggrfunc=reducesize(
+            reducefunc=mean,
+            win=(splitwindow(nwindows=4),),
+        ),
+        norm=MinMax
+    )
+)
+@test dsts isa SX.DataSet{SX.ModalDecisionTree}
+@test dsts.mach.args[1].data[1,1] isa Vector
+
+
+
+dsts = setup_dataset(
+    Xts, yts;
+    model=SX.ModalDecisionTree(),
+    aggrfunc=reducesize(
+        reducefunc=mean,
+        win=(splitwindow(nwindows=4),),
+    ),
+    norm=MinMax
+)
+
+
 
 dsts = setup_dataset(
     Xts, yts,
