@@ -6,10 +6,12 @@ is_multidim(::Matrix{T}) where T = T <: AbstractArray
 # if no data treatment is specified, check the model being used and,
 # if it is modal, do not aggregate; instead, reduce the dimensionality of the
 # multidimensional data.
-function default_treatment(model::MLJ.Model)
+function default_treatment(model::MLJ.Model; kwargs...)
     return model isa Modal ?
-        TreatmentGroup(aggrfunc=reducesize(win=(splitwindow(nwindows=3)))) :
-        DT.DefaultTreatmentGroup
+        TreatmentGroup(
+            aggrfunc=reducesize(win=(splitwindow(nwindows=3))); kwargs...) :
+        TreatmentGroup(
+            aggrfunc=aggregate(win=(wholewindow())); kwargs...)
 end
 
 # ---------------------------------------------------------------------------- #
@@ -264,9 +266,9 @@ function setup_dataset(
     rng::Union{AbstractRNG,Int}=Xoshiro(42),
     kwargs...
 ) where T
-    treatment = isempty(kwargs) ?
-        default_treatment(model) :
-        TreatmentGroup(; kwargs...)
+    treatment = haskey(kwargs, :aggrfunc) ?
+        TreatmentGroup(; kwargs...) :
+        default_treatment(model; kwargs...)
 
     dt = DT.load_dataset(X, vnames, y, treatment; float_type)
     _setup_dataset(dt; model, w, resampling, valid_ratio, rng)

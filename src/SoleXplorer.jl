@@ -52,8 +52,8 @@ import MLJ.MLJBase: train_test_pairs
     BorderlineSMOTE1, SMOTEN, SMOTENC, RandomUndersampler,
     ClusterUndersampler, ENNUndersampler, TomekUndersampler,
     # normalization
-    ZScore, MinMax, Center, Sigmoid, UnitEnergy, UnitPower,
-    Scale, ScaleMad, ScaleFirst, PNorm1, PNorm, PNormInf, Robust
+    ZScore, MinMax, Center, Sigmoid, UnitPower,
+    Scale, ScaleMad, ScaleFirst, PNorm1, PNormInf
     
 using DataTreatments
 const DT = DataTreatments

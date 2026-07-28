@@ -328,6 +328,226 @@ dsc = setup_dataset(
 @test dsc.pinfo.type isa MLJ.TimeSeriesCV
 
 # ---------------------------------------------------------------------------- #
+#                               normalization                                  #
+# ---------------------------------------------------------------------------- #
+# propositional
+dsc = setup_dataset(
+    Xc, yc; model=SX.DecisionTreeClassifier(),
+    norm=ZScore
+)
+@test dsc isa SX.DataSet{SX.DecisionTreeClassifier}
+@test dsts.mach.args[1].data[1,1] isa Real
+
+dsc = setup_dataset(
+    Xc, yc; model=SX.DecisionTreeClassifier(),
+    norm=MinMax
+)
+@test dsc isa SX.DataSet{SX.DecisionTreeClassifier}
+@test dsts.mach.args[1].data[1,1] isa Real
+
+dsc = setup_dataset(
+    Xc, yc; model=SX.DecisionTreeClassifier(),
+    norm=Center
+)
+@test dsc isa SX.DataSet{SX.DecisionTreeClassifier}
+@test dsts.mach.args[1].data[1,1] isa Real
+
+dsc = setup_dataset(
+    Xc, yc; model=SX.DecisionTreeClassifier(),
+    norm=Sigmoid
+)
+@test dsc isa SX.DataSet{SX.DecisionTreeClassifier}
+@test dsts.mach.args[1].data[1,1] isa Real
+
+dsc = setup_dataset(
+    Xc, yc; model=SX.DecisionTreeClassifier(),
+    norm=UnitPower
+)
+@test dsc isa SX.DataSet{SX.DecisionTreeClassifier}
+@test dsts.mach.args[1].data[1,1] isa Real
+
+dsc = setup_dataset(
+    Xc, yc; model=SX.DecisionTreeClassifier(),
+    norm=Scale
+)
+@test dsc isa SX.DataSet{SX.DecisionTreeClassifier}
+@test dsts.mach.args[1].data[1,1] isa Real
+
+dsc = setup_dataset(
+    Xc, yc; model=SX.DecisionTreeClassifier(),
+    norm=ScaleMad
+)
+@test dsc isa SX.DataSet{SX.DecisionTreeClassifier}
+@test dsts.mach.args[1].data[1,1] isa Real
+
+dsc = setup_dataset(
+    Xc, yc; model=SX.DecisionTreeClassifier(),
+    norm=ScaleFirst
+)
+@test dsc isa SX.DataSet{SX.DecisionTreeClassifier}
+@test dsts.mach.args[1].data[1,1] isa Real
+
+dsc = setup_dataset(
+    Xc, yc; model=SX.DecisionTreeClassifier(),
+    norm=PNorm1
+)
+@test dsc isa SX.DataSet{SX.DecisionTreeClassifier}
+@test dsts.mach.args[1].data[1,1] isa Real
+
+dsc = setup_dataset(
+    Xc, yc; model=SX.DecisionTreeClassifier(),
+    norm=PNormInf
+)
+@test dsc isa SX.DataSet{SX.DecisionTreeClassifier}
+@test dsts.mach.args[1].data[1,1] isa Real
+
+# ---------------------------------------------------------------------------- #
+# time-series
+dsts = setup_dataset(
+    Xts, yts; model=SX.ModalDecisionTree(),
+    norm=ZScore
+)
+@test dsts isa SX.DataSet{SX.ModalDecisionTree}
+@test dsts.mach.args[1].data[1,1] isa Vector
+
+dsts = setup_dataset(
+    Xts, yts; model=SX.ModalDecisionTree(),
+    aggrfunc=reducesize(win=(splitwindow(nwindows=3))),
+    norm=MinMax
+)
+@test dsts isa SX.DataSet{SX.ModalDecisionTree}
+@test dsts.mach.args[1].data[1,1] isa Vector
+
+dsts = setup_dataset(
+    Xts, yts; model=SX.ModalDecisionTree(),
+    norm=Center
+)
+@test dsts isa SX.DataSet{SX.ModalDecisionTree}
+@test dsts.mach.args[1].data[1,1] isa Vector
+
+dsts = setup_dataset(
+    Xts, yts; model=SX.ModalDecisionTree(),
+    norm=Sigmoid
+)
+@test dsts isa SX.DataSet{SX.ModalDecisionTree}
+@test dsts.mach.args[1].data[1,1] isa Vector
+
+dsts = setup_dataset(
+    Xts, yts; model=SX.ModalDecisionTree(),
+    norm=UnitPower
+)
+@test dsts isa SX.DataSet{SX.ModalDecisionTree}
+@test dsts.mach.args[1].data[1,1] isa Vector
+
+dsts = setup_dataset(
+    Xts, yts; model=SX.ModalDecisionTree(),
+    norm=Scale
+)
+@test dsts isa SX.DataSet{SX.ModalDecisionTree}
+@test dsts.mach.args[1].data[1,1] isa Vector
+
+dsts = setup_dataset(
+    Xts, yts; model=SX.ModalDecisionTree(),
+    norm=ScaleMad
+)
+@test dsts isa SX.DataSet{SX.ModalDecisionTree}
+@test dsts.mach.args[1].data[1,1] isa Vector
+
+dsts = setup_dataset(
+    Xts, yts; model=SX.ModalDecisionTree(),
+    norm=ScaleFirst
+)
+@test dsts isa SX.DataSet{SX.ModalDecisionTree}
+@test dsts.mach.args[1].data[1,1] isa Vector
+
+dsts = setup_dataset(
+    Xts, yts; model=SX.ModalDecisionTree(),
+    norm=PNorm1
+)
+@test dsts isa SX.DataSet{SX.ModalDecisionTree}
+@test dsts.mach.args[1].data[1,1] isa Vector
+
+dsts = setup_dataset(
+    Xts, yts; model=SX.ModalDecisionTree(),
+    norm=PNormInf
+)
+@test dsts isa SX.DataSet{SX.ModalDecisionTree}
+@test dsts.mach.args[1].data[1,1] isa Vector
+
+# ---------------------------------------------------------------------------- #
+# images
+dsimg = setup_dataset(
+    Ximg, yimg; model=SX.ModalDecisionTree(),
+    norm=ZScore
+)
+@test dsimg isa SX.DataSet{SX.ModalDecisionTree}
+@test dsimg.mach.args[1].data[1,1] isa Matrix
+
+dsimg = setup_dataset(
+    Ximg, yimg; model=SX.ModalDecisionTree(),
+    aggrfunc=reducesize(win=(splitwindow(nwindows=3))),
+    norm=MinMax
+)
+@test dsimg isa SX.DataSet{SX.ModalDecisionTree}
+@test dsimg.mach.args[1].data[1,1] isa Matrix
+
+dsimg = setup_dataset(
+    Ximg, yimg; model=SX.ModalDecisionTree(),
+    norm=Center
+)
+@test dsimg isa SX.DataSet{SX.ModalDecisionTree}
+@test dsimg.mach.args[1].data[1,1] isa Matrix
+
+dsimg = setup_dataset(
+    Ximg, yimg; model=SX.ModalDecisionTree(),
+    norm=Sigmoid
+)
+@test dsimg isa SX.DataSet{SX.ModalDecisionTree}
+@test dsimg.mach.args[1].data[1,1] isa Matrix
+
+dsimg = setup_dataset(
+    Ximg, yimg; model=SX.ModalDecisionTree(),
+    norm=UnitPower
+)
+@test dsimg isa SX.DataSet{SX.ModalDecisionTree}
+@test dsimg.mach.args[1].data[1,1] isa Matrix
+
+dsimg = setup_dataset(
+    Ximg, yimg; model=SX.ModalDecisionTree(),
+    norm=Scale
+)
+@test dsimg isa SX.DataSet{SX.ModalDecisionTree}
+@test dsimg.mach.args[1].data[1,1] isa Matrix
+
+dsimg = setup_dataset(
+    Ximg, yimg; model=SX.ModalDecisionTree(),
+    norm=ScaleMad
+)
+@test dsimg isa SX.DataSet{SX.ModalDecisionTree}
+@test dsimg.mach.args[1].data[1,1] isa Matrix
+
+dsimg = setup_dataset(
+    Ximg, yimg; model=SX.ModalDecisionTree(),
+    norm=ScaleFirst
+)
+@test dsimg isa SX.DataSet{SX.ModalDecisionTree}
+@test dsimg.mach.args[1].data[1,1] isa Matrix
+
+dsimg = setup_dataset(
+    Ximg, yimg; model=SX.ModalDecisionTree(),
+    norm=PNorm1
+)
+@test dsimg isa SX.DataSet{SX.ModalDecisionTree}
+@test dsimg.mach.args[1].data[1,1] isa Matrix
+
+dsimg = setup_dataset(
+    Ximg, yimg; model=SX.ModalDecisionTree(),
+    norm=PNormInf
+)
+@test dsimg isa SX.DataSet{SX.ModalDecisionTree}
+@test dsimg.mach.args[1].data[1,1] isa Matrix
+
+# ---------------------------------------------------------------------------- #
 #                              rng propagation                                #
 # ---------------------------------------------------------------------------- #
 dsc = setup_dataset(
