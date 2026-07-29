@@ -1,11 +1,4 @@
 using Test
-using SoleData.Artifacts
-# fill your Artifacts.toml file;
-Artifacts.fillartifacts()
-
-# Loader lists
-abcloader = ABCLoader()
-mitloader = MITESPRESSOLoader()
 
 function run_tests(list)
     println("\n" * ("#"^50))

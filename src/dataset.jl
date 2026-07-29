@@ -262,12 +262,11 @@ function setup_dataset(
     w::Union{Nothing,Vector}=nothing,
     resampling::ResamplingStrategy=Holdout(fraction_train=0.7, shuffle=true),
     valid_ratio::Real=0.0,
-    balance::Union{
-        Nothing,DT.AbstractBalance,Tuple{Vararg{<:DT.AbstractBalance}}}=nothing,
+    balance::Union{Nothing,S,Tuple{Vararg{S}}}=nothing,
     float_type::Type=Float32,
     rng::Union{AbstractRNG,Int}=Xoshiro(42),
     kwargs...
-) where T
+) where {T,S<:DT.AbstractBalance}
     treatment = haskey(kwargs, :aggrfunc) ?
         TreatmentGroup(; kwargs...) :
         default_treatment(model; kwargs...)
