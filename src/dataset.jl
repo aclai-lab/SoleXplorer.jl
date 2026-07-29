@@ -262,6 +262,8 @@ function setup_dataset(
     w::Union{Nothing,Vector}=nothing,
     resampling::ResamplingStrategy=Holdout(fraction_train=0.7, shuffle=true),
     valid_ratio::Real=0.0,
+    balance::Union{
+        Nothing,DT.AbstractBalance,Tuple{Vararg{<:DT.AbstractBalance}}}=nothing,
     float_type::Type=Float32,
     rng::Union{AbstractRNG,Int}=Xoshiro(42),
     kwargs...
@@ -270,7 +272,7 @@ function setup_dataset(
         TreatmentGroup(; kwargs...) :
         default_treatment(model; kwargs...)
 
-    dt = DT.load_dataset(X, vnames, y, treatment; float_type)
+    dt = DT.load_dataset(X, vnames, y, treatment; balance, float_type)
     _setup_dataset(dt; model, w, resampling, valid_ratio, rng)
 end
 

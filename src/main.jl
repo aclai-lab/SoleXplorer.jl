@@ -394,6 +394,13 @@ function solexplorer(
     _solexplorer(ds, solem; kwargs...)
 end
 
+function solexplorer(
+    ds::DataSet;
+    kwargs...
+)
+    _solexplorer(ds, _train_test(ds); kwargs...)
+end
+
 solexplorer(X::AbstractArray, vnames::AbstractVector, args...; kwargs...) =
     solexplorer(DataFrame(X, vnames), args...; kwargs...)
 

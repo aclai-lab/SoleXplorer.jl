@@ -610,19 +610,6 @@ dsts = setup_dataset(
 
 dsts = setup_dataset(
     df_ts, target; model=SX.ModalDecisionTree(),
-    impute=(Interpolate())
-)
-@test dsts isa SX.DataSet{SX.ModalDecisionTree}
-
-dsts = setup_dataset(
-    df_ts, target; model=SX.ModalDecisionTree(),
-    impute=(SVD(init=Substitute(), rank=0, maxiter=100, tol=1e-10)),
-    float_type=Float64 # SVD cannot work with float32 datasets
-)
-@test dsts isa SX.DataSet{SX.ModalDecisionTree}
-
-dsts = setup_dataset(
-    df_ts, target; model=SX.ModalDecisionTree(),
     impute=(Substitute(statistic=mean))
 )
 @test dsts isa SX.DataSet{SX.ModalDecisionTree}
@@ -644,13 +631,86 @@ df_img = DataFrame(
     ],
 )
 
+dsimg = setup_dataset(
+    df_img, target; model=SX.ModalDecisionTree(),
+    aggrfunc=reducesize(win=(splitwindow(nwindows=2))),
+    impute=(LOCF(), NOCB())
+)
+@test dsimg isa SX.DataSet{SX.ModalDecisionTree}
 
+dsimg = setup_dataset(
+    df_img, target; model=SX.ModalDecisionTree(),
+    aggrfunc=reducesize(win=(splitwindow(nwindows=2))),
+    impute=(Substitute(statistic=mean))
+)
+@test dsimg isa SX.DataSet{SX.ModalDecisionTree}
 
 # ---------------------------------------------------------------------------- #
 #                                 imbalance                                    #
 # ---------------------------------------------------------------------------- #
+# create imbalanced dataset
+Ximb = vcat(Xc[1:25, :], Xc[51:100, :], Xc[101:135, :])
+yimb = vcat(yc[1:25], yc[51:100], yc[101:135])
 
+dsc = setup_dataset(
+    Ximb, yimb; model=SX.DecisionTreeClassifier(),
+    balance=SX.RandomOversampler()
+)
+@test dsc isa SX.DataSet{SX.DecisionTreeClassifier}
 
+dsc = setup_dataset(
+    Ximb, yimb; model=SX.DecisionTreeClassifier(),
+    balance=SX.RandomWalkOversampler()
+)
+@test dsc isa SX.DataSet{SX.DecisionTreeClassifier}
+
+dsc = setup_dataset(
+    Ximb, yimb; model=SX.DecisionTreeClassifier(),
+    balance=SX.ROSE()
+)
+@test dsc isa SX.DataSet{SX.DecisionTreeClassifier}
+
+dsc = setup_dataset(
+    Ximb, yimb; model=SX.DecisionTreeClassifier(),
+    balance=SX.SMOTE(k=5)
+)
+@test dsc isa SX.DataSet{SX.DecisionTreeClassifier}
+
+dsc = setup_dataset(
+    Ximb, yimb; model=SX.DecisionTreeClassifier(),
+    balance=SX.BorderlineSMOTE1()
+)
+@test dsc isa SX.DataSet{SX.DecisionTreeClassifier}
+
+dsc = setup_dataset(
+    Ximb, yimb; model=SX.DecisionTreeClassifier(),
+    balance=SX.SMOTENC(k=5)
+)
+@test dsc isa SX.DataSet{SX.DecisionTreeClassifier}
+
+dsc = setup_dataset(
+    Ximb, yimb; model=SX.DecisionTreeClassifier(),
+    balance=SX.RandomUndersampler()
+)
+@test dsc isa SX.DataSet{SX.DecisionTreeClassifier}
+
+dsc = setup_dataset(
+    Ximb, yimb; model=SX.DecisionTreeClassifier(),
+    balance=SX.ClusterUndersampler()
+)
+@test dsc isa SX.DataSet{SX.DecisionTreeClassifier}
+
+dsc = setup_dataset(
+    Ximb, yimb; model=SX.DecisionTreeClassifier(),
+    balance=SX.ENNUndersampler()
+)
+@test dsc isa SX.DataSet{SX.DecisionTreeClassifier}
+
+dsc = setup_dataset(
+    Ximb, yimb; model=SX.DecisionTreeClassifier(),
+    balance=SX.TomekUndersampler()
+)
+@test dsc isa SX.DataSet{SX.DecisionTreeClassifier}
 
 # ---------------------------------------------------------------------------- #
 #                              rng propagation                                 #

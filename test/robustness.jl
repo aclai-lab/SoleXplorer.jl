@@ -2,7 +2,6 @@ using Test
 using SoleXplorer
 const SX = SoleXplorer
 
-
 using SoleData
 
 using MLJ, DataFrames, Random

@@ -60,6 +60,11 @@ import MLJ.MLJBase: train_test_pairs
 using DataTreatments
 const DT = DataTreatments
 
+@reexport using SignalEncodings: Uniform, Quantile, Jenks
+
+using SignalEncodings
+const SE = SignalEncodings
+
 using CategoricalArrays
 using DataFrames
 using Random
