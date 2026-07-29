@@ -548,7 +548,85 @@ dsimg = setup_dataset(
 @test dsimg.mach.args[1].data[1,1] isa Matrix
 
 # ---------------------------------------------------------------------------- #
-#                              rng propagation                                #
+#                                  impute                                      #
+# ---------------------------------------------------------------------------- #
+df_prop = DataFrame([
+    1.0  2.0  3.0;
+    NaN  5.0  6.0;
+    7.0  missing  9.0;
+    1.0  2.0  3.0;
+    4.0  5.0  6.0
+], :auto)
+
+target = ["a", "b", "a", "b", "a"]
+
+# ---------------------------------------------------------------------------- #
+dsc = setup_dataset(
+    df_prop, target; model=SX.DecisionTreeClassifier(),
+    impute=(LOCF(), NOCB())
+)
+@test dsc isa SX.DataSet{SX.DecisionTreeClassifier}
+
+dsc = setup_dataset(
+    df_prop, target; model=SX.DecisionTreeClassifier(),
+    impute=(Interpolate())
+)
+@test dsc isa SX.DataSet{SX.DecisionTreeClassifier}
+
+dsc = setup_dataset(
+    df_prop, target; model=SX.DecisionTreeClassifier(),
+    impute=(SVD(init=Substitute(), rank=0, maxiter=100, tol=1e-10)),
+    float_type=Float64 # SVD cannot work with float32 datasets
+)
+@test dsc isa SX.DataSet{SX.DecisionTreeClassifier}
+
+dsc = setup_dataset(
+    df_prop, target; model=SX.DecisionTreeClassifier(),
+    impute=(Substitute(statistic=mean))
+)
+@test dsc isa SX.DataSet{SX.DecisionTreeClassifier}
+
+# ---------------------------------------------------------------------------- #
+df_ts = DataFrame(
+    ts1 = Any[
+        Union{Missing, Float64}[1.0, NaN, 3.0, 4.0],
+        Union{Missing, Float64}[2.0, 3.0, missing, 5.0],
+        Union{Missing, Float64}[missing, 2.0, 3.0, 4.0],
+        Union{Missing, Float64}[5.0, NaN, 7.0, 8.0],
+    ],
+    ts2 = Any[
+        Union{Missing, Float64}[missing, 2.0, 3.0, NaN],
+        Union{Missing, Float64}[1.0, 2.0, 3.0, 4.0],
+        Union{Missing, Float64}[5.0, missing, 7.0, 8.0],
+        Union{Missing, Float64}[NaN, 2.0, 3.0, 4.0],
+    ],
+)
+
+df_img = DataFrame(
+    img1 = Any[
+        Matrix{Union{Missing, Float64}}([1.0 NaN; missing 4.0]),
+        Matrix{Union{Missing, Float64}}([2.0 3.0; 4.0 missing]),
+        Matrix{Union{Missing, Float64}}([NaN 6.0; 7.0 8.0]),
+        Matrix{Union{Missing, Float64}}([9.0 missing; 11.0 12.0]),
+    ],
+    img2 = Any[
+        Matrix{Union{Missing, Float64}}([missing 2.0; 3.0 NaN]),
+        Matrix{Union{Missing, Float64}}([4.0 5.0; NaN 7.0]),
+        Matrix{Union{Missing, Float64}}([8.0 9.0; 10.0 missing]),
+        Matrix{Union{Missing, Float64}}([11.0 12.0; 13.0 14.0]),
+    ],
+)
+
+
+
+# ---------------------------------------------------------------------------- #
+#                                 imbalance                                    #
+# ---------------------------------------------------------------------------- #
+
+
+
+# ---------------------------------------------------------------------------- #
+#                              rng propagation                                 #
 # ---------------------------------------------------------------------------- #
 dsc = setup_dataset(
     Xc, yc; model=SX.DecisionTreeClassifier(),

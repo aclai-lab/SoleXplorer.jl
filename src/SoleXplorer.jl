@@ -53,7 +53,9 @@ import MLJ.MLJBase: train_test_pairs
     ClusterUndersampler, ENNUndersampler, TomekUndersampler,
     # normalization
     ZScore, MinMax, Center, Sigmoid, UnitPower,
-    Scale, ScaleMad, ScaleFirst, PNorm1, PNormInf
+    Scale, ScaleMad, ScaleFirst, PNorm1, PNormInf,
+    # imputation
+    Interpolate, LOCF, NOCB, SVD, Substitute
     
 using DataTreatments
 const DT = DataTreatments
