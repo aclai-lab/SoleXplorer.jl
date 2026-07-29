@@ -557,10 +557,8 @@ df_prop = DataFrame([
     1.0  2.0  3.0;
     4.0  5.0  6.0
 ], :auto)
-
 target = ["a", "b", "a", "b", "a"]
 
-# ---------------------------------------------------------------------------- #
 dsc = setup_dataset(
     df_prop, target; model=SX.DecisionTreeClassifier(),
     impute=(LOCF(), NOCB())
@@ -587,21 +585,50 @@ dsc = setup_dataset(
 @test dsc isa SX.DataSet{SX.DecisionTreeClassifier}
 
 # ---------------------------------------------------------------------------- #
+# time-series
 df_ts = DataFrame(
     ts1 = Any[
         Union{Missing, Float64}[1.0, NaN, 3.0, 4.0],
         Union{Missing, Float64}[2.0, 3.0, missing, 5.0],
-        Union{Missing, Float64}[missing, 2.0, 3.0, 4.0],
+        missing,
         Union{Missing, Float64}[5.0, NaN, 7.0, 8.0],
     ],
     ts2 = Any[
         Union{Missing, Float64}[missing, 2.0, 3.0, NaN],
-        Union{Missing, Float64}[1.0, 2.0, 3.0, 4.0],
+        NaN,
         Union{Missing, Float64}[5.0, missing, 7.0, 8.0],
         Union{Missing, Float64}[NaN, 2.0, 3.0, 4.0],
     ],
 )
+target = ["a", "b", "a", "b"]
 
+dsts = setup_dataset(
+    df_ts, target; model=SX.ModalDecisionTree(),
+    impute=(LOCF(), NOCB())
+)
+@test dsts isa SX.DataSet{SX.ModalDecisionTree}
+
+dsts = setup_dataset(
+    df_ts, target; model=SX.ModalDecisionTree(),
+    impute=(Interpolate())
+)
+@test dsts isa SX.DataSet{SX.ModalDecisionTree}
+
+dsts = setup_dataset(
+    df_ts, target; model=SX.ModalDecisionTree(),
+    impute=(SVD(init=Substitute(), rank=0, maxiter=100, tol=1e-10)),
+    float_type=Float64 # SVD cannot work with float32 datasets
+)
+@test dsts isa SX.DataSet{SX.ModalDecisionTree}
+
+dsts = setup_dataset(
+    df_ts, target; model=SX.ModalDecisionTree(),
+    impute=(Substitute(statistic=mean))
+)
+@test dsts isa SX.DataSet{SX.ModalDecisionTree}
+
+# ---------------------------------------------------------------------------- #
+# images
 df_img = DataFrame(
     img1 = Any[
         Matrix{Union{Missing, Float64}}([1.0 NaN; missing 4.0]),
