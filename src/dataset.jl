@@ -17,13 +17,15 @@ end
 # ---------------------------------------------------------------------------- #
 #                                   set rng                                    #
 # ---------------------------------------------------------------------------- #
-# Set the random number generator for a model that supports it
+# set `model.rng` to `rng` and return the modified model.
+# called only for MLJ models exposing an `rng` property.
 function set_rng!(m::MLJ.Model, rng::Random.AbstractRNG)
     m.rng = rng
     return m
 end
 
-# set the random number generator for a resampling strategy
+# return a copy of `resampling` configured with `rng`.
+# called only for resampling strategies exposing an `rng` parameter.
 function set_rng(r::MLJ.ResamplingStrategy, rng::Random.AbstractRNG)
     typeof(r)(merge(MLJ.params(r), (rng=rng,))...)
 end
@@ -65,61 +67,53 @@ end
 
 # ---------------------------------------------------------------------------- #
 """
-    Base.length(ds::DataSet) -> Int
+    Base.length(ds::DataSet)
 
 Return the number of folds (partitions) in the dataset.
 """
 Base.length(ds::DataSet) = length(ds.pidxs)
 
 """
-    get_X(ds::DataSet) -> AbstractMatrix
-    get_X(ds::DataSet, part::Symbol) -> Vector{AbstractMatrix}
+    get_X(ds::DataSet)
+    get_X(ds::DataSet, part::Symbol)
 
-Return the feature matrix stored in the MLJ machine.
+Return the feature table stored in the MLJ machine. Datasets created by
+[`setup_dataset`](@ref) store features as a `DataFrame`.
 
-The two-argument form returns a vector of views, one per fold, sliced
-according to the partition indices named `part` (e.g. `:train`, `:test`,
-`:val`).
+The two-argument form returns one view per fold, selecting the rows named by
+`part` in each partition (for example, `:train`, `:test`, or `:val`).
 """
 get_X(ds::DataSet) = ds.mach.args[1].data
 get_X(ds::DataSet, part::Symbol) =
     [@views get_X(ds)[getproperty(ds.pidxs[i], part), :] for i in 1:length(ds)]
 
 """
-    get_y(ds::DataSet) -> AbstractVector
-    get_y(ds::DataSet, part::Symbol) -> Vector{AbstractVector}
+    get_y(ds::DataSet)
+    get_y(ds::DataSet, part::Symbol)
 
 Return the target vector stored in the MLJ machine.
 
-The two-argument form returns a vector of views, one per fold, sliced
-according to the partition indices named `part` (e.g. `:train`, `:test`,
-`:val`).
+The two-argument form returns one view per fold, selecting observations named
+by `part`. These accessors require a supervised dataset; they are unavailable
+when `setup_dataset` was called without a target.
 """
 get_y(ds::DataSet) = ds.mach.args[2].data
 get_y(ds::DataSet, part::Symbol) =
     [@views get_y(ds)[getproperty(ds.pidxs[i], part)] for i in 1:length(ds)]
 
 """
-    get_mach(ds::DataSet) -> MLJ.Machine
+    get_mach(ds::DataSet)
 
 Return the MLJ machine wrapped by the dataset.
 """
 get_mach(ds::DataSet) = ds.mach
 
 """
-    get_mach_model(ds::DataSet) -> MLJ.Model
+    get_mach_model(ds::DataSet)
 
 Return the model stored inside the MLJ machine.
 """
 get_mach_model(ds::DataSet) = ds.mach.model
-
-"""
-    get_logiset(ds::DataSet) -> AbstractLogiset
-
-Return the first modality of the logiset produced after fitting the
-machine. Only valid for modal datasets.
-"""
-get_logiset(ds::DataSet) = ds.mach.data[1].modalities[1]
 
 """
     get_rng(ds::DataSet) -> AbstractRNG
@@ -131,91 +125,6 @@ get_rng(ds::DataSet) = get_rng(ds.pinfo)
 # ---------------------------------------------------------------------------- #
 #                                setup dataset                                 #
 # ---------------------------------------------------------------------------- #
-"""
-    setup_dataset(
-        X::Matrix,
-        y=nothing;
-        vnames=["V1", "V2", ...],
-        w=nothing,
-        model::MLJ.Model;
-        resampling=Holdout(fraction_train=0.7, shuffle=true),
-        valid_ratio=0.0,
-        float_type=Float32,
-        rng=Xoshiro(42),
-        kwargs...
-    ) -> DataSet
-
-    setup_dataset(
-        df::AbstractDataFrame,
-        y=nothing;
-        kwargs...
-    ) -> DataSet
-
-Create and configure a `DataSet` for machine learning. The function loads or
-uses the supplied data treatment, selects the data representation compatible
-with the model, creates train/test (and optionally validation) partitions,
-and builds an MLJ machine.
-
-# Arguments
-- `X::Matrix`: Raw feature matrix. Multidimensional samples are represented
-  by matrix elements that are themselves vectors.
-- `df::AbstractDataFrame`: Tabular feature data. It is converted to a matrix
-  before loading.
-- `y::Union{Nothing,AbstractVector{<:Label}}=nothing`: Target values. When
-  omitted, the MLJ machine is created without a target.
-- `vnames::Vector{String}`: Feature names for `X`. By default, names are
-  generated as `"V1"`, `"V2"`, and so on.
-- `w::Union{Nothing,Vector}=nothing`: Optional per-observation weights.
-
-# Keyword Arguments
-
-## Model and preprocessing
-- `model::MLJ.Model`: Model used to build the MLJ machine. If omitted, a
-  `ModalDecisionTree` is selected for multidimensional data; otherwise,
-  categorical targets select a `DecisionTreeClassifier` and other targets
-  select a `DecisionTreeRegressor`.
-- `float_type::Type=Float32`: Numeric type used while loading matrix or
-  DataFrame data.
-
-## Resampling
-- `resampling::ResamplingStrategy=Holdout(fraction_train=0.7, shuffle=true)`:
-  MLJ holdout or cross-validation strategy used to partition observations.
-- `valid_ratio::Real=0.0`: Fraction of each training partition reserved for
-  validation.
-- `rng::Union{AbstractRNG,Int}=Xoshiro(42)`: Random-number generator, or an
-  integer seed. The generator is propagated to the model, resampling strategy.
-
-# Returns
-A `DataSet` containing the MLJ machine, partition indices, and partition
-metadata.
-
-# Errors
-Throws an error when a modal model is used with tabular data, or when a
-non-modal model is used with multidimensional data.
-
-# Examples
-```julia
-using SoleXplorer, MLJ, DataFrames
-
-X, y = @load_iris
-df = DataFrame(X)
-
-# Classification with default model and preprocessing:
-ds = setup_dataset(df, y)
-
-# Cross-validation with a reproducible seed:
-ds = setup_dataset(
-    df,
-    y;
-    resampling=CV(nfolds=10, shuffle=true),
-    rng=1,
-)
-
-```
-
-# See also
-[`DataSet`](@ref), [`solexplorer`](@ref)
-"""
 function _setup_dataset(
     dt::DT.DataTreatment;
     model::MLJ.Model,
@@ -254,6 +163,69 @@ function _setup_dataset(
     DataSet(mach, ttpairs, pinfo)
 end
 
+"""
+    setup_dataset(X::Matrix, y=nothing; model, kwargs...) -> DataSet
+    setup_dataset(df::AbstractDataFrame, y=nothing; model, kwargs...) -> DataSet
+
+Create an untrained [`DataSet`](@ref) containing an MLJ machine, partition
+indices, and partition metadata.
+
+`X` may contain scalar values for tabular learning or array-valued entries for
+multidimensional/modal learning. Data-frame inputs are converted to a matrix
+before being loaded. The selected treatment determines whether tabular or
+multidimensional data are supplied to the machine.
+
+# Arguments
+- `X::Matrix`: Feature matrix.
+- `df::AbstractDataFrame`: Tabular feature data.
+- `y::Union{Nothing,AbstractVector{<:Label}}=nothing`: Optional target vector.
+- `model::MLJ.Model`: **Required** MLJ model. Modal models require
+  multidimensional data; non-modal models require tabular data.
+- `vnames::Vector{String}`: Names for matrix columns. Defaults to `"V1"`,
+  `"V2"`, and so on.
+- `w::Union{Nothing,Vector}=nothing`: Optional observation weights.
+
+# Keyword arguments
+- `resampling::ResamplingStrategy=Holdout(fraction_train=0.7, shuffle=true)`:
+  Holdout or cross-validation strategy used to create partitions.
+- `valid_ratio::Real=0.0`: Fraction of each training partition reserved for
+  validation.
+- `balance=nothing`: Optional balancing strategy forwarded to
+  `DataTreatments.load_dataset`.
+- `float_type::Type=Float32`: Numeric type used while loading data.
+- `rng::Union{AbstractRNG,Int}=Xoshiro(42)`: RNG, or integer seed, used for
+  partitioning and propagated to models/resampling strategies that support an
+  `rng` parameter.
+- `aggrfunc` and additional `kwargs`: Treatment options forwarded to
+  `TreatmentGroup`. If `aggrfunc` is omitted, modal models use dimensionality
+  reduction over three windows and non-modal models aggregate each whole
+  window.
+
+# Returns
+A [`DataSet`](@ref). This function configures the machine but does not fit it.
+
+# Errors
+Throws an error if a modal model is paired with tabular data, or a non-modal
+model is paired with multidimensional data.
+
+# Examples
+```julia
+using SoleXplorer, MLJ, DataFrames
+
+X, y = @load_iris
+
+ds = setup_dataset(
+    DataFrame(X),
+    y;
+    model=DecisionTreeClassifier(),
+    resampling=CV(nfolds=10, shuffle=true),
+    rng=1,
+)
+```
+
+# See also
+[`DataSet`](@ref), [`get_X`](@ref), [`get_y`](@ref), [`solexplorer`](@ref)
+"""
 function setup_dataset(
     X::Matrix{T},
     y::Union{Nothing,AbstractVector{<:Label}}=nothing;

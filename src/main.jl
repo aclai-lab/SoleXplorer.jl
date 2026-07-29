@@ -20,30 +20,21 @@ abstract type AbstractModelSet end
 """
     ModelSet{S} <: AbstractModelSet
 
-Wrapper for complete symbolic model analysis results.
-
-This structure holds all components of a symbolic analysis workflow
-including the dataset configuration, sole trained models, extracted
-rules, and performance measures.
+Container returned by [`solexplorer`](@ref), holding the results of a symbolic
+model-analysis run.
 
 # Type Parameters
-- `S`: The sole model type (e.g., `DecisionTreeClassifier`)
+- `S`: Concrete model type associated with the input `SoleModel`.
 
 # Fields
-- `ds::DataSet`: Dataset configuration with cross-validation setup,
-  plus all settings needed by modal analysis.
-- `sole::Vector{AbstractModel}`: Vector of trained symbolic models
-  (one per CV fold).
-- `measures::Union{Nothing,Measures}`: Performance evaluation measures,
-  or `nothing` if evaluation has not been performed.
+- `ds::DataSet`: Dataset, machine, and partition configuration. The
+  partitioning strategy may be holdout or cross-validation.
+- `sole::Vector{AbstractModel}`: One trained symbolic model per partition.
+- `measures::Union{Nothing,Measures}`: Evaluation results, or `nothing` when
+  evaluation has not yet been performed.
 
-# Accessing Components
-- [`get_ds`](@ref): Extract dataset configuration
-- [`get_sole`](@ref): Extract trained models
-- [`get_measures`](@ref): Extract performance measures
-- [`get_values`](@ref): Extract computed measure values
-
-# See also: [`solexplorer`](@ref)
+# See also
+[`solexplorer`](@ref), [`solexplorer!`](@ref), [`DataSet`](@ref)
 """
 mutable struct ModelSet{S} <: AbstractModelSet
     ds::DataSet
@@ -63,44 +54,51 @@ end
 #                                 constructors                                 #
 # ---------------------------------------------------------------------------- #
 """
-    get_ds(m::ModelSet) -> DataSet
+    get_ds(m::ModelSet)
 
 Returns the dataset configuration from a `ModelSet`.
 """
 get_ds(m::ModelSet) = m.ds
 
 """
-    get_sole(m::ModelSet) -> Vector{AbstractModel}
+    get_sole(m::ModelSet)
 
 Returns the vector of trained sole symbolic models from a `ModelSet`.
 """
 get_sole(m::ModelSet) = m.sole
 
 """
-    get_measures(m::ModelSet) -> Union{Nothing,Measures}
+    get_measures(m::ModelSet)
 
 Returns the performance evaluation measures from a `ModelSet`.
 """
 get_measures(m::ModelSet) = m.measures
 
 """
-    get_values(m::ModelSet) -> Vector
+    get_values(m::ModelSet)
 
-Returns the computed performance measure values from a `ModelSet`.
+Return the aggregate values of the performance measures stored in `m`.
+
+This accessor requires `get_measures(m)` not to be `nothing`.
 """
 get_values(m::ModelSet) = get_measures(m).measures_values
 
 """
-    get_dataset(m::ModelSet) -> DataFrame
+    get_dataset(m::ModelSet)
 
-Returns the raw dataset from the MLJ machine stored in the `ModelSet`.
+Return the feature data stored in the MLJ machine associated with `m`.
+
+Equivalent to `get_X(get_ds(m))`.
 """
 get_dataset(m::ModelSet) = m.ds.mach.args[1].data
 
 """
-    get_targets(m::ModelSet) -> AbstractVector
+    get_targets(m::ModelSet)
 
-Returns the target vector from the MLJ machine stored in the `ModelSet`.
+Return the target vector stored in the MLJ machine associated with `m`.
+
+This accessor is available only for supervised datasets. Equivalent to
+`get_y(get_ds(m))`.
 """
 get_targets(m::ModelSet) = m.ds.mach.args[2].data
 
@@ -132,9 +130,16 @@ function Base.show(io::IO, ::MIME"text/plain", m::ModelSet{S}) where S
         end
 end
 
+"""
+    show_measures(m::ModelSet) -> nothing
+
+Print each performance measure and its aggregate value.
+
+Requires `m` to contain evaluation results.
+"""
 function show_measures(m::ModelSet)
     println("Performance Measures:")
-    for (ms, v) in zip(get_measures(m), get_values(m))
+    for (ms, v) in zip(get_measures(m).measures, get_values(m))
         v isa Real ?
             println("  $(ms) = $(round(v, digits=2))") :
             println("  $(ms) = $(v)")
@@ -144,12 +149,18 @@ end
 # ---------------------------------------------------------------------------- #
 #                                 utilities                                    #
 # ---------------------------------------------------------------------------- #
+# return deterministic predictions stored in `solem`.
+# y_test is accepted for compatibility with MLJ prediction operations.
 function supporting_predictions(solem::AbstractModel)
     return solem.info isa Base.RefValue ?
         solem.info[].supporting_predictions :
         solem.info.supporting_predictions
 end
 
+# return MLJ-compatible predictions for a symbolic model.
+# for classification, deterministic class predictions are converted to
+# degenerate `UnivariateFinite` distributions using the classes observed in
+# y_test. Regression predictions are returned unchanged.
 sole_predict_mode(solem::AbstractModel, y_test::AbstractVector{<:Label}) =
     supporting_predictions(solem)
 
@@ -168,22 +179,12 @@ function sole_predict(solem::AbstractModel, y_test::AbstractVector{<:Label})
         preds
 end
 
-# set the random number generator for a rule extraction strategy
-function set_rng(r::RuleExtractor, rng::Random.AbstractRNG)::RuleExtractor
-    T = typeof(r)
-
-    fnames = fieldnames(T)
-    fvalues = map(fnames) do fn
-        fn === :rng ? rng : getfield(r, fn)
-    end
-    
-    return T(; NamedTuple{fnames}(fvalues)...)
-end
-
 # ---------------------------------------------------------------------------- #
 #                                eval measures                                 #
 # ---------------------------------------------------------------------------- #
-# Adapted from MLJ's evaluate
+# adapted from MLJ's evaluate
+# evaluate `measures` on the test partition of every fold and aggregate their
+# values according to each measure's external aggregation mode.
 function eval_measures(
     ds::DataSet,
     solem::Vector{AbstractModel},
@@ -248,6 +249,20 @@ end
 # ---------------------------------------------------------------------------- #
 #                            internal solexplorer                              #
 # ---------------------------------------------------------------------------- #
+"""
+    solexplorer!(modelset::ModelSet; measures=())
+
+Evaluate an existing `ModelSet` in-place and return it.
+
+Existing measures are replaced. When `measures` is empty, task-appropriate
+default measures are selected from the target type.
+
+# Keyword Arguments
+- `measures::Tuple{Vararg{FussyMeasure}}=()`: Measures to evaluate.
+
+# See also
+[`solexplorer`](@ref), [`get_measures`](@ref), [`show_measures`](@ref)
+"""
 function _solexplorer!(
     modelset::AbstractModelSet;
     measures::Tuple{Vararg{FussyMeasure}}=()
@@ -277,7 +292,7 @@ end
 #                                 solexplorer                                  #
 # ---------------------------------------------------------------------------- #
 """
-    solexplorer!(modelset::ModelSet; kwargs...) -> ModelSet
+    solexplorer!(modelset::ModelSet; kwargs...)
 
 Perform additional analysis on an existing `ModelSet` in-place.
 
@@ -292,75 +307,57 @@ Adds or updates performance measures on an existing `ModelSet`.
 solexplorer!(modelset::ModelSet; kwargs...) = _solexplorer!(modelset; kwargs...)
 
 """
-    solexplorer(
-        X::AbstractDataFrame,
-        y::AbstractVector{<:Label},
-        args...;
-        measures::Tuple{Vararg{FussyMeasure}}=(),
-        kwargs...
-    ) -> ModelSet
+    solexplorer(X::AbstractDataFrame, y::AbstractVector{<:Label}, args...;
+                model, measures=(), kwargs...)
+    solexplorer(X::AbstractArray, vnames::AbstractVector,
+                y::AbstractVector{<:Label}, args...; model, measures=(),
+                kwargs...)
+    solexplorer(dt::DT.DataTreatment, args...; model, measures=(), kwargs...)
+    solexplorer(ds::DataSet; measures=())
+    solexplorer(ds::DataSet, solem::SoleModel; measures=())
 
-    solexplorer(
-        dt::DT.DataTreatment,
-        args...;
-        measures::Tuple{Vararg{FussyMeasure}}=(),
-        kwargs...
-    ) -> ModelSet
+Run the complete symbolic-model analysis workflow.
 
-    solexplorer(ds::DataSet, solem::SoleModel; kwargs...) -> ModelSet
-
-Complete end-to-end symbolic model analysis workflow.
-
-This is the main entry point for symbolic analysis. It performs the
-complete workflow:
-1. **Dataset Setup**: Configures cross-validation and preprocessing.
-2. **Model Configuration**: Sets up the MLJ machine.
-3. **Model Training**: Trains symbolic models on each CV fold.
-4. **Evaluation**: Computes comprehensive performance metrics.
+For raw data or a `DataTreatment`, this function configures a dataset, trains
+one symbolic model for each partition, and evaluates those models on the
+corresponding test partitions. Passing a `DataSet` skips dataset setup;
+passing both a `DataSet` and `SoleModel` skips training as well.
 
 # Arguments
-- `X::AbstractDataFrame`: Feature matrix with observations as rows.
-- `y::AbstractVector{<:Label}`: Target variable (class labels or
-  continuous values).
-- `dt::DT.DataTreatment`: Pre-built data treatment object, e.g. from
-  `DataTreatments.load_dataset`. Use this for modal (time-series) data.
-- `ds::DataSet`: A pre-configured dataset. Combined with `solem` to
-  skip training and go straight to evaluation.
-- `solem::SoleModel`: A pre-trained sole model paired with `ds`.
-- `args...`: Optional positional arguments forwarded to
-  [`setup_dataset`](@ref) (e.g., a `TreatmentGroup`).
+- `X`: Tabular feature data, with observations in rows.
+- `vnames`: Names used when converting an array input to a `DataFrame`.
+- `y`: Target labels or continuous targets.
+- `dt`: Pre-configured `DataTreatment`, typically used for modal data.
+- `ds`: Pre-configured dataset.
+- `solem`: Pre-trained symbolic model associated with `ds`.
+- `args...`: Positional options forwarded to [`setup_dataset`](@ref).
 
 # Keyword Arguments
-- `measures::Tuple{Vararg{FussyMeasure}}=()`: Performance measures tuple.
-  If empty, default measures for the task type are used.
-- `kwargs...`: Additional options forwarded to [`setup_dataset`](@ref)
-  (e.g., `model`, `resampling`, `rng`).
+- `model::MLJ.Model`: Required when constructing a dataset from `X` or `dt`.
+- `measures::Tuple{Vararg{FussyMeasure}}=()`: Measures to evaluate. Empty
+  tuples select task-appropriate defaults.
+- `kwargs...`: Additional options forwarded to [`setup_dataset`](@ref), such
+  as `resampling`, `rng`, and data-treatment options.
 
 # Examples
 ```julia
-# Basic usage with default settings
-modelset = solexplorer(X, y)
+using SoleXplorer, MLJ
 
-# Time series classification with modal decision tree
+X, y = @load_iris
+
 modelset = solexplorer(
-    X, y;
-    model=ModalRandomForest(),
-    resampling=Holdout(fraction_train=0.7, shuffle=true),
+    DataFrame(X),
+    y;
+    model=DecisionTreeClassifier(),
+    resampling=CV(nfolds=5, shuffle=true),
     rng=1,
-    measures=(log_loss, accuracy, confusion_matrix, kappa)
 )
 
-# From a pre-built DataTreatment
-modelset = solexplorer(dt; model=ModalDecisionTree(), rng=1)
-
-# Accessing results
-ds     = get_ds(modelset)
-models = get_sole(modelset)
-perf   = get_measures(modelset)
-vals   = get_values(modelset)
+show_measures(modelset)
 ```
 
-# See also: [`ModelSet`](@ref), [`setup_dataset`](@ref), [`solexplorer!`](@ref)
+# See also
+[`ModelSet`](@ref), [`setup_dataset`](@ref), [`solexplorer!`](@ref)
 """
 function solexplorer(
     X::AbstractDataFrame,
