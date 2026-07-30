@@ -17,8 +17,6 @@ for time-series data.
   extraction in a single call.
 - **Cross-validation**: full support for MLJ resampling strategies
   (`Holdout`, `CV`, `StratifiedCV`, `pCV`).
-- **Hyperparameter tuning**: grid search, random search, and particle
-  swarm optimization via MLJ tuning.
 - **Modal models**: native support for
   [ModalDecisionTree](https://github.com/aclai-lab/ModalDecisionTrees.jl)
   and `ModalRandomForest` on multivariate time-series.
@@ -65,26 +63,6 @@ modelset = solexplorer(
     resampling=CV(nfolds=5, shuffle=true),
     rng=1,
     measures=(accuracy, log_loss, confusion_matrix)
-)
-```
-
-## Hyperparameter Tuning
-
-```julia
-r = SoleXplorer.range(
-    :min_purity_increase; lower=0.001, upper=1.0, scale=:log
-)
-modelset = solexplorer(
-    X, y;
-    model=DecisionTreeClassifier(),
-    resampling=CV(nfolds=5, shuffle=true),
-    rng=1,
-    tuning=GridTuning(
-        resolution=10,
-        resampling=CV(nfolds=3),
-        range=r,
-        measure=accuracy
-    )
 )
 ```
 

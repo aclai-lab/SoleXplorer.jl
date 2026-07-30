@@ -24,8 +24,6 @@ jobs:
         with:
           version: '1'
       - name: Install dependencies
-        env:
-          PYTHON: ""
         run: |
           julia --project=docs/ -e '
             using Pkg
@@ -35,5 +33,4 @@ jobs:
       - name: Build and deploy
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PYTHON: ""
         run: julia --project=docs/ docs/make.jl

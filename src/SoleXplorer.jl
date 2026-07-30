@@ -36,14 +36,6 @@ import MLJ.MLJBase: train_test_pairs
 @reexport using DataTreatments:
     load_dataset, get_tabular, get_target,
     TreatmentGroup, aggregate, reducesize,
-    # catch22
-    mode_5, mode_10, embedding_dist, acf_timescale, acf_first_min, ami2,
-    trev, outlier_timing_pos, outlier_timing_neg, whiten_timescale,
-    forecast_error, ami_timescale, high_fluctuation, stretch_decreasing,
-    stretch_high, entropy_pairs, rs_range, dfa, low_freq_power,
-    centroid_freq, transition_variance, periodicity,
-    # features sets
-    base_set, catch9, catch22_set, complete_set,
     # windowing
     wholewindow, splitwindow, adaptivewindow,
     # balancing
