@@ -32,7 +32,7 @@ SignalEncodings = "0.1"
 SoleData = "0.16"
 SoleModels = "0.10"
 XGBoost = "2.5"
-julia = "1"
+julia = "1.11"
 
 [extras]
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
