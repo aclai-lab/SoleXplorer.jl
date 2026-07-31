@@ -71,7 +71,7 @@ config = InTreesConfig(
     rng=Xoshiro(42)
 )
 
-function extract_rules(m::ModelSet, idx::Int=1)
+function posthoc_datas(m::ModelSet, idx::Int=1)
     return (
         get_sole(m)[idx],
         scalarlogiset(get_X(get_ds(m), :test)[idx]; allow_propositional=true),
@@ -79,4 +79,4 @@ function extract_rules(m::ModelSet, idx::Int=1)
     )
 end
 
-intrees(config, extract_rules(modelh)...)
+intrees(config, posthoc_datas(modelh)...)

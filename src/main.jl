@@ -84,32 +84,27 @@ This accessor requires `get_measures(m)` not to be `nothing`.
 get_values(m::ModelSet) = get_measures(m).measures_values
 
 """
-    get_dataset(m::ModelSet)
+    get_X(m::ModelSet, partition::Symbol)
 
-Return the feature data stored in the MLJ machine associated with `m`.
-
-Equivalent to `get_X(get_ds(m))`.
+Return the feature data vector.
 """
-get_dataset(m::ModelSet) = m.ds.mach.args[1].data
+get_X(m::ModelSet, partition::Symbol) = get_X(m.ds, partition)
 
 """
-    get_targets(m::ModelSet)
+    get_y(m::ModelSet, partition::Symbol)
 
-Return the target vector stored in the MLJ machine associated with `m`.
-
-This accessor is available only for supervised datasets. Equivalent to
-`get_y(get_ds(m))`.
+Return the target vectors.
 """
-get_targets(m::ModelSet) = m.ds.mach.args[2].data
+get_y(m::ModelSet, partition::Symbol) = get_y(m.ds, partition)
 
 # ---------------------------------------------------------------------------- #
 #                                  base show                                   #
 # ---------------------------------------------------------------------------- #
 function Base.show(io::IO, m::ModelSet{S}) where S
     print(io, "ModelSet{$S}(")
-    print(io, "models=$(length(solemodels(m)))")
+    print(io, "models=$(length(get_sole(m)))")
 
-    isnothing(measures(m))     || print(io, ", measures=$(length(measures(m)))")
+    isnothing(measures(m)) || print(io, ", measures=$(length(get_measures(m)))")
 
     print(io, ")")
 end
@@ -249,20 +244,9 @@ end
 # ---------------------------------------------------------------------------- #
 #                            internal solexplorer                              #
 # ---------------------------------------------------------------------------- #
-"""
-    solexplorer!(modelset::ModelSet; measures=())
-
-Evaluate an existing `ModelSet` in-place and return it.
-
-Existing measures are replaced. When `measures` is empty, task-appropriate
-default measures are selected from the target type.
-
-# Keyword Arguments
-- `measures::Tuple{Vararg{FussyMeasure}}=()`: Measures to evaluate.
-
-# See also
-[`solexplorer`](@ref), [`get_measures`](@ref), [`show_measures`](@ref)
-"""
+# evaluate an existing `ModelSet` in-place and return it.
+# existing measures are replaced. When `measures` is empty, task-appropriate
+# default measures are selected from the target type.
 function _solexplorer!(
     modelset::AbstractModelSet;
     measures::Tuple{Vararg{FussyMeasure}}=()
