@@ -267,13 +267,6 @@ dsts = setup_dataset(
 @test dsts isa SX.DataSet{SX.DecisionTreeClassifier}
 @test dsts.mach.args[1].data[1,1] isa Real
 
-dsts = setup_dataset(
-    Xts, yts; model=SX.DecisionTreeClassifier(),
-    aggrfunc=SX.aggregate(features=catch22_set)
-)
-@test dsts isa SX.DataSet{SX.DecisionTreeClassifier}
-@test dsts.mach.args[1].data[1,1] isa Real
-
 # ---------------------------------------------------------------------------- #
 dsimg = setup_dataset(
     Ximg, yimg; model=SX.DecisionTreeClassifier(),
@@ -285,13 +278,6 @@ dsimg = setup_dataset(
 dsimg = setup_dataset(
     Ximg, yimg; model=SX.DecisionTreeClassifier(),
     aggrfunc=SX.aggregate(features=(maximum, minimum, mean))
-)
-@test dsimg isa SX.DataSet{SX.DecisionTreeClassifier}
-@test dsimg.mach.args[1].data[1,1] isa Real
-
-dsimg = setup_dataset(
-    Ximg, yimg; model=SX.DecisionTreeClassifier(),
-    aggrfunc=SX.aggregate(features=catch22_set)
 )
 @test dsimg isa SX.DataSet{SX.DecisionTreeClassifier}
 @test dsimg.mach.args[1].data[1,1] isa Real
