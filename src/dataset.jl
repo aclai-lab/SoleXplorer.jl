@@ -249,8 +249,7 @@ end
 
 setup_dataset(
     df::AbstractDataFrame,
-    y::AbstractVector{<:Label},
-    args...;
+    y::AbstractVector{<:Label};
     kwargs...
 ) = setup_dataset(Matrix(df), y; vnames=names(df), kwargs...)
 

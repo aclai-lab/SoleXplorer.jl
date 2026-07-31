@@ -86,14 +86,22 @@ get_values(m::ModelSet) = get_measures(m).measures_values
 """
     get_X(m::ModelSet, partition::Symbol)
 
-Return the feature data vector.
+Return the feature data for the given partition, one entry per fold.
+
+`partition` selects which subset of each fold to return, typically `:train`,
+`:test`, or `:val` (when a validation split was configured). Delegates to
+[`get_X(::DataSet, ::Symbol)`](@ref).
 """
 get_X(m::ModelSet, partition::Symbol) = get_X(m.ds, partition)
 
 """
     get_y(m::ModelSet, partition::Symbol)
 
-Return the target vectors.
+Return the target values for the given partition, one entry per fold.
+
+`partition` selects which subset of each fold to return, typically `:train`,
+`:test`, or `:val` (when a validation split was configured). Delegates to
+[`get_y(::DataSet, ::Symbol)`](@ref).
 """
 get_y(m::ModelSet, partition::Symbol) = get_y(m.ds, partition)
 
@@ -187,15 +195,16 @@ function eval_measures(
     y_test::Vector{<:AbstractVector{<:Label}}
 )
     mach_model = get_mach_model(ds)
-    measures = MLJBase._actual_measures([measures...], mach_model)
-    operations = get_operations(measures, MLJBase.prediction_type(mach_model))
+    actual_measures = MLJBase._actual_measures([measures...], mach_model)
+    operations = get_operations(
+        actual_measures, MLJBase.prediction_type(mach_model))
 
     nfolds = length(ds)
     test_fold_sizes = [length(y_test[k]) for k in 1:nfolds]
-    nmeasures = length(measures)
+    nmeasures = length(actual_measures)
 
     # weights used to aggregate per-fold measurements,
-    # which depends on a measures
+    # which depends on a measure
     # external mode of aggregation:
     fold_weights(mode) = nfolds .* test_fold_sizes ./ sum(test_fold_sizes)
     fold_weights(::MLJBase.StatisticalMeasuresBase.Sum) = nothing
@@ -208,7 +217,7 @@ function eval_measures(
         # categorical arrays, like confusion matrix and kappa
         test = eltype(y_test[k]) <: CLabel ? String.(y_test[k]) : y_test[k]
 
-        [map(measures, operations) do m, op
+        [map(actual_measures, operations) do m, op
             m(
                 yhat_given_operation[op],
                 test,
@@ -229,7 +238,7 @@ function eval_measures(
 
     # overall aggregates:
     measures_values = map(1:nmeasures) do k
-        m = measures[k]
+        m = actual_measures[k]
         mode = MLJBase.StatisticalMeasuresBase.external_aggregation_mode(m)
         MLJBase.StatisticalMeasuresBase.aggregate(
             fold[k];
@@ -238,15 +247,15 @@ function eval_measures(
         )
     end
 
-    Measures(fold, measures, measures_values, operations)
+    Measures(fold, actual_measures, measures_values, operations)
 end
 
 # ---------------------------------------------------------------------------- #
 #                            internal solexplorer                              #
 # ---------------------------------------------------------------------------- #
-# evaluate an existing `ModelSet` in-place and return it.
-# existing measures are replaced. When `measures` is empty, task-appropriate
-# default measures are selected from the target type.
+# internal in-place evaluator: replaces existing measures on `modelset`.
+# when `measures` is empty, task-appropriate defaults are selected
+# from the target type. See the public `solexplorer!` for docs.
 function _solexplorer!(
     modelset::AbstractModelSet;
     measures::Tuple{Vararg{FussyMeasure}}=()

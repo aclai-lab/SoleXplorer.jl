@@ -189,7 +189,7 @@ function apply(
     X::AbstractDataFrame,
     y::AbstractVector
 )::DecisionXGBoost
-    base_score = get_base_score(m) == -Inf ? mean(m.y[train]) : 0.5
+    base_score = get_base_score(m) == -Inf ? mean(m.args[2].data) : 0.5
     m.model.base_score = base_score
 
     trees = XGBoost.trees(m.fitresult[1])
