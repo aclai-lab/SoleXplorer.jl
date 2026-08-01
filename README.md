@@ -12,7 +12,7 @@
 learning analysis. It wraps [MLJ.jl](https://juliaai.github.io/MLJ.jl/)
 and [Sole.jl](https://github.com/aclai-lab/Sole.jl) to provide a unified
 interface for training, evaluating, and extracting interpretable rules
-from symbolic models — including modal decision trees and random forests
+from symbolic models, including modal decision trees and random forests
 for time-series and image data.
 
 ## Features
@@ -39,7 +39,7 @@ for time-series and image data.
     (`LOCF`, `NOCB`, `Interpolate`, `Substitute`, `SVD`, ...), applied at the
     tabular level and *inside* multidimensional elements (vectors, matrices).
   - **Class imbalance correction** via
-    [Imbalance.jl](https://github.com/JuliaAI/Imbalance.jl) — oversampling
+    [Imbalance.jl](https://github.com/JuliaAI/Imbalance.jl), oversampling
     (`SMOTE`, `ROSE`, `RandomOversampler`, `BorderlineSMOTE1`, `SMOTENC`, ...)
     and undersampling (`RandomUndersampler`, `TomekUndersampler`,
     `ClusterUndersampler`, `ENNUndersampler`, ...).
@@ -181,7 +181,7 @@ modelset = solexplorer(
 )
 ```
 
-Available windowing functions — including `adaptivewindow`, which
+Available windowing functions, including `adaptivewindow`, which
 gracefully handles datasets whose elements have **non-uniform length**:
 
 ```julia

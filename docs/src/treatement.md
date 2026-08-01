@@ -7,7 +7,7 @@ CurrentModule = SoleXplorer
 This page documents the data-preparation options available through
 [DataTreatments.jl](https://github.com/PasoStudio73/DataTreatments.jl),
 which SoleXplorer wraps transparently. All preprocessing is configured
-via keyword arguments passed directly to `setup_dataset`/`solexplorer` —
+via keyword arguments passed directly to `setup_dataset`/`solexplorer`,
 no separate `DataTreatment` object needs to be built by hand.
 
 ## Overview
@@ -16,7 +16,7 @@ no separate `DataTreatment` object needs to be built by hand.
 and an Sole model, plus a set of optional treatment keywords:
 
 - `aggrfunc`: how multidimensional columns (time-series, images) are
-  turned into model-ready data — see [Aggregation vs. Size Reduction](@ref).
+  turned into model-ready data, see [Aggregation vs. Size Reduction](@ref).
 - `impute`: missing/NaN handling, powered by
   [Impute.jl](https://github.com/invenia/Impute.jl).
 - `balance`: class-imbalance correction, powered by
@@ -46,14 +46,14 @@ modelset = solexplorer(X, y; model=XGBoostClassifier())
 Multidimensional columns (time-series, images) are handled by
 `aggrfunc`, which selects one of two strategies:
 
-- **`reducesize`** — shrinks each element (windowing + reduction
+- **`reducesize`**, shrinks each element (windowing + reduction
   function) while preserving its array structure. Use this with
   **modal** models, which operate natively on vectors/matrices.
-- **`aggregate`** — extracts scalar features (via windowing) from each
+- **`aggregate`**, extracts scalar features (via windowing) from each
   element, producing a flat tabular matrix. Use this with
   **traditional** (non-modal) models.
 
-#### Modal (Time-Series) Data — `reducesize`
+#### Modal (Time-Series) Data, `reducesize`
 
 ```julia
 using SoleXplorer, SoleData, MLJ, DataFrames
@@ -75,7 +75,7 @@ modelset = solexplorer(
 
 The same applies to `ModalRandomForest` and `ModalAdaBoost`.
 
-#### Traditional Models — `aggregate`
+#### Traditional Models, `aggregate`
 
 ```julia
 modelset = solexplorer(
