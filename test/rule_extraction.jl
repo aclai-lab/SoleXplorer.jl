@@ -2,129 +2,81 @@ using Test
 using SoleXplorer
 const SX = SoleXplorer
 
-using MLJ
-using DataFrames
+using SoleData
+using SoleModels
 
+using SolePostHoc
+
+using MLJ
+using DataFrames, Random
+
+# ---------------------------------------------------------------------------- #
+#                                load dataset                                  #
+# ---------------------------------------------------------------------------- #
 Xc, yc = @load_iris
 Xc = DataFrame(Xc)
 
-solex = solexplorer(
-    Xc, yc;
-    model=SX.RandomForestClassifier(max_depth=5, n_trees=10),
-    resampling=Holdout(;shuffle=true),
-    rng=42,   
+# ---------------------------------------------------------------------------- #
+#                        I'm easy like sunday morning                          #
+# ---------------------------------------------------------------------------- #
+dsh = setup_dataset(Xc, yc; model=RandomForestClassifier(n_trees=20), rng=42)
+modelh = solexplorer(dsh)
+@test modelh isa SX.ModelSet
+@test SX.get_sole(modelh) isa Vector{SX.AbstractModel}
+@test length(SX.get_sole(modelh)) == 1
+@test get_X(get_ds(modelh), :test) isa Vector{<:SubDataFrame}
+@test length(get_X(get_ds(modelh), :test)) == 1
+@test get_y(get_ds(modelh), :test) isa Vector
+@test length(get_y(get_ds(modelh), :test)) == 1
+
+dscv = setup_dataset(
+    Xc,
+    yc;
+    model=RandomForestClassifier(n_trees=20),
+    resampling=CV(nfolds=3, shuffle=true),
+    rng=42
 )
+modelcv = solexplorer(dscv)
+@test modelcv isa SX.ModelSet
+@test SX.get_sole(modelcv) isa Vector{SX.AbstractModel}
+@test length(SX.get_sole(modelcv)) == 3
+@test get_X(get_ds(modelcv), :test) isa Vector{<:SubDataFrame}
+@test length(get_X(get_ds(modelcv), :test)) == 3
+@test get_y(get_ds(modelcv), :test) isa Vector
+@test length(get_y(get_ds(modelcv), :test)) == 3
 
 # ---------------------------------------------------------------------------- #
-#                          in trees rules extraction                           #
+#                                    intrees                                   #
 # ---------------------------------------------------------------------------- #
-solexplorer!(
-    solex;
-    extractor=InTreesRuleExtractor()
-)
-get_rules(solex)
-@test get_rules(solex) isa Vector{SX.DecisionSet}
-
-solexplorer!(
-    solex;
-    extractor=InTreesRuleExtractor(min_coverage=0.3)
-)
-get_rules(solex)
-@test get_rules(solex) isa Vector{SX.DecisionSet}
-
-@test_throws MethodError solexplorer!(
-    solex;
-    extractor=InTreesRuleExtractor(;invalid=true)
-)
-
-# ---------------------------------------------------------------------------- #
-#                           lumen rules extraction                             #
-# ---------------------------------------------------------------------------- #
-solexplorer!(
-    solex;
-    extractor=LumenRuleExtractor()
-)
-get_rules(solex)
-@test get_rules(solex) isa Vector{SX.DecisionSet}
-
-# takes too long on randomforest
-soledt = solexplorer(
-    Xc, yc;
-    model=SX.DecisionTreeClassifier(max_depth=5,),
-    resampling=Holdout(;shuffle=true),
-    rng=42,   
-    extractor=LumenRuleExtractor(minimization_scheme=:mitespresso)
-)
-@test get_rules(soledt) isa Vector{SX.DecisionSet}
-
-@test_throws MethodError solexplorer!(
-    solex;
-    extractor=LumenRuleExtractor(invalid=true)
+config = InTreesConfig(
+    pruning=PruningConfig(
+        prune_rules=true,
+        decay_threshold=0.05,
+        percentage_degradation=true,
+        s=1.0e-6
+    ),
+    rule_selection=CBC(
+        threshold=0.1,
+        nsubfeatures=0,
+        ntrees=50,
+        partial_sampling=0.7,
+        max_depth=10
+    ),
+    post_process=STEL(;
+        min_coverage=0.01
+    ),
+    complexity_metric=:natoms,
+    max_rules=0,
+    dns=false,
+    rng=Xoshiro(42)
 )
 
-# ---------------------------------------------------------------------------- #
-#                          batrees rules extraction                            #
-# ---------------------------------------------------------------------------- #
-# remember to install g++, clang and make
-# sudo apt update
-# sudo apt install clang
-# sudo apt install make
-# sudo apt install build-essential
-solexplorer!(
-    solex;
-    extractor=BATreesRuleExtractor(;dataset_name="Sole_Analysis")
-)
-@test get_rules(solex) isa Vector{SX.DecisionSet}
+function posthoc_datas(m::ModelSet, idx::Int=1)
+    return (
+        get_sole(m)[idx],
+        scalarlogiset(get_X(get_ds(m), :test)[idx]; allow_propositional=true),
+        get_y(get_ds(m), :test)[idx]
+    )
+end
 
-solexplorer!(
-    solex;
-    extractor=BATreesRuleExtractor(dataset_name="Sole_Analysis", num_trees=5)
-)
-@test get_rules(solex) isa Vector{SX.DecisionSet}
-
-@test_throws MethodError solexplorer!(
-    solex;
-    extractor=BATreesRuleExtractor(;invalid=true)
-)
-
-# ---------------------------------------------------------------------------- #
-#                         rulecosi rules extraction                            #
-# ---------------------------------------------------------------------------- #
-solexplorer!(
-    solex;
-    extractor=RULECOSIPLUSRuleExtractor()
-)
-@test get_rules(solex) isa Vector{SX.DecisionSet}
-
-@test_throws MethodError  solexplorer!(
-    solex;
-    extractor=RULECOSIPLUSRuleExtractor(invalid=true)
-)
-
-# ---------------------------------------------------------------------------- #
-#                           refne rules extraction                             #
-# ---------------------------------------------------------------------------- #
-solexplorer!(
-    solex;
-    extractor=REFNERuleExtractor(;L=2)
-)
-@test get_rules(solex) isa Vector{SX.DecisionSet}
-
-@test_throws MethodError solexplorer!(
-    solex;
-    extractor=REFNERuleExtractor(invalid=true)
-)
-
-# ---------------------------------------------------------------------------- #
-#                          trepan rules extraction                             #
-# ---------------------------------------------------------------------------- #
-solexplorer!(
-    solex;
-    extractor=TREPANRuleExtractor()
-)
-@test get_rules(solex) isa Vector{SX.DecisionSet}
-
-@test_throws MethodError solexplorer!(
-    solex;
-    extractor=TREPANRuleExtractor(invalid=true)
-)
+intrees(config, posthoc_datas(modelh)...)

@@ -2,90 +2,160 @@
 CurrentModule = SoleXplorer
 ```
 
-# [Treatement](@id treatement)
-With multidimensional datasets there are two possible types of work:
+# Data Treatment
 
-1. Use of Propositional algorithms (DecisionTree, XGBoost):
-   - Applies windowing to divide time series into segments
-   - Extracts scalar features (max, min, mean, etc.) from each window
-   - Returns a standard tabular DataFrame
+This page documents the data-preparation options available through
+[DataTreatments.jl](https://github.com/PasoStudio73/DataTreatments.jl),
+which SoleXplorer wraps transparently. All preprocessing is configured
+via keyword arguments passed directly to `setup_dataset`/`solexplorer`,
+no separate `DataTreatment` object needs to be built by hand.
 
-2. Use of Modal algorithms (ModalDecisionTree):
-   - Creates windowed time series preserving temporal structure
-   - Applies reduction functions to manage dimensionality
+## Overview
 
-```@docs
-treatment(X::AbstractDataFrame, treat::Symbol)
+`setup_dataset` accepts a `DataFrame` (or raw matrix), a target vector,
+and an Sole model, plus a set of optional treatment keywords:
+
+- `aggrfunc`: how multidimensional columns (time-series, images) are
+  turned into model-ready data, see [Aggregation vs. Size Reduction](@ref).
+- `impute`: missing/NaN handling, powered by
+  [Impute.jl](https://github.com/invenia/Impute.jl).
+- `balance`: class-imbalance correction, powered by
+  [Imbalance.jl](https://github.com/JuliaAI/Imbalance.jl).
+- `norm`: normalization, powered by
+  [Normalization.jl](https://github.com/PasoStudio73/Normalization.jl).
+- `valid_ratio`: fraction of the training set reserved for validation
+  (used by models with early stopping, e.g. `XGBoostClassifier`).
+
+## Examples
+
+### Tabular Data
+
+For standard tabular data, no treatment keywords are required:
+
+```julia
+using SoleXplorer, SoleData, MLJ, DataFrames
+
+X, y = @load_iris
+X = DataFrame(X)
+
+modelset = solexplorer(X, y; model=XGBoostClassifier())
 ```
 
-<!-- Windowing strategies availables for reduce/aggregation time-series datasets.
+### Aggregation vs. Size Reduction
 
-```@docs
-MovingWindow
-WholeWindow
-SplitWindow
-adaptivewindow
-AbstractWinFunction
-WinFunction
-``` -->
+Multidimensional columns (time-series, images) are handled by
+`aggrfunc`, which selects one of two strategies:
 
-# [Featuresets](@id featuresets)
+- **`reducesize`**, shrinks each element (windowing + reduction
+  function) while preserving its array structure. Use this with
+  **modal** models, which operate natively on vectors/matrices.
+- **`aggregate`**, extracts scalar features (via windowing) from each
+  element, producing a flat tabular matrix. Use this with
+  **traditional** (non-modal) models.
 
-### Basic Statistics
-Standard statistical measures: `maximum`, `minimum`, `mean`, `median`, `std`, `cov`
+#### Modal (Time-Series) Data, `reducesize`
 
-<!-- ### Catch22 Features
-Canonical time-series characteristics covering:
-- Distribution properties and extreme events
-- Linear and nonlinear autocorrelation structures  
-- Forecasting performance and scaling properties
-- Symbolic dynamics and transition patterns -->
+```julia
+using SoleXplorer, SoleData, MLJ, DataFrames
 
-<!-- ### Predefined Feature Sets
+natopsloader = SoleData.Artifacts.NatopsLoader()
+X, y = SoleData.Artifacts.load(natopsloader)
 
-- [`base_set`](@ref): Minimal statistical features (4 features)
-- [`catch9`](@ref): Curated subset combining statistics + key Catch22 (9 features)  
-- [`catch22_set`](@ref): Complete Catch22 suite (22 features)
-- [`complete_set`](@ref): All features combined (28 features)
+modelset = solexplorer(
+    X, y;
+    model=ModalDecisionTree(),
+    aggrfunc=reducesize(
+        reducefunc=mean,
+        win=(splitwindow(nwindows=5),)
+    ),
+    resampling=Holdout(fraction_train=0.7, shuffle=true),
+    rng=42
+)
+```
 
-### References
+The same applies to `ModalRandomForest` and `ModalAdaBoost`.
 
-The Catch22 features are based on the Canonical Time-series Characteristics:
-- **Repository**: https://github.com/DynamicsAndNeuralSystems/catch22
-- **Paper**: Lubba, C.H., Sethi, S.S., Knaute, P. et al. "catch22: CAnonical Time-series CHaracteristics." *Data Min Knowl Disc* 33, 1821–1852 (2019). https://doi.org/10.1007/s10618-019-00647-x -->
+#### Traditional Models, `aggregate`
 
-<!-- ```@docs
-base_set
-catch9
-catch22_set
-complete_set
-``` -->
+```julia
+modelset = solexplorer(
+    X, y;
+    model=DecisionTreeClassifier(),
+    aggrfunc=SoleXplorer.aggregate(
+        features=(mean, maximum, minimum),
+        win=(splitwindow(nwindows=3),)
+    )
+)
+```
 
-See also: [`treatment`](@ref), [`setup_dataset`](@ref)
+Available windowing functions include `splitwindow`, `movingwindow`,
+`adaptivewindow`, and `wholewindow`. `adaptivewindow` is especially
+useful for datasets whose elements have **non-uniform length**, since
+it produces a comparable number of windows regardless of the original
+element size:
 
-## All Catch22 Features
+```julia
+aggrfunc=SoleXplorer.aggregate(win=(adaptivewindow(nwindows=3, overlap=0.2),))
+```
 
-<!-- ```@docs
-mode_5
-mode_10  
-embedding_dist
-acf_timescale
-acf_first_min
-ami2
-trev
-outlier_timing_pos
-outlier_timing_neg
-whiten_timescale
-forecast_error
-ami_timescale
-high_fluctuation
-stretch_decreasing
-stretch_high
-entropy_pairs
-rs_range
-dfa
-low_freq_power
-centroid_freq
-transition_variance
-periodicity
-``` -->
+### Missing Value Imputation
+
+```julia
+X, y = @load_iris
+X = DataFrame(X)
+
+modelset = solexplorer(
+    X, y;
+    model=DecisionTreeClassifier(),
+    impute=(LOCF(), NOCB())
+)
+```
+
+### Class Imbalance Correction
+
+```julia
+modelset = solexplorer(
+    X, y;
+    model=DecisionTreeClassifier(),
+    balance=SMOTE(k=5)
+)
+```
+
+> [!WARNING]
+> `balance` requires data free of `missing`/`NaN` values, since
+> [Imbalance.jl](https://github.com/JuliaAI/Imbalance.jl) cannot handle
+> them. When combining `impute` and `balance`, SoleXplorer guarantees
+> imputation is always applied first.
+
+> [!WARNING]
+> At the time of writing, [Imbalance.jl](https://github.com/JuliaAI/Imbalance.jl)
+> only supports tabular data: `balance` cannot be applied to
+> multidimensional columns (time-series, images).
+
+### Normalization
+
+```julia
+natopsloader = SoleData.Artifacts.NatopsLoader()
+X, y = SoleData.Artifacts.load(natopsloader)
+
+modelset = solexplorer(
+    X, y;
+    model=DecisionTreeClassifier(),
+    norm=ZScore
+)
+```
+
+### From a Raw Matrix
+
+```julia
+X_matrix = Matrix(X)
+variable_names = names(X)
+
+modelset = solexplorer(
+    X_matrix,
+    variable_names,
+    y;
+    model=DecisionTreeClassifier(),
+    float_type=Float32
+)
+```

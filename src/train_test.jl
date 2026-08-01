@@ -19,26 +19,17 @@ const XGBoostModel = Union{XGBoostClassifier, XGBoostRegressor}
 # check if dataset or model uses XGBoost
 # used to determine if XGBoost-specific setup (watchlist) is needed
 has_xgboost_model(ds::DataSet) = has_xgboost_model(ds.mach.model)
-has_xgboost_model(model::MLJTuning.EitherTunedModel) = has_xgboost_model(model.model)
 has_xgboost_model(::XGBoostModel) = true
 has_xgboost_model(::Any) = false
 
-# Check if dataset uses hyperparameter tuning
-is_tuned_model(ds::DataSet) = is_tuned_model(ds.mach.model)
-is_tuned_model(::MLJTuning.EitherTunedModel) = true
-is_tuned_model(::Any) = false
-
-function get_early_stopping_rounds(ds::DataSet)
-    return is_tuned_model(ds) ?
-        ds.mach.model.model.early_stopping_rounds :
-        ds.mach.model.early_stopping_rounds
-
-end
+get_early_stopping_rounds(ds::DataSet) = ds.mach.model.early_stopping_rounds
 
 # create XGBoost watchlist for early stopping validation
 # throws `ArgumentError` if validation set is empty
 function makewatchlist!(ds::DataSet, train::Vector{Int}, valid::Vector{Int})
-    isempty(valid) && throw(ArgumentError("No validation data provided, use preprocess valid_ratio parameter"))
+    isempty(valid) &&
+        throw(ArgumentError("No validation data provided, " *
+        "use preprocess valid_ratio parameter"))
 
     X = get_X(ds)
     y = get_y(ds)
@@ -49,21 +40,18 @@ function makewatchlist!(ds::DataSet, train::Vector{Int}, valid::Vector{Int})
         y_train = @. MLJ.levelcode(y[train]) - 1 # convert to 0-based indexing
         y_valid = @. MLJ.levelcode(y[valid]) - 1 # convert to 0-based indexing
     end
-    dtrain        = XGBoost.DMatrix((@views X[train, :], y_train); feature_names)
-    dvalid        = XGBoost.DMatrix((@views X[valid, :], y_valid); feature_names)
+    dtrain = XGBoost.DMatrix((@views X[train, :], y_train); feature_names)
+    dvalid = XGBoost.DMatrix((@views X[valid, :], y_valid); feature_names)
 
     watchlist = XGBoost.OrderedDict(["train" => dtrain, "eval" => dvalid])
 
-    if is_tuned_model(ds)
-        ds.mach.model.model.watchlist = watchlist
-    else
-        ds.mach.model.watchlist = watchlist
-    end
+    return ds.mach.model.watchlist = watchlist
 end
 
 # configure XGBoost watchlist for fold `i` if early stopping is enabled
 function set_watchlist!(ds::DataSet, i::Int)
-    # XGBoost supports early stopping. This requires configuring a watchlist and validation ratio
+    # XGBoost supports early stopping.
+    # This requires configuring a watchlist and validation ratio
     if get_early_stopping_rounds(ds) > 0
         train = get_train(ds.pidxs[i])
         valid = get_valid(ds.pidxs[i])
@@ -76,7 +64,7 @@ end
 # ---------------------------------------------------------------------------- #
 # container for collections of symbolic models from cross-validation
 mutable struct SoleModel{D} <: AbstractSoleModel
-    sole   :: Vector{AbstractModel}
+    sole::Vector{AbstractModel}
 
     function SoleModel(::D, sole::Vector{AbstractModel}) where D<:DataSet
         new{D}(sole)
@@ -109,7 +97,7 @@ solemodels(solem::SoleModel) = solem.sole
 # ---------------------------------------------------------------------------- #
 # internal cross-validation training implementation
 function _train_test(ds::DataSet)::SoleModel
-    n_folds   = length(ds.pidxs)
+    n_folds = length(ds.pidxs)
     solemodel = Vector{AbstractModel}(undef, n_folds)
 
     # TODO this can be parallelizable

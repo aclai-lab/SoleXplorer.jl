@@ -1,27 +1,18 @@
 module SoleXplorer
 using Reexport
 
-using SoleData: scalarlogiset
-using SoleData.Artifacts
+using SoleData: PropositionalLogiset, scalarlogiset
 
 @reexport using SoleModels: Label, CLabel, RLabel, XGLabel
 using SoleModels:
     Branch, ConstantModel,
     DecisionEnsemble, DecisionTree, DecisionXGBoost,
     AbstractModel, solemodel, weighted_aggregation, apply!,
-    RuleExtractor, DecisionSet,
-    readmetrics
+    DecisionSet, readmetrics
 
-@reexport using SoleData.Artifacts: NatopsLoader, load
-
-@reexport using SolePostHoc.RuleExtraction:
-    InTreesRuleExtractor, LumenRuleExtractor, BATreesRuleExtractor,
-    RULECOSIPLUSRuleExtractor, REFNERuleExtractor, TREPANRuleExtractor
-using SolePostHoc.RuleExtraction
-
-# ---------------------------------------------------------------------------------------- #
-#                                           MLJ                                            #
-# ---------------------------------------------------------------------------------------- #
+# ---------------------------------------------------------------------------- #
+#                                     MLJ                                      #
+# ---------------------------------------------------------------------------- #
 @reexport using MLJ:
 # performance measures for classification
     Accuracy, Kappa, LogLoss, FScore,
@@ -34,57 +25,51 @@ using SolePostHoc.RuleExtraction
 # cross-validation
     Holdout, CV, StratifiedCV, TimeSeriesCV
 
-# tuning
-using MLJParticleSwarmOptimization
-const PSO = MLJParticleSwarmOptimization
-
 using MLJ
-using MLJ: MLJBase, MLJTuning
+using MLJ: MLJBase
 # custom resampling strategy
 import MLJ.MLJBase: train_test_pairs
 
-# ---------------------------------------------------------------------------------------- #
-#                                    external packages                                     #
-# ---------------------------------------------------------------------------------------- #
+# ---------------------------------------------------------------------------- #
+#                              external packages                               #
+# ---------------------------------------------------------------------------- #
 @reexport using DataTreatments:
     load_dataset, get_tabular, get_target,
     TreatmentGroup, aggregate, reducesize,
-    # catch22
-    mode_5, mode_10, embedding_dist, acf_timescale, acf_first_min, ami2,
-    trev, outlier_timing_pos, outlier_timing_neg, whiten_timescale,
-    forecast_error, ami_timescale, high_fluctuation, stretch_decreasing,
-    stretch_high, entropy_pairs, rs_range, dfa, low_freq_power,
-    centroid_freq, transition_variance, periodicity,
-    # features sets
-    base_set, catch9, catch22_set, complete_set,
     # windowing
-    movingwindow, wholewindow, splitwindow, adaptivewindow,
+    wholewindow, splitwindow, adaptivewindow,
     # balancing
     RandomOversampler, RandomWalkOversampler, ROSE, SMOTE,
     BorderlineSMOTE1, SMOTEN, SMOTENC, RandomUndersampler,
     ClusterUndersampler, ENNUndersampler, TomekUndersampler,
     # normalization
-    ZScore, MinMax, Center, Sigmoid, UnitEnergy, UnitPower,
-    Scale, ScaleMad, ScaleFirst, PNorm1, PNorm, PNormInf,
-    MissingSafe, Robust
+    ZScore, MinMax, Center, Sigmoid, UnitPower,
+    Scale, ScaleMad, ScaleFirst, PNorm1, PNormInf,
+    # imputation
+    Interpolate, LOCF, NOCB, SVD, Substitute
     
 using DataTreatments
 const DT = DataTreatments
+
+@reexport using SignalEncodings: Uniform, Quantile, Jenks
+
+using SignalEncodings
+const SE = SignalEncodings
 
 using CategoricalArrays
 using DataFrames
 using Random
 
-# ---------------------------------------------------------------------------------------- #
-#                                       interfaces                                         #
-# ---------------------------------------------------------------------------------------- #
+# ---------------------------------------------------------------------------- #
+#                                 interfaces                                   #
+# ---------------------------------------------------------------------------- #
 export partition, pCV
 export get_X, get_y, get_train, get_test
 include("partition.jl")
 
-# ---------------------------------------------------------------------------------------- #
-#                                         models                                           #
-# ---------------------------------------------------------------------------------------- #
+# ---------------------------------------------------------------------------- #
+#                                   models                                     #
+# ---------------------------------------------------------------------------- #
 @reexport using MLJDecisionTreeInterface:
     DecisionTreeClassifier, DecisionTreeRegressor,
     RandomForestClassifier, RandomForestRegressor,
@@ -99,37 +84,27 @@ using ModalDecisionTrees
     XGBoostClassifier, XGBoostRegressor
 using XGBoost, MLJXGBoostInterface
 
-# @reexport using ModalDecisionLists:
-#     RandomDecisionListClassifier, SequentialCoveringForest
-# using ModalDecisionLists
-
 const Regression =
     Union{DecisionTreeRegressor,RandomForestRegressor,XGBoostRegressor}
 const Modal =
     Union{ModalDecisionTree,ModalRandomForest,ModalAdaBoost}
 
-# ---------------------------------------------------------------------------------------- #
-#                                        sections                                          #
-# ---------------------------------------------------------------------------------------- #
+# ---------------------------------------------------------------------------- #
+#                                  sections                                    #
+# ---------------------------------------------------------------------------- #
 include("measures.jl")
 
-export range,
-    get_range, get_strategy, get_resampling, get_measure, get_repeats,
-    GridTuning, RandomTuning, ParticleTuning, AdaptiveTuning
-include("tuning.jl")
-
-export AbstractDataSet, PropositionalDataSet, ModalDataSet, DataSet,
-    code_dataset, get_mach, get_mach_model, get_logiset, setup_dataset
+export AbstractDataSet, DataSet, setup_dataset,
+    get_X, get_y, get_mach, get_mach_model, get_rng
 include("dataset.jl")
 
-export train_test
 include("apply.jl")
+
+export train_test
 include("train_test.jl")
 
-include("extractrules.jl")
-
 export AbstractModelSet, ModelSet, solexplorer, solexplorer!,
-    get_ds, get_sole, get_rules, get_measures, get_values
+    get_ds, get_sole, get_rules, get_measures, get_values, show_measures
 include("main.jl")
 
 end

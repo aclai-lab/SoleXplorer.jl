@@ -2,83 +2,271 @@
 CurrentModule = SoleXplorer
 ```
 
-# SoleXplorer
+# SoleXplorer.jl
 
-## Introduction
-Welcome to the documentation for [SoleXplorer](https://github.com/aclai-lab/SoleXplorer.jl), an interactive interface for exploring symbolic machine learning models.
+**SoleXplorer.jl** is a Julia package for end-to-end symbolic machine
+learning analysis. It wraps [MLJ.jl](https://juliaai.github.io/MLJ.jl/)
+and [Sole.jl](https://github.com/aclai-lab/Sole.jl) to provide a unified
+interface for training, evaluating, and extracting interpretable rules
+from symbolic models, including modal decision trees and random forests
+for time-series and image data.
 
-Built on top of the [Sole.jl](https://github.com/aclai-lab/Sole.jl) ecosystem. It provides tools for visualizing, inspecting, and interacting with models derived from (logic-based) symbolic learning algorithms.
+## Features
 
-Key features:
-* Can handle both classification and regression tasks.
-* Inspect metrics.
-* Works also on time-series based datasets using modal logic.
-* View rules and their metrics.
-* Inspect logical formulas and their evaluation.
-<!-- * View modal rule associations. -->
-<!-- * Integrated GUI. -->
+- **Unified workflow**: dataset setup, training, evaluation, and rule
+  extraction in a single call, either via `solexplorer(X, y; ...)` or by
+  chaining `setup_dataset` and `solexplorer(ds)`.
+- **Cross-validation**: full support for MLJ resampling strategies
+  (`Holdout`, `CV`, `StratifiedCV`, `TimeSeriesCV`), plus SoleXplorer's own
+  `pCV` (parametrized repeated cross-validation).
+- **Modal models**: native support for
+  [ModalDecisionTree](https://github.com/aclai-lab/ModalDecisionTrees.jl),
+  `ModalRandomForest`, and `ModalAdaBoost` on multivariate time-series and
+  image datasets.
+- **Classic models**: `DecisionTreeClassifier/Regressor`,
+  `RandomForestClassifier/Regressor`, `AdaBoostStumpClassifier`,
+  `XGBoostClassifier/Regressor` (including early-stopping via a validation
+  watchlist).
+- **[DataTreatments.jl](https://github.com/PasoStudio73/DataTreatments.jl)
+  integration**: since datasets are prepared through `DataTreatments.jl`,
+  SoleXplorer inherits, all of its data-preparation power:
+  - **Missing/NaN imputation** via
+  [Impute.jl](https://github.com/invenia/Impute.jl)
+    (`LOCF`, `NOCB`, `Interpolate`, `Substitute`, `SVD`, ...), applied at the
+    tabular level and *inside* multidimensional elements (vectors, matrices).
+  - **Class imbalance correction** via
+    [Imbalance.jl](https://github.com/JuliaAI/Imbalance.jl), oversampling
+    (`SMOTE`, `ROSE`, `RandomOversampler`, `BorderlineSMOTE1`, `SMOTENC`, ...)
+    and undersampling (`RandomUndersampler`, `TomekUndersampler`,
+    `ClusterUndersampler`, `ENNUndersampler`, ...).
+  - **Multidimensional data support**: time-series, images, and other
+    array-valued columns can be transformed via `aggregate` (feature
+    extraction → flat tabular matrix, for traditional ML models) or
+    `reducesize` (dimensionality reduction → array output, for modal
+    analysis on large images/signals).
+  - **Windowing functions** (`splitwindow`, `movingwindow`,
+    `adaptivewindow`, `wholewindow`) let you work naturally with datasets
+    whose elements have **non-uniform sizes** (e.g. variable-length
+    time-series), by dividing each element into a comparable number of
+    windows regardless of its original length.
+  - **Normalization** via
+    [Normalization.jl](https://github.com/PasoStudio73/Normalization.jl)
+    (`ZScore`, `MinMax`, `Center`, `Sigmoid`, `UnitPower`, `Scale`,
+    `ScaleMad`, `ScaleFirst`, `PNorm1`, `PNormInf`), applicable to both
+    tabular and multidimensional data.
+- **Interpretability**: automatic conversion of trained MLJ models into
+  Sole symbolic models, ready for rule extraction and semantic analysis.
 
 ## Installation
+
 ```julia
 using Pkg
-Pkg.add SoleXplorer
+Pkg.add("SoleXplorer")
+```
+
+Or from the REPL:
+
+```
+] add SoleXplorer
 ```
 
 ## Quick Start
 
-### Decision tree
-Every parameter is defaulted: start analysis simply passing your raw dataset:
-
 ```julia
-using SoleXplorer, MLJ
+using SoleXplorer, MLJ, DataFrames
 
-# Load example dataset
-Xc, yc = @load_iris
+# load a dataset
+X, y = @load_iris
+X = DataFrame(X)
 
-# Train a decision tree
-modelc = solexplorer(Xc, yc)
+# run the full workflow with default settings
+modelset = solexplorer(X, y; model=RandomForestClassifier(n_trees=20), rng=42)
+
+# access results
+ds     = get_ds(modelset)        # DataSet configuration
+models = get_sole(modelset)      # trained symbolic models (one per fold)
+perf   = get_measures(modelset)  # performance evaluation
+vals   = get_values(modelset)    # raw measure values
 ```
 
-Of course, customizations are possible:
+## Two-Step Workflow
+
+`setup_dataset` and `solexplorer` can be split, which is useful when you
+want to inspect or reuse the same `DataSet` across multiple runs:
 
 ```julia
-using Random
+ds = setup_dataset(X, y; model=RandomForestClassifier(n_trees=20), rng=42)
+modelset = solexplorer(ds)
+```
 
-range = SoleXplorer.range(:min_purity_increase; lower=0.001, upper=1.0, scale=:log)
-modelc = solexplorer(
-    Xc, yc;
+## Cross-Validation
+
+```julia
+modelset = solexplorer(
+    X, y;
     model=DecisionTreeClassifier(),
     resampling=CV(nfolds=5, shuffle=true),
-    seed=1,
-    tuning=(tuning=Grid(resolution=10), resampling=CV(nfolds=3), range, measure=accuracy, repeats=2),
-    extractor=InTreesRuleExtractor(),
-    measures=(accuracy, log_loss, confusion_matrix, kappa)      
+    rng=42,
+    measures=(Accuracy(), LogLoss(), ConfusionMatrix(), Kappa())
 )
 ```
 
-### Temporal association rules
+Other supported strategies:
+
 ```julia
-# Load a temporal dataset
-natopsloader = SoleXplorer.NatopsLoader()
-Xts, yts = SoleXplorer.load(natopsloader)
+solexplorer(X, y; model=DecisionTreeClassifier(),
+    resampling=Holdout(fraction_train=0.7, shuffle=true), rng=7)
 
-# Train a modal decision tree
-modelts = solexplorer(
-    Xts, yts;
+solexplorer(X, y; model=DecisionTreeClassifier(),
+    resampling=StratifiedCV(nfolds=4, shuffle=true), rng=99)
+```
+
+## Modal Models on Time-Series and Images
+
+Multidimensional columns (time-series, images) are automatically detected.
+Use `reducesize` to shrink them while preserving their array structure, so
+they can be fed to modal models:
+
+```julia
+using SoleData
+
+natopsloader = SoleData.Artifacts.NatopsLoader()
+X, y = SoleData.Artifacts.load(natopsloader)
+
+modelset = solexplorer(
+    X, y;
     model=ModalDecisionTree(),
-    resampling=Holdout(fraction_train=0.8, shuffle=true),
-    seed=1,
-    features=(minimum, maximum),
-    measures=(log_loss, accuracy, confusion_matrix, kappa)
+    aggrfunc=reducesize(
+        reducefunc=mean,
+        win=(splitwindow(nwindows=5),)
+    ),
+    resampling=StratifiedCV(nfolds=4, shuffle=true),
+    rng=42,
+    measures=(Accuracy(),)
 )
 ```
 
-## Related packages
-SoleXplorer extensively uses the following packages:
-* [`SoleLogics`](https://github.com/aclai-lab/SoleLogics.jl): modal and temporal logic systems.
-* [`MLJ`](https://github.com/JuliaAI/MLJ.jl): provides all machine learning frameworks.
-* [`SolePostHoc`](https://github.com/aclai-lab/SolePostHoc.jl): for rule extraction.
-<!-- * [`ModalAssociationRules`](https://github.com/aclai-lab/ModalAssociationRules.jl): for mining association rules. -->
+The same applies to `ModalRandomForest` and `ModalAdaBoost`:
+
+```julia
+modelset = solexplorer(
+    X, y;
+    model=ModalRandomForest(),
+    aggrfunc=reducesize(reducefunc=mean, win=(splitwindow(nwindows=3),)),
+    resampling=Holdout(fraction_train=0.75, shuffle=true),
+    rng=42,
+    measures=(Accuracy(),)
+)
+```
+
+## From Time-Series to Tabular Data
+
+Use `aggregate` instead of `reducesize` to extract scalar features
+(via windowing) and feed multidimensional data to traditional, non-modal
+models:
+
+```julia
+modelset = solexplorer(
+    X, y;
+    model=DecisionTreeClassifier(),
+    aggrfunc=SoleXplorer.aggregate(
+        features=(mean, maximum, minimum),
+        win=(splitwindow(nwindows=3),)
+    ),
+    measures=(Accuracy(),)
+)
+```
+
+Available windowing functions, including `adaptivewindow`, which
+gracefully handles datasets whose elements have **non-uniform length**:
+
+```julia
+aggrfunc=SoleXplorer.aggregate(win=(adaptivewindow(nwindows=3, overlap=0.2),))
+```
+
+## XGBoost with Early Stopping
+
+```julia
+modelset = solexplorer(
+    X, y;
+    model=XGBoostClassifier(early_stopping_rounds=10),
+    resampling=CV(nfolds=3, shuffle=true),
+    valid_ratio=0.2,
+    rng=42,
+    measures=(Accuracy(), ConfusionMatrix())
+)
+```
+
+## Normalization
+
+```julia
+modelset = solexplorer(
+    X, y;
+    model=DecisionTreeClassifier(),
+    norm=ZScore  # or MinMax, Center, Sigmoid, UnitPower, Scale, ...
+)
+```
+
+## Missing Value Imputation
+
+```julia
+modelset = solexplorer(
+    X, y;
+    model=DecisionTreeClassifier(),
+    impute=(LOCF(), NOCB())
+)
+
+# or, for continuous data
+modelset = solexplorer(
+    X, y;
+    model=DecisionTreeClassifier(),
+    impute=(Interpolate(),)
+)
+```
+
+## Class Imbalance Correction
+
+```julia
+X, y = @load_iris
+X = DataFrame(X)[1:end-25,:]
+y = y[1:end-25]
+
+modelset = solexplorer(
+    X, y;
+    model=DecisionTreeClassifier(),
+    balance=SMOTE(k=5)
+)
+
+# undersampling is available too
+modelset = solexplorer(
+    X, y;
+    model=DecisionTreeClassifier(),
+    balance=TomekUndersampler()
+)
+```
+
+## Regression
+
+```julia
+Xr, yr = @load_boston
+Xr = DataFrame(Xr)
+
+modelset = solexplorer(
+    Xr, yr;
+    model=XGBoostRegressor(),
+    resampling=CV(nfolds=5, shuffle=true),
+    rng=42,
+    measures=(RootMeanSquaredError(), LPLoss())
+)
+```
+
+## Contents
+
+```@contents
+Pages = ["index.md", "dataset.md", "symbolic_analysis.md", "treatement.md"]
+Depth = 2
+```
 
 ## About
-The package is developed by the [ACLAI Lab](https://aclai.unife.it/en/) @ University of Ferrara.
+The package is developed by the
+[ACLAI Lab](https://aclai.unife.it/en/) @ University of Ferrara.

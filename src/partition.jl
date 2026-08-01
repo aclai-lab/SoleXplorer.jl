@@ -10,22 +10,27 @@ abstract type AbstractPartitionIdxs end
 # ---------------------------------------------------------------------------- #
 #                                 dataset info                                 #
 # ---------------------------------------------------------------------------- #
-# container for partition strategy metadata and parameters
+# Container for partition strategy metadata and parameters.
 
-# fields
-# - type::T: MLJ resampling strategy (e.g., CV, Holdout, StratifiedCV)
-# - valid_ratio::Real: Proportion of data for validation (0.0-1.0), optinal for XGBoost
+# Fields
+# - `type::T`: MLJ resampling strategy (e.g., `CV`, `Holdout`,
+#   `StratifiedCV`).
+# - `valid_ratio::Real`: Proportion of training data reserved for
+#   validation (0.0–1.0). Used optionally with XGBoost early stopping.
+# - `rng::Random.AbstractRNG`: Random number generator used during
+#   partitioning.
 struct PartitionInfo{T} <: AbstractPartitionInfo
-    type        :: T
-    valid_ratio :: Real
-    rng         :: Random.AbstractRNG
+    type::T
+    valid_ratio::Real
+    rng::Random.AbstractRNG
 
     function PartitionInfo(
-        type        :: T,
-        valid_ratio :: Real,
-        rng         :: Random.AbstractRNG,
+        type::T,
+        valid_ratio::Real,
+        rng::Random.AbstractRNG,
     )::PartitionInfo where {T<:MLJ.ResamplingStrategy}
-        0 ≤ valid_ratio ≤ 1 || throw(ArgumentError("valid_ratio must be between 0 and 1"))
+        0 ≤ valid_ratio ≤ 1 ||
+            throw(ArgumentError("valid_ratio must be between 0 and 1"))
 
         new{T}(type, valid_ratio, rng)
     end
@@ -34,6 +39,11 @@ end
 # ---------------------------------------------------------------------------- #
 #                                   methods                                    #
 # ---------------------------------------------------------------------------- #
+"""
+    get_rng(p::PartitionInfo) -> AbstractRNG
+
+Return the random number generator stored in the partition info.
+"""
 get_rng(p::PartitionInfo) = p.rng
 
 function Base.show(io::IO, info::PartitionInfo)
@@ -51,21 +61,27 @@ end
 # ---------------------------------------------------------------------------- #
 #                             partition indexes                                #
 # ---------------------------------------------------------------------------- #
-# container for train/validation/test index vectors
+# Container for train/validation/test index vectors for a single fold.
+
+# Fields
+# - `train::Vector{T}`: Indices of training samples.
+# - `valid::Vector{T}`: Indices of validation samples. Empty when
+#   `valid_ratio == 0.0`.
+# - `test::Vector{T}`: Indices of test samples.
 struct PartitionIdxs{T<:Int} <: AbstractPartitionIdxs
-    train :: Vector{T}
-    valid :: Vector{T}
-    test  :: Vector{T}
+    train::Vector{T}
+    valid::Vector{T}
+    test::Vector{T}
 
     function PartitionIdxs(
-        train :: Union{Vector{T}, UnitRange{T}},
-        valid :: Union{Vector{T}, UnitRange{T}},
-        test  :: Union{Vector{T}, UnitRange{T}},
+        train::Union{Vector{T},UnitRange{T}},
+        valid::Union{Vector{T},UnitRange{T}},
+        test::Union{Vector{T},UnitRange{T}},
     ) where T<:Int
     new{T}(
-        train isa UnitRange ? collect(train) : train, 
-        valid isa UnitRange ? collect(valid) : valid, 
-        test  isa UnitRange ? collect(test)  : test
+        train isa UnitRange ? collect(train) : train,
+        valid isa UnitRange ? collect(valid) : valid,
+        test isa UnitRange ? collect(test) : test
     )
     end
 end
@@ -74,26 +90,42 @@ end
 #                                 constructors                                 #
 # ---------------------------------------------------------------------------- #
 """
-    partition(y; resampling, valid_ratio, rng) -> (parts::Vector{PartitionIdxs}, info::PartitionInfo)
+    partition(
+        rows::Int,
+        y::Union{Nothing,AbstractVector};
+        resampling,
+        valid_ratio,
+        rng
+    ) -> (Vector{PartitionIdxs}, PartitionInfo)
 
-Create data partitions from labels `y` using an MLJ `resampling` strategy.
+    partition(y::AbstractVector; kwargs...) ->
+        (Vector{PartitionIdxs}, PartitionInfo)
 
-Arguments
-- `y::AbstractVector{<:Label}`: Labels used for stratification where applicable.
-- `resampling::MLJ.ResamplingStrategy`: MLJ resampling strategy (e.g., `CV`, `Holdout`, `StratifiedCV`).
-- `valid_ratio::Real`: Fraction of the training split to allocate to validation (0.0–1.0). If `0.0`,
-  no validation indices are produced.
-- `rng::Random.AbstractRNG`: RNG controlling reproducibility of the MLJ partitioning.
+Create data partitions from labels `y` using an MLJ resampling strategy.
 
-Returns
-- `parts::Vector{PartitionIdxs}`: One `PartitionIdxs` per train/test (and optional validation) split.
-  Validation indices are empty when `valid_ratio == 0.0`.
-- `info::PartitionInfo`: Captures the resampling strategy, `valid_ratio`, and `rng` used.
+# Arguments
+- `rows::Int`: Total number of samples.
+- `y::Union{Nothing,AbstractVector}`: Labels used for stratification
+  where applicable (e.g., `StratifiedCV`).
 
-Notes
+# Keyword Arguments
+- `resampling::MLJ.ResamplingStrategy`: MLJ resampling strategy
+  (e.g., `CV`, `Holdout`, `StratifiedCV`).
+- `valid_ratio::Real`: Fraction of the training split to allocate to
+  validation (0.0–1.0). If `0.0`, no validation indices are produced.
+- `rng::Random.AbstractRNG`: RNG controlling reproducibility of the
+  MLJ partitioning.
+
+# Returns
+- `Vector{PartitionIdxs}`: One `PartitionIdxs` per fold. Validation
+  indices are empty when `valid_ratio == 0.0`.
+- `PartitionInfo`: Captures the resampling strategy, `valid_ratio`,
+  and `rng` used.
+
+# Notes
 - Train/test indices are obtained via `MLJBase.train_test_pairs`.
-- When `valid_ratio > 0`, each train split is further split by `MLJ.partition(train, 1 - valid_ratio)`
-  to produce validation indices.
+- When `valid_ratio > 0`, each train split is further partitioned
+  via `MLJ.partition(train, 1 - valid_ratio)`.
 """
 function partition(
     rows::Int,
@@ -107,10 +139,13 @@ function partition(
     ttpairs = MLJBase.train_test_pairs(resampling, 1:rows, y)
 
     if valid_ratio == 0.0
-        return ([PartitionIdxs(train, eltype(train)[], test) for (train, test) in ttpairs], pinfo)
+        return ([PartitionIdxs(train, eltype(train)[], test)
+            for (train, test) in ttpairs], pinfo)
     else
-        tvalid = collect((MLJ.partition(t[1], 1-valid_ratio)..., t[2]) for t in ttpairs)
-        return ([PartitionIdxs(train, valid, test) for (train, valid, test) in tvalid], pinfo)
+        tvalid = collect((MLJ.partition(t[1], 1-valid_ratio)..., t[2])
+            for t in ttpairs)
+        return ([PartitionIdxs(train, valid, test)
+            for (train, valid, test) in tvalid], pinfo)
     end
 end
 
@@ -119,7 +154,8 @@ partition(y::AbstractVector; kwargs...) = partition(length(y), y; kwargs...)
 # ---------------------------------------------------------------------------- #
 #                                   methods                                    #
 # ---------------------------------------------------------------------------- #
-Base.length(t::PartitionIdxs) = length(t.train) + length(t.valid) + length(t.test)
+Base.length(t::PartitionIdxs) =
+    length(t.train) + length(t.valid) + length(t.test)
 
 """
     get_train(t::PartitionIdxs) -> Vector{Int}
@@ -148,11 +184,12 @@ get_test(t::PartitionIdxs)  = t.test
 function Base.show(io::IO, pidx::PartitionIdxs{T}) where T
     n_train = length(pidx.train)
     n_valid = length(pidx.valid)
-    n_test  = length(pidx.test)
-    total   = n_train + n_valid + n_test
+    n_test = length(pidx.test)
+    total = n_train + n_valid + n_test
     
     print(io, "PartitionIdxs{$T}")
-    print(io, "\n  Total samples: $total, Train: $n_train, Valid: $n_valid, Test: $n_test.")
+    print(io, "\n  Total samples: $total, " *
+        "Train: $n_train, Valid: $n_valid, Test: $n_test.")
 end
 
 function Base.show(io::IO, ::MIME"text/plain", pidx::PartitionIdxs{T}) where T
@@ -165,36 +202,41 @@ end
 """
     pCV <: MLJ.ResamplingStrategy
 
-Custom MLJ resampling strategy for parametrized cross-validation with configurable train/test split ratio.
+Custom MLJ resampling strategy for parametrized cross-validation with
+a configurable train/test split ratio.
 
-Unlike standard k-fold cross-validation where the train/test split is determined by the number of folds,
-`pCV` allows you to specify both the number of folds and the exact fraction of data allocated to training
-in each fold.
+Unlike standard k-fold CV where the split ratio is fixed by the number
+of folds, `pCV` lets you specify both the number of folds and the
+exact fraction of data used for training in each fold.
 
-Fields
+# Fields
 - `nfolds::Int`: Number of folds (must be > 1).
-- `fraction_train::Float64`: Fraction of data to use for training in each fold (0.0–1.0).
-- `shuffle::Bool`: Whether to shuffle the data before partitioning.
-- `rng::Union{Int,AbstractRNG}`: Random number generator or seed for reproducibility.
+- `fraction_train::Float64`: Fraction of data for training in each
+  fold (0.0–1.0).
+- `shuffle::Bool`: Whether to shuffle data before partitioning.
+- `rng::Union{Int,AbstractRNG}`: RNG or integer seed for
+  reproducibility.
 
-Constructor
+# Constructor
     pCV(; nfolds=6, fraction_train=0.7, shuffle=nothing, rng=nothing)
 
-Example
+# Notes
+- Each fold produces a different random train/test split with the
+  specified ratio.
+- Unlike standard CV, test sets are **not** disjoint partitions of
+  the data.
+- Useful when a specific train/test ratio is required across repeated
+  random splits.
+
+# Examples
 ```julia
-using MLJ, Random
-
-# Create a pCV resampling strategy with 10 folds, 60% training data
-resampling = pCV(nfolds=10, fraction_train=0.6, shuffle=true, rng=Xoshiro(42))
-
-# Use with SoleXplorer.partition
-partition_idxs, info = SoleXplorer.partition(y; resampling, valid_ratio=0.0, rng=Xoshiro(42))
+resampling = pCV(
+    nfolds=10, fraction_train=0.6, shuffle=true, rng=Xoshiro(42)
+)
+parts, info = SoleXplorer.partition(
+    y; resampling, valid_ratio=0.0, rng=Xoshiro(42)
+)
 ```
-
-Notes
-- Each fold produces a different random train/test split with the specified ratio.
-- This differs from standard CV where test sets are disjoint partitions of the data.
-- Useful for scenarios requiring repeated random splits with a specific train/test ratio.
 """
 struct pCV <: ResamplingStrategy
     nfolds::Int
@@ -208,11 +250,21 @@ struct pCV <: ResamplingStrategy
 end
 
 # Constructor with keywords
-pCV(; nfolds::Int=6, fraction_train::Float64=0.7, shuffle=nothing, rng=nothing) =
+pCV(;
+    nfolds::Int=6,
+    fraction_train::Float64=0.7,
+    shuffle=nothing,
+    rng=nothing
+) =
     pCV(nfolds, fraction_train, MLJBase.shuffle_and_rng(shuffle, rng)...)
 
 function MLJBase.train_test_pairs(pcv::pCV, rows)
     return map(1:pcv.nfolds) do _
-        MLJBase.partition(rows, pcv.fraction_train, shuffle=pcv.shuffle, rng=pcv.rng)
+        MLJBase.partition(
+            rows,
+            pcv.fraction_train,
+            shuffle=pcv.shuffle,
+            rng=pcv.rng
+        )
     end
 end

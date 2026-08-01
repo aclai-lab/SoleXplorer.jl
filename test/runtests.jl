@@ -1,11 +1,9 @@
 using Test
-using SoleData.Artifacts
-# fill your Artifacts.toml file;
-Artifacts.fillartifacts()
 
-# Loader lists
-abcloader = ABCLoader()
-mitloader = MITESPRESSOLoader()
+using SoleData.Artifacts
+
+# fill your Artifacts.toml file;
+fillartifacts() # comment this line in debug
 
 function run_tests(list)
     println("\n" * ("#"^50))
@@ -18,12 +16,10 @@ end
 println("Julia version: ", VERSION)
 
 test_suites = [
-    # ("Setup Dataset", ["dataset.jl",]),
-    # ("Train and Test", ["train_test.jl",]),
+    ("Setup Dataset", ["dataset.jl",]),
+    ("Train and Test", ["train_test.jl",]),
     ("Symbolic Analysis", ["solexplorer.jl",]),
-    ("Solemodel robustness", ["robustness.jl"]),
-    ("Tuning", ["tuning.jl"]),
-    ("Rule extraction", ["rule_extraction.jl"]),
+    ("Solemodel robustness", ["robustness.jl"])
 ]
 
 @testset "SoleXplorer.jl" begin
