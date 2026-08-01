@@ -123,9 +123,6 @@ solexplorer(X, y; model=DecisionTreeClassifier(),
 
 solexplorer(X, y; model=DecisionTreeClassifier(),
     resampling=StratifiedCV(nfolds=4, shuffle=true), rng=99)
-
-solexplorer(X, y; model=DecisionTreeClassifier(),
-    resampling=TimeSeriesCV(nfolds=4), rng=1)
 ```
 
 ## Modal Models on Time-Series and Images
@@ -148,7 +145,7 @@ modelset = solexplorer(
         win=(splitwindow(nwindows=5),)
     ),
     resampling=StratifiedCV(nfolds=4, shuffle=true),
-    rng=99,
+    rng=42,
     measures=(Accuracy(),)
 )
 ```
@@ -161,7 +158,7 @@ modelset = solexplorer(
     model=ModalRandomForest(),
     aggrfunc=reducesize(reducefunc=mean, win=(splitwindow(nwindows=3),)),
     resampling=Holdout(fraction_train=0.75, shuffle=true),
-    rng=7,
+    rng=42,
     measures=(Accuracy(),)
 )
 ```
@@ -234,6 +231,10 @@ modelset = solexplorer(
 ## Class Imbalance Correction
 
 ```julia
+X, y = @load_iris
+X = DataFrame(X)[1:end-25,:]
+y = y[1:end-25]
+
 modelset = solexplorer(
     X, y;
     model=DecisionTreeClassifier(),
