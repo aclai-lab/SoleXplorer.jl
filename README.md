@@ -4,12 +4,9 @@
 
 ## A symbolic journey through your datasets
 
-[![main](https://img.shields.io/badge/docs-main-blue.svg)]
-(https://aclai-lab.github.io/SoleXplorer.jl/)
-[![CI](https://github.com/aclai-lab/SoleXplorer.jl/actions/workflows/ci.yml/badge.svg)]
-(https://github.com/aclai-lab/SoleXplorer.jl/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/aclai-lab/SoleXplorer.jl/graph/badge.svg?token=EJQ1MJOTDO)]
-(https://codecov.io/gh/aclai-lab/SoleXplorer.jl)
+[![main](https://img.shields.io/badge/docs-main-blue.svg)](https://aclai-lab.github.io/SoleXplorer.jl/)
+[![CI](https://github.com/aclai-lab/SoleXplorer.jl/actions/workflows/ci.yml/badge.svg)](https://github.com/aclai-lab/SoleXplorer.jl/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/aclai-lab/SoleXplorer.jl/graph/badge.svg?token=EJQ1MJOTDO)](https://codecov.io/gh/aclai-lab/SoleXplorer.jl)
 
 **SoleXplorer.jl** is a Julia package for end-to-end symbolic machine
 learning analysis. It wraps [MLJ.jl](https://juliaai.github.io/MLJ.jl/)
