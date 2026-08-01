@@ -263,13 +263,6 @@ modelset = solexplorer(
 )
 ```
 
-## Contents
-
-```@contents
-Pages = ["index.md", "dataset.md", "symbolic_analysis.md", "treatement.md"]
-Depth = 2
-```
-
 ## About
 The package is developed by the
 [ACLAI Lab](https://aclai.unife.it/en/) @ University of Ferrara.
