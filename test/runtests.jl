@@ -1,5 +1,10 @@
 using Test
 
+using SoleData.Artifacts
+
+# fill your Artifacts.toml file;
+fillartifacts() # comment this line in debug
+
 function run_tests(list)
     println("\n" * ("#"^50))
     for test in list
