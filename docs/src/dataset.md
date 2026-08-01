@@ -31,6 +31,7 @@ get_X
 get_y
 get_mach
 get_mach_model
+get_rng
 ```
 
 ## Partitioning

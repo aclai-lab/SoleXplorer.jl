@@ -16,19 +16,19 @@ specified measures.
 The full pipeline is:
 
 ```
-DataSet  →  train/test  →  SoleModel  →  rule extraction  →  Measures
+DataSet  →  train/test  →  SoleModel  →  Measures
 ```
 
 ## API Reference
 
 ```@docs
-ModelSet
 solexplorer
 solexplorer!
 get_ds
 get_sole
 get_measures
 get_values
+show_measures
 ```
 
 ## Examples

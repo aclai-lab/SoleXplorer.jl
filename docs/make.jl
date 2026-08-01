@@ -23,7 +23,7 @@ makedocs(;
         "Home" => "index.md",
         "Symbolic Analysis" => "symbolic_analysis.md",
         "Setup Dataset" => "dataset.md",
-        "Multi Dimensional Treatement" => "treatement.md",
+        "Data Treatement" => "treatement.md",
     ],
     warnonly=:true,
 )

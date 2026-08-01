@@ -181,11 +181,11 @@ multidimensional data are supplied to the machine.
 - `y::Union{Nothing,AbstractVector{<:Label}}=nothing`: Optional target vector.
 - `model::MLJ.Model`: **Required** MLJ model. Modal models require
   multidimensional data; non-modal models require tabular data.
-- `vnames::Vector{String}`: Names for matrix columns. Defaults to `"V1"`,
-  `"V2"`, and so on.
 - `w::Union{Nothing,Vector}=nothing`: Optional observation weights.
 
 # Keyword arguments
+- `vnames::Vector{String}`: Names for matrix columns. Defaults to `"V1"`,
+  `"V2"`, and so on.
 - `resampling::ResamplingStrategy=Holdout(fraction_train=0.7, shuffle=true)`:
   Holdout or cross-validation strategy used to create partitions.
 - `valid_ratio::Real=0.0`: Fraction of each training partition reserved for
